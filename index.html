@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>منجز | بوابة منجزات الثانوية 94</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">✦</div>
+        <div>
+          <h1>منجز</h1>
+          <p>بوابة منجزات الثانوية 94</p>
+        </div>
+      </div>
+
+      <nav id="nav">
+        <a href="#home" data-route="home" class="active">⌂ <span>الرئيسية</span></a>
+        <a href="#about" data-route="about">▦ <span>عن المدرسة</span></a>
+        <a href="#add" data-route="add">＋ <span>إضافة منجز</span></a>
+        <a href="#achievements" data-route="achievements">▤ <span>استعراض المنجزات</span></a>
+        <a href="#admin" data-route="admin">▥ <span>لوحة الإدارة</span></a>
+        <a href="#reports" data-route="reports">◔ <span>التقارير والإحصاءات</span></a>
+        <a href="#awards" data-route="awards">🏆 <span>التكريمات والحوافز</span></a>
+        <a href="#partners" data-route="partners">◉ <span>الشراكات</span></a>
+        <a href="#settings" data-route="settings">⚙ <span>الإعدادات</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <strong>الثانوية الرابعة والتسعون - مسارات</strong>
+        <span>من البيانات إلى الأثر</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="top-title">من الجهود .. تُصنع المنجزات</div>
+        <div class="top-actions">
+          <input id="globalSearch" type="search" placeholder="ابحث عن منجزات ..." />
+          <span class="pill">إدارة تعليم جدة</span>
+          <span class="pill">مكتب الواحة</span>
+        </div>
+      </header>
+
+      <section id="view"></section>
+
+      <footer>
+        <span>الثانوية الرابعة والتسعون - مسارات</span>
+        <span>سياسة الاستخدام</span>
+        <span>سياسة الخصوصية</span>
+        <span>الدعم الفني</span>
+      </footer>
+    </main>
+  </div>
+
+  <template id="homeTpl">
+    <div class="hero">
+      <div>
+        <span class="eyebrow">توثيق • متابعة • أثر</span>
+        <h2>بوابة منجزات الثانوية الرابعة والتسعين</h2>
+        <p>منصة داخلية لتنظيم منجزات المدرسة وشواهدها، ومتابعة الأثر بصورة موحدة وقابلة للبحث والتقارير</p>
+        <div class="actions">
+          <a class="btn primary" href="#add">إضافة منجز</a>
+          <a class="btn secondary" href="#achievements">استعراض المنجزات</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="metric"><b id="mTotal">0</b><span>إجمالي المنجزات</span></div>
+        <div class="metric"><b id="mApproved">0</b><span>معتمد</span></div>
+        <div class="metric"><b id="mReview">0</b><span>تحت المراجعة</span></div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h3>أقسام المنجزات</h3>
+    </div>
+    <div class="cards grid-4">
+      <div class="category">الإدارة المدرسية</div>
+      <div class="category">التعليم والتعلم</div>
+      <div class="category">نواتج التعلم</div>
+      <div class="category">البيئة المدرسية</div>
+      <div class="category">المجتمع المحلي</div>
+      <div class="category">قصص ملهمة</div>
+      <div class="category">التكريمات والحوافز</div>
+      <div class="category">البرامج والمبادرات</div>
+    </div>
+  </template>
+
+  <template id="aboutTpl">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">عن المدرسة</span>
+        <h2>الثانوية الرابعة والتسعون - مسارات</h2>
+      </div>
+    </div>
+
+    <div class="cards grid-4">
+      <div class="info-card"><b>630</b><span>إجمالي الطالبات</span></div>
+      <div class="info-card"><b>1428هـ</b><span>تاريخ التأسيس</span></div>
+      <div class="info-card"><b>عام</b><span>نوع التعليم</span></div>
+      <div class="info-card"><b>مستأجر</b><span>نوع المبنى</span></div>
+    </div>
+
+    <div class="split">
+      <div class="panel">
+        <h3>توزيع الطالبات</h3>
+        <div class="triplet">
+          <div><b>212</b><span>أول ثانوي</span></div>
+          <div><b>210</b><span>ثاني ثانوي</span></div>
+          <div><b>208</b><span>ثالث ثانوي</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>الكادر المدرسي والإداري</h3>
+        <div class="staff-grid">
+          <span>مديرة <b>1</b></span>
+          <span>وكيلات <b>3</b></span>
+          <span>موجهات طلابيات <b>2</b></span>
+          <span>معلمات <b>44</b></span>
+          <span>مساعدات إداريات <b>15</b></span>
+          <span>مسجل معلومات <b>1</b></span>
+          <span>معلمتا حاسب <b>2</b></span>
+          <span>محضر مختبر <b>1</b></span>
+          <span>عاملات خدمات <b>3</b></span>
+          <span>حارس <b>1</b></span>
+          <span>رائد نشاط مفرغ <b>0</b></span>
+          <span>أمين مصادر <b>0</b></span>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="addTpl">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">إضافة منجز</span>
+        <h2>توثيق منجز جديد</h2>
+        <p>أدخلي البيانات وارفعِي الشواهد ثم أرسليها للمراجعة</p>
+      </div>
+    </div>
+
+    <form id="achievementForm" class="panel form-grid">
+      <label>اسم المنجز *
+        <input name="title" required />
+      </label>
+
+      <label>القسم / المجال *
+        <select name="category" required>
+          <option value="">اختاري القسم</option>
+          <option>الإدارة المدرسية</option>
+          <option>التعليم والتعلم</option>
+          <option>نواتج التعلم</option>
+          <option>البيئة المدرسية</option>
+          <option>المجتمع المحلي</option>
+          <option>قصص ملهمة</option>
+          <option>التكريمات والحوافز</option>
+          <option>البرامج والمبادرات</option>
+          <option>الشراكات</option>
+        </select>
+      </label>
+
+      <label>تاريخ التنفيذ *
+        <input name="date" type="date" required />
+      </label>
+
+      <label>الجهة المنفذة *
+        <input name="entity" required />
+      </label>
+
+      <label>اسم المنفذة / الفريق *
+        <input name="team" required />
+      </label>
+
+      <label>الفئة المستهدفة *
+        <input name="audience" placeholder="مثال: الطالبات - المعلمات - أولياء الأمور" required />
+      </label>
+
+      <label>عدد المستفيدات
+        <input name="beneficiaries" type="number" min="0" />
+      </label>
+
+      <label>نوع المنجز *
+        <select name="type" required>
+          <option value="">اختاري النوع</option>
+          <option>مبادرة</option>
+          <option>برنامج</option>
+          <option>ورشة</option>
+          <option>تكريم</option>
+          <option>شراكة</option>
+          <option>تقرير</option>
+          <option>أخرى</option>
+        </select>
+      </label>
+
+      <label class="wide">الهدف من المنجز *
+        <textarea name="goal" required></textarea>
+      </label>
+
+      <label class="wide">وصف مختصر *
+        <textarea name="description" required></textarea>
+      </label>
+
+      <label class="wide">الأثر / النتيجة *
+        <textarea name="impact" required></textarea>
+      </label>
+
+      <label>رفع الصور
+        <input name="images" type="file" accept="image/*" multiple />
+      </label>
+
+      <label>رفع ملف PDF أو مستند
+        <input name="documents" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" multiple />
+      </label>
+
+      <label class="wide">رابط خارجي
+        <input name="link" type="url" placeholder="https://" />
+      </label>
+
+      <div class="wide form-actions">
+        <button class="btn primary" type="submit">إرسال المنجز</button>
+        <button class="btn secondary" type="reset">إلغاء</button>
+      </div>
+      <div id="formMsg" class="wide"></div>
+    </form>
+  </template>
+
+  <template id="achievementsTpl">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">مكتبة الشواهد</span>
+        <h2>استعراض المنجزات</h2>
+      </div>
+    </div>
+
+    <div class="filters panel">
+      <input id="searchAchievements" type="search" placeholder="ابحثي عن منجز..." />
+      <select id="filterCategory">
+        <option value="">جميع الأقسام</option>
+        <option>الإدارة المدرسية</option>
+        <option>التعليم والتعلم</option>
+        <option>نواتج التعلم</option>
+        <option>البيئة المدرسية</option>
+        <option>المجتمع المحلي</option>
+        <option>قصص ملهمة</option>
+        <option>التكريمات والحوافز</option>
+        <option>البرامج والمبادرات</option>
+        <option>الشراكات</option>
+      </select>
+      <select id="filterStatus">
+        <option value="">جميع الحالات</option>
+        <option>تحت المراجعة</option>
+        <option>معتمد</option>
+      </select>
+    </div>
+
+    <div id="achievementList" class="cards achievement-list"></div>
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">▤</div>
+      <h3>لا توجد منجزات مضافة حتى الآن</h3>
+      <p>ابدئي بإضافة أول منجز للمدرسة، وستظهر الشواهد هنا تلقائيًا</p>
+      <a class="btn primary" href="#add">إضافة أول منجز</a>
+    </div>
+  </template>
+
+  <template id="placeholderTpl">
+    <div class="empty-state large">
+      <div class="empty-icon">◫</div>
+      <h2 id="placeholderTitle"></h2>
+      <p>تم تجهيز هذه الصفحة ضمن هيكل الموقع، وسيتم تفعيل وظائفها في المرحلة التالية</p>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
