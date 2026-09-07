@@ -241,6 +241,7 @@
         <label class="wide">رابط خارجي
           <input name="link" type="url" placeholder="https://">
         </label>
+        <p class="upload-note wide">تُستخدم أول صورة مرفوعة كصورة غلاف مصغرة تلقائيًا ويمكن إضافة مرفقات لاحقًا من صفحة التفاصيل</p>
       </div>
 
       <div class="form-actions">
@@ -375,6 +376,7 @@
         <label>رفع شهادة أو PDF
           <input name="documents" type="file" accept=".pdf,.doc,.docx" multiple>
         </label>
+        <p class="upload-note wide">تُستخدم أول صورة مرفوعة كصورة غلاف مصغرة تلقائيًا ويمكن إضافة مرفقات لاحقًا من صفحة التفاصيل</p>
       </div>
       <div class="form-actions">
         <button class="btn btn-primary" type="submit">حفظ التكريم</button>
@@ -454,6 +456,7 @@
         <label>رفع الاتفاقية أو PDF
           <input name="documents" type="file" accept=".pdf,.doc,.docx" multiple>
         </label>
+        <p class="upload-note wide">تُستخدم أول صورة مرفوعة كصورة غلاف مصغرة تلقائيًا ويمكن إضافة مرفقات لاحقًا من صفحة التفاصيل</p>
       </div>
       <div class="form-actions">
         <button class="btn btn-primary" type="submit">حفظ الشراكة</button>
@@ -535,6 +538,14 @@
       <p>سيتم ربط هذه الصفحة بالبيانات والتقارير الفعلية</p>
     </div>
   </template>
+
+
+  <dialog id="detailDialog" class="detail-dialog">
+    <div class="detail-shell">
+      <button type="button" class="detail-close" id="detailClose" aria-label="إغلاق">×</button>
+      <div id="detailContent"></div>
+    </div>
+  </dialog>
 
   <script src="app.js"></script>
 </body>

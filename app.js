@@ -13,6 +13,77 @@ function saveAwards(items){ localStorage.setItem(AWARDS_STORE, JSON.stringify(it
 function getPartners(){ try { return JSON.parse(localStorage.getItem(PARTNERS_STORE) || "[]"); } catch { return []; } }
 function savePartners(items){ localStorage.setItem(PARTNERS_STORE, JSON.stringify(items)); }
 
+const MEDIA_DB = "manjaz_media_v1";
+const MEDIA_STORE = "files";
+
+function openMediaDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(MEDIA_DB,1);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(MEDIA_STORE)){
+        const store=db.createObjectStore(MEDIA_STORE,{keyPath:"id",autoIncrement:true});
+        store.createIndex("parentKey","parentKey",{unique:false});
+      }
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function saveSelectedFiles(parentKey, imageFiles=[], docFiles=[]){
+  const files=[
+    ...Array.from(imageFiles||[]).map(file=>({parentKey,kind:"image",name:file.name,type:file.type||"image/*",blob:file,createdAt:new Date().toISOString()})),
+    ...Array.from(docFiles||[]).map(file=>({parentKey,kind:"document",name:file.name,type:file.type||"application/octet-stream",blob:file,createdAt:new Date().toISOString()}))
+  ];
+  if(!files.length) return;
+  const db=await openMediaDB();
+  await new Promise((resolve,reject)=>{
+    const tx=db.transaction(MEDIA_STORE,"readwrite");
+    const store=tx.objectStore(MEDIA_STORE);
+    files.forEach(f=>store.add(f));
+    tx.oncomplete=resolve;
+    tx.onerror=()=>reject(tx.error);
+  });
+  db.close();
+}
+
+async function getMedia(parentKey){
+  const db=await openMediaDB();
+  const rows=await new Promise((resolve,reject)=>{
+    const tx=db.transaction(MEDIA_STORE,"readonly");
+    const idx=tx.objectStore(MEDIA_STORE).index("parentKey");
+    const req=idx.getAll(parentKey);
+    req.onsuccess=()=>resolve(req.result||[]);
+    req.onerror=()=>reject(req.error);
+  });
+  db.close();
+  return rows;
+}
+
+function parentKey(kind,id){ return `${kind}:${id}`; }
+function mediaURL(row){ return URL.createObjectURL(row.blob); }
+
+async function hydrateCover(el,kind,id){
+  if(!el) return;
+  try{
+    const rows=await getMedia(parentKey(kind,id));
+    const image=rows.find(r=>r.kind==="image");
+    if(image){
+      el.innerHTML="";
+      const img=document.createElement("img");
+      img.src=mediaURL(image);
+      img.alt="صورة الغلاف";
+      el.appendChild(img);
+    }
+  }catch(err){ console.warn("media cover",err); }
+}
+
+function getRecord(kind,id){
+  const list = kind==="achievement" ? getItems() : kind==="award" ? getAwards() : getPartners();
+  return list.find(x=>String(x.id)===String(id));
+}
+
 const placeholders = {
   reports:"التقارير والإحصاءات",
   awards:"التكريمات والحوافز",
@@ -73,11 +144,12 @@ function render(){
 function wireForm(){
   const form=byId("achievementForm");
   const msg=byId("formMsg");
-  form.addEventListener("submit",e=>{
+  form.addEventListener("submit",async e=>{
     e.preventDefault();
     const fd=new FormData(form);
+    const id=(crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
     const item={
-      id:(crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+      id,
       title:fd.get("title"),
       category:fd.get("category"),
       date:fd.get("date"),
@@ -93,12 +165,17 @@ function wireForm(){
       status:"تحت المراجعة",
       createdAt:new Date().toISOString()
     };
-    const items=getItems();
-    items.unshift(item);
-    saveItems(items);
-    form.reset();
-    msg.className="success";
-    msg.textContent="تم حفظ المنجز وإرساله للمراجعة بنجاح";
+    const items=getItems(); items.unshift(item); saveItems(items);
+    try{
+      await saveSelectedFiles(parentKey("achievement",id),form.elements.images?.files,form.elements.documents?.files);
+      form.reset();
+      msg.className="success";
+      msg.textContent="تم حفظ المنجز والمرفقات وإرساله للمراجعة بنجاح";
+    }catch(err){
+      msg.className="success";
+      msg.textContent="تم حفظ المنجز، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
+      console.error(err);
+    }
   });
 }
 
@@ -129,7 +206,10 @@ function wireAchievements(){
     items.forEach(x=>{
       const card=document.createElement("article");
       card.className="achievement-card";
+      card.dataset.kind="achievement";
+      card.dataset.id=x.id;
       card.innerHTML=`
+        <div class="card-cover"><div class="card-cover-placeholder">لا توجد صورة غلاف بعد</div></div>
         <span class="badge">${esc(x.status)}</span>
         <h3>${esc(x.title)}</h3>
         <div class="meta">
@@ -139,8 +219,11 @@ function wireAchievements(){
           <span>المستفيدات: ${esc(x.beneficiaries || "—")}</span>
         </div>
         <p>${esc(x.impact)}</p>
+        <span class="card-open">عرض التفاصيل ←</span>
       `;
+      card.addEventListener("click",()=>openDetails("achievement",x.id));
       list.appendChild(card);
+      hydrateCover(card.querySelector(".card-cover"),"achievement",x.id);
     });
   }
   draw();
@@ -149,9 +232,9 @@ function wireAchievements(){
 function wireAdmin(){
   const a=getItems(), w=getAwards(), p=getPartners();
   const items=[
-    ...a.map(x=>({...x,_kind:"منجز"})),
-    ...w.map(x=>({...x,_kind:"تكريم"})),
-    ...p.map(x=>({...x,_kind:"شراكة"}))
+    ...a.map(x=>({...x,_kind:"منجز",_mediaKind:"achievement"})),
+    ...w.map(x=>({...x,_kind:"تكريم",_mediaKind:"award"})),
+    ...p.map(x=>({...x,_kind:"شراكة",_mediaKind:"partner"}))
   ];
   byId("dNew").textContent=0;
   byId("dReview").textContent=items.filter(x=>x.status==="تحت المراجعة").length;
@@ -165,17 +248,23 @@ function wireAdmin(){
     const row=document.createElement("div");
     row.className="admin-item";
     row.innerHTML=`
+      <div class="admin-thumb"><span></span></div>
       <div>
         <h4>${esc(x.title)}</h4>
         <p>${esc(x._kind)} • ${esc(x.category || x.type || "")} • ${esc(x.team || x.recipient || x.partner || "")} • ${esc(x.date || x.startDate || "")}</p>
       </div>
       <div class="admin-actions">
+        <button class="small-btn view-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">عرض</button>
         <button class="small-btn approve" data-id="${esc(x.id)}" data-kind="${esc(x._kind)}">اعتماد</button>
       </div>
     `;
     list.appendChild(row);
+    hydrateCover(row.querySelector(".admin-thumb"),x._mediaKind,x.id);
   });
 
+  list.querySelectorAll(".view-record").forEach(btn=>{
+    btn.addEventListener("click",()=>openDetails(btn.dataset.mediaKind,btn.dataset.id));
+  });
   list.querySelectorAll(".approve").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const kind=btn.dataset.kind, id=btn.dataset.id;
@@ -187,7 +276,6 @@ function wireAdmin(){
   });
 }
 
-
 function wireAwards(){
   const form=byId("awardForm");
   const show=byId("showAwardForm");
@@ -195,11 +283,12 @@ function wireAwards(){
   const msg=byId("awardMsg");
   show.addEventListener("click",()=>form.style.display="block");
   cancel.addEventListener("click",()=>{form.reset();form.style.display="none";});
-  form.addEventListener("submit",e=>{
+  form.addEventListener("submit",async e=>{
     e.preventDefault();
     const fd=new FormData(form);
+    const id=(crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
     const item={
-      id:(crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+      id,
       title:fd.get("title"), type:fd.get("type"), grantor:fd.get("grantor"),
       recipient:fd.get("recipient"), date:fd.get("date"),
       beneficiaries:Number(fd.get("beneficiaries")||0),
@@ -207,9 +296,13 @@ function wireAwards(){
       status:"تحت المراجعة", createdAt:new Date().toISOString()
     };
     const items=getAwards(); items.unshift(item); saveAwards(items);
-    form.reset(); form.style.display="none";
-    msg.className="success"; msg.textContent="تم حفظ التكريم وإرساله للمراجعة بنجاح";
-    drawAwards();
+    try{
+      await saveSelectedFiles(parentKey("award",id),form.elements.images?.files,form.elements.documents?.files);
+      msg.className="success"; msg.textContent="تم حفظ التكريم والمرفقات وإرساله للمراجعة بنجاح";
+    }catch(err){
+      msg.className="success"; msg.textContent="تم حفظ التكريم، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
+    }
+    form.reset(); form.style.display="none"; drawAwards();
   });
   drawAwards();
 
@@ -223,10 +316,13 @@ function wireAwards(){
     items.forEach(x=>{
       const card=document.createElement("article");
       card.className="achievement-card";
-      card.innerHTML=`<span class="badge">${esc(x.status)}</span><h3>${esc(x.title)}</h3>
+      card.innerHTML=`<div class="card-cover"><div class="card-cover-placeholder">لا توجد صورة غلاف بعد</div></div>
+      <span class="badge">${esc(x.status)}</span><h3>${esc(x.title)}</h3>
       <div class="meta"><span>${esc(x.type)}</span><span>${esc(x.grantor)}</span><span>${esc(x.recipient)}</span><span>${esc(x.date)}</span></div>
-      <p>${esc(x.reason)}</p>`;
+      <p>${esc(x.reason)}</p><span class="card-open">عرض التفاصيل ←</span>`;
+      card.addEventListener("click",()=>openDetails("award",x.id));
       list.appendChild(card);
+      hydrateCover(card.querySelector(".card-cover"),"award",x.id);
     });
   }
 }
@@ -238,11 +334,12 @@ function wirePartners(){
   const msg=byId("partnerMsg");
   show.addEventListener("click",()=>form.style.display="block");
   cancel.addEventListener("click",()=>{form.reset();form.style.display="none";});
-  form.addEventListener("submit",e=>{
+  form.addEventListener("submit",async e=>{
     e.preventDefault();
     const fd=new FormData(form);
+    const id=(crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
     const item={
-      id:(crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+      id,
       title:fd.get("title"), partner:fd.get("partner"), type:fd.get("type"),
       startDate:fd.get("startDate"), endDate:fd.get("endDate"),
       beneficiaries:Number(fd.get("beneficiaries")||0),
@@ -250,9 +347,13 @@ function wirePartners(){
       status:"تحت المراجعة", createdAt:new Date().toISOString()
     };
     const items=getPartners(); items.unshift(item); savePartners(items);
-    form.reset(); form.style.display="none";
-    msg.className="success"; msg.textContent="تم حفظ الشراكة وإرسالها للمراجعة بنجاح";
-    drawPartners();
+    try{
+      await saveSelectedFiles(parentKey("partner",id),form.elements.images?.files,form.elements.documents?.files);
+      msg.className="success"; msg.textContent="تم حفظ الشراكة والمرفقات وإرسالها للمراجعة بنجاح";
+    }catch(err){
+      msg.className="success"; msg.textContent="تم حفظ الشراكة، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
+    }
+    form.reset(); form.style.display="none"; drawPartners();
   });
   drawPartners();
 
@@ -266,10 +367,13 @@ function wirePartners(){
     items.forEach(x=>{
       const card=document.createElement("article");
       card.className="achievement-card";
-      card.innerHTML=`<span class="badge">${esc(x.status)}</span><h3>${esc(x.title)}</h3>
+      card.innerHTML=`<div class="card-cover"><div class="card-cover-placeholder">لا توجد صورة غلاف بعد</div></div>
+      <span class="badge">${esc(x.status)}</span><h3>${esc(x.title)}</h3>
       <div class="meta"><span>${esc(x.partner)}</span><span>${esc(x.type)}</span><span>${esc(x.startDate)}</span><span>المستفيدات: ${esc(x.beneficiaries||0)}</span></div>
-      <p>${esc(x.impact)}</p>`;
+      <p>${esc(x.impact)}</p><span class="card-open">عرض التفاصيل ←</span>`;
+      card.addEventListener("click",()=>openDetails("partner",x.id));
       list.appendChild(card);
+      hydrateCover(card.querySelector(".card-cover"),"partner",x.id);
     });
   }
 }
@@ -323,6 +427,131 @@ function drawBars(container, rows){
   });
 }
 
+
+async function openDetails(kind,id){
+  const record=getRecord(kind,id);
+  if(!record) return;
+  const dialog=byId("detailDialog");
+  const content=byId("detailContent");
+  const rows=await getMedia(parentKey(kind,id));
+  const images=rows.filter(r=>r.kind==="image");
+  const docs=rows.filter(r=>r.kind==="document");
+
+  const labels = kind==="achievement"
+    ? {
+        type:"منجز",
+        category:record.category,
+        date:record.date,
+        owner:record.team,
+        ownerLabel:"المنفذة / الفريق",
+        sections:[
+          ["الهدف",record.goal],
+          ["الوصف",record.description],
+          ["الأثر / النتيجة",record.impact],
+          ["الفئة المستهدفة",record.audience],
+          ["الجهة المنفذة",record.entity]
+        ]
+      }
+    : kind==="award"
+    ? {
+        type:"تكريم",
+        category:record.type,
+        date:record.date,
+        owner:record.recipient,
+        ownerLabel:"المكرمة / الفئة",
+        sections:[
+          ["سبب التكريم",record.reason],
+          ["الأثر / القيمة المضافة",record.impact],
+          ["الجهة المانحة",record.grantor]
+        ]
+      }
+    : {
+        type:"شراكة",
+        category:record.type,
+        date:record.startDate,
+        owner:record.partner,
+        ownerLabel:"الجهة الشريكة",
+        sections:[
+          ["الهدف من الشراكة",record.goal],
+          ["وصف التنفيذ",record.description],
+          ["الأثر / النتيجة",record.impact],
+          ["تاريخ النهاية",record.endDate]
+        ]
+      };
+
+  const cover=images[0] ? `<img src="${mediaURL(images[0])}" alt="صورة الغلاف">` : `<div class="card-cover-placeholder">لا توجد صورة غلاف بعد<br><small>يمكن إضافتها من الأسفل</small></div>`;
+  const gallery=images.length ? images.map(x=>`<img src="${mediaURL(x)}" alt="${esc(x.name)}">`).join("") : `<div class="empty-inline">لا توجد صور مرفقة</div>`;
+  const docLinks=docs.length ? docs.map(x=>`<a class="file-link" href="${mediaURL(x)}" target="_blank" download="${esc(x.name)}"><span>${esc(x.name)}</span><strong>فتح / تنزيل</strong></a>`).join("") : `<div class="empty-inline">لا توجد مستندات مرفقة</div>`;
+  const external = kind==="achievement" && record.link ? `<div class="detail-section"><h3>رابط خارجي</h3><a class="file-link" href="${esc(record.link)}" target="_blank" rel="noopener"><span>${esc(record.link)}</span><strong>فتح الرابط</strong></a></div>` : "";
+
+  content.innerHTML=`
+    <div class="detail-hero">
+      <div class="detail-cover">${cover}</div>
+      <div class="detail-title">
+        <span class="badge">${esc(record.status)}</span>
+        <h2>${esc(record.title)}</h2>
+        <div class="detail-meta">
+          <span>${esc(labels.type)}</span>
+          <span>${esc(labels.category||"")}</span>
+          <span>${esc(labels.date||"")}</span>
+          <span>${esc(labels.ownerLabel)}: ${esc(labels.owner||"")}</span>
+          <span>المستفيدات: ${esc(record.beneficiaries||"—")}</span>
+        </div>
+      </div>
+    </div>
+
+    ${labels.sections.filter(x=>x[1]).map(([h,v])=>`<div class="detail-section"><h3>${esc(h)}</h3><p>${esc(v)}</p></div>`).join("")}
+
+    <div class="detail-section">
+      <h3>الصور</h3>
+      <div class="media-gallery">${gallery}</div>
+    </div>
+
+    <div class="detail-section">
+      <h3>الملفات والمستندات</h3>
+      <div class="file-list">${docLinks}</div>
+    </div>
+
+    ${external}
+
+    <div class="add-attachments">
+      <h3>إضافة مرفقات لهذا السجل</h3>
+      <div class="attachment-grid">
+        <label>إضافة صور<input id="detailImages" type="file" accept="image/*" multiple></label>
+        <label>إضافة ملفات<input id="detailDocs" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" multiple></label>
+        <button id="saveDetailAttachments" class="btn btn-primary" type="button">حفظ المرفقات</button>
+      </div>
+      <div class="attachment-status" id="detailAttachmentStatus">أول صورة محفوظة تصبح صورة الغلاف المصغرة تلقائيًا</div>
+    </div>
+  `;
+  dialog.showModal();
+
+  byId("saveDetailAttachments").addEventListener("click",async ()=>{
+    const status=byId("detailAttachmentStatus");
+    try{
+      await saveSelectedFiles(
+        parentKey(kind,id),
+        byId("detailImages").files,
+        byId("detailDocs").files
+      );
+      status.textContent="تم حفظ المرفقات بنجاح";
+      setTimeout(()=>openDetails(kind,id),350);
+    }catch(err){
+      status.textContent="تعذر حفظ المرفقات على هذا الجهاز";
+      console.error(err);
+    }
+  });
+}
+
+function setupDetailDialog(){
+  const dialog=byId("detailDialog");
+  const close=byId("detailClose");
+  if(close) close.addEventListener("click",()=>dialog.close());
+  if(dialog) dialog.addEventListener("click",e=>{
+    if(e.target===dialog) dialog.close();
+  });
+}
+
 function esc(v){
   return String(v ?? "").replace(/[&<>"']/g,c=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
@@ -331,4 +560,7 @@ function esc(v){
 function byId(id){ return document.getElementById(id); }
 
 window.addEventListener("hashchange",render);
-window.addEventListener("DOMContentLoaded",render);
+window.addEventListener("DOMContentLoaded",()=>{
+  setupDetailDialog();
+  render();
+});
