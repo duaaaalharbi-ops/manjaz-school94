@@ -785,6 +785,7 @@ async function openEditRecord(kind,id){
     for(const [k,v] of fd.entries()) patch[k]=v;
     if(Object.prototype.hasOwnProperty.call(patch,"beneficiaries")) patch.beneficiaries=patch.beneficiaries===""?"":Number(patch.beneficiaries);
     const updated={...original,...patch,id:original.id,media:Array.isArray(original.media)?original.media:[],coverUrl:original.coverUrl||"",createdAt:original.createdAt,updatedAt:new Date().toISOString()};
+    let editSucceeded=false;
     try{
       // نحفظ سحابيًا أولًا. لا نحذف أو نعيد إنشاء السجل، وبذلك تبقى المرفقات والمعرّف والبيانات السابقة محفوظة.
       if(original._cloud || /^\d+$/.test(String(original.id))){
@@ -796,16 +797,23 @@ async function openEditRecord(kind,id){
       if(i<0) throw new Error("السجل غير موجود محليًا");
       items[i]={...items[i],...updated};
       saveCollection(kind,items);
-      status.textContent="تم حفظ التعديلات بنجاح";
-      render();
-      setTimeout(()=>overlay.classList.remove("is-open"),450);
+      editSucceeded=true;
+      fields.querySelectorAll("input,select,textarea").forEach(el=>el.disabled=true);
+      saveBtn.disabled=true;
+      overlay.querySelector("#manjazEditCancel").disabled=true;
+      status.innerHTML=`<strong>تم حفظ التعديلات بنجاح</strong><br><span>اكتملت عملية الحفظ ويمكنك الآن الخروج</span><br><button type="button" id="editSuccessClose" class="btn btn-primary" style="margin-top:10px">إغلاق</button>`;
+      const doneClose=status.querySelector("#editSuccessClose");
+      if(doneClose) doneClose.addEventListener("click",()=>{ delete overlay.dataset.busy; overlay.classList.remove("is-open"); render(); });
+      return;
     }catch(err){
       console.error("تعذر حفظ التعديلات:",err);
       status.textContent="تعذر حفظ التعديلات سحابيًا. لم يتم حذف أو استبدال البيانات السابقة";
     }finally{
-      delete overlay.dataset.busy;
-      saveBtn.disabled=false;
-      saveBtn.textContent="حفظ التعديلات";
+      if(!editSucceeded){
+        delete overlay.dataset.busy;
+        saveBtn.disabled=false;
+        saveBtn.textContent="حفظ التعديلات";
+      }
     }
   };
 }
@@ -814,7 +822,7 @@ function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 9.6 • سحابي";
+  badge.textContent="الإصدار 9.7 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -1017,13 +1025,23 @@ function wireForm(){
           : "تم حفظ المنجز ورفع المرفقات وإرساله للمراجعة بنجاح";
     }
 
-    form.reset();
-    clearSelectedFiles(form);
-    isSubmitting=false;
-    delete form.dataset.busy;
-    if(submitBtn){
-      submitBtn.disabled=false;
-      submitBtn.textContent=submitBtn.dataset.originalText || "حفظ وإرسال المنجز";
+    const fullSuccess=!uploadFailed && !cloudSaveFailed;
+    if(fullSuccess){
+      form.querySelectorAll("input,select,textarea,button").forEach(el=>el.disabled=true);
+      if(msg){
+        msg.className="success";
+        msg.innerHTML=`<strong>تم إرسال المنجز بنجاح</strong><br><span>اكتملت عملية الحفظ والرفع ويمكنك الآن الخروج</span><br><button type="button" id="achievementSuccessClose" class="btn btn-primary" style="margin-top:10px">إغلاق</button>`;
+        const closeSuccess=msg.querySelector("#achievementSuccessClose");
+        if(closeSuccess){
+          closeSuccess.disabled=false;
+          closeSuccess.addEventListener("click",()=>{ form.reset(); clearSelectedFiles(form); location.hash="#achievements"; });
+        }
+      }
+      if(submitBtn) submitBtn.textContent="تم الإرسال";
+    }else{
+      isSubmitting=false;
+      delete form.dataset.busy;
+      if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent=submitBtn.dataset.originalText || "حفظ وإرسال المنجز"; }
     }
   }
 
@@ -1158,26 +1176,23 @@ function wireAwards(){
   const msg=byId("awardMsg");
   show.addEventListener("click",()=>form.style.display="block");
   cancel.addEventListener("click",()=>{form.reset();form.style.display="none";});
+  let busy=false;
   form.addEventListener("submit",async e=>{
-    e.preventDefault();
-    const fd=new FormData(form);
-    const id=(crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-    const item={
-      id,
-      title:fd.get("title"), type:fd.get("type"), grantor:fd.get("grantor"),
-      recipient:fd.get("recipient"), date:fd.get("date"),
-      beneficiaries:Number(fd.get("beneficiaries")||0),
-      reason:fd.get("reason"), impact:fd.get("impact"),
-      status:"تحت المراجعة", createdAt:new Date().toISOString()
-    };
+    e.preventDefault(); if(busy) return;
+    busy=true; form.dataset.busy="1";
+    const controls=[...form.querySelectorAll("input,select,textarea,button")]; controls.forEach(el=>el.disabled=true);
+    msg.className="success"; msg.textContent="جارٍ حفظ التكريم ورفع المرفقات...";
+    const fd=new FormData(form); const id=(crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+    const item={id,title:fd.get("title"),type:fd.get("type"),grantor:fd.get("grantor"),recipient:fd.get("recipient"),date:fd.get("date"),beneficiaries:Number(fd.get("beneficiaries")||0),reason:fd.get("reason"),impact:fd.get("impact"),status:"تحت المراجعة",createdAt:new Date().toISOString(),media:[]};
     const items=getAwards(); items.unshift(item); saveAwards(items);
     try{
-      await saveSelectedFiles(parentKey("award",id),form.elements.images?.files,form.elements.documents?.files);
-      msg.className="success"; msg.textContent="تم حفظ التكريم ورفع المرفقات إلى الموقع وإرساله للمراجعة بنجاح";
+      await saveSelectedFiles(parentKey("award",id),selectedFiles(form.elements.images),selectedFiles(form.elements.documents),(done,total)=>{msg.textContent=`جارٍ رفع المرفقات ${done} من ${total}...`;});
+      msg.innerHTML=`<strong>تم إرسال التكريم بنجاح</strong><br><span>اكتملت عملية الحفظ والرفع ويمكنك الآن الخروج</span><br><button type="button" id="awardSuccessClose" class="btn btn-primary" style="margin-top:10px">إغلاق</button>`;
+      const close=msg.querySelector("#awardSuccessClose"); close.disabled=false; close.addEventListener("click",()=>{form.reset();clearSelectedFiles(form);form.style.display="none";drawAwards();});
     }catch(err){
-      msg.className="success"; msg.textContent="تم حفظ التكريم، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
+      console.error(err); msg.className="warning"; msg.textContent="لم يكتمل حفظ جميع المرفقات. ما تم حفظه سيبقى محفوظًا ولن يُكرر";
+      busy=false; delete form.dataset.busy; controls.forEach(el=>el.disabled=false);
     }
-    form.reset(); form.style.display="none"; drawAwards();
   });
   drawAwards();
 
@@ -1209,26 +1224,23 @@ function wirePartners(){
   const msg=byId("partnerMsg");
   show.addEventListener("click",()=>form.style.display="block");
   cancel.addEventListener("click",()=>{form.reset();form.style.display="none";});
+  let busy=false;
   form.addEventListener("submit",async e=>{
-    e.preventDefault();
-    const fd=new FormData(form);
-    const id=(crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-    const item={
-      id,
-      title:fd.get("title"), partner:fd.get("partner"), type:fd.get("type"),
-      startDate:fd.get("startDate"), endDate:fd.get("endDate"),
-      beneficiaries:Number(fd.get("beneficiaries")||0),
-      goal:fd.get("goal"), description:fd.get("description"), impact:fd.get("impact"),
-      status:"تحت المراجعة", createdAt:new Date().toISOString()
-    };
+    e.preventDefault(); if(busy) return;
+    busy=true; form.dataset.busy="1";
+    const controls=[...form.querySelectorAll("input,select,textarea,button")]; controls.forEach(el=>el.disabled=true);
+    msg.className="success"; msg.textContent="جارٍ حفظ الشراكة ورفع المرفقات...";
+    const fd=new FormData(form); const id=(crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+    const item={id,title:fd.get("title"),partner:fd.get("partner"),type:fd.get("type"),startDate:fd.get("startDate"),endDate:fd.get("endDate"),beneficiaries:Number(fd.get("beneficiaries")||0),goal:fd.get("goal"),description:fd.get("description"),impact:fd.get("impact"),status:"تحت المراجعة",createdAt:new Date().toISOString(),media:[]};
     const items=getPartners(); items.unshift(item); savePartners(items);
     try{
-      await saveSelectedFiles(parentKey("partner",id),form.elements.images?.files,form.elements.documents?.files);
-      msg.className="success"; msg.textContent="تم حفظ الشراكة ورفع المرفقات إلى الموقع وإرسالها للمراجعة بنجاح";
+      await saveSelectedFiles(parentKey("partner",id),selectedFiles(form.elements.images),selectedFiles(form.elements.documents),(done,total)=>{msg.textContent=`جارٍ رفع المرفقات ${done} من ${total}...`;});
+      msg.innerHTML=`<strong>تم إرسال الشراكة بنجاح</strong><br><span>اكتملت عملية الحفظ والرفع ويمكنك الآن الخروج</span><br><button type="button" id="partnerSuccessClose" class="btn btn-primary" style="margin-top:10px">إغلاق</button>`;
+      const close=msg.querySelector("#partnerSuccessClose"); close.disabled=false; close.addEventListener("click",()=>{form.reset();clearSelectedFiles(form);form.style.display="none";drawPartners();});
     }catch(err){
-      msg.className="success"; msg.textContent="تم حفظ الشراكة، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
+      console.error(err); msg.className="warning"; msg.textContent="لم يكتمل حفظ جميع المرفقات. ما تم حفظه سيبقى محفوظًا ولن يُكرر";
+      busy=false; delete form.dataset.busy; controls.forEach(el=>el.disabled=false);
     }
-    form.reset(); form.style.display="none"; drawPartners();
   });
   drawPartners();
 
