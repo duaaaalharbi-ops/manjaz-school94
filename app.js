@@ -1,4 +1,3 @@
-
 const STORE = "manjaz_achievements_v2";
 const AWARDS_STORE = "manjaz_awards_v1";
 const PARTNERS_STORE = "manjaz_partners_v1";
@@ -13,67 +12,131 @@ function saveAwards(items){ localStorage.setItem(AWARDS_STORE, JSON.stringify(it
 function getPartners(){ try { return JSON.parse(localStorage.getItem(PARTNERS_STORE) || "[]"); } catch { return []; } }
 function savePartners(items){ localStorage.setItem(PARTNERS_STORE, JSON.stringify(items)); }
 
-const MEDIA_DB = "manjaz_media_v1";
-const MEDIA_STORE = "files";
+const SUPABASE_URL = "https://idkjuqfxcweqekdkcktk.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
+const SUPABASE_BUCKET = "manjaz-media";
 
-function openMediaDB(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(MEDIA_DB,1);
-    req.onupgradeneeded=()=>{
-      const db=req.result;
-      if(!db.objectStoreNames.contains(MEDIA_STORE)){
-        const store=db.createObjectStore(MEDIA_STORE,{keyPath:"id",autoIncrement:true});
-        store.createIndex("parentKey","parentKey",{unique:false});
-      }
-    };
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
+function safeFileName(name){
+  const ext = (name.match(/\.[A-Za-z0-9]+$/) || [""])[0];
+  const base = name.replace(/\.[A-Za-z0-9]+$/,"")
+    .replace(/[^\w\u0600-\u06FF-]+/g,"-")
+    .replace(/-+/g,"-")
+    .replace(/^-|-$/g,"")
+    .slice(0,60) || "file";
+  return `${base}${ext}`;
 }
 
-async function saveSelectedFiles(parentKey, imageFiles=[], docFiles=[]){
-  const files=[
-    ...Array.from(imageFiles||[]).map(file=>({parentKey,kind:"image",name:file.name,type:file.type||"image/*",blob:file,createdAt:new Date().toISOString()})),
-    ...Array.from(docFiles||[]).map(file=>({parentKey,kind:"document",name:file.name,type:file.type||"application/octet-stream",blob:file,createdAt:new Date().toISOString()}))
+function getCollection(kind){
+  return kind==="achievement" ? getItems() : kind==="award" ? getAwards() : getPartners();
+}
+
+function saveCollection(kind,items){
+  if(kind==="achievement") saveItems(items);
+  else if(kind==="award") saveAwards(items);
+  else savePartners(items);
+}
+
+function getKindFromParentKey(key){
+  return String(key).split(":")[0];
+}
+
+function getIdFromParentKey(key){
+  return String(key).slice(String(key).indexOf(":")+1);
+}
+
+function persistMediaRows(kind,id,newRows){
+  if(!newRows.length) return;
+  const items=getCollection(kind);
+  const item=items.find(x=>String(x.id)===String(id));
+  if(!item) return;
+
+  const existing=Array.isArray(item.media) ? item.media : [];
+  item.media=[...existing,...newRows];
+
+  if(!item.coverUrl){
+    const firstImage=item.media.find(x=>x.kind==="image");
+    if(firstImage) item.coverUrl=firstImage.url;
+  }
+
+  saveCollection(kind,items);
+}
+
+async function uploadOneFile(parentKeyValue,kind,file){
+  const recordKind=getKindFromParentKey(parentKeyValue);
+  const recordId=getIdFromParentKey(parentKeyValue);
+  const stamp=`${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  const clean=safeFileName(file.name);
+  const path=`${recordKind}/${recordId}/${stamp}-${clean}`;
+  const uploadUrl=`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${encodeURI(path)}`;
+
+  const res=await fetch(uploadUrl,{
+    method:"POST",
+    headers:{
+      "apikey":SUPABASE_PUBLISHABLE_KEY,
+      "Authorization":`Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      "Content-Type":file.type || "application/octet-stream",
+      "x-upsert":"false"
+    },
+    body:file
+  });
+
+  if(!res.ok){
+    let detail="";
+    try{ detail=await res.text(); }catch{}
+    throw new Error(`فشل رفع ${file.name}: ${res.status} ${detail}`);
+  }
+
+  return {
+    kind,
+    name:file.name,
+    type:file.type || "application/octet-stream",
+    path,
+    url:`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURI(path)}`,
+    createdAt:new Date().toISOString()
+  };
+}
+
+async function saveSelectedFiles(parentKeyValue, imageFiles=[], docFiles=[]){
+  const queue=[
+    ...Array.from(imageFiles||[]).map(file=>({kind:"image",file})),
+    ...Array.from(docFiles||[]).map(file=>({kind:"document",file}))
   ];
-  if(!files.length) return;
-  const db=await openMediaDB();
-  await new Promise((resolve,reject)=>{
-    const tx=db.transaction(MEDIA_STORE,"readwrite");
-    const store=tx.objectStore(MEDIA_STORE);
-    files.forEach(f=>store.add(f));
-    tx.oncomplete=resolve;
-    tx.onerror=()=>reject(tx.error);
-  });
-  db.close();
+  if(!queue.length) return [];
+
+  const uploaded=[];
+  for(const entry of queue){
+    uploaded.push(await uploadOneFile(parentKeyValue,entry.kind,entry.file));
+  }
+
+  const recordKind=getKindFromParentKey(parentKeyValue);
+  const recordId=getIdFromParentKey(parentKeyValue);
+  persistMediaRows(recordKind,recordId,uploaded);
+  return uploaded;
 }
 
-async function getMedia(parentKey){
-  const db=await openMediaDB();
-  const rows=await new Promise((resolve,reject)=>{
-    const tx=db.transaction(MEDIA_STORE,"readonly");
-    const idx=tx.objectStore(MEDIA_STORE).index("parentKey");
-    const req=idx.getAll(parentKey);
-    req.onsuccess=()=>resolve(req.result||[]);
-    req.onerror=()=>reject(req.error);
-  });
-  db.close();
-  return rows;
+async function getMedia(parentKeyValue){
+  const kind=getKindFromParentKey(parentKeyValue);
+  const id=getIdFromParentKey(parentKeyValue);
+  const record=getRecord(kind,id);
+  return record && Array.isArray(record.media) ? record.media : [];
 }
 
 function parentKey(kind,id){ return `${kind}:${id}`; }
-function mediaURL(row){ return URL.createObjectURL(row.blob); }
+function mediaURL(row){ return row?.url || ""; }
 
 async function hydrateCover(el,kind,id){
   if(!el) return;
   try{
+    const record=getRecord(kind,id);
+    const direct=record?.coverUrl;
     const rows=await getMedia(parentKey(kind,id));
-    const image=rows.find(r=>r.kind==="image");
+    const image=direct ? {url:direct} : rows.find(r=>r.kind==="image");
     if(image){
       el.innerHTML="";
       const img=document.createElement("img");
       img.src=mediaURL(image);
       img.alt="صورة الغلاف";
+      img.loading="lazy";
       el.appendChild(img);
     }
   }catch(err){ console.warn("media cover",err); }
@@ -101,6 +164,60 @@ function setActive(route){
     const isActive = a.dataset.mobileRoute === route;
     a.style.opacity = isActive ? "1" : ".72";
   });
+}
+
+function injectDetailsButtonStyle(){
+  if(document.getElementById("detailsButtonStyle")) return;
+  const style=document.createElement("style");
+  style.id="detailsButtonStyle";
+  style.textContent=`
+    .details-btn{
+      width:100%;
+      margin-top:14px;
+      border:1.5px solid #1f8f84;
+      background:#ffffff;
+      color:#126a62;
+      border-radius:10px;
+      padding:11px 16px;
+      font-family:inherit;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      transition:background-color .15s ease,color .15s ease,transform .08s ease,border-color .15s ease;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .details-btn:hover,
+    .details-btn:focus-visible{
+      background:#e7f5f2;
+      color:#0b514c;
+      border-color:#126a62;
+      outline:none;
+    }
+    .details-btn:active,
+    .details-btn.is-pressed{
+      background:#126a62;
+      color:#ffffff;
+      border-color:#126a62;
+      transform:scale(.985);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function createDetailsButton(kind,id){
+  const btn=document.createElement("button");
+  btn.type="button";
+  btn.className="details-btn";
+  btn.textContent="مشاهدة التفاصيل";
+  btn.addEventListener("click",e=>{
+    e.stopPropagation();
+    openDetails(kind,id);
+  });
+  btn.addEventListener("pointerdown",()=>btn.classList.add("is-pressed"));
+  ["pointerup","pointercancel","pointerleave"].forEach(evt=>{
+    btn.addEventListener(evt,()=>btn.classList.remove("is-pressed"));
+  });
+  return btn;
 }
 
 function render(){
@@ -170,7 +287,7 @@ function wireForm(){
       await saveSelectedFiles(parentKey("achievement",id),form.elements.images?.files,form.elements.documents?.files);
       form.reset();
       msg.className="success";
-      msg.textContent="تم حفظ المنجز والمرفقات وإرساله للمراجعة بنجاح";
+      msg.textContent="تم حفظ المنجز ورفع المرفقات إلى الموقع وإرساله للمراجعة بنجاح";
     }catch(err){
       msg.className="success";
       msg.textContent="تم حفظ المنجز، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
@@ -219,9 +336,8 @@ function wireAchievements(){
           <span>المستفيدات: ${esc(x.beneficiaries || "—")}</span>
         </div>
         <p>${esc(x.impact)}</p>
-        <span class="card-open">عرض التفاصيل ←</span>
       `;
-      card.addEventListener("click",()=>openDetails("achievement",x.id));
+      card.appendChild(createDetailsButton("achievement",x.id));
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"achievement",x.id);
     });
@@ -254,7 +370,7 @@ function wireAdmin(){
         <p>${esc(x._kind)} • ${esc(x.category || x.type || "")} • ${esc(x.team || x.recipient || x.partner || "")} • ${esc(x.date || x.startDate || "")}</p>
       </div>
       <div class="admin-actions">
-        <button class="small-btn view-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">عرض</button>
+        <button class="small-btn view-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">مشاهدة التفاصيل</button>
         <button class="small-btn approve" data-id="${esc(x.id)}" data-kind="${esc(x._kind)}">اعتماد</button>
       </div>
     `;
@@ -263,8 +379,10 @@ function wireAdmin(){
   });
 
   list.querySelectorAll(".view-record").forEach(btn=>{
+    btn.classList.add("details-btn");
     btn.addEventListener("click",()=>openDetails(btn.dataset.mediaKind,btn.dataset.id));
   });
+
   list.querySelectorAll(".approve").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const kind=btn.dataset.kind, id=btn.dataset.id;
@@ -298,7 +416,7 @@ function wireAwards(){
     const items=getAwards(); items.unshift(item); saveAwards(items);
     try{
       await saveSelectedFiles(parentKey("award",id),form.elements.images?.files,form.elements.documents?.files);
-      msg.className="success"; msg.textContent="تم حفظ التكريم والمرفقات وإرساله للمراجعة بنجاح";
+      msg.className="success"; msg.textContent="تم حفظ التكريم ورفع المرفقات إلى الموقع وإرساله للمراجعة بنجاح";
     }catch(err){
       msg.className="success"; msg.textContent="تم حفظ التكريم، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
     }
@@ -319,8 +437,8 @@ function wireAwards(){
       card.innerHTML=`<div class="card-cover"><div class="card-cover-placeholder">لا توجد صورة غلاف بعد</div></div>
       <span class="badge">${esc(x.status)}</span><h3>${esc(x.title)}</h3>
       <div class="meta"><span>${esc(x.type)}</span><span>${esc(x.grantor)}</span><span>${esc(x.recipient)}</span><span>${esc(x.date)}</span></div>
-      <p>${esc(x.reason)}</p><span class="card-open">عرض التفاصيل ←</span>`;
-      card.addEventListener("click",()=>openDetails("award",x.id));
+      <p>${esc(x.reason)}</p>`;
+      card.appendChild(createDetailsButton("award",x.id));
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"award",x.id);
     });
@@ -349,7 +467,7 @@ function wirePartners(){
     const items=getPartners(); items.unshift(item); savePartners(items);
     try{
       await saveSelectedFiles(parentKey("partner",id),form.elements.images?.files,form.elements.documents?.files);
-      msg.className="success"; msg.textContent="تم حفظ الشراكة والمرفقات وإرسالها للمراجعة بنجاح";
+      msg.className="success"; msg.textContent="تم حفظ الشراكة ورفع المرفقات إلى الموقع وإرسالها للمراجعة بنجاح";
     }catch(err){
       msg.className="success"; msg.textContent="تم حفظ الشراكة، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
     }
@@ -370,8 +488,8 @@ function wirePartners(){
       card.innerHTML=`<div class="card-cover"><div class="card-cover-placeholder">لا توجد صورة غلاف بعد</div></div>
       <span class="badge">${esc(x.status)}</span><h3>${esc(x.title)}</h3>
       <div class="meta"><span>${esc(x.partner)}</span><span>${esc(x.type)}</span><span>${esc(x.startDate)}</span><span>المستفيدات: ${esc(x.beneficiaries||0)}</span></div>
-      <p>${esc(x.impact)}</p><span class="card-open">عرض التفاصيل ←</span>`;
-      card.addEventListener("click",()=>openDetails("partner",x.id));
+      <p>${esc(x.impact)}</p>`;
+      card.appendChild(createDetailsButton("partner",x.id));
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"partner",x.id);
     });
@@ -427,12 +545,23 @@ function drawBars(container, rows){
   });
 }
 
-
 async function openDetails(kind,id){
   const record=getRecord(kind,id);
   if(!record) return;
+
   const dialog=byId("detailDialog");
   const content=byId("detailContent");
+  if(!dialog || !content) return;
+
+  /* نفتح النافذة أولًا حتى لا يمنع فشل المرفقات مشاهدة التفاصيل */
+  content.innerHTML=`<div class="detail-section"><h3>جارٍ تحميل التفاصيل</h3></div>`;
+  if(typeof dialog.showModal==="function"){
+    if(!dialog.open) dialog.showModal();
+  }else{
+    dialog.setAttribute("open","");
+    dialog.style.display="block";
+  }
+
   const rows=await getMedia(parentKey(kind,id));
   const images=rows.filter(r=>r.kind==="image");
   const docs=rows.filter(r=>r.kind==="document");
@@ -521,10 +650,9 @@ async function openDetails(kind,id){
         <label>إضافة ملفات<input id="detailDocs" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" multiple></label>
         <button id="saveDetailAttachments" class="btn btn-primary" type="button">حفظ المرفقات</button>
       </div>
-      <div class="attachment-status" id="detailAttachmentStatus">أول صورة محفوظة تصبح صورة الغلاف المصغرة تلقائيًا</div>
+      <div class="attachment-status" id="detailAttachmentStatus">المرفقات الجديدة تُضاف إلى السابقة، وأول صورة تصبح صورة الغلاف تلقائيًا</div>
     </div>
   `;
-  dialog.showModal();
 
   byId("saveDetailAttachments").addEventListener("click",async ()=>{
     const status=byId("detailAttachmentStatus");
@@ -534,10 +662,10 @@ async function openDetails(kind,id){
         byId("detailImages").files,
         byId("detailDocs").files
       );
-      status.textContent="تم حفظ المرفقات بنجاح";
+      status.textContent="تم رفع المرفقات وإضافتها إلى المرفقات السابقة بنجاح";
       setTimeout(()=>openDetails(kind,id),350);
     }catch(err){
-      status.textContent="تعذر حفظ المرفقات على هذا الجهاز";
+      status.textContent="تعذر رفع المرفقات إلى الموقع";
       console.error(err);
     }
   });
@@ -546,9 +674,23 @@ async function openDetails(kind,id){
 function setupDetailDialog(){
   const dialog=byId("detailDialog");
   const close=byId("detailClose");
-  if(close) close.addEventListener("click",()=>dialog.close());
+  if(close && dialog){
+    close.addEventListener("click",()=>{
+      if(typeof dialog.close==="function") dialog.close();
+      else {
+        dialog.removeAttribute("open");
+        dialog.style.display="none";
+      }
+    });
+  }
   if(dialog) dialog.addEventListener("click",e=>{
-    if(e.target===dialog) dialog.close();
+    if(e.target===dialog){
+      if(typeof dialog.close==="function") dialog.close();
+      else {
+        dialog.removeAttribute("open");
+        dialog.style.display="none";
+      }
+    }
   });
 }
 
@@ -561,6 +703,7 @@ function byId(id){ return document.getElementById(id); }
 
 window.addEventListener("hashchange",render);
 window.addEventListener("DOMContentLoaded",()=>{
+  injectDetailsButtonStyle();
   setupDetailDialog();
   render();
 });
