@@ -320,6 +320,207 @@
     </section>
   </template>
 
+
+  <template id="awardsTpl">
+    <section class="page-intro">
+      <div>
+        <span class="kicker">التكريمات والحوافز</span>
+        <h2>إدارة التكريمات</h2>
+        <p>إضافة التكريمات والشهادات والحوافز واستعراضها بصورة تراكمية</p>
+      </div>
+    </section>
+
+    <div class="section-actions">
+      <button class="btn btn-primary" id="showAwardForm">إضافة تكريم</button>
+    </div>
+
+    <form id="awardForm" class="surface form-card hidden-form">
+      <div class="form-section-title">بيانات التكريم</div>
+      <div class="form-grid">
+        <label>عنوان التكريم *
+          <input name="title" required>
+        </label>
+        <label>نوع التكريم *
+          <select name="type" required>
+            <option value="">اختاري النوع</option>
+            <option>شهادة</option>
+            <option>درع</option>
+            <option>تكريم رسمي</option>
+            <option>حافز</option>
+            <option>جائزة</option>
+            <option>أخرى</option>
+          </select>
+        </label>
+        <label>الجهة المانحة *
+          <input name="grantor" required>
+        </label>
+        <label>المكرمة / الفئة *
+          <input name="recipient" required>
+        </label>
+        <label>تاريخ التكريم *
+          <input name="date" type="date" required>
+        </label>
+        <label>عدد المستفيدات
+          <input name="beneficiaries" type="number" min="0">
+        </label>
+        <label class="wide">سبب التكريم *
+          <textarea name="reason" required></textarea>
+        </label>
+        <label class="wide">الأثر / القيمة المضافة
+          <textarea name="impact"></textarea>
+        </label>
+        <label>رفع الصور
+          <input name="images" type="file" accept="image/*" multiple>
+        </label>
+        <label>رفع شهادة أو PDF
+          <input name="documents" type="file" accept=".pdf,.doc,.docx" multiple>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">حفظ التكريم</button>
+        <button class="btn btn-ghost" type="button" id="cancelAward">إلغاء</button>
+      </div>
+      <div id="awardMsg"></div>
+    </form>
+
+    <div class="stat-grid stat-grid-3">
+      <article class="stat-card gold"><span>إجمالي التكريمات</span><b id="awTotal">0</b></article>
+      <article class="stat-card"><span>معتمد</span><b id="awApproved">0</b></article>
+      <article class="stat-card"><span>تحت المراجعة</span><b id="awReview">0</b></article>
+    </div>
+
+    <div id="awardList" class="achievement-list"></div>
+    <div id="awardEmpty" class="surface empty-state">
+      <div class="empty-mark">◇</div>
+      <h3>لا توجد تكريمات مضافة حتى الآن</h3>
+      <p>ابدئي بإضافة أول تكريم، وستظهر البيانات هنا تلقائيًا</p>
+    </div>
+  </template>
+
+  <template id="partnersTpl">
+    <section class="page-intro">
+      <div>
+        <span class="kicker">الشراكات</span>
+        <h2>إدارة الشراكات</h2>
+        <p>توثيق الشراكات والاتفاقيات والمبادرات المشتركة واستعراض أثرها</p>
+      </div>
+    </section>
+
+    <div class="section-actions">
+      <button class="btn btn-primary" id="showPartnerForm">إضافة شراكة</button>
+    </div>
+
+    <form id="partnerForm" class="surface form-card hidden-form">
+      <div class="form-section-title">بيانات الشراكة</div>
+      <div class="form-grid">
+        <label>عنوان الشراكة *
+          <input name="title" required>
+        </label>
+        <label>الجهة الشريكة *
+          <input name="partner" required>
+        </label>
+        <label>نوع الشراكة *
+          <select name="type" required>
+            <option value="">اختاري النوع</option>
+            <option>تعليمية</option>
+            <option>مجتمعية</option>
+            <option>تدريبية</option>
+            <option>تطوعية</option>
+            <option>صحية</option>
+            <option>أخرى</option>
+          </select>
+        </label>
+        <label>تاريخ البداية *
+          <input name="startDate" type="date" required>
+        </label>
+        <label>تاريخ النهاية
+          <input name="endDate" type="date">
+        </label>
+        <label>عدد المستفيدات
+          <input name="beneficiaries" type="number" min="0">
+        </label>
+        <label class="wide">الهدف من الشراكة *
+          <textarea name="goal" required></textarea>
+        </label>
+        <label class="wide">وصف التنفيذ *
+          <textarea name="description" required></textarea>
+        </label>
+        <label class="wide">الأثر / النتيجة *
+          <textarea name="impact" required></textarea>
+        </label>
+        <label>رفع الصور
+          <input name="images" type="file" accept="image/*" multiple>
+        </label>
+        <label>رفع الاتفاقية أو PDF
+          <input name="documents" type="file" accept=".pdf,.doc,.docx" multiple>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">حفظ الشراكة</button>
+        <button class="btn btn-ghost" type="button" id="cancelPartner">إلغاء</button>
+      </div>
+      <div id="partnerMsg"></div>
+    </form>
+
+    <div class="stat-grid stat-grid-3">
+      <article class="stat-card gold"><span>إجمالي الشراكات</span><b id="ptTotal">0</b></article>
+      <article class="stat-card"><span>معتمد</span><b id="ptApproved">0</b></article>
+      <article class="stat-card"><span>تحت المراجعة</span><b id="ptReview">0</b></article>
+    </div>
+
+    <div id="partnerList" class="achievement-list"></div>
+    <div id="partnerEmpty" class="surface empty-state">
+      <div class="empty-mark">◎</div>
+      <h3>لا توجد شراكات مضافة حتى الآن</h3>
+      <p>ابدئي بإضافة أول شراكة، وستظهر البيانات هنا تلقائيًا</p>
+    </div>
+  </template>
+
+  <template id="reportsTpl">
+    <section class="page-intro">
+      <div>
+        <span class="kicker">التقارير والإحصاءات</span>
+        <h2>المؤشرات التراكمية</h2>
+        <p>تتحدث تلقائيًا حسب ما يتم إضافته واعتماده داخل الموقع</p>
+      </div>
+    </section>
+
+    <div class="stat-grid stat-grid-4">
+      <article class="stat-card gold"><span>إجمالي السجلات</span><b id="rAll">0</b></article>
+      <article class="stat-card"><span>المنجزات</span><b id="rAchievements">0</b></article>
+      <article class="stat-card"><span>التكريمات</span><b id="rAwards">0</b></article>
+      <article class="stat-card"><span>الشراكات</span><b id="rPartners">0</b></article>
+    </div>
+
+    <div class="stat-grid stat-grid-4">
+      <article class="stat-card"><span>إجمالي المستفيدات</span><b id="rBeneficiaries">0</b></article>
+      <article class="stat-card"><span>معتمد</span><b id="rApproved">0</b></article>
+      <article class="stat-card"><span>تحت المراجعة</span><b id="rReview">0</b></article>
+      <article class="stat-card"><span>نسبة الاعتماد</span><b id="rRate">0%</b></article>
+    </div>
+
+    <div class="dashboard-grid">
+      <section class="surface panel">
+        <div class="panel-head"><h3>التوزيع حسب النوع</h3><span>تراكمي</span></div>
+        <div id="typeBars" class="bar-list"></div>
+      </section>
+
+      <section class="surface panel">
+        <div class="panel-head"><h3>التوزيع حسب المجال</h3><span>للمنجزات</span></div>
+        <div id="categoryBars" class="bar-list"></div>
+      </section>
+    </div>
+
+    <section class="surface panel" style="margin-top:18px">
+      <div class="panel-head"><h3>التوزيع الزمني</h3><span>حسب الشهر</span></div>
+      <div id="monthBars" class="bar-list"></div>
+    </section>
+
+    <div class="section-actions">
+      <button class="btn btn-primary" onclick="window.print()">طباعة التقرير</button>
+    </div>
+  </template>
+
   <template id="placeholderTpl">
     <section class="page-intro">
       <div>
