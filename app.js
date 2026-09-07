@@ -263,16 +263,20 @@ async function uploadOneFile(parentKeyValue,kind,file){
   const recordKind=getKindFromParentKey(parentKeyValue);
   const recordId=getIdFromParentKey(parentKeyValue);
   const stamp=`${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-  const clean=safeFileName(file.name);
-  const path=`${recordKind}/${recordId}/${stamp}-${clean}`;
-  const uploadUrl=`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${encodeURI(path)}`;
+  const originalName=file.name || "file";
+  const ext=(originalName.match(/\.[A-Za-z0-9]+$/)||[""])[0].toLowerCase();
+  /* اسم التخزين ASCII لتفادي مشاكل Safari/Supabase مع أسماء PDF العربية؛ الاسم الأصلي يبقى للعرض */
+  const storageName=`file${ext}`;
+  const path=`${recordKind}/${recordId}/${stamp}-${storageName}`;
+  const uploadUrl=`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`;
+  const contentType=ext===".pdf" ? "application/pdf" : (file.type || "application/octet-stream");
 
   const res=await fetch(uploadUrl,{
     method:"POST",
     headers:{
       "apikey":SUPABASE_PUBLISHABLE_KEY,
       "Authorization":`Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-      "Content-Type":file.type || "application/octet-stream",
+      "Content-Type":contentType,
       "x-upsert":"false"
     },
     body:file
@@ -287,9 +291,9 @@ async function uploadOneFile(parentKeyValue,kind,file){
   return {
     kind,
     name:file.name,
-    type:file.type || "application/octet-stream",
+    type:contentType,
     path,
-    url:`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURI(path)}`,
+    url:`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`,
     createdAt:new Date().toISOString()
   };
 }
@@ -301,14 +305,36 @@ async function saveSelectedFiles(parentKeyValue, imageFiles=[], docFiles=[]){
   ];
   if(!queue.length) return [];
 
-  const uploaded=[];
-  for(const entry of queue){
-    uploaded.push(await uploadOneFile(parentKeyValue,entry.kind,entry.file));
-  }
-
   const recordKind=getKindFromParentKey(parentKeyValue);
   const recordId=getIdFromParentKey(parentKeyValue);
-  persistMediaRows(recordKind,recordId,uploaded);
+  const uploaded=[];
+  const failed=[];
+
+  /* نحفظ كل ملف ناجح فورًا حتى لا تضيع روابط الملفات إذا فشل ملف لاحق */
+  for(const entry of queue){
+    try{
+      const row=await uploadOneFile(parentKeyValue,entry.kind,entry.file);
+      uploaded.push(row);
+      persistMediaRows(recordKind,recordId,[row]);
+    }catch(err){
+      failed.push({name:entry.file?.name || "ملف",error:err});
+      console.error("فشل مرفق منفرد:",err);
+    }
+  }
+
+  /* مزامنة روابط المرفقات والغلاف مع سجل Supabase */
+  const refreshed=getRecord(recordKind,recordId);
+  if(refreshed){
+    try{ await updateCloudRecord(recordKind,refreshed); }
+    catch(err){ console.error("تعذر مزامنة بيانات المرفقات سحابيًا:",err); }
+  }
+
+  if(failed.length){
+    const err=new Error(`تعذر رفع ${failed.length} من ${queue.length} مرفق`);
+    err.uploaded=uploaded;
+    err.failed=failed;
+    throw err;
+  }
   return uploaded;
 }
 
@@ -341,6 +367,28 @@ async function deleteCloudMedia(rows=[]){
       console.warn("تعذر حذف المرفق من التخزين:",path,err);
     }
   }
+}
+
+
+async function deleteOneAttachment(kind,id,path){
+  const record=getRecord(kind,id);
+  if(!record) throw new Error("السجل غير موجود");
+  const rows=Array.isArray(record.media)?record.media:[];
+  const target=rows.find(x=>x.path===path);
+  if(!target) return;
+  const ok=window.confirm(`حذف المرفق «${target.name||"ملف"}»؟`);
+  if(!ok) return;
+  await deleteCloudMedia([target]);
+  record.media=rows.filter(x=>x.path!==path);
+  if(record.coverUrl===target.url){
+    const next=record.media.find(x=>x.kind==="image");
+    record.coverUrl=next ? next.url : "";
+  }
+  const items=getCollection(kind);
+  const idx=items.findIndex(x=>String(x.id)===String(id));
+  if(idx>=0) items[idx]=record;
+  saveCollection(kind,items);
+  await updateCloudRecord(kind,record);
 }
 
 async function deleteRecord(kind,id){
@@ -521,7 +569,7 @@ function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 9.1 • سحابي";
+  badge.textContent="الإصدار 9.3 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -564,10 +612,44 @@ function render(){
   }
 }
 
+
+const selectedFileState=new WeakMap();
+function setupFileSelectionRemovers(form){
+  if(!form) return;
+  form.querySelectorAll('input[type="file"]').forEach(input=>{
+    const box=document.createElement("div");
+    box.className="selected-file-list";
+    box.style.cssText="display:grid;gap:6px;margin-top:8px";
+    input.insertAdjacentElement("afterend",box);
+    selectedFileState.set(input,[]);
+    const draw=()=>{
+      const files=selectedFileState.get(input)||[];
+      box.innerHTML=files.map((f,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #d9dee7;border-radius:8px;background:#fff"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span><button type="button" data-i="${i}" style="border:0;background:transparent;color:#a12828;font-weight:700;cursor:pointer">إزالة</button></div>`).join("");
+      box.querySelectorAll("button[data-i]").forEach(btn=>btn.addEventListener("click",()=>{
+        const arr=selectedFileState.get(input)||[];
+        arr.splice(Number(btn.dataset.i),1);
+        selectedFileState.set(input,arr);
+        draw();
+      }));
+    };
+    input.addEventListener("change",()=>{
+      const old=selectedFileState.get(input)||[];
+      const incoming=Array.from(input.files||[]);
+      selectedFileState.set(input,[...old,...incoming]);
+      input.value="";
+      draw();
+    });
+  });
+}
+function selectedFiles(input){
+  return input ? (selectedFileState.get(input) || Array.from(input.files||[])) : [];
+}
+
 function wireForm(){
   const form=byId("achievementForm");
   const msg=byId("formMsg");
   if(!form) return;
+  setupFileSelectionRemovers(form);
 
   const submitBtn=form.querySelector('button[type="submit"],input[type="submit"]');
 
@@ -639,8 +721,8 @@ function wireForm(){
     try{
       await saveSelectedFiles(
         parentKey("achievement",activeId),
-        form.elements.images?.files,
-        form.elements.documents?.files
+        selectedFiles(form.elements.images),
+        selectedFiles(form.elements.documents)
       );
       const refreshed=getItems().find(x=>String(x.id)===String(activeId));
       if(refreshed && !cloudSaveFailed) await updateCloudRecord("achievement",refreshed);
@@ -1001,9 +1083,10 @@ async function openDetails(kind,id){
         ]
       };
 
-  const cover=images[0] ? `<img src="${mediaURL(images[0])}" alt="صورة الغلاف">` : `<div class="card-cover-placeholder">لا توجد صورة غلاف بعد<br><small>يمكن إضافتها من الأسفل</small></div>`;
-  const gallery=images.length ? images.map(x=>`<img src="${mediaURL(x)}" alt="${esc(x.name)}">`).join("") : `<div class="empty-inline">لا توجد صور مرفقة</div>`;
-  const docLinks=docs.length ? docs.map(x=>`<a class="file-link" href="${mediaURL(x)}" target="_blank" download="${esc(x.name)}"><span>${esc(x.name)}</span><strong>فتح / تنزيل</strong></a>`).join("") : `<div class="empty-inline">لا توجد مستندات مرفقة</div>`;
+  const coverImage = record.coverUrl ? {url:record.coverUrl} : images[0];
+  const cover=coverImage ? `<img src="${mediaURL(coverImage)}" alt="صورة الغلاف">` : `<div class="card-cover-placeholder">لا توجد صورة غلاف بعد<br><small>يمكن إضافتها من الأسفل</small></div>`;
+  const gallery=images.length ? images.map(x=>`<div class="media-item" style="display:grid;gap:6px"><a href="${mediaURL(x)}" target="_blank" rel="noopener"><img src="${mediaURL(x)}" alt="${esc(x.name)}"></a><button type="button" class="delete-attachment" data-path="${esc(x.path||"")}" style="border:1px solid #d7dce5;background:#fff;border-radius:8px;padding:7px;color:#9b2525">حذف المرفق</button></div>`).join("") : `<div class="empty-inline">لا توجد صور مرفقة</div>`;
+  const docLinks=docs.length ? docs.map(x=>`<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center"><a class="file-link" href="${mediaURL(x)}" target="_blank" rel="noopener"><span>${esc(x.name)}</span><strong>فتح / تنزيل</strong></a><button type="button" class="delete-attachment" data-path="${esc(x.path||"")}" style="border:1px solid #d7dce5;background:#fff;border-radius:8px;padding:9px;color:#9b2525">حذف</button></div>`).join("") : `<div class="empty-inline">لا توجد مستندات مرفقة</div>`;
   const external = kind==="achievement" && record.link ? `<div class="detail-section"><h3>رابط خارجي</h3><a class="file-link" href="${esc(record.link)}" target="_blank" rel="noopener"><span>${esc(record.link)}</span><strong>فتح الرابط</strong></a></div>` : "";
 
   content.innerHTML=`
@@ -1053,6 +1136,18 @@ async function openDetails(kind,id){
     </div>
   `;
 
+  content.querySelectorAll(".delete-attachment").forEach(btn=>btn.addEventListener("click",async ()=>{
+    try{
+      await deleteOneAttachment(kind,id,btn.dataset.path);
+      await openDetails(kind,id);
+    }catch(err){
+      console.error(err);
+      alert("تعذر حذف المرفق");
+    }
+  }));
+
+  setupFileSelectionRemovers(content);
+
   const deleteCurrent=byId("deleteCurrentRecord");
   if(deleteCurrent){
     deleteCurrent.addEventListener("click",async ()=>{
@@ -1065,8 +1160,8 @@ async function openDetails(kind,id){
     try{
       await saveSelectedFiles(
         parentKey(kind,id),
-        byId("detailImages").files,
-        byId("detailDocs").files
+        selectedFiles(byId("detailImages")),
+        selectedFiles(byId("detailDocs"))
       );
       status.textContent="تم رفع المرفقات وإضافتها إلى المرفقات السابقة بنجاح";
       setTimeout(()=>openDetails(kind,id),350);
