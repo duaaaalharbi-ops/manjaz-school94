@@ -818,11 +818,63 @@ async function openEditRecord(kind,id){
   };
 }
 
+
+
+function injectTrialBanner(){
+  if(document.getElementById("manjazTrialBanner")) return;
+
+  const style=document.createElement("style");
+  style.id="manjazTrialBannerStyle";
+  style.textContent=`
+    #manjazTrialBanner{
+      position:fixed;top:0;right:0;left:0;height:36px;z-index:100000;
+      background:linear-gradient(90deg,#0b2f46,#0f5f59,#0b2f46);
+      color:#fff;overflow:hidden;display:flex;align-items:center;
+      box-shadow:0 2px 10px rgba(0,0,0,.12);direction:rtl;
+    }
+    #manjazTrialBanner .trial-track{
+      display:inline-flex;align-items:center;gap:12px;white-space:nowrap;
+      min-width:max-content;padding-inline:24px;
+      font:700 13px/1.2 system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;
+      animation:manjazTrialMove 22s linear infinite;
+    }
+    #manjazTrialBanner .trial-label{
+      display:inline-block;background:#d2aa55;color:#102f43;
+      border-radius:999px;padding:4px 10px;font-weight:800;
+    }
+    @keyframes manjazTrialMove{
+      from{transform:translateX(-12%)}
+      to{transform:translateX(100vw)}
+    }
+    @media (max-width:640px){
+      #manjazTrialBanner{height:34px}
+      #manjazTrialBanner .trial-track{font-size:11.5px;animation-duration:18s}
+    }
+    @media (prefers-reduced-motion:reduce){
+      #manjazTrialBanner .trial-track{animation:none;margin-inline:auto}
+    }
+  `;
+  document.head.appendChild(style);
+
+  const banner=document.createElement("div");
+  banner.id="manjazTrialBanner";
+  banner.setAttribute("role","status");
+  banner.setAttribute("aria-label","تنبيه الإصدار التجريبي");
+  banner.innerHTML=`<div class="trial-track"><span class="trial-label">إصدار تجريبي</span><span>نعمل باستمرار على تطوير «منجز» وتحسين تجربة الاستخدام، ونرحب بملاحظاتكم ومقترحاتكم للإسهام في تطوير النسخة القادمة</span></div>`;
+  document.body.appendChild(banner);
+
+  if(!document.body.dataset.trialBannerOffset){
+    const current=parseFloat(getComputedStyle(document.body).paddingTop)||0;
+    document.body.style.paddingTop=`${current+36}px`;
+    document.body.dataset.trialBannerOffset="1";
+  }
+}
+
 function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 9.7 • سحابي";
+  badge.textContent="الإصدار 9.8 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -1533,6 +1585,7 @@ window.addEventListener("hashchange",render);
 window.addEventListener("DOMContentLoaded",()=>{
   injectDetailsButtonStyle();
   showVersionBadge();
+  injectTrialBanner();
   setupDetailDialog();
   syncCloudAndRender();
 });
