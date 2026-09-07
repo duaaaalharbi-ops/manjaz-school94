@@ -2,6 +2,8 @@ const STORE = "manjaz_achievements_v2";
 const AWARDS_STORE = "manjaz_awards_v1";
 const PARTNERS_STORE = "manjaz_partners_v1";
 
+/* سياسة تحديث آمنة: هذه المفاتيح ثابتة ولا تُمسح عند تحديث الكود. أي إصدار جديد يقرأ البيانات الحالية ويضيف الوظائف دون إعادة تهيئة السجلات أو المرفقات. */
+
 function parseStoredArray(key){
   try{
     const value=JSON.parse(localStorage.getItem(key) || "[]");
@@ -600,6 +602,59 @@ function injectDetailsButtonStyle(){
       background:#9f2f2f;
       color:#fff;
     }
+    .record-edit-btn{
+      width:100%;
+      margin-top:8px;
+      border:1px solid #c49a46;
+      background:#fff;
+      color:#765719;
+      border-radius:10px;
+      padding:10px 14px;
+      font-family:inherit;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .record-edit-btn:hover,.record-edit-btn:focus-visible{
+      background:#fff8e8;
+      outline:none;
+    }
+    .record-edit-btn:active{
+      background:#765719;
+      color:#fff;
+    }
+    .record-actions-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:8px;
+      margin-top:14px;
+    }
+    .record-actions-grid .details-btn,.record-actions-grid .record-edit-btn,.record-actions-grid .record-delete-btn{
+      margin-top:0;
+    }
+    .manjaz-edit-overlay{
+      position:fixed;inset:0;z-index:100000;background:rgba(10,23,40,.56);
+      display:none;align-items:center;justify-content:center;padding:18px;
+    }
+    .manjaz-edit-overlay.is-open{display:flex}
+    .manjaz-edit-panel{
+      width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;
+      box-shadow:0 24px 70px rgba(0,0,0,.28);padding:20px;direction:rtl;
+    }
+    .manjaz-edit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .manjaz-edit-head h2{margin:0}
+    .manjaz-edit-close{border:0;background:#eef1f4;border-radius:10px;padding:9px 13px;font-family:inherit;cursor:pointer}
+    .manjaz-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .manjaz-edit-grid label{display:grid;gap:6px;font-weight:700;color:#263446}
+    .manjaz-edit-grid input,.manjaz-edit-grid select,.manjaz-edit-grid textarea{
+      width:100%;box-sizing:border-box;border:1px solid #cfd6df;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:15px;background:#fff
+    }
+    .manjaz-edit-grid textarea{min-height:92px;resize:vertical}
+    .manjaz-edit-wide{grid-column:1/-1}
+    .manjaz-edit-actions{display:flex;gap:10px;justify-content:flex-start;margin-top:16px}
+    .manjaz-edit-status{margin-top:12px;min-height:22px;font-weight:700}
+    @media(max-width:680px){.record-actions-grid{grid-template-columns:1fr}.manjaz-edit-grid{grid-template-columns:1fr}.manjaz-edit-wide{grid-column:auto}}
     .detail-danger-zone{
       margin-top:18px;
       padding-top:16px;
@@ -625,11 +680,141 @@ function createDetailsButton(kind,id){
   return btn;
 }
 
+
+function createEditButton(kind,id){
+  const btn=document.createElement("button");
+  btn.type="button";
+  btn.className="record-edit-btn";
+  btn.textContent="تعديل";
+  btn.addEventListener("click",e=>{
+    e.stopPropagation();
+    openEditRecord(kind,id);
+  });
+  return btn;
+}
+
+function appendRecordActions(card,kind,id){
+  const wrap=document.createElement("div");
+  wrap.className="record-actions-grid";
+  wrap.appendChild(createDetailsButton(kind,id));
+  wrap.appendChild(createEditButton(kind,id));
+  wrap.appendChild(createDeleteButton(kind,id));
+  card.appendChild(wrap);
+}
+
+function ensureEditOverlay(){
+  let overlay=document.getElementById("manjazEditOverlay");
+  if(overlay) return overlay;
+  overlay=document.createElement("div");
+  overlay.id="manjazEditOverlay";
+  overlay.className="manjaz-edit-overlay";
+  overlay.innerHTML=`<div class="manjaz-edit-panel" role="dialog" aria-modal="true" aria-labelledby="manjazEditTitle">
+    <div class="manjaz-edit-head"><h2 id="manjazEditTitle">تعديل السجل</h2><button type="button" class="manjaz-edit-close" id="manjazEditClose">إغلاق</button></div>
+    <form id="manjazEditForm"><div id="manjazEditFields" class="manjaz-edit-grid"></div>
+      <div class="manjaz-edit-actions"><button type="submit" class="btn btn-primary" id="manjazEditSave">حفظ التعديلات</button><button type="button" class="btn" id="manjazEditCancel">إلغاء</button></div>
+      <div id="manjazEditStatus" class="manjaz-edit-status"></div>
+    </form>
+  </div>`;
+  document.body.appendChild(overlay);
+  const close=()=>{ if(overlay.dataset.busy==="1") return; overlay.classList.remove("is-open"); };
+  overlay.querySelector("#manjazEditClose").addEventListener("click",close);
+  overlay.querySelector("#manjazEditCancel").addEventListener("click",close);
+  overlay.addEventListener("click",e=>{ if(e.target===overlay) close(); });
+  return overlay;
+}
+
+function editField(label,name,value,type="text",wide=false,options=null){
+  const cls=wide ? "manjaz-edit-wide" : "";
+  if(options){
+    const opts=options.map(o=>`<option value="${esc(o)}" ${String(value||"")===String(o)?"selected":""}>${esc(o)}</option>`).join("");
+    return `<label class="${cls}">${esc(label)}<select name="${esc(name)}">${opts}</select></label>`;
+  }
+  if(type==="textarea") return `<label class="${cls}">${esc(label)}<textarea name="${esc(name)}">${esc(value||"")}</textarea></label>`;
+  return `<label class="${cls}">${esc(label)}<input type="${esc(type)}" name="${esc(name)}" value="${esc(value||"")}"></label>`;
+}
+
+function editFieldsFor(kind,r){
+  const statusOptions=["تحت المراجعة","معتمد"];
+  if(kind==="achievement") return [
+    editField("اسم المنجز","title",r.title), editField("التصنيف","category",r.category),
+    editField("التاريخ","date",r.date,"date"), editField("الجهة المنفذة","entity",r.entity),
+    editField("المنفذة / الفريق","team",r.team), editField("الفئة المستهدفة","audience",r.audience),
+    editField("عدد المستفيدات","beneficiaries",r.beneficiaries,"number"), editField("نوع المنجز","type",r.type),
+    editField("الهدف","goal",r.goal,"textarea",true), editField("الوصف","description",r.description,"textarea",true),
+    editField("الأثر / النتيجة","impact",r.impact,"textarea",true), editField("الرابط الخارجي","link",r.link,"url",true),
+    editField("الحالة","status",r.status,"text",false,statusOptions)
+  ].join("");
+  if(kind==="award") return [
+    editField("اسم التكريم","title",r.title), editField("نوع التكريم","type",r.type),
+    editField("الجهة المانحة","grantor",r.grantor), editField("المكرمة / الفئة","recipient",r.recipient),
+    editField("التاريخ","date",r.date,"date"), editField("عدد المستفيدات","beneficiaries",r.beneficiaries,"number"),
+    editField("سبب التكريم","reason",r.reason,"textarea",true), editField("الأثر / القيمة المضافة","impact",r.impact,"textarea",true),
+    editField("الحالة","status",r.status,"text",false,statusOptions)
+  ].join("");
+  return [
+    editField("اسم الشراكة","title",r.title), editField("الجهة الشريكة","partner",r.partner),
+    editField("نوع الشراكة","type",r.type), editField("تاريخ البداية","startDate",r.startDate,"date"),
+    editField("تاريخ النهاية","endDate",r.endDate,"date"), editField("عدد المستفيدات","beneficiaries",r.beneficiaries,"number"),
+    editField("الهدف من الشراكة","goal",r.goal,"textarea",true), editField("وصف التنفيذ","description",r.description,"textarea",true),
+    editField("الأثر / النتيجة","impact",r.impact,"textarea",true), editField("الحالة","status",r.status,"text",false,statusOptions)
+  ].join("");
+}
+
+async function openEditRecord(kind,id){
+  const original=getRecord(kind,id);
+  if(!original){ alert("تعذر العثور على السجل"); return; }
+  const overlay=ensureEditOverlay();
+  const fields=overlay.querySelector("#manjazEditFields");
+  const form=overlay.querySelector("#manjazEditForm");
+  const status=overlay.querySelector("#manjazEditStatus");
+  const saveBtn=overlay.querySelector("#manjazEditSave");
+  overlay.querySelector("#manjazEditTitle").textContent=kind==="achievement"?"تعديل المنجز":kind==="award"?"تعديل التكريم":"تعديل الشراكة";
+  fields.innerHTML=editFieldsFor(kind,original);
+  status.textContent="";
+  overlay.classList.add("is-open");
+
+  form.onsubmit=async e=>{
+    e.preventDefault();
+    if(overlay.dataset.busy==="1") return;
+    overlay.dataset.busy="1";
+    saveBtn.disabled=true;
+    saveBtn.textContent="جارٍ حفظ التعديلات...";
+    status.textContent="جارٍ حفظ التعديلات دون المساس بالمرفقات أو البيانات السابقة";
+    const fd=new FormData(form);
+    const patch={};
+    for(const [k,v] of fd.entries()) patch[k]=v;
+    if(Object.prototype.hasOwnProperty.call(patch,"beneficiaries")) patch.beneficiaries=patch.beneficiaries===""?"":Number(patch.beneficiaries);
+    const updated={...original,...patch,id:original.id,media:Array.isArray(original.media)?original.media:[],coverUrl:original.coverUrl||"",createdAt:original.createdAt,updatedAt:new Date().toISOString()};
+    try{
+      // نحفظ سحابيًا أولًا. لا نحذف أو نعيد إنشاء السجل، وبذلك تبقى المرفقات والمعرّف والبيانات السابقة محفوظة.
+      if(original._cloud || /^\d+$/.test(String(original.id))){
+        const cloudUpdated=await updateCloudRecord(kind,updated);
+        Object.assign(updated,cloudUpdated||{});
+      }
+      const items=getCollection(kind);
+      const i=items.findIndex(x=>String(x.id)===String(id));
+      if(i<0) throw new Error("السجل غير موجود محليًا");
+      items[i]={...items[i],...updated};
+      saveCollection(kind,items);
+      status.textContent="تم حفظ التعديلات بنجاح";
+      render();
+      setTimeout(()=>overlay.classList.remove("is-open"),450);
+    }catch(err){
+      console.error("تعذر حفظ التعديلات:",err);
+      status.textContent="تعذر حفظ التعديلات سحابيًا. لم يتم حذف أو استبدال البيانات السابقة";
+    }finally{
+      delete overlay.dataset.busy;
+      saveBtn.disabled=false;
+      saveBtn.textContent="حفظ التعديلات";
+    }
+  };
+}
+
 function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 9.4 • سحابي";
+  badge.textContent="الإصدار 9.6 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -892,8 +1077,7 @@ function wireAchievements(){
         </div>
         <p>${esc(x.impact)}</p>
       `;
-      card.appendChild(createDetailsButton("achievement",x.id));
-      card.appendChild(createDeleteButton("achievement",x.id));
+      appendRecordActions(card,"achievement",x.id);
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"achievement",x.id);
     });
@@ -927,6 +1111,7 @@ function wireAdmin(){
       </div>
       <div class="admin-actions">
         <button class="small-btn view-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">مشاهدة التفاصيل</button>
+        <button class="small-btn edit-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">تعديل</button>
         <button class="small-btn approve" data-id="${esc(x.id)}" data-kind="${esc(x._kind)}">اعتماد</button>
         <button class="small-btn admin-delete-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">حذف</button>
       </div>
@@ -938,6 +1123,10 @@ function wireAdmin(){
   list.querySelectorAll(".view-record").forEach(btn=>{
     btn.classList.add("details-btn");
     btn.addEventListener("click",()=>openDetails(btn.dataset.mediaKind,btn.dataset.id));
+  });
+
+  list.querySelectorAll(".edit-record").forEach(btn=>{
+    btn.addEventListener("click",()=>openEditRecord(btn.dataset.mediaKind,btn.dataset.id));
   });
 
   list.querySelectorAll(".admin-delete-record").forEach(btn=>{
@@ -1006,8 +1195,7 @@ function wireAwards(){
       <span class="badge">${esc(x.status)}</span><h3>${esc(x.title)}</h3>
       <div class="meta"><span>${esc(x.type)}</span><span>${esc(x.grantor)}</span><span>${esc(x.recipient)}</span><span>${esc(x.date)}</span></div>
       <p>${esc(x.reason)}</p>`;
-      card.appendChild(createDetailsButton("award",x.id));
-      card.appendChild(createDeleteButton("award",x.id));
+      appendRecordActions(card,"award",x.id);
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"award",x.id);
     });
@@ -1058,8 +1246,7 @@ function wirePartners(){
       <span class="badge">${esc(x.status)}</span><h3>${esc(x.title)}</h3>
       <div class="meta"><span>${esc(x.partner)}</span><span>${esc(x.type)}</span><span>${esc(x.startDate)}</span><span>المستفيدات: ${esc(x.beneficiaries||0)}</span></div>
       <p>${esc(x.impact)}</p>`;
-      card.appendChild(createDetailsButton("partner",x.id));
-      card.appendChild(createDeleteButton("partner",x.id));
+      appendRecordActions(card,"partner",x.id);
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"partner",x.id);
     });
@@ -1114,6 +1301,8 @@ function drawBars(container, rows){
     container.appendChild(row);
   });
 }
+
+let detailUploadBusy=false;
 
 async function openDetails(kind,id){
   const record=getRecord(kind,id);
@@ -1224,11 +1413,6 @@ async function openDetails(kind,id){
       <div class="attachment-status" id="detailAttachmentStatus">المرفقات الجديدة تُضاف إلى السابقة، وأول صورة تصبح صورة الغلاف تلقائيًا</div>
     </div>
 
-    <div class="detail-danger-zone">
-      <button id="deleteCurrentRecord" class="record-delete-btn" type="button">${
-        kind==="achievement" ? "حذف المنجز" : kind==="award" ? "حذف التكريم" : "حذف الشراكة"
-      }</button>
-    </div>
   `;
 
   content.querySelectorAll(".delete-attachment").forEach(btn=>btn.addEventListener("click",async ()=>{
@@ -1243,17 +1427,10 @@ async function openDetails(kind,id){
 
   setupFileSelectionRemovers(content);
 
-  const deleteCurrent=byId("deleteCurrentRecord");
-  if(deleteCurrent){
-    deleteCurrent.addEventListener("click",async ()=>{
-      await deleteRecord(kind,id);
-    });
-  }
 
   const detailSaveBtn=byId("saveDetailAttachments");
-  let detailBusy=false;
   detailSaveBtn.addEventListener("click",async ()=>{
-    if(detailBusy) return;
+    if(detailUploadBusy) return;
     const status=byId("detailAttachmentStatus");
     const imageInput=byId("detailImages"), docInput=byId("detailDocs");
     const images=selectedFiles(imageInput), docs=selectedFiles(docInput);
@@ -1261,25 +1438,46 @@ async function openDetails(kind,id){
       status.textContent="اختاري صورة أو ملفًا أولًا";
       return;
     }
-    detailBusy=true;
-    detailSaveBtn.disabled=true;
-    const oldText=detailSaveBtn.textContent;
-    detailSaveBtn.textContent="جارٍ الرفع...";
+
+    detailUploadBusy=true;
+    const dialog=byId("detailDialog"), closeBtn=byId("detailClose");
+    const controls=[...content.querySelectorAll("input, button")];
+    controls.forEach(el=>el.disabled=true);
+    if(closeBtn) closeBtn.disabled=true;
+    if(dialog) dialog.setAttribute("data-upload-busy","true");
+    detailSaveBtn.textContent="جارٍ الحفظ...";
+    status.innerHTML="<strong>جارٍ حفظ المرفقات...</strong><br>يرجى عدم إغلاق النافذة حتى يكتمل الحفظ";
+
+    let succeeded=false;
     try{
       await saveSelectedFiles(
         parentKey(kind,id), images, docs,
-        (done,total)=>{ status.textContent=done<total ? `جارٍ رفع المرفقات ${done} من ${total}...` : "اكتمل الرفع، جارٍ حفظ البيانات..."; }
+        (done,total)=>{
+          status.innerHTML=`<strong>جارٍ حفظ المرفقات...</strong><br>تم رفع ${done} من ${total}`;
+        }
       );
       clearSelectedFiles(content);
-      status.textContent="تم رفع المرفقات وإضافتها إلى المرفقات السابقة بنجاح";
-      setTimeout(()=>openDetails(kind,id),250);
+      succeeded=true;
+      status.innerHTML=`<div style="padding:12px;border:1px solid #b9d8c2;border-radius:10px"><strong>تم حفظ المرفقات بنجاح</strong><br><span>اكتملت عملية الرفع والحفظ ويمكنك الآن الخروج</span><br><button type="button" id="attachmentSuccessClose" class="btn btn-primary" style="margin-top:10px">إغلاق</button></div>`;
     }catch(err){
-      status.textContent="تعذر رفع بعض المرفقات. الملفات التي نجح رفعها محفوظة ولن تُرفع مرة أخرى";
+      status.innerHTML="<strong>لم يكتمل حفظ جميع المرفقات</strong><br>الملفات التي نجح رفعها محفوظة ولن تُرفع مرة أخرى. يمكنك إعادة المحاولة للملفات المتبقية";
       console.error(err);
     }finally{
-      detailBusy=false;
-      detailSaveBtn.disabled=false;
-      detailSaveBtn.textContent=oldText;
+      detailUploadBusy=false;
+      if(dialog) dialog.removeAttribute("data-upload-busy");
+      controls.forEach(el=>el.disabled=false);
+      if(closeBtn) closeBtn.disabled=false;
+      detailSaveBtn.textContent="حفظ المرفقات";
+      if(succeeded){
+        // بعد النجاح يبقى زر الحفظ معطلًا، والخروج يتم فقط من زر «إغلاق» داخل رسالة النجاح
+        detailSaveBtn.disabled=true;
+        const successClose=byId("attachmentSuccessClose");
+        if(successClose) successClose.addEventListener("click",()=>{
+          if(typeof dialog?.close==="function") dialog.close();
+          else if(dialog){ dialog.removeAttribute("open"); dialog.style.display="none"; }
+          renderAchievements(); renderAdmin();
+        });
+      }
     }
   });
 }
@@ -1289,6 +1487,7 @@ function setupDetailDialog(){
   const close=byId("detailClose");
   if(close && dialog){
     close.addEventListener("click",()=>{
+      if(detailUploadBusy) return;
       if(typeof dialog.close==="function") dialog.close();
       else {
         dialog.removeAttribute("open");
@@ -1298,12 +1497,16 @@ function setupDetailDialog(){
   }
   if(dialog) dialog.addEventListener("click",e=>{
     if(e.target===dialog){
+      if(detailUploadBusy) return;
       if(typeof dialog.close==="function") dialog.close();
       else {
         dialog.removeAttribute("open");
         dialog.style.display="none";
       }
     }
+  });
+  if(dialog) dialog.addEventListener("cancel",e=>{
+    if(detailUploadBusy) e.preventDefault();
   });
 }
 
