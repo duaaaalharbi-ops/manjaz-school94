@@ -242,6 +242,10 @@ function getIdFromParentKey(key){
   return String(key).slice(String(key).indexOf(":")+1);
 }
 
+function fileFingerprint(file,kind=""){
+  return [kind,file?.name||"",Number(file?.size||0),Number(file?.lastModified||0),file?.type||""].join("|");
+}
+
 function persistMediaRows(kind,id,newRows){
   if(!newRows.length) return;
   const items=getCollection(kind);
@@ -249,7 +253,14 @@ function persistMediaRows(kind,id,newRows){
   if(!item) return;
 
   const existing=Array.isArray(item.media) ? item.media : [];
-  item.media=[...existing,...newRows];
+  const seen=new Set(existing.map(x=>x.clientKey || `${x.path||""}|${x.url||""}`));
+  const unique=newRows.filter(row=>{
+    const k=row.clientKey || `${row.path||""}|${row.url||""}`;
+    if(seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  item.media=[...existing,...unique];
 
   if(!item.coverUrl){
     const firstImage=item.media.find(x=>x.kind==="image");
@@ -265,22 +276,32 @@ async function uploadOneFile(parentKeyValue,kind,file){
   const stamp=`${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
   const originalName=file.name || "file";
   const ext=(originalName.match(/\.[A-Za-z0-9]+$/)||[""])[0].toLowerCase();
-  /* اسم التخزين ASCII لتفادي مشاكل Safari/Supabase مع أسماء PDF العربية؛ الاسم الأصلي يبقى للعرض */
   const storageName=`file${ext}`;
   const path=`${recordKind}/${recordId}/${stamp}-${storageName}`;
   const uploadUrl=`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`;
   const contentType=ext===".pdf" ? "application/pdf" : (file.type || "application/octet-stream");
 
-  const res=await fetch(uploadUrl,{
-    method:"POST",
-    headers:{
-      "apikey":SUPABASE_PUBLISHABLE_KEY,
-      "Authorization":`Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-      "Content-Type":contentType,
-      "x-upsert":"false"
-    },
-    body:file
-  });
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),120000);
+  let res;
+  try{
+    res=await fetch(uploadUrl,{
+      method:"POST",
+      headers:{
+        "apikey":SUPABASE_PUBLISHABLE_KEY,
+        "Authorization":`Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+        "Content-Type":contentType,
+        "x-upsert":"false"
+      },
+      body:file,
+      signal:controller.signal
+    });
+  }catch(err){
+    if(err?.name==="AbortError") throw new Error(`انتهت مهلة رفع ${file.name}`);
+    throw err;
+  }finally{
+    clearTimeout(timeout);
+  }
 
   if(!res.ok){
     let detail="";
@@ -292,50 +313,89 @@ async function uploadOneFile(parentKeyValue,kind,file){
     kind,
     name:file.name,
     type:contentType,
+    size:Number(file.size||0),
+    lastModified:Number(file.lastModified||0),
+    clientKey:fileFingerprint(file,kind),
     path,
     url:`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`,
     createdAt:new Date().toISOString()
   };
 }
 
-async function saveSelectedFiles(parentKeyValue, imageFiles=[], docFiles=[]){
-  const queue=[
+const activeUploadLocks=new Set();
+async function saveSelectedFiles(parentKeyValue, imageFiles=[], docFiles=[], onProgress=null){
+  const rawQueue=[
     ...Array.from(imageFiles||[]).map(file=>({kind:"image",file})),
     ...Array.from(docFiles||[]).map(file=>({kind:"document",file}))
   ];
-  if(!queue.length) return [];
+  if(!rawQueue.length) return [];
+
+  /* منع تكرار نفس الملف داخل عملية الرفع نفسها */
+  const localSeen=new Set();
+  let queue=rawQueue.filter(entry=>{
+    const key=fileFingerprint(entry.file,entry.kind);
+    if(localSeen.has(key)) return false;
+    localSeen.add(key);
+    return true;
+  });
 
   const recordKind=getKindFromParentKey(parentKeyValue);
   const recordId=getIdFromParentKey(parentKeyValue);
+  const current=getRecord(recordKind,recordId);
+  const already=new Set((current?.media||[]).map(x=>x.clientKey).filter(Boolean));
+  queue=queue.filter(entry=>!already.has(fileFingerprint(entry.file,entry.kind)));
+  if(!queue.length) return [];
+
+  const lockKey=`${recordKind}:${recordId}`;
+  if(activeUploadLocks.has(lockKey)) throw new Error("عملية رفع أخرى ما زالت جارية لهذا السجل");
+  activeUploadLocks.add(lockKey);
+
   const uploaded=[];
   const failed=[];
+  let completed=0;
+  const total=queue.length;
+  const report=()=>{ if(typeof onProgress==="function") onProgress(completed,total); };
+  report();
 
-  /* نحفظ كل ملف ناجح فورًا حتى لا تضيع روابط الملفات إذا فشل ملف لاحق */
-  for(const entry of queue){
-    try{
-      const row=await uploadOneFile(parentKeyValue,entry.kind,entry.file);
-      uploaded.push(row);
-      persistMediaRows(recordKind,recordId,[row]);
-    }catch(err){
-      failed.push({name:entry.file?.name || "ملف",error:err});
-      console.error("فشل مرفق منفرد:",err);
+  try{
+    /* عاملان متوازيان: أسرع من التسلسل مع تجنب ضغط كبير على Safari */
+    let cursor=0;
+    async function worker(){
+      while(true){
+        const index=cursor++;
+        if(index>=queue.length) return;
+        const entry=queue[index];
+        try{
+          const row=await uploadOneFile(parentKeyValue,entry.kind,entry.file);
+          uploaded.push(row);
+          persistMediaRows(recordKind,recordId,[row]);
+        }catch(err){
+          failed.push({name:entry.file?.name || "ملف",error:err});
+          console.error("فشل مرفق منفرد:",err);
+        }finally{
+          completed++;
+          report();
+        }
+      }
     }
-  }
+    await Promise.all([worker(),worker()]);
 
-  /* مزامنة روابط المرفقات والغلاف مع سجل Supabase */
-  const refreshed=getRecord(recordKind,recordId);
-  if(refreshed){
-    try{ await updateCloudRecord(recordKind,refreshed); }
-    catch(err){ console.error("تعذر مزامنة بيانات المرفقات سحابيًا:",err); }
-  }
+    const refreshed=getRecord(recordKind,recordId);
+    if(refreshed){
+      try{ await updateCloudRecord(recordKind,refreshed); }
+      catch(err){ console.error("تعذر مزامنة بيانات المرفقات سحابيًا:",err); }
+    }
 
-  if(failed.length){
-    const err=new Error(`تعذر رفع ${failed.length} من ${queue.length} مرفق`);
-    err.uploaded=uploaded;
-    err.failed=failed;
-    throw err;
+    if(failed.length){
+      const err=new Error(`تعذر رفع ${failed.length} من ${queue.length} مرفق`);
+      err.uploaded=uploaded;
+      err.failed=failed;
+      throw err;
+    }
+    return uploaded;
+  }finally{
+    activeUploadLocks.delete(lockKey);
   }
-  return uploaded;
 }
 
 async function getMedia(parentKeyValue){
@@ -569,7 +629,7 @@ function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 9.3 • سحابي";
+  badge.textContent="الإصدار 9.4 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -614,35 +674,57 @@ function render(){
 
 
 const selectedFileState=new WeakMap();
-function setupFileSelectionRemovers(form){
-  if(!form) return;
-  form.querySelectorAll('input[type="file"]').forEach(input=>{
+function setupFileSelectionRemovers(root){
+  if(!root) return;
+  root.querySelectorAll('input[type="file"]').forEach(input=>{
+    if(input.dataset.manjazFileReady==="1") return;
+    input.dataset.manjazFileReady="1";
     const box=document.createElement("div");
     box.className="selected-file-list";
     box.style.cssText="display:grid;gap:6px;margin-top:8px";
     input.insertAdjacentElement("afterend",box);
     selectedFileState.set(input,[]);
+
     const draw=()=>{
       const files=selectedFileState.get(input)||[];
       box.innerHTML=files.map((f,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #d9dee7;border-radius:8px;background:#fff"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span><button type="button" data-i="${i}" style="border:0;background:transparent;color:#a12828;font-weight:700;cursor:pointer">إزالة</button></div>`).join("");
       box.querySelectorAll("button[data-i]").forEach(btn=>btn.addEventListener("click",()=>{
-        const arr=selectedFileState.get(input)||[];
+        const arr=[...(selectedFileState.get(input)||[])];
         arr.splice(Number(btn.dataset.i),1);
         selectedFileState.set(input,arr);
         draw();
       }));
     };
+
     input.addEventListener("change",()=>{
       const old=selectedFileState.get(input)||[];
       const incoming=Array.from(input.files||[]);
-      selectedFileState.set(input,[...old,...incoming]);
+      const merged=[];
+      const seen=new Set();
+      [...old,...incoming].forEach(f=>{
+        const key=fileFingerprint(f);
+        if(seen.has(key)) return;
+        seen.add(key);
+        merged.push(f);
+      });
+      selectedFileState.set(input,merged);
+      /* تفريغ عنصر الإدخال يمنع Safari من الاحتفاظ بملفات حُذفت من القائمة */
       input.value="";
       draw();
     });
+    input._manjazRedraw=draw;
   });
 }
 function selectedFiles(input){
-  return input ? (selectedFileState.get(input) || Array.from(input.files||[])) : [];
+  return input ? [...(selectedFileState.get(input) || [])] : [];
+}
+function clearSelectedFiles(root){
+  if(!root) return;
+  root.querySelectorAll('input[type="file"]').forEach(input=>{
+    selectedFileState.set(input,[]);
+    try{ input.value=""; }catch{}
+    if(typeof input._manjazRedraw==="function") input._manjazRedraw();
+  });
 }
 
 function wireForm(){
@@ -652,9 +734,11 @@ function wireForm(){
   setupFileSelectionRemovers(form);
 
   const submitBtn=form.querySelector('button[type="submit"],input[type="submit"]');
+  let isSubmitting=false;
 
   async function submitAchievement(e){
     if(e) e.preventDefault();
+    if(isSubmitting) return;
 
     if(!form.checkValidity()){
       form.reportValidity();
@@ -665,6 +749,8 @@ function wireForm(){
       return;
     }
 
+    isSubmitting=true;
+    form.dataset.busy="1";
     if(submitBtn){
       submitBtn.disabled=true;
       submitBtn.dataset.originalText=submitBtn.textContent;
@@ -722,7 +808,13 @@ function wireForm(){
       await saveSelectedFiles(
         parentKey("achievement",activeId),
         selectedFiles(form.elements.images),
-        selectedFiles(form.elements.documents)
+        selectedFiles(form.elements.documents),
+        (done,total)=>{
+          if(msg && total){
+            msg.className="success";
+            msg.textContent=done<total ? `جارٍ رفع المرفقات ${done} من ${total}...` : "اكتمل رفع المرفقات، جارٍ إنهاء الحفظ...";
+          }
+        }
       );
       const refreshed=getItems().find(x=>String(x.id)===String(activeId));
       if(refreshed && !cloudSaveFailed) await updateCloudRecord("achievement",refreshed);
@@ -741,6 +833,9 @@ function wireForm(){
     }
 
     form.reset();
+    clearSelectedFiles(form);
+    isSubmitting=false;
+    delete form.dataset.busy;
     if(submitBtn){
       submitBtn.disabled=false;
       submitBtn.textContent=submitBtn.dataset.originalText || "حفظ وإرسال المنجز";
@@ -1155,19 +1250,36 @@ async function openDetails(kind,id){
     });
   }
 
-  byId("saveDetailAttachments").addEventListener("click",async ()=>{
+  const detailSaveBtn=byId("saveDetailAttachments");
+  let detailBusy=false;
+  detailSaveBtn.addEventListener("click",async ()=>{
+    if(detailBusy) return;
     const status=byId("detailAttachmentStatus");
+    const imageInput=byId("detailImages"), docInput=byId("detailDocs");
+    const images=selectedFiles(imageInput), docs=selectedFiles(docInput);
+    if(!images.length && !docs.length){
+      status.textContent="اختاري صورة أو ملفًا أولًا";
+      return;
+    }
+    detailBusy=true;
+    detailSaveBtn.disabled=true;
+    const oldText=detailSaveBtn.textContent;
+    detailSaveBtn.textContent="جارٍ الرفع...";
     try{
       await saveSelectedFiles(
-        parentKey(kind,id),
-        selectedFiles(byId("detailImages")),
-        selectedFiles(byId("detailDocs"))
+        parentKey(kind,id), images, docs,
+        (done,total)=>{ status.textContent=done<total ? `جارٍ رفع المرفقات ${done} من ${total}...` : "اكتمل الرفع، جارٍ حفظ البيانات..."; }
       );
+      clearSelectedFiles(content);
       status.textContent="تم رفع المرفقات وإضافتها إلى المرفقات السابقة بنجاح";
-      setTimeout(()=>openDetails(kind,id),350);
+      setTimeout(()=>openDetails(kind,id),250);
     }catch(err){
-      status.textContent="تعذر رفع المرفقات إلى الموقع";
+      status.textContent="تعذر رفع بعض المرفقات. الملفات التي نجح رفعها محفوظة ولن تُرفع مرة أخرى";
       console.error(err);
+    }finally{
+      detailBusy=false;
+      detailSaveBtn.disabled=false;
+      detailSaveBtn.textContent=oldText;
     }
   });
 }
