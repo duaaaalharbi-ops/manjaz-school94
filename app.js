@@ -2,9 +2,44 @@ const STORE = "manjaz_achievements_v2";
 const AWARDS_STORE = "manjaz_awards_v1";
 const PARTNERS_STORE = "manjaz_partners_v1";
 
+function parseStoredArray(key){
+  try{
+    const value=JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(value) ? value : [];
+  }catch{ return []; }
+}
+
+function normalizeStatus(value){
+  const s=String(value||"");
+  if(s==="معتمد" || s.includes("Ù…Ø¹ØªÙ…Ø¯")) return "معتمد";
+  if(s==="تحت المراجعة" || s.includes("ØªØ­Øª Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©")) return "تحت المراجعة";
+  return s || "تحت المراجعة";
+}
+
+function mergeUniqueRecords(groups){
+  const map=new Map();
+  groups.flat().forEach((x,index)=>{
+    if(!x || typeof x!=="object") return;
+    const key=String(x.id || `${x.title||""}|${x.date||x.startDate||""}|${index}`);
+    const previous=map.get(key) || {};
+    map.set(key,{...previous,...x,status:normalizeStatus(x.status)});
+  });
+  return Array.from(map.values()).sort((a,b)=>
+    String(b.createdAt||b.date||b.startDate||"").localeCompare(String(a.createdAt||a.date||a.startDate||""))
+  );
+}
+
 function getItems(){
-  try { return JSON.parse(localStorage.getItem(STORE) || "[]"); }
-  catch { return []; }
+  const groups=[parseStoredArray(STORE)];
+  /* استرجاع نسخ المنجزات المحلية الأقدم إن وُجدت، دون حذف النسخة الحالية */
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i)||"";
+    if(key!==STORE && /^manjaz_achievements/i.test(key)) groups.push(parseStoredArray(key));
+  }
+  const items=mergeUniqueRecords(groups);
+  /* ترحيل آمن إلى المفتاح الحالي */
+  try{ localStorage.setItem(STORE,JSON.stringify(items)); }catch{}
+  return items;
 }
 function saveItems(items){ localStorage.setItem(STORE, JSON.stringify(items)); }
 function getAwards(){ try { return JSON.parse(localStorage.getItem(AWARDS_STORE) || "[]"); } catch { return []; } }
@@ -124,6 +159,69 @@ async function getMedia(parentKeyValue){
 function parentKey(kind,id){ return `${kind}:${id}`; }
 function mediaURL(row){ return row?.url || ""; }
 
+
+async function deleteCloudMedia(rows=[]){
+  /* حذف ملفات Supabase يحتاج سياسة DELETE؛ إذا لم تكن مفعلة لا نمنع حذف السجل */
+  const paths=rows.map(x=>x?.path).filter(Boolean);
+  for(const path of paths){
+    try{
+      const url=`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${encodeURI(path)}`;
+      const res=await fetch(url,{
+        method:"DELETE",
+        headers:{
+          "apikey":SUPABASE_PUBLISHABLE_KEY,
+          "Authorization":`Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+        }
+      });
+      if(!res.ok) console.warn("تعذر حذف المرفق من التخزين:",path,res.status);
+    }catch(err){
+      console.warn("تعذر حذف المرفق من التخزين:",path,err);
+    }
+  }
+}
+
+async function deleteRecord(kind,id){
+  const record=getRecord(kind,id);
+  if(!record) return false;
+
+  const typeLabel=kind==="achievement" ? "المنجز" : kind==="award" ? "التكريم" : "الشراكة";
+  const ok=window.confirm(`هل أنتِ متأكدة من حذف ${typeLabel} «${record.title || ""}»؟\n\nلا يمكن التراجع عن حذف السجل`);
+  if(!ok) return false;
+
+  const rows=Array.isArray(record.media) ? record.media : [];
+  const items=getCollection(kind).filter(x=>String(x.id)!==String(id));
+  saveCollection(kind,items);
+
+  /* محاولة تنظيف المرفقات من Supabase دون تعطيل حذف السجل */
+  deleteCloudMedia(rows);
+
+  const dialog=byId("detailDialog");
+  if(dialog){
+    try{
+      if(typeof dialog.close==="function" && dialog.open) dialog.close();
+      else{
+        dialog.removeAttribute("open");
+        dialog.style.display="none";
+      }
+    }catch{}
+  }
+
+  render();
+  return true;
+}
+
+function createDeleteButton(kind,id){
+  const btn=document.createElement("button");
+  btn.type="button";
+  btn.className="record-delete-btn";
+  btn.textContent=kind==="achievement" ? "حذف المنجز" : kind==="award" ? "حذف التكريم" : "حذف الشراكة";
+  btn.addEventListener("click",async e=>{
+    e.stopPropagation();
+    await deleteRecord(kind,id);
+  });
+  return btn;
+}
+
 async function hydrateCover(el,kind,id){
   if(!el) return;
   try{
@@ -200,6 +298,33 @@ function injectDetailsButtonStyle(){
       border-color:#126a62;
       transform:scale(.985);
     }
+    .record-delete-btn{
+      width:100%;
+      margin-top:8px;
+      border:1px solid #b23a3a;
+      background:#fff;
+      color:#9f2f2f;
+      border-radius:10px;
+      padding:10px 14px;
+      font-family:inherit;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .record-delete-btn:hover,.record-delete-btn:focus-visible{
+      background:#fff1f1;
+      outline:none;
+    }
+    .record-delete-btn:active{
+      background:#9f2f2f;
+      color:#fff;
+    }
+    .detail-danger-zone{
+      margin-top:18px;
+      padding-top:16px;
+      border-top:1px solid rgba(159,47,47,.18);
+    }
   `;
   document.head.appendChild(style);
 }
@@ -218,6 +343,15 @@ function createDetailsButton(kind,id){
     btn.addEventListener(evt,()=>btn.classList.remove("is-pressed"));
   });
   return btn;
+}
+
+function showVersionBadge(){
+  if(document.getElementById("manjazVersionBadge")) return;
+  const badge=document.createElement("div");
+  badge.id="manjazVersionBadge";
+  badge.textContent="الإصدار 8.1";
+  badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
+  document.body.appendChild(badge);
 }
 
 function render(){
@@ -261,8 +395,28 @@ function render(){
 function wireForm(){
   const form=byId("achievementForm");
   const msg=byId("formMsg");
-  form.addEventListener("submit",async e=>{
-    e.preventDefault();
+  if(!form) return;
+
+  const submitBtn=form.querySelector('button[type="submit"],input[type="submit"]');
+
+  async function submitAchievement(e){
+    if(e) e.preventDefault();
+
+    if(!form.checkValidity()){
+      form.reportValidity();
+      if(msg){
+        msg.className="error";
+        msg.textContent="أكملي الحقول المطلوبة ثم اضغطي حفظ وإرسال المنجز";
+      }
+      return;
+    }
+
+    if(submitBtn){
+      submitBtn.disabled=true;
+      submitBtn.dataset.originalText=submitBtn.textContent;
+      submitBtn.textContent="جارٍ حفظ المنجز...";
+    }
+
     const fd=new FormData(form);
     const id=(crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
     const item={
@@ -280,22 +434,55 @@ function wireForm(){
       impact:fd.get("impact"),
       link:fd.get("link"),
       status:"تحت المراجعة",
-      createdAt:new Date().toISOString()
+      createdAt:new Date().toISOString(),
+      media:[]
     };
-    const items=getItems(); items.unshift(item); saveItems(items);
-    try{
-      await saveSelectedFiles(parentKey("achievement",id),form.elements.images?.files,form.elements.documents?.files);
-      form.reset();
-      msg.className="success";
-      msg.textContent="تم حفظ المنجز ورفع المرفقات إلى الموقع وإرساله للمراجعة بنجاح";
-    }catch(err){
-      msg.className="success";
-      msg.textContent="تم حفظ المنجز، لكن تعذر حفظ بعض المرفقات على هذا الجهاز";
-      console.error(err);
-    }
-  });
-}
 
+    /* نحفظ بيانات المنجز أولًا دائمًا */
+    const items=getItems();
+    items.unshift(item);
+    saveItems(mergeUniqueRecords([items]));
+
+    if(msg){
+      msg.className="success";
+      msg.textContent="تم حفظ بيانات المنجز، جارٍ رفع المرفقات...";
+    }
+
+    let uploadFailed=false;
+    try{
+      await saveSelectedFiles(
+        parentKey("achievement",id),
+        form.elements.images?.files,
+        form.elements.documents?.files
+      );
+    }catch(err){
+      uploadFailed=true;
+      console.error("رفع المرفقات:",err);
+    }
+
+    if(msg){
+      msg.className=uploadFailed ? "warning" : "success";
+      msg.textContent=uploadFailed
+        ? "تم حفظ المنجز بنجاح، لكن تعذر رفع بعض المرفقات. يمكنك فتح مشاهدة التفاصيل وإضافتها لاحقًا"
+        : "تم حفظ المنجز ورفع المرفقات وإرساله للمراجعة بنجاح";
+    }
+
+    form.reset();
+    if(submitBtn){
+      submitBtn.disabled=false;
+      submitBtn.textContent=submitBtn.dataset.originalText || "حفظ وإرسال المنجز";
+    }
+  }
+
+  form.addEventListener("submit",submitAchievement);
+
+  /* ضمان استجابة زر الحفظ على Safari حتى لو كان القالب يستخدم زرًا غير مضبوط */
+  if(submitBtn){
+    submitBtn.addEventListener("click",e=>{
+      if(submitBtn.type!=="submit") submitAchievement(e);
+    });
+  }
+}
 function wireAchievements(){
   const search=byId("searchAchievements");
   const cat=byId("filterCategory");
@@ -338,6 +525,7 @@ function wireAchievements(){
         <p>${esc(x.impact)}</p>
       `;
       card.appendChild(createDetailsButton("achievement",x.id));
+      card.appendChild(createDeleteButton("achievement",x.id));
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"achievement",x.id);
     });
@@ -372,6 +560,7 @@ function wireAdmin(){
       <div class="admin-actions">
         <button class="small-btn view-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">مشاهدة التفاصيل</button>
         <button class="small-btn approve" data-id="${esc(x.id)}" data-kind="${esc(x._kind)}">اعتماد</button>
+        <button class="small-btn admin-delete-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">حذف</button>
       </div>
     `;
     list.appendChild(row);
@@ -381,6 +570,12 @@ function wireAdmin(){
   list.querySelectorAll(".view-record").forEach(btn=>{
     btn.classList.add("details-btn");
     btn.addEventListener("click",()=>openDetails(btn.dataset.mediaKind,btn.dataset.id));
+  });
+
+  list.querySelectorAll(".admin-delete-record").forEach(btn=>{
+    btn.addEventListener("click",async ()=>{
+      await deleteRecord(btn.dataset.mediaKind,btn.dataset.id);
+    });
   });
 
   list.querySelectorAll(".approve").forEach(btn=>{
@@ -439,6 +634,7 @@ function wireAwards(){
       <div class="meta"><span>${esc(x.type)}</span><span>${esc(x.grantor)}</span><span>${esc(x.recipient)}</span><span>${esc(x.date)}</span></div>
       <p>${esc(x.reason)}</p>`;
       card.appendChild(createDetailsButton("award",x.id));
+      card.appendChild(createDeleteButton("award",x.id));
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"award",x.id);
     });
@@ -490,6 +686,7 @@ function wirePartners(){
       <div class="meta"><span>${esc(x.partner)}</span><span>${esc(x.type)}</span><span>${esc(x.startDate)}</span><span>المستفيدات: ${esc(x.beneficiaries||0)}</span></div>
       <p>${esc(x.impact)}</p>`;
       card.appendChild(createDetailsButton("partner",x.id));
+      card.appendChild(createDeleteButton("partner",x.id));
       list.appendChild(card);
       hydrateCover(card.querySelector(".card-cover"),"partner",x.id);
     });
@@ -652,7 +849,20 @@ async function openDetails(kind,id){
       </div>
       <div class="attachment-status" id="detailAttachmentStatus">المرفقات الجديدة تُضاف إلى السابقة، وأول صورة تصبح صورة الغلاف تلقائيًا</div>
     </div>
+
+    <div class="detail-danger-zone">
+      <button id="deleteCurrentRecord" class="record-delete-btn" type="button">${
+        kind==="achievement" ? "حذف المنجز" : kind==="award" ? "حذف التكريم" : "حذف الشراكة"
+      }</button>
+    </div>
   `;
+
+  const deleteCurrent=byId("deleteCurrentRecord");
+  if(deleteCurrent){
+    deleteCurrent.addEventListener("click",async ()=>{
+      await deleteRecord(kind,id);
+    });
+  }
 
   byId("saveDetailAttachments").addEventListener("click",async ()=>{
     const status=byId("detailAttachmentStatus");
@@ -704,6 +914,7 @@ function byId(id){ return document.getElementById(id); }
 window.addEventListener("hashchange",render);
 window.addEventListener("DOMContentLoaded",()=>{
   injectDetailsButtonStyle();
+  showVersionBadge();
   setupDetailDialog();
   render();
 });
