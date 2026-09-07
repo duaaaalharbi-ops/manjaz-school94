@@ -51,6 +51,161 @@ const SUPABASE_URL = "https://idkjuqfxcweqekdkcktk.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
 const SUPABASE_BUCKET = "manjaz-media";
 
+const RECORDS_ENDPOINT=`${SUPABASE_URL}/rest/v1/records`;
+const SUPABASE_HEADERS={
+  "apikey":SUPABASE_PUBLISHABLE_KEY,
+  "Authorization":`Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+  "Content-Type":"application/json"
+};
+
+function recordKindToCollection(kind){
+  return kind==="achievement" ? "achievement" : kind==="award" ? "award" : "partner";
+}
+
+function collectionToRecordKind(kind){
+  return kind==="achievement" ? "achievement" : kind==="award" ? "award" : "partner";
+}
+
+function cloudRowToItem(row){
+  const data=(row && row.data && typeof row.data==="object") ? row.data : {};
+  return {
+    ...data,
+    id:String(row.id),
+    status:row.status || data.status || "تحت المراجعة",
+    createdAt:data.createdAt || row.created_at || new Date().toISOString(),
+    updatedAt:row.updated_at || data.updatedAt || row.created_at || new Date().toISOString(),
+    _cloud:true,
+    _kind:row.kind
+  };
+}
+
+async function fetchCloudRecords(kind){
+  const params=new URLSearchParams({
+    select:"id,kind,data,status,created_at,updated_at",
+    kind:`eq.${collectionToRecordKind(kind)}`,
+    order:"created_at.desc"
+  });
+  const res=await fetch(`${RECORDS_ENDPOINT}?${params.toString()}`,{
+    headers:SUPABASE_HEADERS
+  });
+  if(!res.ok){
+    const txt=await res.text().catch(()=> "");
+    throw new Error(`تعذر قراءة السجلات السحابية (${res.status}) ${txt}`);
+  }
+  const rows=await res.json();
+  return Array.isArray(rows) ? rows.map(cloudRowToItem) : [];
+}
+
+async function insertCloudRecord(kind,item){
+  const payload={
+    id:item.id,
+    kind:collectionToRecordKind(kind),
+    data:{...item},
+    status:item.status || "تحت المراجعة",
+    updated_at:new Date().toISOString()
+  };
+  const res=await fetch(RECORDS_ENDPOINT,{
+    method:"POST",
+    headers:{...SUPABASE_HEADERS,"Prefer":"return=representation"},
+    body:JSON.stringify(payload)
+  });
+  if(!res.ok){
+    const txt=await res.text().catch(()=> "");
+    throw new Error(`تعذر حفظ السجل في Supabase (${res.status}) ${txt}`);
+  }
+  const rows=await res.json();
+  return Array.isArray(rows) && rows[0] ? cloudRowToItem(rows[0]) : item;
+}
+
+async function updateCloudRecord(kind,item){
+  const payload={
+    data:{...item},
+    status:item.status || "تحت المراجعة",
+    updated_at:new Date().toISOString()
+  };
+  const params=new URLSearchParams({
+    id:`eq.${item.id}`,
+    kind:`eq.${collectionToRecordKind(kind)}`
+  });
+  const res=await fetch(`${RECORDS_ENDPOINT}?${params.toString()}`,{
+    method:"PATCH",
+    headers:{...SUPABASE_HEADERS,"Prefer":"return=representation"},
+    body:JSON.stringify(payload)
+  });
+  if(!res.ok){
+    const txt=await res.text().catch(()=> "");
+    throw new Error(`تعذر تحديث السجل في Supabase (${res.status}) ${txt}`);
+  }
+  const rows=await res.json();
+  return Array.isArray(rows) && rows[0] ? cloudRowToItem(rows[0]) : item;
+}
+
+async function deleteCloudRecord(kind,id){
+  const params=new URLSearchParams({
+    id:`eq.${id}`,
+    kind:`eq.${collectionToRecordKind(kind)}`
+  });
+  const res=await fetch(`${RECORDS_ENDPOINT}?${params.toString()}`,{
+    method:"DELETE",
+    headers:{...SUPABASE_HEADERS,"Prefer":"return=representation"}
+  });
+  if(!res.ok){
+    const txt=await res.text().catch(()=> "");
+    throw new Error(`تعذر حذف السجل من Supabase (${res.status}) ${txt}`);
+  }
+  return true;
+}
+
+/* مزامنة أولية: ترفع السجلات المحلية القديمة إلى Supabase مرة واحدة، ثم تبقي نسخة محلية احتياطية */
+const CLOUD_MIGRATION_FLAG="manjaz_cloud_records_migrated_v1";
+
+async function migrateLocalRecordsToCloud(){
+  if(localStorage.getItem(CLOUD_MIGRATION_FLAG)==="1") return;
+
+  const groups=[
+    ["achievement",getItems()],
+    ["award",getAwards()],
+    ["partner",getPartners()]
+  ];
+
+  for(const [kind,items] of groups){
+    for(const item of items){
+      if(!item || !item.id) continue;
+      try{
+        await insertCloudRecord(kind,item);
+      }catch(err){
+        /* 409/duplicate أو سجل سبق رفعه: نحاول تحديثه بدل إنشاء نسخة ثانية */
+        try{ await updateCloudRecord(kind,item); }
+        catch{ console.warn("تعذر ترحيل سجل قديم:",kind,item.id,err); }
+      }
+    }
+  }
+  localStorage.setItem(CLOUD_MIGRATION_FLAG,"1");
+}
+
+async function refreshAllCloudCollections(){
+  const [achievements,awards,partners]=await Promise.all([
+    fetchCloudRecords("achievement"),
+    fetchCloudRecords("award"),
+    fetchCloudRecords("partner")
+  ]);
+  saveItems(achievements);
+  saveAwards(awards);
+  savePartners(partners);
+  return {achievements,awards,partners};
+}
+
+async function syncCloudAndRender(){
+  try{
+    await migrateLocalRecordsToCloud();
+    await refreshAllCloudCollections();
+  }catch(err){
+    console.error("Cloud sync:",err);
+  }
+  render();
+}
+
+
 function safeFileName(name){
   const ext = (name.match(/\.[A-Za-z0-9]+$/) || [""])[0];
   const base = name.replace(/\.[A-Za-z0-9]+$/,"")
@@ -189,11 +344,20 @@ async function deleteRecord(kind,id){
   if(!ok) return false;
 
   const rows=Array.isArray(record.media) ? record.media : [];
+
+  try{
+    await deleteCloudRecord(kind,id);
+  }catch(err){
+    console.error("تعذر حذف السجل السحابي:",err);
+    alert("تعذر حذف السجل من Supabase. لم يتم تنفيذ الحذف");
+    return false;
+  }
+
   const items=getCollection(kind).filter(x=>String(x.id)!==String(id));
   saveCollection(kind,items);
 
-  /* محاولة تنظيف المرفقات من Supabase دون تعطيل حذف السجل */
-  deleteCloudMedia(rows);
+  /* تنظيف المرفقات من Supabase بعد نجاح حذف السجل */
+  await deleteCloudMedia(rows);
 
   const dialog=byId("detailDialog");
   if(dialog){
@@ -349,7 +513,7 @@ function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 8.1";
+  badge.textContent="الإصدار 9.0 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -443,9 +607,19 @@ function wireForm(){
     items.unshift(item);
     saveItems(mergeUniqueRecords([items]));
 
+    let cloudSaveFailed=false;
+    try{
+      await insertCloudRecord("achievement",item);
+    }catch(err){
+      cloudSaveFailed=true;
+      console.error("حفظ المنجز سحابيًا:",err);
+    }
+
     if(msg){
-      msg.className="success";
-      msg.textContent="تم حفظ بيانات المنجز، جارٍ رفع المرفقات...";
+      msg.className=cloudSaveFailed ? "warning" : "success";
+      msg.textContent=cloudSaveFailed
+        ? "تم حفظ نسخة محلية مؤقتًا، لكن تعذر إرسال بيانات المنجز إلى Supabase"
+        : "تم حفظ بيانات المنجز سحابيًا، جارٍ رفع المرفقات...";
     }
 
     let uploadFailed=false;
@@ -455,16 +629,20 @@ function wireForm(){
         form.elements.images?.files,
         form.elements.documents?.files
       );
+      const refreshed=getItems().find(x=>String(x.id)===String(id));
+      if(refreshed && !cloudSaveFailed) await updateCloudRecord("achievement",refreshed);
     }catch(err){
       uploadFailed=true;
       console.error("رفع المرفقات:",err);
     }
 
     if(msg){
-      msg.className=uploadFailed ? "warning" : "success";
-      msg.textContent=uploadFailed
-        ? "تم حفظ المنجز بنجاح، لكن تعذر رفع بعض المرفقات. يمكنك فتح مشاهدة التفاصيل وإضافتها لاحقًا"
-        : "تم حفظ المنجز ورفع المرفقات وإرساله للمراجعة بنجاح";
+      msg.className=(uploadFailed||cloudSaveFailed) ? "warning" : "success";
+      msg.textContent=cloudSaveFailed
+        ? "تم حفظ نسخة محلية مؤقتة، لكن تعذر الحفظ السحابي. تحققي من الاتصال ثم أعيدي المحاولة"
+        : uploadFailed
+          ? "تم حفظ المنجز سحابيًا، لكن تعذر رفع بعض المرفقات. يمكنك إضافتها لاحقًا من التفاصيل"
+          : "تم حفظ المنجز ورفع المرفقات وإرساله للمراجعة بنجاح";
     }
 
     form.reset();
@@ -579,11 +757,16 @@ function wireAdmin(){
   });
 
   list.querySelectorAll(".approve").forEach(btn=>{
-    btn.addEventListener("click",()=>{
+    btn.addEventListener("click",async ()=>{
       const kind=btn.dataset.kind, id=btn.dataset.id;
-      if(kind==="منجز"){ const all=getItems(); const item=all.find(x=>x.id===id); if(item)item.status="معتمد"; saveItems(all); }
-      if(kind==="تكريم"){ const all=getAwards(); const item=all.find(x=>x.id===id); if(item)item.status="معتمد"; saveAwards(all); }
-      if(kind==="شراكة"){ const all=getPartners(); const item=all.find(x=>x.id===id); if(item)item.status="معتمد"; savePartners(all); }
+      let updated=null, cloudKind="achievement";
+      if(kind==="منجز"){ const all=getItems(); updated=all.find(x=>x.id===id); if(updated)updated.status="معتمد"; saveItems(all); cloudKind="achievement"; }
+      if(kind==="تكريم"){ const all=getAwards(); updated=all.find(x=>x.id===id); if(updated)updated.status="معتمد"; saveAwards(all); cloudKind="award"; }
+      if(kind==="شراكة"){ const all=getPartners(); updated=all.find(x=>x.id===id); if(updated)updated.status="معتمد"; savePartners(all); cloudKind="partner"; }
+      if(updated){
+        try{ await updateCloudRecord(cloudKind,updated); }
+        catch(err){ console.error("تعذر تحديث حالة الاعتماد سحابيًا:",err); }
+      }
       render();
     });
   });
@@ -916,5 +1099,5 @@ window.addEventListener("DOMContentLoaded",()=>{
   injectDetailsButtonStyle();
   showVersionBadge();
   setupDetailDialog();
-  render();
+  syncCloudAndRender();
 });
