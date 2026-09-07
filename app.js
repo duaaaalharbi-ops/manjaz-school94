@@ -98,7 +98,6 @@ async function fetchCloudRecords(kind){
 
 async function insertCloudRecord(kind,item){
   const payload={
-    id:item.id,
     kind:collectionToRecordKind(kind),
     data:{...item},
     status:item.status || "تحت المراجعة",
@@ -115,6 +114,17 @@ async function insertCloudRecord(kind,item){
   }
   const rows=await res.json();
   return Array.isArray(rows) && rows[0] ? cloudRowToItem(rows[0]) : item;
+}
+
+
+function replaceLocalId(kind,oldId,cloudItem){
+  const items=getCollection(kind);
+  const index=items.findIndex(x=>String(x.id)===String(oldId));
+  if(index>=0){
+    items[index]={...items[index],...cloudItem,id:String(cloudItem.id)};
+    saveCollection(kind,items);
+  }
+  return String(cloudItem.id);
 }
 
 async function updateCloudRecord(kind,item){
@@ -174,9 +184,7 @@ async function migrateLocalRecordsToCloud(){
       try{
         await insertCloudRecord(kind,item);
       }catch(err){
-        /* 409/duplicate أو سجل سبق رفعه: نحاول تحديثه بدل إنشاء نسخة ثانية */
-        try{ await updateCloudRecord(kind,item); }
-        catch{ console.warn("تعذر ترحيل سجل قديم:",kind,item.id,err); }
+        console.warn("تعذر ترحيل سجل محلي قديم:",kind,item.id,err);
       }
     }
   }
@@ -513,7 +521,7 @@ function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 9.0 • سحابي";
+  badge.textContent="الإصدار 9.1 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -608,8 +616,13 @@ function wireForm(){
     saveItems(mergeUniqueRecords([items]));
 
     let cloudSaveFailed=false;
+    let activeId=id;
     try{
-      await insertCloudRecord("achievement",item);
+      const cloudItem=await insertCloudRecord("achievement",item);
+      if(cloudItem && cloudItem.id){
+        activeId=replaceLocalId("achievement",id,cloudItem);
+        item.id=activeId;
+      }
     }catch(err){
       cloudSaveFailed=true;
       console.error("حفظ المنجز سحابيًا:",err);
@@ -625,11 +638,11 @@ function wireForm(){
     let uploadFailed=false;
     try{
       await saveSelectedFiles(
-        parentKey("achievement",id),
+        parentKey("achievement",activeId),
         form.elements.images?.files,
         form.elements.documents?.files
       );
-      const refreshed=getItems().find(x=>String(x.id)===String(id));
+      const refreshed=getItems().find(x=>String(x.id)===String(activeId));
       if(refreshed && !cloudSaveFailed) await updateCloudRecord("achievement",refreshed);
     }catch(err){
       uploadFailed=true;
