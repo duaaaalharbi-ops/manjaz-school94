@@ -15,7 +15,7 @@
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=10.6"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=10.7"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -54,14 +54,12 @@
     section.innerHTML=`
       <div class="section-title">
         <div>
-          <span class="kicker">خدمة رقمية</span>
-          <h3>إصدار الشهادات الرقمية</h3>
+          <h3>الخدمات الرقمية</h3>
         </div>
       </div>
-      <article class="category-card cert-home-card" role="button" tabindex="0" aria-label="فتح إصدار شهادات الورش المنفذة الرقمية">
-        <span class="cat-no">09</span>
-        <strong>إصدار شهادات الورش المنفذة الرقمية</strong>
-        <small>أنشئي شهادتك المعتمدة إلكترونيًا للورش المنفذة دون حفظ بياناتك</small>
+      <article class="category-card cert-home-card" role="button" tabindex="0" aria-label="فتح إصدار الشهادات للورش المنفذة رقميًا">
+        <strong>إصدار الشهادات للورش المنفذة رقميًا</strong>
+        <small>أنشئي شهادتك الرقمية بعد اختيار الورشة من قائمة الورش المنفذة</small>
         <span class="cert-home-link">إصدار شهادة</span>
       </article>`;
     const open=()=>location.hash="#certificates";
@@ -124,16 +122,39 @@
 
   function injectCertificatesAnnouncement(){
     const banner=document.getElementById("manjazTrialBanner");
-    if(!banner || banner.dataset.certAnnouncement==="1") return;
-    const text="تم إطلاق خاصية إصدار الشهادات الرقمية للورش المنفذة عبر بوابة «منجز»";
-    const target=banner.querySelector(".trial-track,.trial-text,.marquee-track") || banner.firstElementChild || banner;
-    if(!target.textContent.includes(text)){
-      const sep=document.createElement("span");
-      sep.className="cert-banner-announcement";
-      sep.textContent="  |  "+text+"  |  ";
-      target.appendChild(sep);
+    if(!banner) return;
+
+    const announcement="تم إطلاق خاصية إصدار الشهادات الرقمية للورش المنفذة عبر بوابة «منجز»";
+    const oldNeedles=[
+      "نعمل باستمرار على تطوير «منجز»",
+      "نعمل باستمرار على تطوير \"منجز\"",
+      "ونرحب بملاحظاتكم ومقترحاتكم",
+      "للإسهام في تطوير النسخة القادمة"
+    ];
+
+    // Preserve the trial badge, but replace the moving announcement itself.
+    const candidates=[...banner.querySelectorAll("span,div,p")].filter(el=>{
+      const t=(el.textContent||"").trim();
+      return t && oldNeedles.some(n=>t.includes(n));
+    });
+
+    if(candidates.length){
+      // Prefer the deepest matching element so styling/animation remain intact.
+      const target=candidates.sort((a,b)=>b.children.length-a.children.length).pop();
+      if(target) target.textContent=announcement;
+    }else{
+      const moving=banner.querySelector(".trial-text,.marquee-text,.ticker-text,[data-trial-text]");
+      if(moving) moving.textContent=announcement;
+      else{
+        // Last-resort: replace the longest non-badge textual node without deleting the "إصدار تجريبي" label.
+        const els=[...banner.querySelectorAll("span,div,p")].filter(el=>{
+          const t=(el.textContent||"").trim();
+          return t && !t.includes("إصدار تجريبي") && !el.children.length;
+        }).sort((a,b)=>(b.textContent||"").length-(a.textContent||"").length);
+        if(els[0]) els[0].textContent=announcement;
+      }
     }
-    banner.dataset.certAnnouncement="1";
+    banner.dataset.certAnnouncement="10.7";
   }
 
   function certificateTextHTML(w,name){
@@ -252,12 +273,15 @@
     setTimeout(injectHomeCertificatesSection,0);
     setTimeout(injectHomeCertificatesSection,250);
     setTimeout(injectHomeCertificatesSection,800);
+    setTimeout(injectCertificatesAnnouncement,0);
+    setTimeout(injectCertificatesAnnouncement,250);
+    setTimeout(injectCertificatesAnnouncement,900);
     if((location.hash||"").slice(1)===ROUTE) setTimeout(renderPage,0);
   }
 
   window.addEventListener("hashchange",()=>{
     setTimeout(()=>{
-      if((location.hash||"").slice(1)===ROUTE) renderPage(); else injectHomeCertificatesSection();
+      if((location.hash||"").slice(1)===ROUTE) renderPage(); else injectHomeCertificatesSection(); injectCertificatesAnnouncement();
     },0);
   });
   window.addEventListener("DOMContentLoaded",boot);

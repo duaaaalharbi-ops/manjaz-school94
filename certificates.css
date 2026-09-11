@@ -99,3 +99,52 @@
   opacity:.96;
 }
 .cert-banner-announcement{font-weight:800}
+
+
+/* 10.7 — home cleanup */
+.category-grid .cat-no{
+  display:none !important;
+}
+
+/* No numbering or "new" badge in the Digital Services card */
+.cert-home-card .cat-no,
+.cert-home-section .badge{
+  display:none !important;
+}
+
+.cert-home-section .section-title .kicker{
+  display:none !important;
+}
+
+.cert-home-section .section-title h3{
+  margin:0;
+}
+
+.cert-home-card{
+  grid-template-columns:1fr auto !important;
+  grid-template-areas:
+    "title action"
+    "desc action" !important;
+}
+
+.cert-home-card strong{
+  grid-area:title;
+}
+
+.cert-home-card small{
+  grid-area:desc;
+}
+
+.cert-home-link{
+  grid-area:action;
+}
+
+@media(max-width:680px){
+  .cert-home-card{
+    grid-template-columns:1fr !important;
+    grid-template-areas:
+      "title"
+      "desc"
+      "action" !important;
+  }
+}
