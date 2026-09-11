@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7-button-fix";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7-ios-direct-open";
 (function(){
   "use strict";
 
@@ -35,7 +35,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7-button-fix";
     const nav=document.getElementById("nav");
     if(nav && !nav.querySelector('[data-route="certificates"]')){
       const a=document.createElement("a");
-      a.href="#certificates";a.dataset.route="certificates";
+      a.href="#home" data-open-certificates="1";a.dataset.route="certificates";
       a.innerHTML='<span class="icon">▧</span><span>إصدار شهادات الورش</span>';
       const settings=nav.querySelector('[data-route="settings"]');
       nav.insertBefore(a,settings||null);
@@ -61,17 +61,14 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7-button-fix";
       <article class="category-card cert-home-card" role="button" tabindex="0" aria-label="فتح إصدار الشهادات للورش المنفذة رقميًا">
         <strong>إصدار الشهادات للورش المنفذة رقميًا</strong>
         <small>أنشئي شهادتك الرقمية بعد اختيار الورشة من قائمة الورش المنفذة</small>
-        <a class="cert-home-link cert-home-action" href="#certificates">إصدار شهادة</a>
+        <a class="cert-home-link cert-home-action" href="#home" data-open-certificates="1">إصدار شهادة</a>
       </article>`;
-    const open=()=>{ location.hash="#certificates"; setTimeout(renderPage,0); };
+    const open=()=>{ renderPage(); setTimeout(()=>window.scrollTo({top:0,behavior:"smooth"}),0); };
     const card=section.querySelector(".cert-home-card");
-    card.addEventListener("click",e=>{
-      if(e.target.closest(".cert-home-action")) return;
-      open();
-    });
+    card.addEventListener("click",e=>{ e.preventDefault(); open(); });
     card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
-    section.querySelector(".cert-home-action")?.addEventListener("click",()=>{
-      setTimeout(renderPage,0);
+    section.querySelector(".cert-home-action")?.addEventListener("click",e=>{
+      e.preventDefault(); e.stopPropagation(); open();
     });
     const categorySection=categoryGrid.closest(".section-block") || categoryGrid.parentElement;
     categorySection.insertAdjacentElement("afterend",section);
@@ -277,6 +274,25 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7-button-fix";
 
   function boot(){
     injectStyle();injectNav();observeAppRenders();
+    if(document.documentElement.dataset.certDirectOpen!=="1"){
+      document.documentElement.dataset.certDirectOpen="1";
+      document.addEventListener("click",e=>{
+        const target=e.target.closest("[data-open-certificates='1']");
+        if(!target) return;
+        e.preventDefault();
+        e.stopPropagation();
+        renderPage();
+        setTimeout(()=>window.scrollTo({top:0,behavior:"smooth"}),0);
+      },true);
+      document.addEventListener("touchend",e=>{
+        const target=e.target.closest("[data-open-certificates='1']");
+        if(!target) return;
+        e.preventDefault();
+        e.stopPropagation();
+        renderPage();
+        setTimeout(()=>window.scrollTo({top:0,behavior:"smooth"}),0);
+      },{capture:true,passive:false});
+    }
     setTimeout(injectHomeCertificatesSection,0);
     setTimeout(injectHomeCertificatesSection,250);
     setTimeout(injectHomeCertificatesSection,800);

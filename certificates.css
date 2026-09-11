@@ -162,3 +162,13 @@
 .cert-home-card{
   cursor:pointer;
 }
+
+/* Same-version Safari direct-open fix */
+.cert-home-action{
+  pointer-events:auto !important;
+  touch-action:manipulation;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
