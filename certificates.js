@@ -1,3 +1,4 @@
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7-button-fix";
 (function(){
   "use strict";
 
@@ -60,12 +61,18 @@
       <article class="category-card cert-home-card" role="button" tabindex="0" aria-label="فتح إصدار الشهادات للورش المنفذة رقميًا">
         <strong>إصدار الشهادات للورش المنفذة رقميًا</strong>
         <small>أنشئي شهادتك الرقمية بعد اختيار الورشة من قائمة الورش المنفذة</small>
-        <span class="cert-home-link">إصدار شهادة</span>
+        <a class="cert-home-link cert-home-action" href="#certificates">إصدار شهادة</a>
       </article>`;
-    const open=()=>location.hash="#certificates";
+    const open=()=>{ location.hash="#certificates"; setTimeout(renderPage,0); };
     const card=section.querySelector(".cert-home-card");
-    card.addEventListener("click",open);
+    card.addEventListener("click",e=>{
+      if(e.target.closest(".cert-home-action")) return;
+      open();
+    });
     card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
+    section.querySelector(".cert-home-action")?.addEventListener("click",()=>{
+      setTimeout(renderPage,0);
+    });
     const categorySection=categoryGrid.closest(".section-block") || categoryGrid.parentElement;
     categorySection.insertAdjacentElement("afterend",section);
   }

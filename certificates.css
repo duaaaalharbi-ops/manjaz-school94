@@ -148,3 +148,17 @@
       "action" !important;
   }
 }
+
+/* 10.8 — activate the digital certificate issue action as a real link */
+.cert-home-action{
+  text-decoration:none !important;
+  cursor:pointer !important;
+  pointer-events:auto !important;
+  position:relative;
+  z-index:5;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.cert-home-card{
+  cursor:pointer;
+}
