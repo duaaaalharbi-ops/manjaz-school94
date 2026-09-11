@@ -15,7 +15,7 @@
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=10.1"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=10.2"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -197,9 +197,27 @@
     setActiveNav();view.innerHTML=pageHTML();wirePage();
   }
 
+  function observeAppRenders(){
+    const view=document.getElementById("view");
+    if(!view || view.dataset.certObserver==="1") return;
+    view.dataset.certObserver="1";
+    let timer;
+    const observer=new MutationObserver(()=>{
+      clearTimeout(timer);
+      timer=setTimeout(()=>{
+        const route=(location.hash||"#home").slice(1);
+        if(route===ROUTE) renderPage();
+        else if(route==="home") injectHomeCard();
+      },40);
+    });
+    observer.observe(view,{childList:true,subtree:true});
+  }
+
   function boot(){
-    injectStyle();injectNav();
+    injectStyle();injectNav();observeAppRenders();
     setTimeout(injectHomeCard,0);
+    setTimeout(injectHomeCard,250);
+    setTimeout(injectHomeCard,800);
     if((location.hash||"").slice(1)===ROUTE) setTimeout(renderPage,0);
   }
 
