@@ -48,3 +48,41 @@
 .cert-implementers{margin-top:18px;font-size:16px;color:#0b3047;line-height:1.8}
 .cert-body .cert-text{max-width:900px;font-size:21px;line-height:2.05;margin-top:14px}
 .cert-body .cert-date{margin-top:18px}
+
+/* 10.5 Home certificate section: full-width medium card */
+.cert-home-section{width:100%;box-sizing:border-box}
+.cert-home-section .section-title{margin-bottom:12px}
+.cert-home-card{
+  width:100%;
+  min-height:150px;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  grid-template-areas:
+    "badge title action"
+    "badge desc action";
+  align-items:center;
+  column-gap:18px;
+  row-gap:6px;
+  padding:24px 28px;
+  border-radius:18px;
+}
+.cert-home-card .cat-no{grid-area:badge;align-self:center}
+.cert-home-card strong{grid-area:title;font-size:clamp(20px,2.2vw,27px);color:#0b3047}
+.cert-home-card small{grid-area:desc;font-size:14px;line-height:1.9;max-width:760px;color:#64727d}
+.cert-home-link{grid-area:action;display:inline-flex;align-items:center;justify-content:center;min-width:126px;padding:11px 16px;border-radius:12px;background:#0f5f59;color:#fff;font-weight:900;white-space:nowrap}
+.cert-home-card::after{content:"جديد";top:12px;left:12px;font-size:11px;padding:5px 10px}
+@media(max-width:680px){
+  .cert-home-card{
+    min-height:138px;
+    grid-template-columns:1fr auto;
+    grid-template-areas:
+      "title badge"
+      "desc desc"
+      "action action";
+    padding:20px 18px;
+    gap:9px 12px;
+  }
+  .cert-home-card .cat-no{grid-area:badge}
+  .cert-home-link{width:100%;box-sizing:border-box}
+}
