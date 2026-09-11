@@ -15,7 +15,7 @@
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=10.2"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=10.3"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -41,15 +41,41 @@
     }
   }
 
-  function injectHomeCard(){
+  function injectHomeCertificatesSection(){
     if((location.hash||"#home")!=="#home") return;
-    const grid=document.querySelector("#view .category-grid");
-    if(!grid || grid.querySelector(".cert-home-card")) return;
-    const card=document.createElement("article");
-    card.className="category-card cert-home-card";
-    card.innerHTML='<span class="cat-no">09</span><strong>إصدار شهادات الورش المنفذة الرقمية</strong><small>أنشئي شهادتك المعتمدة إلكترونيًا للورش المنفذة دون حفظ بياناتك</small>';
-    card.addEventListener("click",()=>location.hash="#certificates");
-    grid.appendChild(card);
+    const view=document.getElementById("view");
+    if(!view) return;
+
+    // Remove the old documentation categories section from the home screen only.
+    view.querySelectorAll(".section-block").forEach(section=>{
+      const title=section.querySelector(".section-title h3");
+      if(title && title.textContent.trim()==="أقسام التوثيق") section.remove();
+    });
+
+    if(view.querySelector(".cert-home-section")) return;
+    const hero=view.querySelector(".hero");
+    if(!hero) return;
+
+    const section=document.createElement("section");
+    section.className="section-block cert-home-section";
+    section.innerHTML=`
+      <div class="section-title">
+        <div>
+          <span class="kicker">الخدمات الرقمية</span>
+          <h3>إصدار الشهادات الرقمية</h3>
+        </div>
+      </div>
+      <article class="category-card cert-home-card" role="button" tabindex="0" aria-label="فتح إصدار شهادات الورش المنفذة الرقمية">
+        <span class="cat-no">01</span>
+        <strong>إصدار شهادات الورش المنفذة الرقمية</strong>
+        <small>أنشئي شهادتك المعتمدة إلكترونيًا للورش المنفذة دون حفظ بياناتك</small>
+        <span class="cert-home-link">إصدار شهادة</span>
+      </article>`;
+    const open=()=>location.hash="#certificates";
+    const card=section.querySelector(".cert-home-card");
+    card.addEventListener("click",open);
+    card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
+    hero.insertAdjacentElement("afterend",section);
   }
 
   function setActiveNav(){
@@ -207,7 +233,7 @@
       timer=setTimeout(()=>{
         const route=(location.hash||"#home").slice(1);
         if(route===ROUTE) renderPage();
-        else if(route==="home") injectHomeCard();
+        else if(route==="home") injectHomeCertificatesSection();
       },40);
     });
     observer.observe(view,{childList:true,subtree:true});
@@ -215,15 +241,15 @@
 
   function boot(){
     injectStyle();injectNav();observeAppRenders();
-    setTimeout(injectHomeCard,0);
-    setTimeout(injectHomeCard,250);
-    setTimeout(injectHomeCard,800);
+    setTimeout(injectHomeCertificatesSection,0);
+    setTimeout(injectHomeCertificatesSection,250);
+    setTimeout(injectHomeCertificatesSection,800);
     if((location.hash||"").slice(1)===ROUTE) setTimeout(renderPage,0);
   }
 
   window.addEventListener("hashchange",()=>{
     setTimeout(()=>{
-      if((location.hash||"").slice(1)===ROUTE) renderPage(); else injectHomeCard();
+      if((location.hash||"").slice(1)===ROUTE) renderPage(); else injectHomeCertificatesSection();
     },0);
   });
   window.addEventListener("DOMContentLoaded",boot);
