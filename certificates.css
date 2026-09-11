@@ -31,7 +31,7 @@
 .cert-accent{position:absolute;background:#0f5f59;opacity:.08;border-radius:50%}.cert-accent.a{width:360px;height:360px;right:-170px;top:-150px}.cert-accent.b{width:300px;height:300px;left:-140px;bottom:-140px}
 .cert-body{position:absolute;inset:72px 95px;display:flex;flex-direction:column;align-items:center;text-align:center;z-index:2;color:#183846}
 .cert-school{font-size:23px;font-weight:900;color:#0b3047;margin-bottom:10px}.cert-heading{font-size:46px;font-weight:900;color:#0b3047;margin:12px 0 8px}.cert-program{font-size:28px;font-weight:900;color:#0f5f59;margin:0 0 18px}.cert-text{max-width:820px;font-size:22px;line-height:2;color:#445861}.cert-name-label{margin-top:12px;font-size:16px;color:#75838b}.cert-name{font-size:39px;font-weight:900;color:#0b3047;margin:7px 0 12px;max-width:850px;line-height:1.35}.cert-date{font-size:18px;color:#596a73}.cert-signatures{margin-top:auto;width:100%;display:flex;justify-content:center;gap:70px;flex-wrap:wrap;color:#0b3047;font-size:16px;font-weight:800}.cert-signatures span{min-width:220px;border-top:1px solid #d2aa55;padding-top:10px}.cert-watermark{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);font-size:13px;color:#8d9ba2;z-index:2}
-.cert-home-card{cursor:pointer;position:relative;overflow:hidden}.cert-home-card::after{content:"جديد";position:absolute;top:10px;left:10px;background:#d2aa55;color:#0b3047;font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px}
+.cert-home-card{cursor:pointer;position:relative;overflow:hidden}
 .cert-config-note{border:1px solid #dce4e7;border-radius:14px;padding:14px;background:#f9fbfb;color:#5f7079;font-size:13px;line-height:1.8}
 @media(max-width:1000px){.cert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.certificate-paper{transform-origin:top right;transform:scale(.72);margin-bottom:-220px}}
 @media(max-width:680px){.cert-grid{grid-template-columns:1fr}.cert-form{padding:15px}.certificate-stage{padding:4px}.certificate-paper{transform:scale(.34);margin-bottom:-520px}.cert-actions{display:grid;grid-template-columns:1fr}.cert-btn{width:100%}}
@@ -71,7 +71,7 @@
 .cert-home-card strong{grid-area:title;font-size:clamp(20px,2.2vw,27px);color:#0b3047}
 .cert-home-card small{grid-area:desc;font-size:14px;line-height:1.9;max-width:760px;color:#64727d}
 .cert-home-link{grid-area:action;display:inline-flex;align-items:center;justify-content:center;min-width:126px;padding:11px 16px;border-radius:12px;background:#0f5f59;color:#fff;font-weight:900;white-space:nowrap}
-.cert-home-card::after{content:"جديد";top:12px;left:12px;font-size:11px;padding:5px 10px}
+
 @media(max-width:680px){
   .cert-home-card{
     min-height:138px;
@@ -86,3 +86,16 @@
   .cert-home-card .cat-no{grid-area:badge}
   .cert-home-link{width:100%;box-sizing:border-box}
 }
+
+/* 10.6 official school stamp: original user-supplied seal, shown in preview and exported PDF */
+.cert-official-stamp{
+  position:absolute;
+  left:92px;
+  bottom:82px;
+  width:150px;
+  height:auto;
+  object-fit:contain;
+  z-index:3;
+  opacity:.96;
+}
+.cert-banner-announcement{font-weight:800}

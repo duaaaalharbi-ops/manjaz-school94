@@ -15,7 +15,7 @@
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=10.4"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=10.6"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -54,13 +54,12 @@
     section.innerHTML=`
       <div class="section-title">
         <div>
-          <span class="kicker">خدمة جديدة</span>
+          <span class="kicker">خدمة رقمية</span>
           <h3>إصدار الشهادات الرقمية</h3>
         </div>
-        <span class="badge" style="display:inline-flex;align-items:center;justify-content:center;padding:6px 12px;border-radius:999px;font-weight:800;">جديد</span>
       </div>
       <article class="category-card cert-home-card" role="button" tabindex="0" aria-label="فتح إصدار شهادات الورش المنفذة الرقمية">
-        <span class="cat-no">جديد</span>
+        <span class="cat-no">09</span>
         <strong>إصدار شهادات الورش المنفذة الرقمية</strong>
         <small>أنشئي شهادتك المعتمدة إلكترونيًا للورش المنفذة دون حفظ بياناتك</small>
         <span class="cert-home-link">إصدار شهادة</span>
@@ -123,6 +122,20 @@
     </div>`;
   }
 
+  function injectCertificatesAnnouncement(){
+    const banner=document.getElementById("manjazTrialBanner");
+    if(!banner || banner.dataset.certAnnouncement==="1") return;
+    const text="تم إطلاق خاصية إصدار الشهادات الرقمية للورش المنفذة عبر بوابة «منجز»";
+    const target=banner.querySelector(".trial-track,.trial-text,.marquee-track") || banner.firstElementChild || banner;
+    if(!target.textContent.includes(text)){
+      const sep=document.createElement("span");
+      sep.className="cert-banner-announcement";
+      sep.textContent="  |  "+text+"  |  ";
+      target.appendChild(sep);
+    }
+    banner.dataset.certAnnouncement="1";
+  }
+
   function certificateTextHTML(w,name){
     const raw=String(w.certificateText||"");
     const token="{{name}}";
@@ -147,7 +160,7 @@
         <div class="cert-date">${esc(w.date||"")} • ${esc(w.duration||"")}</div>
         ${implementers.length?`<div class="cert-implementers"><strong>${implementers.length>1?'المنفذتان':'المنفذة'}:</strong> ${implementers.map(esc).join('، ')}</div>`:""}
       </div>
-      <div class="cert-watermark">تم إصدار هذه الشهادة إلكترونيًا عبر منصة منجز</div>`;
+      <img class="cert-official-stamp" src="official-school-stamp.png" alt="الختم الرسمي للمدرسة"><div class="cert-watermark">تم إصدار هذه الشهادة إلكترونيًا عبر منصة منجز</div>`;
   }
 
   function fileName(w,name){
