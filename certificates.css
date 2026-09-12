@@ -1,0 +1,1122 @@
+/* الشهادات الرقمية - منجز */
+.certificates-page{display:grid;gap:18px}
+.certificates-intro{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.certificates-intro h2{margin:4px 0 6px;color:#0b3047;font-size:clamp(24px,3vw,36px)}
+.certificates-intro p{margin:0;color:#64727d;max-width:760px;line-height:1.9}
+.cert-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cert-workshop-card{border:1px solid #e2e7ea;background:#fff;border-radius:18px;padding:18px;display:grid;gap:12px;box-shadow:0 10px 28px rgba(11,48,71,.06)}
+.cert-workshop-card h3{margin:0;color:#0b3047;font-size:18px}
+.cert-meta{display:flex;gap:8px;flex-wrap:wrap;color:#6b7881;font-size:13px}
+.cert-status{display:inline-flex;align-items:center;width:max-content;padding:5px 10px;border-radius:999px;background:#e8f4f2;color:#0f5f59;font-weight:800;font-size:12px}
+.cert-status.off{background:#f2f2f2;color:#7a7a7a}
+.cert-empty{padding:34px;text-align:center;border:1px dashed #ccd5da;border-radius:18px;background:#fff;color:#65737c}
+.cert-empty h3{color:#0b3047;margin:0 0 8px}
+.cert-form{background:#fff;border:1px solid #e2e7ea;border-radius:18px;padding:20px;display:grid;gap:16px;box-shadow:0 10px 28px rgba(11,48,71,.06)}
+.cert-form label{display:grid;gap:8px;font-weight:800;color:#0b3047}
+.cert-form input,.cert-form select{width:100%;box-sizing:border-box;border:1px solid #ced7dc;border-radius:12px;padding:13px 14px;font:inherit;background:#fff;color:#193847}
+.cert-help{font-size:13px;color:#71808a;line-height:1.8}
+.cert-actions{display:flex;gap:10px;flex-wrap:wrap}
+.cert-btn{border:0;border-radius:11px;padding:11px 16px;font:800 14px/1.2 inherit;cursor:pointer}
+.cert-btn.primary{background:#0f5f59;color:#fff}.cert-btn.secondary{background:#edf2f3;color:#0b3047}.cert-btn.gold{background:#d2aa55;color:#0b3047}
+.cert-btn:disabled{opacity:.5;cursor:not-allowed}
+.cert-message{min-height:24px;font-weight:800}.cert-message.error{color:#a12626}.cert-message.success{color:#17623b}.cert-message.info{color:#0f5f59}
+.cert-preview-wrap{display:none;gap:12px}.cert-preview-wrap.is-visible{display:grid}
+.cert-preview-note{font-size:13px;color:#687780;text-align:center}
+.certificate-stage{overflow:auto;padding:8px;background:#eef3f4;border:1px solid #d8e0e3;border-radius:16px}
+.certificate-paper{position:relative;margin:auto;width:1123px;height:794px;background:#fff;overflow:hidden;direction:rtl;font-family:Tahoma,"Segoe UI",Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.10)}
+.certificate-paper.has-template{background-size:100% 100%;background-position:center;background-repeat:no-repeat}
+.cert-default-bg{position:absolute;inset:0;background:linear-gradient(135deg,#fdfcf7 0%,#fff 55%,#f0f7f6 100%)}
+.cert-default-bg::before{content:"";position:absolute;inset:26px;border:4px solid #0b3047;border-radius:18px}
+.cert-default-bg::after{content:"";position:absolute;inset:42px;border:1px solid #d2aa55;border-radius:12px}
+.cert-accent{position:absolute;background:#0f5f59;opacity:.08;border-radius:50%}.cert-accent.a{width:360px;height:360px;right:-170px;top:-150px}.cert-accent.b{width:300px;height:300px;left:-140px;bottom:-140px}
+.cert-body{position:absolute;inset:72px 95px;display:flex;flex-direction:column;align-items:center;text-align:center;z-index:2;color:#183846}
+.cert-school{font-size:23px;font-weight:900;color:#0b3047;margin-bottom:10px}.cert-heading{font-size:46px;font-weight:900;color:#0b3047;margin:12px 0 8px}.cert-program{font-size:28px;font-weight:900;color:#0f5f59;margin:0 0 18px}.cert-text{max-width:820px;font-size:22px;line-height:2;color:#445861}.cert-name-label{margin-top:12px;font-size:16px;color:#75838b}.cert-name{font-size:39px;font-weight:900;color:#0b3047;margin:7px 0 12px;max-width:850px;line-height:1.35}.cert-date{font-size:18px;color:#596a73}.cert-signatures{margin-top:auto;width:100%;display:flex;justify-content:center;gap:70px;flex-wrap:wrap;color:#0b3047;font-size:16px;font-weight:800}.cert-signatures span{min-width:220px;border-top:1px solid #d2aa55;padding-top:10px}.cert-watermark{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);font-size:13px;color:#8d9ba2;z-index:2}
+.cert-home-card{cursor:pointer;position:relative;overflow:hidden}
+.cert-config-note{border:1px solid #dce4e7;border-radius:14px;padding:14px;background:#f9fbfb;color:#5f7079;font-size:13px;line-height:1.8}
+@media(max-width:1000px){.cert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.certificate-paper{transform-origin:top right;transform:scale(.72);margin-bottom:-220px}}
+@media(max-width:680px){.cert-grid{grid-template-columns:1fr}.cert-form{padding:15px}.certificate-stage{padding:4px}.certificate-paper{transform:scale(.34);margin-bottom:-520px}.cert-actions{display:grid;grid-template-columns:1fr}.cert-btn{width:100%}}
+@media print{.sidebar,.topbar,.mobile-nav,.footer,#manjazTrialBanner,#manjazVersionBadge{display:none!important}.content{margin:0!important;padding:0!important}.certificate-stage{border:0;padding:0;background:#fff}.certificate-paper{transform:none!important;box-shadow:none;margin:0}.certificates-page>*:not(.cert-preview-wrap){display:none!important}.cert-preview-note,.cert-actions{display:none!important}}
+
+/* 10.1 - الورش مستقلة وعدم حفظ بيانات المستفيدة */
+.cert-meta-stack{display:grid;gap:7px;line-height:1.65}
+.cert-meta-stack span{display:block}
+.cert-selected-workshop{border:1px solid #d8e2e5;border-radius:14px;padding:14px;background:#f8fbfb;display:grid;gap:6px;color:#52656f}
+.cert-selected-workshop strong{font-size:18px;color:#0b3047}
+.cert-selected-workshop span{font-size:14px;color:#0f5f59;font-weight:800}
+.cert-selected-workshop small{font-size:13px;color:#687780;line-height:1.7}
+.cert-inline-name{display:inline-block;color:#0b3047;font-weight:900;font-size:1.15em;padding:0 .22em;border-bottom:1px solid #d2aa55}
+.cert-implementers{margin-top:18px;font-size:16px;color:#0b3047;line-height:1.8}
+.cert-body .cert-text{max-width:900px;font-size:21px;line-height:2.05;margin-top:14px}
+.cert-body .cert-date{margin-top:18px}
+
+/* 10.5 Home certificate section: full-width medium card */
+.cert-home-section{width:100%;box-sizing:border-box}
+.cert-home-section .section-title{margin-bottom:12px}
+.cert-home-card{
+  width:100%;
+  min-height:150px;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  grid-template-areas:
+    "badge title action"
+    "badge desc action";
+  align-items:center;
+  column-gap:18px;
+  row-gap:6px;
+  padding:24px 28px;
+  border-radius:18px;
+}
+.cert-home-card .cat-no{grid-area:badge;align-self:center}
+.cert-home-card strong{grid-area:title;font-size:clamp(20px,2.2vw,27px);color:#0b3047}
+.cert-home-card small{grid-area:desc;font-size:14px;line-height:1.9;max-width:760px;color:#64727d}
+.cert-home-link{grid-area:action;display:inline-flex;align-items:center;justify-content:center;min-width:126px;padding:11px 16px;border-radius:12px;background:#0f5f59;color:#fff;font-weight:900;white-space:nowrap}
+
+@media(max-width:680px){
+  .cert-home-card{
+    min-height:138px;
+    grid-template-columns:1fr auto;
+    grid-template-areas:
+      "title badge"
+      "desc desc"
+      "action action";
+    padding:20px 18px;
+    gap:9px 12px;
+  }
+  .cert-home-card .cat-no{grid-area:badge}
+  .cert-home-link{width:100%;box-sizing:border-box}
+}
+
+/* 10.6 official school stamp: original user-supplied seal, shown in preview and exported PDF */
+.cert-official-stamp{
+  position:absolute;
+  left:92px;
+  bottom:82px;
+  width:150px;
+  height:auto;
+  object-fit:contain;
+  z-index:3;
+  opacity:.96;
+}
+.cert-banner-announcement{font-weight:800}
+
+
+/* 10.7 — home cleanup */
+.category-grid .cat-no{
+  display:none !important;
+}
+
+/* No numbering or "new" badge in the Digital Services card */
+.cert-home-card .cat-no,
+.cert-home-section .badge{
+  display:none !important;
+}
+
+.cert-home-section .section-title .kicker{
+  display:none !important;
+}
+
+.cert-home-section .section-title h3{
+  margin:0;
+}
+
+.cert-home-card{
+  grid-template-columns:1fr auto !important;
+  grid-template-areas:
+    "title action"
+    "desc action" !important;
+}
+
+.cert-home-card strong{
+  grid-area:title;
+}
+
+.cert-home-card small{
+  grid-area:desc;
+}
+
+.cert-home-link{
+  grid-area:action;
+}
+
+@media(max-width:680px){
+  .cert-home-card{
+    grid-template-columns:1fr !important;
+    grid-template-areas:
+      "title"
+      "desc"
+      "action" !important;
+  }
+}
+
+/* 10.8 — activate the digital certificate issue action as a real link */
+.cert-home-action{
+  text-decoration:none !important;
+  cursor:pointer !important;
+  pointer-events:auto !important;
+  position:relative;
+  z-index:5;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.cert-home-card{
+  cursor:pointer;
+}
+
+/* Same-version Safari direct-open fix */
+.cert-home-action{
+  pointer-events:auto !important;
+  touch-action:manipulation;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+
+/* 10.7.2 — القالب الرسمي المعتمد لشهادات بوابة منجز */
+.certificate-paper.cert-approved{
+  position:relative;
+  width:1123px;
+  height:794px;
+  overflow:hidden;
+  direction:rtl;
+  font-family:Tahoma,"Segoe UI",Arial,sans-serif;
+  background:#fffdf8;
+  color:#17394a;
+  box-shadow:0 8px 24px rgba(0,0,0,.10);
+}
+.cert-approved-bg{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(15,95,89,.07) 0 115px, transparent 116px),
+    radial-gradient(circle at 0% 100%, rgba(11,48,71,.05) 0 120px, transparent 121px),
+    linear-gradient(135deg,#fffdf8 0%,#ffffff 58%,#f7faf9 100%);
+}
+.cert-approved-bg::before{
+  content:"";
+  position:absolute;
+  inset:22px;
+  border:3px solid #0b3047;
+  border-radius:15px;
+}
+.cert-approved-bg::after{
+  content:"";
+  position:absolute;
+  inset:34px;
+  border:1px solid #d2aa55;
+  border-radius:11px;
+}
+
+.cert-approved-header{
+  position:absolute;
+  z-index:3;
+  top:50px;
+  right:72px;
+  left:72px;
+  height:110px;
+  display:grid;
+  grid-template-columns:1fr 250px 1fr;
+  align-items:start;
+  border-bottom:1px solid rgba(210,170,85,.55);
+  padding-bottom:14px;
+}
+.cert-header-right{
+  justify-self:start;
+  text-align:right;
+  display:grid;
+  gap:5px;
+  color:#0b3047;
+  line-height:1.3;
+}
+.cert-header-right strong{font-size:17px}
+.cert-header-right span{font-size:14px}
+.cert-header-center{
+  justify-self:center;
+  align-self:start;
+  width:220px;
+  height:94px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.cert-ministry-logo{
+  max-width:190px;
+  max-height:90px;
+  object-fit:contain;
+  display:block;
+}
+.cert-header-left{
+  justify-self:end;
+  text-align:left;
+  display:grid;
+  gap:6px;
+  color:#0b3047;
+}
+.cert-header-left strong{font-size:18px}
+.cert-header-left span{font-size:12px;color:#687a83}
+
+.cert-approved-main{
+  position:absolute;
+  z-index:3;
+  top:176px;
+  right:110px;
+  left:110px;
+  bottom:154px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+}
+.cert-approved-heading{
+  font-size:44px;
+  line-height:1.15;
+  font-weight:900;
+  color:#0b3047;
+  margin:0 0 8px;
+}
+.cert-approved-program{
+  font-size:26px;
+  line-height:1.35;
+  font-weight:900;
+  color:#0f5f59;
+  margin-bottom:22px;
+}
+.cert-approved-testimony{
+  font-size:20px;
+  line-height:1.65;
+  font-weight:700;
+  color:#405762;
+}
+.cert-approved-name{
+  min-width:570px;
+  max-width:860px;
+  margin:5px 0 12px;
+  padding:5px 28px 8px;
+  border-bottom:1px solid #d2aa55;
+  font-size:34px;
+  line-height:1.25;
+  font-weight:900;
+  color:#0f5f59;
+}
+.cert-approved-text{
+  max-width:880px;
+  font-size:19px;
+  line-height:1.9;
+  color:#405762;
+  margin:0;
+}
+.cert-facilitators{
+  margin-top:auto;
+  width:88%;
+  display:grid;
+  gap:11px;
+}
+.cert-facilitators-title{
+  font-size:17px;
+  font-weight:900;
+  color:#0b3047;
+  text-align:center;
+}
+.cert-facilitators-grid{
+  display:grid;
+  gap:10px 36px;
+  align-items:center;
+  justify-content:center;
+}
+.cert-facilitators-grid.count-1{grid-template-columns:minmax(280px,520px)}
+.cert-facilitators-grid.count-2{grid-template-columns:repeat(2,minmax(250px,1fr))}
+.cert-facilitators-grid.count-3{grid-template-columns:repeat(3,minmax(210px,1fr));width:100%}
+.cert-facilitators-grid.count-4{grid-template-columns:repeat(2,minmax(250px,1fr));width:82%;margin:auto}
+.cert-facilitator-name{
+  font-size:15px;
+  line-height:1.55;
+  font-weight:800;
+  color:#17394a;
+  text-align:center;
+  padding:5px 8px;
+  border-bottom:1px solid rgba(210,170,85,.7);
+}
+.cert-facilitators-grid.count-4 .cert-facilitator-name{font-size:14px}
+
+.cert-approved-footer{
+  position:absolute;
+  z-index:4;
+  right:76px;
+  left:76px;
+  bottom:58px;
+  display:grid;
+  grid-template-columns:1fr 190px 1fr;
+  align-items:end;
+  min-height:88px;
+}
+.cert-footer-right{
+  justify-self:start;
+  text-align:right;
+  display:grid;
+  gap:5px;
+  color:#0b3047;
+}
+.cert-footer-right strong{font-size:15px}
+.cert-footer-right span{font-size:14px}
+.cert-stamp-zone{
+  width:190px;
+  height:88px;
+  display:flex;
+  justify-content:center;
+  align-items:end;
+}
+.cert-approved .cert-official-stamp{
+  position:static !important;
+  width:118px !important;
+  max-height:82px;
+  object-fit:contain;
+  opacity:.96;
+  transform:none !important;
+}
+.cert-footer-left{
+  justify-self:end;
+  text-align:left;
+  display:grid;
+  gap:5px;
+  color:#0b3047;
+}
+.cert-footer-left strong{font-size:15px}
+.cert-footer-left span{font-size:18px;font-weight:900}
+.cert-approved-watermark{
+  position:absolute;
+  z-index:3;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  color:#9ba5aa;
+  font-size:9px;
+  white-space:nowrap;
+}
+
+/* لا أيقونات أو بطاقات داخل الشهادة الرسمية */
+.cert-approved .cert-workshop-details,
+.cert-approved .cert-signatures,
+.cert-approved .cert-date,
+.cert-approved .cert-implementers,
+.cert-approved .cert-school,
+.cert-approved .cert-body{
+  display:none !important;
+}
+
+/* 10.7.6 — خلفية ثابتة + شعار منجز المعتمد */
+.certificate-paper.cert-final{
+ position:relative;width:1123px;height:794px;overflow:hidden;direction:rtl;
+ font-family:Tahoma,"Segoe UI",Arial,sans-serif;background:#fffdf8;
+ background-size:100% 100%;background-position:center;background-repeat:no-repeat;
+ color:#0b3047;box-shadow:0 8px 24px rgba(0,0,0,.10)
+}
+.cert-final-header{
+ position:absolute;z-index:4;top:38px;right:78px;left:78px;height:105px;
+ display:grid;grid-template-columns:1fr 170px 1fr;align-items:start
+}
+.cert-final-org{justify-self:start;text-align:right;display:grid;gap:3px;line-height:1.35;color:#0b3047}
+.cert-final-org strong{font-size:17px;font-weight:900}.cert-final-org span{font-size:13px;font-weight:700}
+.cert-final-ministry{justify-self:center;width:170px;height:82px;display:flex;justify-content:center;align-items:flex-start}
+.cert-final-ministry img{max-width:145px;max-height:74px;object-fit:contain}
+.cert-final-manjaz{justify-self:end;width:250px;height:96px;display:flex;align-items:flex-start;justify-content:flex-end;overflow:hidden}
+.cert-final-manjaz img{width:245px;height:92px;object-fit:contain;object-position:center}
+.cert-final-main{
+ position:absolute;z-index:4;top:145px;right:118px;left:118px;bottom:145px;
+ display:flex;flex-direction:column;align-items:center;text-align:center
+}
+.cert-final-title{font-size:48px;line-height:1.12;font-weight:900;color:#0b3047}
+.cert-final-workshop{margin-top:6px;font-size:27px;line-height:1.35;font-weight:900;color:#0f5f59}
+.cert-final-testimony{margin-top:17px;font-size:20px;line-height:1.55;font-weight:800;color:#304d5b}
+.cert-final-name{
+ margin-top:7px;width:70%;box-sizing:border-box;padding:8px 22px 10px;border-radius:8px;
+ background:rgba(215,238,235,.82);font-size:35px;line-height:1.25;font-weight:900;color:#0f5f59
+}
+.cert-final-attendance{margin-top:13px;max-width:860px;font-size:18px;line-height:1.8;font-weight:700;color:#304d5b}
+.cert-final-wish{margin-top:3px;font-size:19px;line-height:1.65;font-weight:800;color:#304d5b}
+.cert-final .cert-facilitators{margin-top:auto;width:82%;display:grid;gap:7px}
+.cert-final .cert-facilitators-title{font-size:18px;font-weight:900;color:#0b3047;text-align:center}
+.cert-final .cert-facilitators-grid{display:grid;gap:7px 32px;justify-content:center;align-items:center}
+.cert-final .cert-facilitators-grid.count-1{grid-template-columns:minmax(320px,520px)}
+.cert-final .cert-facilitators-grid.count-2{grid-template-columns:repeat(2,minmax(260px,1fr))}
+.cert-final .cert-facilitators-grid.count-3{grid-template-columns:repeat(3,minmax(205px,1fr));width:100%}
+.cert-final .cert-facilitators-grid.count-4{grid-template-columns:repeat(2,minmax(260px,1fr));width:82%;margin:auto}
+.cert-final .cert-facilitator-name{border:0!important;padding:2px 8px;font-size:15px;line-height:1.5;font-weight:800;color:#17394a;text-align:center}
+.cert-final-footer{
+ position:absolute;z-index:4;right:86px;left:86px;bottom:46px;min-height:90px;
+ display:grid;grid-template-columns:1fr 185px 1fr;align-items:end
+}
+.cert-final-date{justify-self:start;text-align:center;min-width:190px;display:grid;gap:4px;color:#0b3047}
+.cert-final-date strong,.cert-final-principal strong{font-size:15px;font-weight:900}
+.cert-final-date span{font-size:14px;font-weight:700}
+.cert-final-stamp{justify-self:center;width:185px;height:90px;display:flex;align-items:center;justify-content:center}
+.cert-final-stamp img{width:126px;max-height:86px;object-fit:contain}
+.cert-final-principal{justify-self:end;text-align:center;min-width:220px;display:grid;gap:4px;color:#0b3047}
+.cert-final-principal span{font-size:18px;font-weight:900}
+.cert-final .cert-approved-bg,.cert-final .cert-reference-bg,.cert-final .cert-curve,.cert-final .cert-leaves,.cert-final .cert-approved-watermark{display:none!important}
+
+
+/* 10.7.7 — تحسين وضوح الخطوط في الشهادة */
+.cert-final-title{font-size:56px!important;line-height:1.08!important}
+.cert-final-workshop{font-size:32px!important;line-height:1.30!important;margin-top:7px!important}
+.cert-final-testimony{font-size:23px!important;line-height:1.50!important;margin-top:16px!important}
+.cert-final-name{
+  font-size:40px!important;line-height:1.22!important;
+  width:72%!important;padding:9px 24px 11px!important
+}
+.cert-final-attendance{
+  font-size:21px!important;line-height:1.72!important;
+  max-width:900px!important;margin-top:12px!important
+}
+.cert-final-wish{font-size:22px!important;line-height:1.55!important;margin-top:2px!important}
+.cert-final .cert-facilitators-title{font-size:21px!important}
+.cert-final .cert-facilitator-name{font-size:18px!important;line-height:1.45!important}
+.cert-final-date strong,.cert-final-principal strong{font-size:18px!important}
+.cert-final-date span{font-size:16px!important}
+.cert-final-principal span{font-size:21px!important}
+.cert-final-main{top:140px!important;bottom:143px!important}
+.cert-final-ministry img{max-width:130px!important;max-height:68px!important}
+
+
+/* 10.7.8 — تحسين دقة الشعارات، المنطقة الآمنة، التاريخ والتذييل */
+.certificate-paper.cert-final{
+  width:1123px!important;
+  height:794px!important;
+  overflow:hidden!important;
+}
+
+/* المنطقة الآمنة للترويسة */
+.cert-final-header{
+  top:54px!important;
+  right:84px!important;
+  left:84px!important;
+  height:96px!important;
+  grid-template-columns:1fr 170px 1fr!important;
+  align-items:start!important;
+}
+
+/* بيانات المدرسة */
+.cert-final-org{
+  margin-top:5px!important;
+  gap:4px!important;
+  line-height:1.38!important;
+}
+.cert-final-org strong{font-size:17px!important}
+.cert-final-org span{font-size:13.5px!important}
+
+/* شعار وزارة التعليم - الأصل المعتمد */
+.cert-final-ministry{
+  width:170px!important;
+  height:78px!important;
+  align-items:flex-start!important;
+  overflow:visible!important;
+}
+.cert-final-ministry img{
+  width:auto!important;
+  height:auto!important;
+  max-width:142px!important;
+  max-height:75px!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  image-rendering:auto!important;
+}
+
+/* شعار منجز - الأصل المعتمد */
+.cert-final-manjaz{
+  width:205px!important;
+  height:90px!important;
+  align-items:flex-start!important;
+  justify-content:flex-end!important;
+  overflow:visible!important;
+  margin-top:0!important;
+}
+.cert-final-manjaz img{
+  width:205px!important;
+  height:auto!important;
+  max-height:90px!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  image-rendering:auto!important;
+}
+
+/* متن الشهادة */
+.cert-final-main{
+  top:155px!important;
+  right:112px!important;
+  left:112px!important;
+  bottom:174px!important;
+}
+.cert-final-title{
+  font-size:56px!important;
+  line-height:1.06!important;
+}
+.cert-final-workshop{
+  font-size:32px!important;
+  line-height:1.28!important;
+  margin-top:6px!important;
+}
+.cert-final-testimony{
+  font-size:23px!important;
+  line-height:1.45!important;
+  margin-top:12px!important;
+}
+.cert-final-name{
+  font-size:40px!important;
+  line-height:1.18!important;
+  width:72%!important;
+  margin-top:6px!important;
+  padding:8px 24px 10px!important;
+}
+.cert-final-attendance{
+  font-size:22.5px!important;
+  line-height:1.62!important;
+  max-width:905px!important;
+  margin-top:10px!important;
+}
+.cert-final-wish{
+  font-size:22px!important;
+  line-height:1.45!important;
+  margin-top:2px!important;
+}
+
+/* التاريخ العربي: يعزل اتجاه الأرقام عن RTL */
+.cert-ar-date{
+  display:inline-block!important;
+  direction:ltr!important;
+  unicode-bidi:isolate!important;
+  white-space:nowrap!important;
+}
+
+/* رفع منفذات الورشة بصورة متوازنة */
+.cert-final .cert-facilitators{
+  margin-top:12px!important;
+  width:82%!important;
+  gap:5px!important;
+}
+.cert-final .cert-facilitators-title{
+  font-size:21px!important;
+  line-height:1.25!important;
+}
+.cert-final .cert-facilitators-grid{
+  gap:5px 30px!important;
+}
+.cert-final .cert-facilitator-name{
+  font-size:18px!important;
+  line-height:1.35!important;
+  padding:1px 8px!important;
+}
+
+/* التذييل داخل المنطقة الآمنة */
+.cert-final-footer{
+  right:92px!important;
+  left:92px!important;
+  bottom:67px!important;
+  min-height:82px!important;
+  display:grid!important;
+  grid-template-columns:1fr 190px 1fr!important;
+  align-items:center!important;
+}
+.cert-final-principal{
+  grid-column:3!important;
+  justify-self:end!important;
+  align-self:center!important;
+  min-width:225px!important;
+  text-align:center!important;
+  gap:3px!important;
+  color:#0b3047!important;
+}
+.cert-final-principal strong{
+  font-size:18px!important;
+  line-height:1.3!important;
+}
+.cert-final-principal span{
+  font-size:21px!important;
+  line-height:1.3!important;
+}
+.cert-final-stamp{
+  grid-column:2!important;
+  justify-self:center!important;
+  width:190px!important;
+  height:82px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.cert-final-stamp img{
+  width:124px!important;
+  height:auto!important;
+  max-height:80px!important;
+  object-fit:contain!important;
+}
+
+/* تاريخ التحرير: سطر واحد هادئ داخل الهامش السفلي */
+.cert-final-date-line{
+  position:absolute!important;
+  z-index:4!important;
+  right:96px!important;
+  left:96px!important;
+  bottom:48px!important;
+  text-align:right!important;
+  direction:rtl!important;
+  white-space:nowrap!important;
+  font-size:12.5px!important;
+  line-height:1!important;
+  font-weight:500!important;
+  color:#7f8e94!important;
+}
+
+/* منع أي أنماط قديمة من إظهار كتلة تاريخ منفصلة */
+.cert-final-date{display:none!important}
+
+
+/* 10.7.8b — ضبط بصري نهائي للشعارين والتذييل */
+.cert-final-header{
+  top:46px!important;
+  height:122px!important;
+}
+.cert-final-ministry{
+  width:145px!important;
+  height:112px!important;
+  overflow:visible!important;
+}
+.cert-final-ministry img{
+  width:142px!important;
+  height:auto!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+}
+.cert-final-manjaz{
+  width:205px!important;
+  height:128px!important;
+  overflow:visible!important;
+}
+.cert-final-manjaz img{
+  width:200px!important;
+  height:auto!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+}
+.cert-final-main{
+  top:166px!important;
+  bottom:170px!important;
+}
+.cert-final-footer{
+  bottom:78px!important;
+}
+.cert-final-date-line{
+  bottom:61px!important;
+}
+
+
+/* 10.7.9 — آخر تعديلات المعاينة */
+.cert-final-date-line{
+  right:50%!important;
+  left:auto!important;
+  transform:translateX(50%)!important;
+  bottom:7px!important;
+  width:max-content!important;
+  max-width:82%!important;
+  text-align:center!important;
+  direction:rtl!important;
+  white-space:nowrap!important;
+  font-size:11.5px!important;
+  line-height:1!important;
+  font-weight:500!important;
+  color:#7f8e94!important;
+  z-index:8!important;
+}
+
+/* 10.7.9b — منع قص تاريخ التحرير */
+.cert-final-date-line{
+  bottom:15px!important;
+  font-size:11px!important;
+}
+
+
+/* 10.7.10 — التكوين البصري المعتمد النهائي */
+
+/* الشعارات: الملفات الأصلية فقط، أصغر قليلًا، بلا قص أو تشويه */
+.cert-final-header{
+  top:48px!important;
+  right:84px!important;
+  left:84px!important;
+  height:105px!important;
+  grid-template-columns:1fr 150px 1fr!important;
+}
+.cert-final-ministry{
+  width:150px!important;
+  height:72px!important;
+}
+.cert-final-ministry img{
+  width:auto!important;
+  height:auto!important;
+  max-width:125px!important;
+  max-height:68px!important;
+  object-fit:contain!important;
+}
+.cert-final-manjaz{
+  width:180px!important;
+  height:82px!important;
+}
+.cert-final-manjaz img{
+  width:175px!important;
+  height:auto!important;
+  max-height:82px!important;
+  object-fit:contain!important;
+}
+
+/* اسم المدرسة في الترويسة سطر واحد */
+.cert-final-org span:last-child{
+  white-space:nowrap!important;
+}
+
+/* المتن مع مساحة منظمة للتوقيعات */
+.cert-final-main{
+  top:166px!important;
+  right:112px!important;
+  left:112px!important;
+  bottom:174px!important;
+}
+
+/* إلغاء تنسيق منفذات الورشة القديم */
+.cert-final .cert-facilitators{
+  display:none!important;
+}
+
+/* منفذات الورشة: سطر واحد بعد التمنيات مباشرة */
+.cert-facilitators-inline{
+  width:100%!important;
+  margin:12px auto 0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex-wrap:nowrap!important;
+  gap:54px!important;
+  direction:rtl!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+.cert-facilitator-inline{
+  display:inline-flex!important;
+  align-items:baseline!important;
+  justify-content:center!important;
+  gap:5px!important;
+  font-size:16.5px!important;
+  line-height:1.35!important;
+  color:#0b3047!important;
+  font-weight:600!important;
+}
+.cert-facilitator-inline b{
+  color:#119b91!important;
+  font-weight:800!important;
+}
+.cert-facilitator-inline span{
+  color:#0b3047!important;
+  font-weight:600!important;
+}
+/* منفذة واحدة = منتصف الصفحة */
+.cert-facilitators-inline.count-1{
+  justify-content:center!important;
+}
+/* منفذتان = سطر واحد متمركز */
+.cert-facilitators-inline.count-2{
+  justify-content:center!important;
+  gap:72px!important;
+}
+
+/* التذييل: المديرة أسفل اليسار، والختم أسفل منتصف الصفحة */
+.cert-final-footer{
+  position:absolute!important;
+  right:92px!important;
+  left:92px!important;
+  bottom:52px!important;
+  min-height:104px!important;
+  display:block!important;
+}
+.cert-final-principal{
+  position:absolute!important;
+  left:0!important;
+  right:auto!important;
+  bottom:4px!important;
+  width:250px!important;
+  min-width:0!important;
+  text-align:center!important;
+  color:#0b3047!important;
+}
+.cert-final-principal strong{
+  display:block!important;
+  font-size:16px!important;
+  line-height:1.25!important;
+  margin:0 0 5px!important;
+}
+.cert-final-principal span{
+  display:block!important;
+  font-size:18px!important;
+  line-height:1.3!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+}
+
+/* الختم الأصلي فقط، أصغر قليلًا، محفوظ النسبة */
+.cert-final-stamp{
+  position:absolute!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:0!important;
+  transform:translateX(-50%)!important;
+  width:118px!important;
+  height:78px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.cert-final-stamp img{
+  width:108px!important;
+  height:auto!important;
+  max-height:74px!important;
+  object-fit:contain!important;
+}
+
+/* تاريخ التحرير ملغى نهائيًا */
+.cert-final-date,
+.cert-final-date-line{
+  display:none!important;
+}
+
+/* الهامش السفلي متوازن ومماثل بصريًا للعلوي */
+.certificate-paper.cert-final{
+  padding-bottom:0!important;
+}
+
+/* 10.7.11 — browser-verified signature geometry */
+.cert-final-main{top:166px!important;bottom:150px!important;}
+.cert-final-wish{margin-top:2px!important;}
+.cert-facilitators-inline{margin-top:7px!important;gap:62px!important;}
+.cert-facilitator-inline{font-size:15.5px!important;}
+.cert-final-footer{bottom:43px!important;min-height:90px!important;}
+.cert-final-principal{left:10px!important;bottom:1px!important;width:245px!important;}
+.cert-final-principal strong{font-size:15.5px!important;margin-bottom:3px!important;}
+.cert-final-principal span{font-size:17px!important;}
+.cert-final-stamp{bottom:0!important;width:108px!important;height:72px!important;}
+.cert-final-stamp img{width:98px!important;max-height:68px!important;}
+
+
+/* 10.7.12 — approved footer adjustment only
+   Raise seal and principal block by approximately three text lines.
+   Principal is exactly three lines. */
+.cert-final-footer{
+  bottom:84px!important;
+  min-height:90px!important;
+}
+.cert-final-principal{
+  left:10px!important;
+  bottom:0!important;
+  width:245px!important;
+}
+.cert-final-principal strong{
+  display:block!important;
+  font-size:15.5px!important;
+  line-height:1.22!important;
+  margin:0 0 3px!important;
+}
+.cert-final-principal span{
+  display:block!important;
+  font-size:16.5px!important;
+  line-height:1.18!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+}
+.cert-final-stamp{
+  bottom:0!important;
+  width:108px!important;
+  height:72px!important;
+}
+.cert-final-stamp img{
+  width:98px!important;
+  max-height:68px!important;
+  object-fit:contain!important;
+}
+
+
+/* 10.7.13 — strict footer-only adjustment
+   Relative to 10.7.12:
+   - raise principal + seal by two additional text lines
+   - principal exactly two rows
+   - enlarge official seal within available space */
+.cert-final-footer{
+  bottom:116px!important;
+  min-height:92px!important;
+}
+.cert-final-principal{
+  left:8px!important;
+  bottom:0!important;
+  width:270px!important;
+  min-width:270px!important;
+  text-align:center!important;
+}
+.cert-final-principal strong{
+  display:block!important;
+  font-size:16px!important;
+  line-height:1.25!important;
+  margin:0 0 5px!important;
+  white-space:nowrap!important;
+}
+.cert-final-principal span{
+  display:block!important;
+  font-size:17px!important;
+  line-height:1.25!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+}
+
+/* larger original stamp, centered; no distortion */
+.cert-final-stamp{
+  bottom:-8px!important;
+  width:136px!important;
+  height:88px!important;
+}
+.cert-final-stamp img{
+  width:126px!important;
+  height:auto!important;
+  max-height:84px!important;
+  object-fit:contain!important;
+}
+
+
+/* 10.7.14 — الضابط الصارم الأخير
+   تعديلان فقط على 10.7.13:
+   1) تكبير الختم أربع درجات
+   2) إزاحة صف مديرة المدرسة وصف الاسم أربع درجات باتجاه اليمين
+*/
+.cert-final-stamp{
+  width:152px!important;
+  height:100px!important;
+}
+.cert-final-stamp img{
+  width:142px!important;
+  height:auto!important;
+  max-height:96px!important;
+  object-fit:contain!important;
+}
+.cert-final-principal{
+  left:24px!important;
+  right:auto!important;
+}
+
+
+/* 10.7.15 — ضابط تصحيح الشعارات فقط
+   ممنوع تغيير أي محاذاة أو موقع في الشهادة.
+   الملفات الأصلية تُعرض بنسبة أبعادها الطبيعية دون تمديد أو قص. */
+
+.cert-final-ministry img,
+.cert-final-manjaz img{
+  width:auto!important;
+  height:auto!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  transform:none!important;
+  filter:none!important;
+}
+
+/* الحفاظ على المواقع والحاويات كما هي، وتصحيح القياس داخلها فقط */
+.cert-final-ministry img{
+  max-width:125px!important;
+  max-height:68px!important;
+}
+
+.cert-final-manjaz img{
+  max-width:175px!important;
+  max-height:82px!important;
+}
+
+
+/* ==========================================================
+   10.7.17 — ضابط الشهادة الأخير
+   قاعدة القياس:
+   - الدرجة / نقرة السهم = 4px
+   - النزول بعدد الأسطر = زيادة مسافة الصف بالمقدار المطلوب
+   - لا تغيير لأي محاذاة أو موقع غير المذكور أدناه
+   ========================================================== */
+
+/* تكبير شعار وزارة التعليم 4 درجات */
+.cert-final-ministry img{
+  max-width:141px!important;
+  max-height:84px!important;
+}
+
+/* تكبير شعار منجز 4 درجات */
+.cert-final-manjaz img{
+  max-width:191px!important;
+  max-height:98px!important;
+}
+
+/* ورشة التدريس التبادلي: نزول 3 أسطر */
+.cert-final-workshop{
+  margin-top:18px!important; /* 6 + 12 */
+}
+
+/* صف "تشهد ...": نزول سطرين */
+.cert-final-testimony{
+  margin-top:20px!important; /* 12 + 8 */
+}
+
+/* صف "قد حضرت الورشة ...": نزول 4 أسطر */
+.cert-final-attendance{
+  margin-top:26px!important; /* 10 + 16 */
+}
+
+/* صف منفذة/منفذات الورشة: نزول 3 أسطر */
+.cert-facilitators-inline{
+  margin-top:19px!important; /* 7 + 12 */
+}
+
+/* الختم: محاذاة 4 نقرات إلى اليمين + تكبير 4 درجات */
+.cert-final-stamp{
+  left:calc(50% + 16px)!important;
+  width:168px!important;
+  height:116px!important;
+}
+.cert-final-stamp img{
+  width:158px!important;
+  height:auto!important;
+  max-height:112px!important;
+  object-fit:contain!important;
+}
+
+/* مديرة المدرسة + الاسم: 3 نقرات إلى اليمين */
+.cert-final-principal{
+  left:36px!important; /* 24 + 12 */
+  right:auto!important;
+}
+
+
+/* 10.7.18 — تعديل الختم فقط
+   من موضع 10.7.17 الحالي: إزاحة إضافية 5 نقرات إلى اليمين
+   النقرة = 4px، الإجمالي الإضافي = 20px
+   لا تغيير في الحجم أو أي عنصر آخر */
+.cert-final-stamp{
+  left:calc(50% + 36px)!important; /* كان +16px، أضيف +20px */
+}
+
+
+/* 10.7.20 — تثبيت موضع الختم بين العرض وPDF
+   السبب: التموضع السابق اعتمد على % + translateX مما قد ينتج فرقًا عند الالتقاط.
+   الحل: موضع مطلق ثابت داخل نفس Footer، بلا نسب مئوية وبلا transform.
+   لا تغيير في أي عنصر آخر. */
+.cert-final-stamp{
+  left:442px!important;
+  right:auto!important;
+  transform:none!important;
+  bottom:-8px!important;
+  width:168px!important;
+  height:116px!important;
+}
+.cert-final-stamp img{
+  width:158px!important;
+  height:auto!important;
+  max-height:112px!important;
+  object-fit:contain!important;
+}
