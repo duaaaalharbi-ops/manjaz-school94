@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.23-training-type";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
 (function(){
   "use strict";
 
@@ -37,7 +37,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.23-training-type";
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=10.7.23"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=10.7.24"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
