@@ -1,15 +1,11 @@
-MANJAZ 4.2
-Replace these files in GitHub:
-- index.html
-- home-v3.js
-- home-header-v36.css
-- home-header-v36.js
-- styles.css
-- certificates.css
+MANJAZ 4.3
+ارفع الملفات الموجودة في هذا المجلد فوق الملفات الحالية بنفس الأسماء ثم Commit changes.
 
-Changes:
-- Removed certificate issue actions from home cards
-- Certificate issue remains inside workshop cards and applied-lesson cards
-- Removed Programs under construction
-- Raised approved certificate footer by exactly 7px
-- Preserved established workshop certificate typography
+التعديلات:
+- بطاقة الدروس التطبيقية أصبحت بنفس إخراج بطاقة الورش
+- إضافة تعديل وحذف للورش والدروس بدون تكبير الخط
+- تفعيل زر إصدار شهادة الورشة عبر الآلية الأصلية
+- شهادة الدروس بنفس التوزيع البصري العام لشهادة الورش
+- حفظ محلي تلقائي لبيانات الدروس عند اكتمال نموذج الإضافة
+- لا يوجد إصدار شهادة في بطاقات الصفحة الرئيسية
+- لا يوجد قسم برامج قيد الإنشاء

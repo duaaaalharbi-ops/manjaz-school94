@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7-ios-force-open";
 (function(){
   "use strict";
 
@@ -10,34 +10,13 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
 
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
   const cleanName=value=>String(value||"").replace(/\s+/g," ").trim().slice(0,MAX_NAME);
-
-  function normalizeWorkshopDate(raw){
-    const source=String(raw||"").trim().replace(/\s+/g," ");
-    const m=source.match(/^(.+?)\s+([٠-٩0-9]{1,2})\/([٠-٩0-9]{1,2})\/([٠-٩0-9]{3,4})\s*هـ?$/);
-    if(!m) return {day:"",date:source};
-    return {day:m[1],date:`${m[4]}.${m[3]}.${m[2]}هـ`};
-  }
-
-  function hijriTodayNumeric(){
-    try{
-      const parts=new Intl.DateTimeFormat("ar-SA-u-ca-islamic",{day:"numeric",month:"numeric",year:"numeric"}).formatToParts(new Date());
-      const get=t=>(parts.find(p=>p.type===t)?.value||"").replace(/[^\u0660-\u06690-9]/g,"");
-      const y=get("year"),m=get("month"),d=get("day");
-      return y&&m&&d?`${y}.${m}.${d}هـ`:"";
-    }catch(_){return "";}
-  }
-
-  function dateSpan(text){
-    return `<span class="cert-ar-date" dir="ltr">${esc(text)}</span>`;
-  }
-  const isAvailable=w=>!!w && w.available!==false && w.availability!=="unavailable" && w.availability!=="hidden";
-  const getActive=()=>workshops().filter(isAvailable);
+  const getActive=()=>workshops().filter(w=>w&&w.available!==false);
   const getWorkshop=id=>workshops().find(w=>String(w.id)===String(id));
 
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=2"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=10.7"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -105,36 +84,24 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
     return `${names.length>1?"المنفذتان":"المنفذة"}: ${names.map(esc).join("، ")}`;
   }
 
-
-  function workshopDurationLabel(w){
-    const text=String((w&&w.durationText)||(w&&w.duration)||"").trim();
-    if(text) return text;
-    const n=Number(w&&w.durationHours);
-    if(!Number.isFinite(n)||n<=0) return "—";
-    if(n===1) return "ساعة واحدة";
-    if(n===2) return "ساعتان";
-    return `${n} ساعات`;
-  }
-
   function workshopCards(){
     const all=workshops();
     if(!all.length) return '<div class="cert-empty"><h3>لا توجد شهادات متاحة حاليًا</h3><p>ستظهر الورش هنا عند إضافتها إلى بيانات القسم</p></div>';
     return `<div class="cert-grid">${all.map(w=>`<article class="cert-workshop-card" data-workshop-id="${esc(w.id)}">
-      <span class="cert-status ${!isAvailable(w)?'off':''}">${!isAvailable(w)?'غير متاحة':'متاحة للإصدار'}</span>
-      <h3>ورشة «${esc(w.title||"بدون عنوان")}»</h3>
+      <span class="cert-status ${w.available===false?'off':''}">${w.available===false?'غير متاحة':'متاحة للإصدار'}</span>
+      <h3>${esc(w.title||"بدون عنوان")}</h3>
       <div class="cert-meta cert-meta-stack">
-        <span><b>التاريخ:</b> ${(()=>{const d=normalizeWorkshopDate(w.date);return `${esc(d.day)} ${dateSpan(d.date||"—")}`.trim();})()}</span>
-        <span><b>المدة:</b> ${esc(workshopDurationLabel(w))}</span>
-        <span><b>نوع التدريب:</b> ${esc(w.trainingType||"—")}</span>
-        ${implementersLabel(w)?`<span><b>${Array.isArray(w.implementers)&&w.implementers.length>1?'منفذات الورشة':'منفذة الورشة'}:</b> ${(w.implementers||[]).map(esc).join('، ')}</span>`:""}
+        <span><b>التاريخ:</b> ${esc(w.date||"—")}</span>
+        <span><b>المدة:</b> ${esc(w.duration||"—")}</span>
+        ${implementersLabel(w)?`<span><b>${Array.isArray(w.implementers)&&w.implementers.length>1?'المنفذتان':'المنفذة'}:</b> ${(w.implementers||[]).map(esc).join('، ')}</span>`:""}
       </div>
-      ${!isAvailable(w)?'':'<button class="cert-btn primary cert-choose" data-id="'+esc(w.id)+'">إصدار الشهادة</button>'}
+      ${w.available===false?'':'<button class="cert-btn primary cert-choose" data-id="'+esc(w.id)+'">إصدار الشهادة</button>'}
     </article>`).join("")}</div>`;
   }
 
   function pageHTML(){
     return `<div class="certificates-page">
-      <section class="page-intro certificates-intro"><div><span class="kicker">منجز</span><h2>${SECTION_TITLE}</h2><p>اختاري الورشة المنفذة، ثم اكتبي اسمك واضغطي إنشاء الشهادة. الشهادة الظاهرة هي النسخة النهائية نفسها التي سيتم تحميلها بصيغة PDF</p></div></section>
+      <section class="page-intro certificates-intro"><div><span class="kicker">منجز</span><h2>${SECTION_TITLE}</h2><p>اختاري الورشة المنفذة، ثم اكتبي اسمك كما ترغبين في ظهوره على الشهادة، وراجعي المعاينة قبل تحميل ملف PDF</p></div></section>
       <section class="surface panel"><div class="panel-head"><h3>الورش المتاحة</h3><span>${getActive().length} متاحة حاليًا</span></div>${workshopCards()}</section>
       <section id="certIssuePanel" class="cert-form" style="display:none">
         <div class="form-section-title">إصدار الشهادة</div>
@@ -143,7 +110,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
         <label>الاسم كما ترغبين في ظهوره في الشهادة<input id="certTeacherName" maxlength="${MAX_NAME}" autocomplete="name" placeholder="اكتبي الاسم كاملًا"></label>
         <div class="cert-help">راجعي كتابة الاسم بعناية قبل اعتماد الشهادة، وسيتم حذف المسافات الزائدة تلقائيًا. لا يتم حفظ الاسم أو الشهادة في ذاكرة الموقع أو قاعدة البيانات</div>
         <div class="cert-actions">
-          <button type="button" class="cert-btn primary" id="certPreviewBtn">إنشاء الشهادة</button>
+          <button type="button" class="cert-btn primary" id="certPreviewBtn">معاينة الشهادة</button>
           <button type="button" class="cert-btn secondary" id="certEditNameBtn" disabled>تعديل الاسم</button>
           <button type="button" class="cert-btn gold" id="certDownloadBtn" disabled>تحميل الشهادة PDF</button>
           <button type="button" class="cert-btn secondary" id="certBackBtn">رجوع</button>
@@ -151,7 +118,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
         <div id="certMsg" class="cert-message" aria-live="polite"></div>
       </section>
       <section id="certPreviewWrap" class="cert-preview-wrap">
-        <div class="cert-preview-note">هذه هي الشهادة النهائية. سيتم تحميل نفس الشهادة الظاهرة دون إعادة بناء أو تغيير في التصميم</div>
+        <div class="cert-preview-note">هذه معاينة للشهادة، تأكدي من صحة الاسم قبل التحميل</div>
         <div class="certificate-stage"><div id="certificatePaper" class="certificate-paper"></div></div>
       </section>
     </div>`;
@@ -202,70 +169,23 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
     return `${esc(parts[0])}<span class="cert-inline-name">${esc(name)}</span>${esc(parts.slice(1).join(token))}`;
   }
 
-
-  function implementersBlock(w){
-    const names=Array.isArray(w.implementers)?w.implementers.filter(Boolean).slice(0,4):[];
-    if(!names.length) return "";
-    const cls=`count-${Math.min(names.length,4)}`;
-    return `<div class="cert-facilitators-inline ${cls}">
-      ${names.map(n=>`<span class="cert-facilitator-inline"><b>منفذة الورشة:</b><span>${esc(n)}</span></span>`).join("")}
-    </div>`;
-  }
-
   function renderCertificate(w,name){
     const paper=document.getElementById("certificatePaper");
     if(!paper) return;
-    const workshopTitle=esc(w.title||"");
-    const workshopDate=normalizeWorkshopDate(w.date);
-    const workshopDatePhrase=workshopDate.day
-      ? `${esc(workshopDate.day)} الموافق ${dateSpan(workshopDate.date)}`
-      : dateSpan(workshopDate.date);
-    const durationHours=Number(w.durationHours);
-    const approvedAttendance=String(w.attendanceText||"").trim();
-    const durationText=String(w.durationText||w.duration||"").trim();
-    function trainingDurationPhrase(){
-      if(approvedAttendance){
-        return approvedAttendance.replace(/^بواقع\s*/,"").trim();
-      }
-      if(Number.isFinite(durationHours)&&durationHours>0){
-        if(durationHours===1) return "ساعة تدريبية واحدة";
-        if(durationHours===2) return "ساعتين تدريبيتين";
-        const words={3:"ثلاث ساعات تدريبية",4:"أربع ساعات تدريبية",5:"خمس ساعات تدريبية",6:"ست ساعات تدريبية",7:"سبع ساعات تدريبية",8:"ثمان ساعات تدريبية",9:"تسع ساعات تدريبية",10:"عشر ساعات تدريبية"};
-        return words[durationHours]||`${durationHours} ساعات تدريبية`;
-      }
-      if(durationText==="ساعة") return "ساعة تدريبية واحدة";
-      if(durationText==="ساعتان"||durationText==="ساعتين") return "ساعتين تدريبيتين";
-      return durationText ? `${durationText} تدريبية` : "";
-    }
-    const durationPhrase=trainingDurationPhrase();
-
-    paper.className="certificate-paper cert-final";
-    paper.style.backgroundImage='url("manjaz-certificate-background.png")';
-    paper.innerHTML=`
-      <header class="cert-final-header">
-        <div class="cert-final-org">
-          <strong>وزارة التعليم</strong>
-          <span>إدارة تعليم جدة</span>
-          <span>الثانوية الرابعة والتسعون - مسارات</span>
-        </div>
-        <div class="cert-final-ministry"><img src="ministry-logo.png" alt="شعار وزارة التعليم"></div>
-        <div class="cert-final-manjaz"><img src="manjaz-logo.png" alt="شعار منجز"></div>
-      </header>
-
-      <main class="cert-final-main">
-        <div class="cert-final-title">شهادة حضور</div>
-        <div class="cert-final-workshop">ورشة «${workshopTitle}»</div>
-        <div class="cert-final-testimony">تشهد الثانوية الرابعة والتسعون - مسارات بأن المعلمة</div>
-        <div class="cert-final-name">${esc(name)}</div>
-        <div class="cert-final-attendance">قد حضرت الورشة التدريبية بعنوان «${workshopTitle}»، والتي نُفذت يوم ${workshopDatePhrase}${durationPhrase ? `، بواقع ${esc(durationPhrase)}` : ""}</div>
-        <div class="cert-final-wish">متمنين لها دوام التوفيق ومزيدًا من التميز والعطاء</div>
-        ${implementersBlock(w)}
-      </main>
-
-      <footer class="cert-final-footer">
-        <div class="cert-final-principal"><strong>مديرة المدرسة</strong><span>زينب ناصر علي حكمي</span></div>
-        <div class="cert-final-stamp"><img src="official-school-stamp.png" alt="الختم الرسمي للمدرسة"></div>
-      </footer>`;
+    const template=String(w.templateImage||"").trim();
+    paper.className="certificate-paper"+(template?" has-template":"");
+    paper.style.backgroundImage=template?`url("${template.replace(/"/g,'%22')}")`:"";
+    const implementers=Array.isArray(w.implementers)?w.implementers.filter(Boolean):[];
+    paper.innerHTML=`${template?'':'<div class="cert-default-bg"></div><i class="cert-accent a"></i><i class="cert-accent b"></i>'}
+      <div class="cert-body">
+        <div class="cert-school">${esc(SCHOOL)}</div>
+        <div class="cert-heading">شهادة حضور</div>
+        <div class="cert-program">${esc(w.title||"")}</div>
+        <div class="cert-text">${certificateTextHTML(w,name)}</div>
+        <div class="cert-date">${esc(w.date||"")} • ${esc(w.duration||"")}</div>
+        ${implementers.length?`<div class="cert-implementers"><strong>${implementers.length>1?'المنفذتان':'المنفذة'}:</strong> ${implementers.map(esc).join('، ')}</div>`:""}
+      </div>
+      <img class="cert-official-stamp" src="official-school-stamp.png" alt="الختم الرسمي للمدرسة"><div class="cert-watermark">تم إصدار هذه الشهادة إلكترونيًا عبر منصة منجز</div>`;
   }
 
   function fileName(w,name){
@@ -273,76 +193,21 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
     return `شهادة - ${clean(w.title)} - ${clean(name)}.pdf`;
   }
 
-  async function waitForCertificateAssets(root){
-    try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
-    const imgs=[...root.querySelectorAll("img")];
-    await Promise.all(imgs.map(img=>new Promise(resolve=>{
-      if(img.complete && img.naturalWidth>0) return resolve();
-      const done=()=>resolve();
-      img.addEventListener("load",done,{once:true});
-      img.addEventListener("error",done,{once:true});
-    })));
-    await new Promise(resolve=>{
-      const bg=new Image();
-      bg.onload=bg.onerror=resolve;
-      bg.src="manjaz-certificate-background.png";
-      if(bg.complete) resolve();
-    });
-  }
-
-  async function snapshotCurrentPreview(){
-    const source=document.getElementById("certificatePaper");
-    if(!source) throw new Error("Certificate not found");
-
-    // 10.7.19: the visible certificate IS the final certificate.
-    // Capture the exact same DOM element shown to the user — no clone, no rebuild,
-    // no alternate PDF CSS and no forced certificate dimensions.
-    await waitForCertificateAssets(source);
-    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-
-    const rect=source.getBoundingClientRect();
-    const targetLongSide=4200; // high-resolution print capture
-    const visualLongSide=Math.max(rect.width,rect.height,1);
-    const captureScale=Math.max(3,Math.min(12,targetLongSide/visualLongSide));
-
-    return await window.html2canvas(source,{
-      scale:captureScale,
-      useCORS:true,
-      allowTaint:false,
-      backgroundColor:"#ffffff",
-      logging:false,
-      scrollX:-window.scrollX,
-      scrollY:-window.scrollY,
-      windowWidth:document.documentElement.clientWidth,
-      windowHeight:document.documentElement.clientHeight
-    });
-  }
-
   async function downloadPDF(w,name){
     const msg=document.getElementById("certMsg"),btn=document.getElementById("certDownloadBtn");
     try{
-      btn.disabled=true;msg.className="cert-message info";msg.textContent="جارٍ تجهيز نفس الشهادة الظاهرة بصيغة PDF عالية الجودة...";
+      btn.disabled=true;msg.className="cert-message info";msg.textContent="جارٍ إنشاء الشهادة...";
       await injectLibraries();
-
-      // The PDF is generated from the exact visible final certificate element.
-      const canvas=await snapshotCurrentPreview();
-      const img=canvas.toDataURL("image/png");
-
+      const node=document.getElementById("certificatePaper");
+      const canvas=await window.html2canvas(node,{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false});
+      const img=canvas.toDataURL("image/jpeg",0.96);
       const {jsPDF}=window.jspdf;
       const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
-      const pageW=297,pageH=210;
-      const ratio=Math.min(pageW/canvas.width,pageH/canvas.height);
-      const imgW=canvas.width*ratio,imgH=canvas.height*ratio;
-      const x=(pageW-imgW)/2,y=(pageH-imgH)/2;
-      pdf.addImage(img,"PNG",x,y,imgW,imgH,undefined,"NONE");
+      pdf.addImage(img,"JPEG",0,0,297,210,undefined,"FAST");
       pdf.save(fileName(w,name));
-
-      msg.className="cert-message success";
-      msg.innerHTML='<strong>تم تحميل الشهادة بنجاح</strong><br>ملف PDF مأخوذ من نفس الشهادة النهائية الظاهرة، دون إعادة بناء التصميم أو حفظ الاسم في الموقع';
+      msg.className="cert-message success";msg.innerHTML='<strong>تم إنشاء الشهادة بنجاح</strong><br>تم إنشاء ملف PDF دون حفظ الاسم أو الشهادة في الموقع';
     }catch(err){
-      console.error(err);
-      msg.className="cert-message error";
-      msg.textContent="تعذر إنشاء ملف PDF، تحققي من الاتصال ثم أعيدي المحاولة";
+      console.error(err);msg.className="cert-message error";msg.textContent="تعذر إنشاء ملف PDF، تحققي من الاتصال ثم أعيدي المحاولة";
     }finally{btn.disabled=false;}
   }
 
@@ -351,9 +216,9 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
 
     document.querySelectorAll(".cert-choose").forEach(btn=>btn.addEventListener("click",()=>{
       const w=getWorkshop(btn.dataset.id);
-      if(!isAvailable(w)) return;
+      if(!w||w.available===false) return;
       hiddenId.value=w.id;
-      const sd=normalizeWorkshopDate(w.date); selected.innerHTML=`<strong>${esc(w.title)}</strong><span>${esc(sd.day)} ${dateSpan(sd.date)} • ${esc(workshopDurationLabel(w))} • ${esc(w.trainingType||"—")}</span>${implementersLabel(w)?`<small>${implementersLabel(w)}</small>`:""}`;
+      selected.innerHTML=`<strong>${esc(w.title)}</strong><span>${esc(w.date)} • ${esc(w.duration||"")}</span>${implementersLabel(w)?`<small>${implementersLabel(w)}</small>`:""}`;
       panel.style.display="grid";
       preview.classList.remove("is-visible");
       msg.textContent="";
@@ -367,7 +232,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
     });
 
     editBtn?.addEventListener("click",()=>{
-      name.disabled=false;name.focus();downloadBtn.disabled=true;msg.className="cert-message info";msg.textContent="عدّلي الاسم ثم اضغطي إنشاء الشهادة مرة أخرى";
+      name.disabled=false;name.focus();downloadBtn.disabled=true;msg.className="cert-message info";msg.textContent="عدّلي الاسم ثم اضغطي معاينة الشهادة مرة أخرى";
     });
 
     previewBtn?.addEventListener("click",()=>{
@@ -375,12 +240,12 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
       if(!w){msg.className="cert-message error";msg.textContent="اختاري ورشة من البطاقات أعلاه";return;}
       if(!n){msg.className="cert-message error";msg.textContent="اكتبي الاسم كما ترغبين في ظهوره في الشهادة";name.focus();return;}
       if(n.length<3){msg.className="cert-message error";msg.textContent="يرجى كتابة الاسم بشكل كامل";name.focus();return;}
-      renderCertificate(w,n);preview.classList.add("is-visible");name.disabled=true;editBtn.disabled=false;downloadBtn.disabled=false;msg.className="cert-message info";msg.textContent="تم إنشاء الشهادة النهائية. يمكنك الآن تحميل نفس الشهادة بصيغة PDF";preview.scrollIntoView({behavior:"smooth",block:"start"});
+      renderCertificate(w,n);preview.classList.add("is-visible");name.disabled=true;editBtn.disabled=false;downloadBtn.disabled=false;msg.className="cert-message info";msg.textContent="راجعي الاسم في المعاينة قبل تحميل الشهادة";preview.scrollIntoView({behavior:"smooth",block:"start"});
     });
 
     downloadBtn?.addEventListener("click",()=>{
       const w=getWorkshop(hiddenId.value),n=cleanName(name.value);
-      if(!w||!n||!preview.classList.contains("is-visible")){msg.className="cert-message error";msg.textContent="أنشئي الشهادة أولًا";return;}
+      if(!w||!n||!preview.classList.contains("is-visible")){msg.className="cert-message error";msg.textContent="عايني الشهادة أولًا";return;}
       downloadPDF(w,n);
     });
   }
@@ -447,4 +312,50 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "2-successful-class";
   }else{
     boot();
   }
+})();
+
+
+/* MANJAZ 4.3 — تفعيل مؤكد لروابط الشهادة + تعديل/حذف الورش */
+(()=>{
+  "use strict";
+  const STORE="manjaz_certificate_workshops_v43";
+  const esc43=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+  const base=()=>Array.isArray(window.MANJAZ_CERTIFICATE_WORKSHOPS)?window.MANJAZ_CERTIFICATE_WORKSHOPS:[];
+  function items(){try{const x=JSON.parse(localStorage.getItem(STORE)||"null");if(Array.isArray(x))return x}catch(_){}return base().slice()}
+  function save(x){localStorage.setItem(STORE,JSON.stringify(x));window.MANJAZ_CERTIFICATE_WORKSHOPS=x}
+
+  function addManagement(){
+    document.querySelectorAll(".cert-workshop-card").forEach(card=>{
+      if(card.querySelector(".workshop-manage-actions")) return;
+      const id=card.dataset.workshopId;
+      const box=document.createElement("div"); box.className="workshop-manage-actions";
+      box.innerHTML='<button type="button" class="lesson-mini-action edit">تعديل</button><button type="button" class="lesson-mini-action delete">حذف</button>';
+      card.appendChild(box);
+      box.querySelector(".edit").onclick=e=>{
+        e.stopPropagation();
+        const a=items(),i=a.findIndex(x=>String(x.id)===String(id)); if(i<0)return;
+        const x=a[i];
+        const title=prompt("اسم الورشة",x.title||"");if(title===null)return;
+        const date=prompt("التاريخ",x.date||"");if(date===null)return;
+        const duration=prompt("المدة",x.duration||x.durationText||"");if(duration===null)return;
+        a[i]={...x,title:title.trim(),date:date.trim(),duration:duration.trim(),durationText:duration.trim()};
+        save(a); location.reload();
+      };
+      box.querySelector(".delete").onclick=e=>{
+        e.stopPropagation();
+        if(!confirm("هل تريدين حذف هذه الورشة؟"))return;
+        save(items().filter(x=>String(x.id)!==String(id))); location.reload();
+      };
+    });
+  }
+
+  document.addEventListener("click",e=>{
+    const b=e.target.closest(".cert-choose");
+    if(!b)return;
+    /* زر الإصدار الأصلي يبقى هو المسؤول عن إنشاء الشهادة؛ هذا فقط يضمن عدم ابتلاع النقرة */
+    e.stopPropagation();
+  },true);
+
+  const mo=new MutationObserver(addManagement);
+  document.addEventListener("DOMContentLoaded",()=>{addManagement();mo.observe(document.body,{childList:true,subtree:true})});
 })();

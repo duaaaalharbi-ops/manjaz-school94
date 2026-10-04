@@ -1550,26 +1550,129 @@ async function openDetails(kind,id){
 }
 
 
-/* V2 — قسم مستقل للدروس التطبيقية */
+/* MANJAZ 4.3 — الدروس التطبيقية: بطاقات موحدة + حفظ + تعديل/حذف + شهادة */
 const APPLIED_LESSONS = Array.isArray(window.MANJAZ_APPLIED_LESSONS) ? window.MANJAZ_APPLIED_LESSONS : [];
+const LESSON_STORAGE_KEY="manjaz_applied_lessons_v43";
+
+function lessonItems(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(LESSON_STORAGE_KEY)||"null");
+    if(Array.isArray(saved)) return saved;
+  }catch(_){}
+  return APPLIED_LESSONS.slice();
+}
+function saveLessonItems(items){
+  localStorage.setItem(LESSON_STORAGE_KEY,JSON.stringify(items));
+  window.MANJAZ_APPLIED_LESSONS=items;
+}
+function lessonId(x,i){ return String(x.id||x.lessonName||x.title||("lesson-"+i)); }
+
 function wireAppliedLessons(){
   const list=byId("lessonList"), empty=byId("lessonEmpty");
   if(!list || !empty) return;
-  const items=APPLIED_LESSONS.filter(x=>x && x.available!==false);
+  const items=lessonItems().filter(x=>x && x.available!==false);
   list.innerHTML=""; empty.style.display=items.length?"none":"block";
-  items.forEach(x=>{
-    const card=document.createElement("article"); card.className="achievement-card applied-lesson-card";
-    card.innerHTML=`<span class="badge">درس تطبيقي</span><h3>${esc(x.lessonName||x.title||"")}</h3>
-      <div class="meta"><span>التاريخ: ${esc(x.date||"")}</span><span>الاستراتيجيات: ${esc(x.strategies||"")}</span><span>الصف: ${esc(x.grade||"")}</span><span>المعلمة: ${esc(x.teacher||"")}</span></div>
-      <button type="button" class="btn btn-primary applied-certificate-btn">إصدار شهادة حضور درس تطبيقي</button>`;
+
+  items.forEach((x,i)=>{
+    const id=lessonId(x,i);
+    const card=document.createElement("article");
+    card.className="cert-workshop-card applied-lesson-card";
+    card.dataset.lessonId=id;
+    card.innerHTML=`
+      <span class="cert-status">معتمد</span>
+      <h3>${esc(x.lessonName||x.title||"بدون عنوان")}</h3>
+      <div class="cert-meta cert-meta-stack">
+        <span><b>التاريخ:</b> ${esc(x.date||"—")}</span>
+        <span><b>الاستراتيجيات:</b> ${esc(x.strategies||"—")}</span>
+        <span><b>الصف:</b> ${esc(x.grade||"—")}</span>
+        <span><b>اسم المعلمة:</b> ${esc(x.teacher||"—")}</span>
+      </div>
+      <div class="lesson-card-actions">
+        ${x.url?`<a class="lesson-link-btn" href="${esc(x.url)}" target="_blank" rel="noopener">استعراض المنجز</a>`:""}
+        <button type="button" class="cert-btn primary applied-certificate-btn">إصدار شهادة الحضور</button>
+        <button type="button" class="lesson-mini-action edit" aria-label="تعديل">تعديل</button>
+        <button type="button" class="lesson-mini-action delete" aria-label="حذف">حذف</button>
+      </div>`;
+
     card.querySelector(".applied-certificate-btn").addEventListener("click",()=>{
       window.dispatchEvent(new CustomEvent("manjaz:applied-lesson-certificate",{detail:x}));
-      if(typeof window.openAppliedLessonCertificate==="function") window.openAppliedLessonCertificate(x);
-      else alert("تم تجهيز بيانات الدرس لإصدار شهادة الحضور");
+      window.openAppliedLessonCertificate(x);
     });
+    card.querySelector(".lesson-mini-action.edit").addEventListener("click",()=>editAppliedLesson(id));
+    card.querySelector(".lesson-mini-action.delete").addEventListener("click",()=>deleteAppliedLesson(id));
     list.appendChild(card);
   });
 }
+
+function editAppliedLesson(id){
+  const items=lessonItems();
+  const idx=items.findIndex((x,i)=>lessonId(x,i)===id);
+  if(idx<0) return;
+  const x=items[idx];
+  const title=prompt("اسم الدرس",x.lessonName||x.title||""); if(title===null)return;
+  const date=prompt("التاريخ",x.date||""); if(date===null)return;
+  const strategies=prompt("الاستراتيجيات",x.strategies||""); if(strategies===null)return;
+  const grade=prompt("الصف",x.grade||""); if(grade===null)return;
+  const teacher=prompt("اسم المعلمة",x.teacher||""); if(teacher===null)return;
+  items[idx]={...x,lessonName:title.trim(),date:date.trim(),strategies:strategies.trim(),grade:grade.trim(),teacher:teacher.trim()};
+  saveLessonItems(items);
+  wireAppliedLessons();
+}
+
+function deleteAppliedLesson(id){
+  if(!confirm("هل تريدين حذف هذا الدرس التطبيقي؟")) return;
+  const items=lessonItems().filter((x,i)=>lessonId(x,i)!==id);
+  saveLessonItems(items);
+  wireAppliedLessons();
+}
+
+/* نفس التوزيع البصري المعتمد لشهادة الورش، مع بيانات الدرس */
+window.openAppliedLessonCertificate=function(x){
+  const name=prompt("الاسم كما ترغبين في ظهوره في الشهادة","");
+  if(name===null || !name.trim()) return;
+  const overlay=document.createElement("div");
+  overlay.className="lesson-cert-overlay";
+  overlay.innerHTML=`
+    <div class="lesson-cert-shell">
+      <div class="lesson-cert-toolbar">
+        <button type="button" data-close>رجوع</button>
+        <button type="button" data-print>تحميل / طباعة PDF</button>
+      </div>
+      <div class="certificate-stage">
+        <div class="certificate-paper cert-approved lesson-certificate-paper">
+          <div class="cert-approved-heading">شهادة حضور</div>
+          <div class="cert-approved-program">درس تطبيقي</div>
+          <div class="cert-approved-testimony">تشهد الثانوية الرابعة والتسعون بحضور</div>
+          <div class="cert-approved-name">${esc(name.trim())}</div>
+          <div class="cert-approved-text">الدرس التطبيقي «${esc(x.lessonName||x.title||"")}»</div>
+          <div class="cert-approved-text">بتاريخ ${esc(x.date||"—")} — تقديم ${esc(x.teacher||"—")}</div>
+          <div class="cert-approved-footer">بوابة منجزات المدرسة الرقمية • الثانوية الرابعة والتسعون</div>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector("[data-close]").onclick=()=>overlay.remove();
+  overlay.querySelector("[data-print]").onclick=()=>window.print();
+};
+
+/* حفظ تلقائي عند اكتمال نموذج إضافة درس إذا كان موجودًا */
+document.addEventListener("submit",e=>{
+  const form=e.target;
+  if(!form || !form.matches("[data-applied-lesson-form],#appliedLessonForm,.applied-lesson-form")) return;
+  const fd=new FormData(form);
+  const item={
+    id:String(Date.now()),
+    lessonName:String(fd.get("lessonName")||fd.get("title")||"").trim(),
+    date:String(fd.get("date")||"").trim(),
+    strategies:String(fd.get("strategies")||"").trim(),
+    grade:String(fd.get("grade")||"").trim(),
+    teacher:String(fd.get("teacher")||"").trim(),
+    url:String(fd.get("url")||"").trim(),
+    available:true
+  };
+  if(!item.lessonName) return;
+  const items=lessonItems(); items.unshift(item); saveLessonItems(items);
+},{capture:true});
 
 function setupDetailDialog(){
   const dialog=byId("detailDialog");
