@@ -1,0 +1,42 @@
+/* Manjaz 3.4 — certificate and card management fixes */
+
+/* Workshop certificate: lock to A4 landscape and prevent mobile CSS from turning it vertical */
+.certificate-stage{overflow:auto!important;-webkit-overflow-scrolling:touch!important}
+.certificate-paper,.certificate-paper.cert-approved{
+  width:1123px!important;height:794px!important;min-width:1123px!important;max-width:none!important;
+  aspect-ratio:1123/794!important;transform:none!important;margin:0 auto!important;box-sizing:border-box!important
+}
+@media(max-width:1000px){.certificate-paper,.certificate-paper.cert-approved{transform:none!important;margin:0 auto!important}}
+@media(max-width:680px){.certificate-stage{padding:4px!important}.certificate-paper,.certificate-paper.cert-approved{transform:none!important;margin:0!important}}
+
+/* Applied lesson certificate: landscape + smaller typography + protected stamp area */
+.applied-cert-stage{overflow:auto!important;-webkit-overflow-scrolling:touch!important}
+.applied-cert-paper{
+  width:1122px!important;height:793px!important;min-width:1122px!important;max-width:none!important;
+  aspect-ratio:297/210!important;transform:none!important;box-sizing:border-box!important
+}
+.applied-cert-paper .cert-final-main{inset:24% 12% 21%!important;justify-content:center!important}
+.applied-cert-paper .cert-final-title{font-size:34px!important;line-height:1.2!important}
+.applied-cert-paper .cert-final-workshop{font-size:23px!important;line-height:1.35!important;margin-top:7px!important}
+.applied-cert-paper .cert-final-testimony{font-size:16px!important;line-height:1.6!important;margin-top:8px!important}
+.applied-cert-paper .cert-final-name{font-size:28px!important;line-height:1.2!important;margin-top:6px!important;max-width:740px!important}
+.applied-cert-paper .cert-final-attendance{font-size:14px!important;line-height:1.7!important;margin-top:8px!important;max-width:720px!important}
+.applied-cert-paper .cert-final-wish{font-size:14px!important;line-height:1.55!important;margin-top:7px!important}
+.applied-cert-paper .cert-final-facilitator{font-size:12px!important}
+.applied-cert-paper .cert-final-header{inset:5% 7% auto!important}
+.applied-cert-paper .cert-final-org{font-size:11px!important;line-height:1.45!important}
+.applied-cert-paper .cert-final-ministry img,.applied-cert-paper .cert-final-manjaz img{max-height:60px!important;max-width:132px!important}
+.applied-cert-paper .cert-final-footer{inset:auto 8% 5.5%!important;gap:10px!important}
+.applied-cert-paper .cert-final-principal{font-size:11px!important}
+.applied-cert-paper .cert-final-stamp img{width:100px!important}
+@media(max-width:700px){.applied-cert-paper{min-width:1122px!important;width:1122px!important;height:793px!important}}
+
+/* Edit / delete actions */
+.community-manage-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.c-edit{background:#fff8e8!important;color:#765719!important;border:1px solid #c49a46!important}
+.c-delete{background:#fff1f1!important;color:#9f2f2f!important;border:1px solid #b23a3a!important}
+.community-edit-overlay{position:fixed;inset:0;z-index:100001;background:#0008;display:none;padding:18px;overflow:auto;direction:rtl}
+.community-edit-overlay.open{display:block}
+.community-edit-panel{max-width:760px;margin:4vh auto;background:#fff;border-radius:18px;padding:20px}
+.community-edit-panel .form-grid{margin-top:14px}
+@media(max-width:680px){.community-manage-actions{grid-template-columns:1fr}}
