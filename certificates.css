@@ -415,3 +415,6 @@
 .cert-approved-testimony,.cert-approved-text{font-weight:700}
 .cert-approved-name{font-weight:900}
 .cert-approved-footer{bottom:65px !important}
+
+/* 4.3 shared workshop/lesson certificate layout */
+.lesson-certificate-page .cert-final-footer{bottom:65px!important}

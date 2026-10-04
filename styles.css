@@ -1099,40 +1099,15 @@ textarea{min-height:105px;resize:vertical}
 /* MANJAZ 4.1 cleanup */
 .topbar,.footer{display:none!important}
 
-
-/* MANJAZ 4.3 — lesson cards inherit workshop card output */
-.applied-lesson-card.cert-workshop-card{
-  cursor:default;
-  background:#fff;
-  border:1px solid #dce5e6;
-  border-radius:18px;
-  padding:18px 16px;
-  box-shadow:none;
+/* MANJAZ 4.3 — workshop/lesson card parity */
+.applied-lessons-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.applied-lesson-card{cursor:default!important}
+.record-actions{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-top:14px}
+.record-icon-action{
+  width:34px!important;height:34px!important;min-height:34px!important;padding:0!important;
+  display:inline-grid!important;place-items:center;border-radius:9px;border:1px solid currentColor;
+  font-size:14px!important;line-height:1!important;background:transparent;font-weight:700;
 }
-.applied-lesson-card .cert-status{font-size:12px}
-.applied-lesson-card h3{font-size:20px;line-height:1.55;margin:12px 0}
-.applied-lesson-card .cert-meta{display:grid;gap:7px;color:#7b8790;font-size:14px;line-height:1.75}
-.lesson-card-actions{display:grid;gap:9px;margin-top:16px}
-.lesson-link-btn{
-  display:flex;align-items:center;justify-content:center;min-height:42px;
-  border:1px solid #dce5e6;border-radius:12px;background:#fff;
-  color:var(--navy);text-decoration:none;font:inherit;font-weight:700;
-}
-.lesson-mini-action,.workshop-manage-actions .lesson-mini-action{
-  appearance:none;background:transparent;border:0;padding:5px 2px;
-  font:inherit;font-size:13px!important;font-weight:700;line-height:1.2;
-  text-align:right;cursor:pointer;
-}
-.lesson-mini-action.edit{color:#8a6b24}
-.lesson-mini-action.delete{color:#b13a3a}
-.workshop-manage-actions{display:flex;gap:16px;margin-top:7px;justify-content:flex-start}
-.lesson-cert-overlay{position:fixed;inset:0;z-index:99999;background:rgba(10,31,45,.82);overflow:auto;padding:20px 10px}
-.lesson-cert-shell{max-width:1000px;margin:auto}
-.lesson-cert-toolbar{display:flex;gap:8px;margin-bottom:10px}
-.lesson-cert-toolbar button{border:0;border-radius:10px;padding:9px 13px;font:inherit}
-.lesson-certificate-paper{position:relative}
-@media print{
-  body>*:not(.lesson-cert-overlay){display:none!important}
-  .lesson-cert-overlay{position:static;background:#fff;padding:0}
-  .lesson-cert-toolbar{display:none!important}
-}
+.record-icon-action.edit{color:#0f5f59}
+.record-icon-action.delete{color:#a12626}
+@media(max-width:680px){.record-actions{grid-template-columns:1fr auto auto!important}.record-icon-action{width:34px!important;min-width:34px!important}}
