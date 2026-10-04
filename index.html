@@ -98,23 +98,45 @@
       </div>
     </section>
 
-    <section class="section-block">
-      <div class="section-title">
-        <div>
-          <span class="kicker">مكونات المنصة</span>
-          <h3>أقسام التوثيق</h3>
-        </div>
-      </div>
+    <section class="section-block home-feature-section" id="featuredAchievementsHome">
+      <div class="section-title"><div><span class="kicker">منجز</span><h3>أبرز المنجزات</h3></div></div>
       <div class="category-grid">
-        <article class="category-card"><span class="cat-no">01</span><strong>الإدارة المدرسية</strong><small>القيادة والتنظيم والحوكمة</small></article>
-        <article class="category-card"><span class="cat-no">02</span><strong>التعليم والتعلم</strong><small>الممارسات التعليمية والاستراتيجيات</small></article>
-        <article class="category-card"><span class="cat-no">03</span><strong>نواتج التعلم</strong><small>التحصيل والنتائج والأثر</small></article>
-        <article class="category-card"><span class="cat-no">04</span><strong>البيئة المدرسية</strong><small>المرافق والجاهزية والبيئة الداعمة</small></article>
-        <article class="category-card"><span class="cat-no">05</span><strong>المجتمع المحلي</strong><small>التواصل والمبادرات المجتمعية</small></article>
-        <article class="category-card"><span class="cat-no">06</span><strong>قصص ملهمة</strong><small>نماذج نجاح مؤثرة</small></article>
-        <article class="category-card"><span class="cat-no">07</span><strong>التكريمات والحوافز</strong><small>التقدير والجوائز والتحفيز</small></article>
-        <article class="category-card"><span class="cat-no">08</span><strong>البرامج والمبادرات</strong><small>البرامج النوعية والمشروعات</small></article>
-        <article class="category-card"><span class="cat-no">09</span><strong>الدروس التطبيقية</strong><small>حضور الدروس التطبيقية وإصدار الشهادات</small></article>
+        <article class="category-card"><span class="cat-no">01</span><strong>أبرز المنجزات</strong><small>استعراض أبرز منجزات المدرسة وشواهد الأثر</small><a class="cert-home-link" href="#achievements">استعراض المنجزات</a><a class="cert-home-link" href="#add">إضافة منجز</a></article>
+      </div>
+    </section>
+
+    <section class="section-block home-feature-section" id="trainingWorkshopsHome">
+      <div class="section-title"><div><span class="kicker">التطوير المهني</span><h3>الورش التدريبية</h3></div></div>
+      <div class="category-grid">
+        <article class="category-card" role="button" tabindex="0" data-open-certificates="1"><span class="cat-no">02</span><strong>الورش التدريبية</strong><small>الورش المنفذة وإصدار شهادات الحضور الرقمية</small><a class="cert-home-link" href="#workshops">استعراض وإضافة ورشة</a><a class="cert-home-link" href="#home" data-open-certificates="1">إصدار شهادة</a></article>
+      </div>
+    </section>
+
+    <section class="section-block home-feature-section" id="appliedLessonsHome">
+      <div class="section-title"><div><span class="kicker">الممارسات التعليمية</span><h3>الدروس التطبيقية</h3></div></div>
+      <div class="category-grid">
+        <article class="category-card"><span class="cat-no">03</span><strong>الدروس التطبيقية</strong><small>استعراض الدروس التطبيقية وإصدار شهادات الحضور</small><a class="cert-home-link" href="#lessons">استعراض وإضافة الدروس</a></article>
+      </div>
+    </section>
+
+    <section class="section-block home-feature-section" id="communityPartnershipHome">
+      <div class="section-title"><div><span class="kicker">التكامل المجتمعي</span><h3>الشراكة المجتمعية</h3></div></div>
+      <div class="category-grid">
+        <article class="category-card"><span class="cat-no">04</span><strong>الشراكة المجتمعية</strong><small>توثيق الشراكات والمبادرات المشتركة وأثرها</small><a class="cert-home-link" href="#partners">استعراض الشراكات</a><a class="cert-home-link" href="#partners" data-open-partner-add="1">إضافة شراكة</a></article>
+      </div>
+    </section>
+
+    <section class="section-block home-feature-section" id="knowledgeProductsHome">
+      <div class="section-title"><div><span class="kicker">نقل الخبرة</span><h3>نماذج الإنتاج المعرفي القابلة للتطبيق</h3></div></div>
+      <div class="category-grid">
+        <article class="category-card"><span class="cat-no">05</span><strong>نماذج الإنتاج المعرفي القابلة للتطبيق</strong><small>نماذج وأدوات معرفية قابلة للاستفادة والتطبيق</small><a class="cert-home-link" href="#knowledge">استعراض وإضافة نموذج</a></article>
+      </div>
+    </section>
+
+    <section class="section-block home-feature-section" id="programsUnderConstructionHome">
+      <div class="section-title"><div><span class="kicker">قيد التطوير</span><h3>برامج طور الإنشاء</h3></div></div>
+      <div class="category-grid">
+        <article class="category-card"><span class="cat-no">06</span><strong>برامج طور الإنشاء</strong><small>برامج يجري إعدادها وتطويرها ضمن بوابة منجز</small><a class="cert-home-link" href="#programs">استعراض وإضافة برنامج</a></article>
       </div>
     </section>
   </template>
@@ -556,9 +578,10 @@
     </div>
   </dialog>
 
-<script src="applied-lessons-data.js?v=10.7.26"></script>
-<script src="app.js?v=10.7.26"></script>
+<script src="applied-lessons-data.js?v=10.7.28"></script>
+<script src="app.js?v=10.7.28"></script>
 <script src="certificates-data.js?v=10.7.24"></script>
 <script src="certificates.js?v=10.7.24"></script>
-<script src="applied-lessons.js?v=10.7.26"></script>
+<script src="applied-lessons.js?v=10.7.28"></script>
+<script src="community-sections.js?v=10.7.28"></script>
 
