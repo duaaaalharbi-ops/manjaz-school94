@@ -1,0 +1,1 @@
+window.MANJAZ_APPLIED_LESSONS = Array.isArray(window.MANJAZ_APPLIED_LESSONS) ? window.MANJAZ_APPLIED_LESSONS : [];

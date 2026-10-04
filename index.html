@@ -27,6 +27,7 @@
         <a href="#reports" data-route="reports"><span class="icon">◔</span><span>التقارير والإحصاءات</span></a>
         <a href="#awards" data-route="awards"><span class="icon">◇</span><span>التكريمات والحوافز</span></a>
         <a href="#partners" data-route="partners"><span class="icon">◎</span><span>الشراكات</span></a>
+        <a href="#lessons" data-route="lessons"><span class="icon">▣</span><span>الدروس التطبيقية</span></a>
         <a href="#settings" data-route="settings"><span class="icon">⚙</span><span>الإعدادات</span></a>
       </nav>
 
@@ -113,6 +114,7 @@
         <article class="category-card"><span class="cat-no">06</span><strong>قصص ملهمة</strong><small>نماذج نجاح مؤثرة</small></article>
         <article class="category-card"><span class="cat-no">07</span><strong>التكريمات والحوافز</strong><small>التقدير والجوائز والتحفيز</small></article>
         <article class="category-card"><span class="cat-no">08</span><strong>البرامج والمبادرات</strong><small>البرامج النوعية والمشروعات</small></article>
+        <article class="category-card"><span class="cat-no">09</span><strong>الدروس التطبيقية</strong><small>حضور الدروس التطبيقية وإصدار الشهادات</small></article>
       </div>
     </section>
   </template>
@@ -524,6 +526,13 @@
     </div>
   </template>
 
+
+  <template id="lessonsTpl">
+    <section class="page-intro"><div><span class="kicker">التطوير المهني</span><h2>الدروس التطبيقية</h2><p>توثيق حضور الدروس التطبيقية وإصدار شهادة حضور</p></div></section>
+    <div id="lessonList" class="achievement-list"></div>
+    <div id="lessonEmpty" class="surface empty-state"><div class="empty-mark">▣</div><h3>لا توجد دروس تطبيقية متاحة حاليًا</h3><p>ستظهر الدروس المتاحة هنا عند إضافتها</p></div>
+  </template>
+
   <template id="placeholderTpl">
     <section class="page-intro">
       <div>
@@ -547,7 +556,9 @@
     </div>
   </dialog>
 
-<script src="app.js"></script>
+<script src="applied-lessons-data.js?v=10.7.26"></script>
+<script src="app.js?v=10.7.26"></script>
 <script src="certificates-data.js?v=10.7.24"></script>
 <script src="certificates.js?v=10.7.24"></script>
+<script src="applied-lessons.js?v=10.7.26"></script>
 

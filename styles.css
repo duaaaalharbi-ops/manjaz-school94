@@ -659,3 +659,8 @@ textarea{min-height:105px;resize:vertical}
   .add-attachments .attachment-grid{grid-template-columns:1fr}
   .achievement-card{padding:18px}
 }
+
+
+/* V10.7.25 — الدروس التطبيقية */
+.applied-lesson-card{cursor:default}
+.applied-lesson-card .applied-certificate-btn{width:100%;margin-top:14px}

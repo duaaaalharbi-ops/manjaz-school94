@@ -874,7 +874,7 @@ function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 9.8 • سحابي";
+  badge.textContent="الإصدار 10.7.25 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -911,6 +911,9 @@ function render(){
   } else if(route==="reports"){
     view.appendChild(clone("reportsTpl"));
     wireReports();
+  } else if(route==="lessons"){
+    view.appendChild(clone("lessonsTpl"));
+    wireAppliedLessons();
   } else {
     view.appendChild(clone("placeholderTpl"));
     byId("placeholderTitle").textContent=placeholders[route] || "قريبًا";
@@ -1543,6 +1546,28 @@ async function openDetails(kind,id){
         });
       }
     }
+  });
+}
+
+
+/* V10.7.25 — قسم مستقل للدروس التطبيقية */
+const APPLIED_LESSONS = Array.isArray(window.MANJAZ_APPLIED_LESSONS) ? window.MANJAZ_APPLIED_LESSONS : [];
+function wireAppliedLessons(){
+  const list=byId("lessonList"), empty=byId("lessonEmpty");
+  if(!list || !empty) return;
+  const items=APPLIED_LESSONS.filter(x=>x && x.available!==false);
+  list.innerHTML=""; empty.style.display=items.length?"none":"block";
+  items.forEach(x=>{
+    const card=document.createElement("article"); card.className="achievement-card applied-lesson-card";
+    card.innerHTML=`<span class="badge">درس تطبيقي</span><h3>${esc(x.lessonName||x.title||"")}</h3>
+      <div class="meta"><span>التاريخ: ${esc(x.date||"")}</span><span>الاستراتيجيات: ${esc(x.strategies||"")}</span><span>الصف: ${esc(x.grade||"")}</span><span>المعلمة: ${esc(x.teacher||"")}</span></div>
+      <button type="button" class="btn btn-primary applied-certificate-btn">إصدار شهادة حضور درس تطبيقي</button>`;
+    card.querySelector(".applied-certificate-btn").addEventListener("click",()=>{
+      window.dispatchEvent(new CustomEvent("manjaz:applied-lesson-certificate",{detail:x}));
+      if(typeof window.openAppliedLessonCertificate==="function") window.openAppliedLessonCertificate(x);
+      else alert("تم تجهيز بيانات الدرس لإصدار شهادة الحضور");
+    });
+    list.appendChild(card);
   });
 }
 
