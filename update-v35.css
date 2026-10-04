@@ -1,0 +1,28 @@
+/* MANJAZ 3.5 — school header + certificate refinements */
+.school-home-header{direction:rtl;text-align:center;padding:22px 26px;margin-bottom:18px;border-top:4px solid #0b3047}
+.school-home-header span{display:block;font-size:13px;color:#687780;margin-bottom:6px}
+.school-home-header h1{margin:0;color:#0b3047;font-size:clamp(25px,4vw,38px);font-weight:900;line-height:1.35}
+.school-home-header small{display:block;margin-top:7px;color:#0f5f59;font-size:14px;font-weight:800}
+.cert-home-section{display:none!important}
+
+/* Workshop certificate remains A4 landscape on all screens */
+.certificate-stage{overflow:auto!important;-webkit-overflow-scrolling:touch!important}
+.certificate-paper,.certificate-paper.cert-approved{width:1123px!important;height:794px!important;min-width:1123px!important;max-width:none!important;aspect-ratio:1123/794!important;transform:none!important;box-sizing:border-box!important}
+
+/* Applied lesson certificate — balanced readable typography */
+.applied-cert-paper{width:1122px!important;height:793px!important;min-width:1122px!important;max-width:none!important;aspect-ratio:297/210!important;transform:none!important}
+.applied-cert-paper .cert-final-main{inset:23% 11% 18%!important;justify-content:center!important}
+.applied-cert-paper .cert-final-title{font-size:39px!important;line-height:1.18!important}
+.applied-cert-paper .cert-final-workshop{font-size:26px!important;line-height:1.35!important;margin-top:7px!important}
+.applied-cert-paper .cert-final-testimony{font-size:18px!important;line-height:1.6!important;margin-top:8px!important}
+.applied-cert-paper .cert-final-name{font-size:32px!important;line-height:1.2!important;margin-top:6px!important;max-width:760px!important}
+.applied-cert-paper .cert-final-attendance{font-size:16px!important;line-height:1.7!important;margin-top:8px!important;max-width:760px!important}
+.applied-cert-paper .cert-final-wish{font-size:16px!important;line-height:1.55!important;margin-top:7px!important}
+.applied-cert-paper .cert-final-footer{inset:auto 8% 9%!important;gap:12px!important}
+.applied-cert-paper .cert-final-principal{font-size:12px!important}
+.applied-cert-paper .cert-final-stamp img{width:112px!important}
+@media(max-width:700px){
+ .school-home-header{padding:18px 14px}
+ .certificate-paper,.certificate-paper.cert-approved{min-width:1123px!important;transform:none!important;margin:0!important}
+ .applied-cert-paper{min-width:1122px!important;width:1122px!important;height:793px!important}
+}
