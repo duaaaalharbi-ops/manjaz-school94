@@ -1,4 +1,4 @@
-window.MANJAZ_COMMUNITY_SECTIONS_VERSION="10.7.28";
+window.MANJAZ_COMMUNITY_SECTIONS_VERSION="2";
 (function(){
 "use strict";
 const STORE="manjaz_public_section_submissions_v1";

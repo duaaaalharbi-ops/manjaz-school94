@@ -1,4 +1,4 @@
-window.MANJAZ_APPLIED_LESSONS_RUNTIME_VERSION = "10.7.26";
+window.MANJAZ_APPLIED_LESSONS_RUNTIME_VERSION = "2";
 (function(){
   "use strict";
   const MAX_NAME=80;

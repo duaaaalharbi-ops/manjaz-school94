@@ -874,7 +874,7 @@ function showVersionBadge(){
   if(document.getElementById("manjazVersionBadge")) return;
   const badge=document.createElement("div");
   badge.id="manjazVersionBadge";
-  badge.textContent="الإصدار 10.7.28 • سحابي";
+  badge.textContent="الإصدار 2 • سحابي";
   badge.style.cssText="position:fixed;left:8px;bottom:8px;z-index:99999;background:#0f5f59;color:#fff;padding:4px 8px;border-radius:8px;font:700 11px/1.2 sans-serif;opacity:.82;pointer-events:none";
   document.body.appendChild(badge);
 }
@@ -1550,7 +1550,7 @@ async function openDetails(kind,id){
 }
 
 
-/* V10.7.25 — قسم مستقل للدروس التطبيقية */
+/* V2 — قسم مستقل للدروس التطبيقية */
 const APPLIED_LESSONS = Array.isArray(window.MANJAZ_APPLIED_LESSONS) ? window.MANJAZ_APPLIED_LESSONS : [];
 function wireAppliedLessons(){
   const list=byId("lessonList"), empty=byId("lessonEmpty");

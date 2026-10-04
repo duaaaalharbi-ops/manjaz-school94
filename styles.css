@@ -661,13 +661,13 @@ textarea{min-height:105px;resize:vertical}
 }
 
 
-/* V10.7.25 — الدروس التطبيقية */
+/* V2 — الدروس التطبيقية */
 .applied-lesson-card{cursor:default}
 .applied-lesson-card .applied-certificate-btn{width:100%;margin-top:14px}
 
 
 /* =========================================================
-   MANJAZ 10.7.29 — Mobile responsive refinement
+   MANJAZ 2 — Mobile responsive refinement
    Desktop rules above remain unchanged.
    ========================================================= */
 @media (max-width: 768px) {
@@ -884,7 +884,7 @@ textarea{min-height:105px;resize:vertical}
 
 
 /* =========================================================
-   MANJAZ 10.7.30 — Professional home service cards
+   MANJAZ 2 — Professional home service cards
    ========================================================= */
 .home-sections-title,
 .home-services-heading,
@@ -1025,4 +1025,27 @@ textarea{min-height:105px;resize:vertical}
   .service-card-actions button {
     min-height: 48px !important;
   }
+}
+
+
+/* MANJAZ RELEASE 2 — fixed home-card action layout */
+.home-card-actions,
+.home-service-actions,
+.service-card-actions {
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:10px !important;
+  width:100% !important;
+}
+.home-card-actions > a,
+.home-card-actions > button,
+.home-service-actions > a,
+.home-service-actions > button,
+.service-card-actions > a,
+.service-card-actions > button {
+  display:flex !important;
+  width:100% !important;
+  flex:0 0 auto !important;
+  text-decoration:none !important;
 }
