@@ -1098,16 +1098,3 @@ textarea{min-height:105px;resize:vertical}
 
 /* MANJAZ 4.1 cleanup */
 .topbar,.footer{display:none!important}
-
-/* MANJAZ 4.3 — workshop/lesson card parity */
-.applied-lessons-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
-.applied-lesson-card{cursor:default!important}
-.record-actions{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-top:14px}
-.record-icon-action{
-  width:34px!important;height:34px!important;min-height:34px!important;padding:0!important;
-  display:inline-grid!important;place-items:center;border-radius:9px;border:1px solid currentColor;
-  font-size:14px!important;line-height:1!important;background:transparent;font-weight:700;
-}
-.record-icon-action.edit{color:#0f5f59}
-.record-icon-action.delete{color:#a12626}
-@media(max-width:680px){.record-actions{grid-template-columns:1fr auto auto!important}.record-icon-action{width:34px!important;min-width:34px!important}}

@@ -416,5 +416,14 @@
 .cert-approved-name{font-weight:900}
 .cert-approved-footer{bottom:65px !important}
 
-/* 4.3 shared workshop/lesson certificate layout */
-.lesson-certificate-page .cert-final-footer{bottom:65px!important}
+/* MANJAZ 4.3 — professional cards */
+.v43-lesson-card{background:#fff!important;border:1px solid #dce4e7!important;border-radius:16px!important;padding:16px!important;box-shadow:0 7px 18px rgba(11,48,71,.05)!important}
+.v43-lesson-card h3{color:#0b3047!important;font-size:18px!important;margin:8px 0 10px!important}
+.v43-lesson-card .cert-meta{display:grid!important;gap:7px!important;color:#52656f!important;font-size:14px!important}
+.v43-mini-actions{display:flex;gap:8px;justify-content:flex-start;margin-top:9px;padding-top:8px;border-top:1px solid #edf1f2}
+.v43-icon{border:0;background:transparent!important;padding:3px 5px!important;min-height:auto!important;width:auto!important;font-size:13px!important;line-height:1!important;cursor:pointer}
+.v43-edit{color:#0f5f59!important}.v43-delete{color:#9b3b3b!important}
+.v43-add-workshop,.v43-add-lesson{width:auto!important;min-height:38px!important;margin-top:8px}
+.v43-cert-dialog{border:0;padding:0;background:transparent;max-width:96vw}.v43-cert-dialog::backdrop{background:rgba(5,24,36,.55)}
+.v43-cert-shell{background:#eef3f4;padding:10px;border-radius:16px;max-width:96vw;max-height:94vh;overflow:auto}
+.v43-cert-controls{display:flex;gap:8px;justify-content:center;margin-bottom:8px;position:sticky;top:0;z-index:20}
