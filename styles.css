@@ -1094,3 +1094,7 @@ textarea{min-height:105px;resize:vertical}
   .home-main-group .category-card strong{font-size:22px}
   .home-main-group .cert-home-link{min-height:48px;display:flex;align-items:center}
 }
+
+
+/* MANJAZ 4.1 cleanup */
+.topbar,.footer{display:none!important}
