@@ -1051,163 +1051,27 @@ textarea{min-height:105px;resize:vertical}
 }
 
 
-/* =========================================================
-   MANJAZ — RELEASE 3
-   Homepage information architecture and unified action system
-   ========================================================= */
-.v3-source-section { display:none !important; }
-
-.v3-home-architecture{
-  direction:rtl;
-  display:grid;
-  gap:30px;
-  margin-top:24px;
-}
-.v3-home-section{
-  display:grid;
-  gap:14px;
-}
-.v3-section-heading{
-  margin:0;
-  padding:0 3px 8px;
-  font-size:20px;
-  line-height:1.45;
-  font-weight:800;
-  text-align:right;
-}
-.v3-card-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:16px;
-}
-.v3-home-section:nth-child(1) .v3-card-grid,
-.v3-home-section:nth-child(3) .v3-card-grid,
-.v3-home-section:nth-child(4) .v3-card-grid{
-  grid-template-columns:1fr;
-}
-.v3-home-card{
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  min-height:220px;
-  padding:22px;
-  border-radius:20px;
-  background:var(--surface,#fff);
-  border:1px solid rgba(11,48,71,.10);
-  box-shadow:0 8px 24px rgba(11,48,71,.06);
-  box-sizing:border-box;
-}
-.v3-home-card h3{
-  margin:0 0 10px;
-  font-size:25px;
-  line-height:1.45;
-  font-weight:800;
-}
-.v3-card-description{
-  margin:0;
-  line-height:1.85;
-}
-.v3-actions{
-  margin-top:auto;
-  padding-top:20px;
-  display:flex;
-  flex-direction:column;
-  gap:9px;
-  width:100%;
-}
-.v3-action{
-  width:100%;
-  min-height:46px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:11px 15px;
-  border:0;
-  border-radius:12px;
-  text-decoration:none !important;
-  font:inherit;
-  font-size:14px;
-  font-weight:700;
-  cursor:pointer;
-  box-sizing:border-box;
-  transition:transform .15s ease,filter .15s ease;
-}
-.v3-action:hover{transform:translateY(-1px);filter:brightness(.98)}
-.v3-action.is-view{
-  background:rgba(11,48,71,.075);
-  color:#0b3047;
-}
-.v3-action.is-view::after{content:"←";font-weight:800}
-.v3-action.is-add{
-  background:#0b3047;
-  color:#fff;
-}
-.v3-action.is-add::after{content:"+";font-size:20px;line-height:1}
-.v3-action.is-certificate{
-  background:rgba(164,125,50,.13);
-  color:#6d531f;
-}
-.v3-action.is-certificate::after{content:"▧";font-size:16px}
-.v3-action.is-unavailable{opacity:.45;cursor:not-allowed}
-
+/* MANJAZ RELEASE 3 — EXACT APPROVED HOME STRUCTURE */
+.hx-old-home{display:none!important}
+.hx-home{direction:rtl;display:grid;gap:30px;margin:24px 0}
+.hx-section{display:grid;gap:14px}
+.hx-heading{margin:0;padding:0 2px 8px;text-align:right;font-size:21px;line-height:1.45;font-weight:800}
+.hx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.hx-section:first-child .hx-grid,.hx-section:nth-child(3) .hx-grid,.hx-section:nth-child(4) .hx-grid{grid-template-columns:1fr}
+.hx-card{display:flex;flex-direction:column;min-width:0;min-height:220px;padding:22px;border-radius:20px;background:#fff;border:1px solid rgba(11,48,71,.10);box-shadow:0 8px 24px rgba(11,48,71,.06);box-sizing:border-box}
+.hx-card h3{margin:0 0 10px;font-size:25px;line-height:1.45;font-weight:800}
+.hx-card p{margin:0;line-height:1.85}
+.hx-actions{margin-top:auto;padding-top:20px;display:flex;flex-direction:column;gap:9px;width:100%}
+.hx-action{width:100%;min-height:46px;padding:11px 15px;border:0;border-radius:12px;display:flex;align-items:center;justify-content:space-between;text-decoration:none!important;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-sizing:border-box}
+.hx-view{background:rgba(11,48,71,.075);color:#0b3047}.hx-view::after{content:"←";font-weight:800}
+.hx-add{background:#0b3047;color:#fff}.hx-add::after{content:"+";font-size:20px}
+.hx-certificate{background:rgba(164,125,50,.14);color:#6d531f}.hx-certificate::after{content:"▧"}
+.hx-disabled{opacity:.42;cursor:not-allowed}
 @media(max-width:768px){
-  .v3-home-architecture{gap:24px;margin-top:18px}
-  .v3-section-heading{font-size:18px}
-  .v3-card-grid,
-  .v3-home-section:nth-child(1) .v3-card-grid,
-  .v3-home-section:nth-child(3) .v3-card-grid,
-  .v3-home-section:nth-child(4) .v3-card-grid{
-    grid-template-columns:1fr;
-  }
-  .v3-home-card{
-    min-height:0;
-    padding:18px;
-    border-radius:17px;
-  }
-  .v3-home-card h3{font-size:22px}
-  .v3-action{min-height:48px}
-}
-
-
-/* ===== MANJAZ RELEASE 3 — FINAL HOME INTERFACE ===== */
-.m3-legacy-home{display:none !important}
-.m3-home{direction:rtl;display:grid;gap:32px;margin:24px 0}
-.m3-section{display:grid;gap:14px}
-.m3-section-title{
- margin:0;padding:0 2px 8px;text-align:right;
- font-size:21px;line-height:1.45;font-weight:800;
-}
-.m3-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.m3-section:first-child .m3-grid,
-.m3-section:nth-child(3) .m3-grid,
-.m3-section:nth-child(4) .m3-grid{grid-template-columns:1fr}
-.m3-card{
- min-width:0;min-height:220px;display:flex;flex-direction:column;
- padding:22px;border:1px solid rgba(11,48,71,.10);border-radius:20px;
- background:#fff;box-shadow:0 8px 24px rgba(11,48,71,.06);
- box-sizing:border-box;
-}
-.m3-card h3{margin:0 0 10px;font-size:25px;line-height:1.45;font-weight:800}
-.m3-card p{margin:0;line-height:1.85}
-.m3-actions{margin-top:auto;padding-top:20px;display:flex;flex-direction:column;gap:9px}
-.m3-action{
- width:100%;min-height:46px;padding:11px 15px;border:0;border-radius:12px;
- display:flex;align-items:center;justify-content:space-between;
- text-decoration:none !important;font:inherit;font-size:14px;font-weight:700;
- cursor:pointer;box-sizing:border-box;
-}
-.m3-view{background:rgba(11,48,71,.075);color:#0b3047}
-.m3-view::after{content:"←";font-weight:800}
-.m3-add{background:#0b3047;color:#fff}
-.m3-add::after{content:"+";font-size:20px}
-.m3-certificate{background:rgba(164,125,50,.14);color:#6d531f}
-.m3-certificate::after{content:"▧"}
-.m3-action.is-disabled{opacity:.42;cursor:not-allowed}
-@media(max-width:768px){
- .m3-home{gap:25px;margin-top:18px}
- .m3-grid,.m3-section:first-child .m3-grid,.m3-section:nth-child(3) .m3-grid,.m3-section:nth-child(4) .m3-grid{grid-template-columns:1fr}
- .m3-section-title{font-size:19px}
- .m3-card{min-height:0;padding:18px;border-radius:17px}
- .m3-card h3{font-size:22px}
- .m3-action{min-height:48px}
+ .hx-home{gap:24px;margin-top:18px}
+ .hx-grid,.hx-section:first-child .hx-grid,.hx-section:nth-child(3) .hx-grid,.hx-section:nth-child(4) .hx-grid{grid-template-columns:1fr}
+ .hx-heading{font-size:19px}
+ .hx-card{min-height:0;padding:18px;border-radius:17px}
+ .hx-card h3{font-size:22px}
+ .hx-action{min-height:48px}
 }
