@@ -1,19 +1,27 @@
-/* MANJAZ HOME 4.1 — single-source home renderer */
+/* MANJAZ HOME 5.0 — card-based home, no visible numbering */
 (()=>{"use strict";
-const sections=[
-["1","الممارسات الميدانية",[["1","أبرز المنجزات","استعراض أبرز منجزات المدرسة وشواهد الأثر",[["استعراض","#achievements"],["إضافة","#add"]]]]],
-["2","النمو المهني",[
-["2-1","الورش التدريبية","الورش المنفذة وتوثيق حضورها",[["استعراض","#certificates"],["إضافة","#certificates-add"]]],
-["2-2","الدروس التطبيقية","توثيق الدروس التطبيقية وحضورها",[["استعراض","#lessons"],["إضافة","#lessons-add"]]],
-["2-3","نماذج الإنتاج المعرفي","نماذج وأدوات معرفية قابلة للاستفادة والتطبيق",[["استعراض","#knowledge"],["إضافة","#knowledge"]]]
-]],
-["3","الشراكة المجتمعية",[["3","الشراكة المجتمعية","توثيق الشراكات والمبادرات المشتركة وأثرها",[["استعراض","#partners"],["إضافة","#partners"]]]]],
-["4","برامج الهيكل الإداري",[["4","برامج الهيكل الإداري","إدارة برامج الهيكل الإداري واستعراضها",[["استعراض","#admin-programs"],["إضافة","#admin-programs"]]]]]
+const cards=[
+  {title:"أبرز المنجزات",view:"#achievements",add:"#add",icon:"▤"},
+  {title:"الورش التدريبية",view:"#certificates",add:"#certificates",addKind:"workshop",icon:"▧"},
+  {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons",addKind:"lesson",icon:"▣"},
+  {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
+  {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
+  {title:"برامج الهيكل الإداري",view:"#admin-programs",add:"#admin-programs",icon:"▦"}
 ];
 
 const isHome=()=>!location.hash || location.hash==="#home";
-const actionClass=(label)=>label.includes("شهادة")?"certificate":label==="إضافة"?"add":"view";
-
+function action(label,href,kind,addKind){
+  const a=document.createElement("a");
+  a.className=`manjaz-home-action ${kind}`;
+  a.href=href;
+  a.textContent=label;
+  if(addKind){
+    a.addEventListener("click",()=>{
+      try{sessionStorage.setItem("manjaz_home_open_add",addKind)}catch(_){ }
+    });
+  }
+  return a;
+}
 function buildHome(){
   const view=document.getElementById("view");
   if(!view || !isHome()) return;
@@ -33,39 +41,27 @@ function buildHome(){
     </div>`;
   main.append(header);
 
-  sections.forEach(([no,title,cards])=>{
-    const section=document.createElement("section");
-    section.className="manjaz-section";
-    section.innerHTML=`<div class="manjaz-section-title"><span>${no}</span><h2>${title}</h2></div><div class="manjaz-grid"></div>`;
-    const grid=section.querySelector(".manjaz-grid");
+  const title=document.createElement("div");
+  title.className="manjaz-home-heading";
+  title.innerHTML="<h2>الأقسام</h2>";
+  main.append(title);
 
-    cards.forEach(([cardNo,cardTitle,desc,actions])=>{
-      const card=document.createElement("article");
-      card.className="manjaz-card";
-      card.innerHTML=`
-        <div class="manjaz-card-head"><span>${cardNo}</span><h3>${cardTitle}</h3></div>
-        <p>${desc}</p>
-        <div class="manjaz-actions"></div>`;
-      const actionBox=card.querySelector(".manjaz-actions");
-      actions.forEach(([label,href])=>{
-        const a=document.createElement("a");
-        a.className=`manjaz-action ${actionClass(label)}`;
-        a.href=href;
-        a.textContent=label;
-        actionBox.append(a);
-      });
-      grid.append(card);
-    });
-    main.append(section);
+  const grid=document.createElement("section");
+  grid.className="manjaz-home-grid";
+  cards.forEach(item=>{
+    const card=document.createElement("article");
+    card.className="manjaz-home-card";
+    card.innerHTML=`<div class="manjaz-home-card-title"><span class="manjaz-home-icon" aria-hidden="true">${item.icon}</span><h3>${item.title}</h3></div><div class="manjaz-home-actions"></div>`;
+    const actions=card.querySelector(".manjaz-home-actions");
+    actions.append(action("استعراض",item.view,"view"));
+    actions.append(action("إضافة",item.add,"add",item.addKind));
+    grid.append(card);
   });
+  main.append(grid);
   view.append(main);
 }
-
-function render(){
-  if(isHome()) buildHome();
-}
+function render(){ if(isHome()) buildHome(); }
 addEventListener("hashchange",()=>setTimeout(render,0));
-if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",render,{once:true});
-else render();
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",render,{once:true}); else render();
 addEventListener("load",render,{once:true});
 })();

@@ -1,0 +1,23 @@
+{
+  "version": "12.2-reference-certificate-restored",
+  "reference": "شهادة - معادلة الصف الناجح - دعاء بندر رشيد الحربي (قبل التحديث المسبب للمشكلة)",
+  "passed": 15,
+  "total": 15,
+  "checks": {
+    "reference_header_org_right": true,
+    "reference_header_ministry_center": true,
+    "reference_header_manjaz_left": true,
+    "reference_footer_principal_left": true,
+    "reference_footer_stamp_center": true,
+    "recipient_highlight": true,
+    "recipient_centered": true,
+    "principal_text_centered": true,
+    "ministry_plus4": true,
+    "manjaz_plus4": true,
+    "stamp_plus6": true,
+    "footer_plus7": true,
+    "workshop_uses_final_template": true,
+    "lesson_uses_final_template": true,
+    "no_recipient_persistence": true
+  }
+}

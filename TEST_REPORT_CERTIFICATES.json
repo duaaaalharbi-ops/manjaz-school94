@@ -1,0 +1,21 @@
+{
+  "version": "12.1",
+  "checks": {
+    "certificate safe zone": true,
+    "recipient centered": true,
+    "recipient highlighted": true,
+    "principal centered": true,
+    "ministry logo +4": true,
+    "manjaz logo +4": true,
+    "stamp +6": true,
+    "footer +7": true,
+    "workshop certificate template intact": true,
+    "lesson certificate template intact": true,
+    "workshop certificate css cache 12.1": true,
+    "index cache 12.1": true,
+    "no beneficiary persistence token": true
+  },
+  "passed": 13,
+  "total": 13,
+  "all_passed": true
+}

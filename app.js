@@ -887,10 +887,6 @@ function render(){
 
   if(route==="home"){
     view.appendChild(clone("homeTpl"));
-    const items=getItems();
-    byId("mTotal").textContent=items.length;
-    byId("mApproved").textContent=items.filter(x=>x.status==="معتمد").length;
-    byId("mReview").textContent=items.filter(x=>x.status==="تحت المراجعة").length;
   } else if(route==="about"){
     view.appendChild(clone("aboutTpl"));
   } else if(route==="add"){
@@ -911,11 +907,9 @@ function render(){
   } else if(route==="reports"){
     view.appendChild(clone("reportsTpl"));
     wireReports();
-  } else if(route==="lessons" || route==="lessons-add"){
+  } else if(route==="lessons"){
     view.appendChild(clone("lessonsTpl"));
-    wireAppliedLessons();
-  } else if(route==="certificates" || route==="certificates-add"){
-    if(typeof window.renderCertificatesPage==="function") window.renderCertificatesPage();
+    if(typeof window.wireAppliedLessons==="function") window.wireAppliedLessons();
   } else {
     view.appendChild(clone("placeholderTpl"));
     byId("placeholderTitle").textContent=placeholders[route] || "قريبًا";
@@ -1552,10 +1546,7 @@ async function openDetails(kind,id){
 }
 
 
-/* قسم الدروس التطبيقية — مصدر البطاقات الوحيد هو applied-lessons.js */
-function wireAppliedLessons(){
-  if(typeof window.renderAppliedLessonsSection==="function") window.renderAppliedLessonsSection();
-}
+/* Applied lessons are rendered only by applied-lessons.js (single source). */
 
 function setupDetailDialog(){
   const dialog=byId("detailDialog");
