@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.7-final-source-fix";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.8-certificate-position-card-parity";
 (function(){
   "use strict";
 
@@ -41,7 +41,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.7-final-source-fix";
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=12.7"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=12.8.1"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
