@@ -61,6 +61,8 @@ function buildHome(){
   view.append(main);
 }
 function render(){ if(isHome()) buildHome(); }
+/* المصدر الرسمي لرسم الرئيسية: يستخدمه app.js أيضًا بعد اكتمال المزامنة السحابية */
+window.renderManjazHome=buildHome;
 addEventListener("hashchange",()=>setTimeout(render,0));
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",render,{once:true}); else render();
 addEventListener("load",render,{once:true});

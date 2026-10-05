@@ -886,7 +886,9 @@ function render(){
   setActive(route);
 
   if(route==="home"){
-    view.appendChild(clone("homeTpl"));
+    /* الرئيسية لها Renderer واحد؛ لا نعيد وضع homeTpl الفارغ بعد المزامنة السحابية */
+    if(typeof window.renderManjazHome==="function") window.renderManjazHome();
+    else view.appendChild(clone("homeTpl"));
   } else if(route==="about"){
     view.appendChild(clone("aboutTpl"));
   } else if(route==="add"){
