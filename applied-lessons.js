@@ -1,4 +1,4 @@
-/* MANJAZ 12.8 — applied lessons use the exact workshop card structure; certificate/edit/delete only */
+/* MANJAZ 13.0 — canonical applied-lessons route; workshop-parity cards; no legacy view action */
 (()=>{"use strict";
 const STORE="manjaz_applied_lessons_managed_v1";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -93,8 +93,17 @@ window.wireAppliedLessons=function(){
 let repairingLessons=false;
 function ensureCanonicalLessons(){
  if(repairingLessons || (location.hash||"").slice(1)!=="lessons") return;
- const list=document.getElementById("lessonList");
- if(!list) return;
+ const view=document.getElementById("view");
+ if(!view) return;
+ let list=document.getElementById("lessonList");
+ if(!list){
+   repairingLessons=true;
+   try{
+     view.innerHTML=`<section class="page-intro"><div><span class="kicker">التطوير المهني</span><h2>الدروس التطبيقية</h2><p>توثيق الدروس التطبيقية وإصدار شهادات الحضور</p></div></section><span id="communityForm" hidden aria-hidden="true"></span><div id="lessonList" class="cert-grid"></div><div id="lessonEmpty" class="surface empty-state"><div class="empty-mark">▣</div><h3>لا توجد دروس تطبيقية متاحة حاليًا</h3><p>ستظهر الدروس المتاحة هنا عند إضافتها</p></div>`;
+     window.wireAppliedLessons();
+   } finally { setTimeout(()=>{repairingLessons=false},0); }
+   return;
+ }
  const canonical=list.querySelector("[data-lesson-actions='canonical']");
  const legacy=[...list.querySelectorAll("a,button")].some(el=>/استعراض|عرض المنجز|فتح المنجز/.test(clean(el.textContent)));
  if(!canonical || legacy){

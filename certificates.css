@@ -582,14 +582,17 @@
   box-sizing:border-box;
   border:0;
   border-radius:0;
-  background:transparent!important;
+  background:#fff!important;
   color:#0b5960;
+  position:relative;
+  z-index:2;
+  box-shadow:0 0 0 100vmax #fff!important;
+  clip-path:inset(0 -100vmax);
   font-size:34px;
   line-height:1.25;
   font-weight:900;
   text-align:center!important;
   overflow-wrap:anywhere;
-  box-shadow:none!important;
 }
 .cert-final-attendance,
 .cert-final-wish{
@@ -704,3 +707,15 @@
   .cert-workshop-card .record-mini-actions .cert-mini-action,
   .applied-lesson-card .record-mini-actions .cert-mini-action{min-width:64px!important}
 }
+
+
+/* MANJAZ 13.0 — certificate source of truth */
+.certificate-paper.cert-final .cert-final-name{
+  background:#fff!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:0 0 0 100vmax #fff!important;
+  clip-path:inset(0 -100vmax)!important;
+}
+.certificate-paper.cert-final .cert-facilitators-inline{position:relative!important;top:-5px!important;}
+.certificate-paper.cert-final .cert-final-stamp img{transform:translateY(-4px)!important;}
