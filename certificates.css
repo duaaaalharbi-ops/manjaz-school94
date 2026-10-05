@@ -675,3 +675,8 @@
   .certificate-paper.cert-final{--cert-safe-x:78px}
 }
 
+
+/* MANJAZ 12.5 — reliable card actions on iPhone/Safari */
+.cert-card-actions button,.cert-card-actions a{pointer-events:auto!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:6}
+.cert-choose{cursor:pointer!important}
+.applied-lesson-card .lesson-card-actions>a,.applied-lesson-card .lesson-card-actions>button{max-width:100%}

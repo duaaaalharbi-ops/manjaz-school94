@@ -1,0 +1,10 @@
+MANJAZ v12.5
+- Workshop certificate action uses delegated click/touch handler: PASS (static code audit)
+- Workshop certificate button remains available on workshop cards: PASS
+- Applied lesson canonical card actions are exactly: إصدار الشهادة / تعديل / حذف: PASS
+- Legacy lesson browse/view actions are removed at render time and guarded by observer: PASS
+- iPhone/Safari touch-action and pointer-events hardened for card actions: PASS
+- certificates.js syntax: PASS
+- applied-lessons.js syntax: PASS
+- Cache-busting updated to v12.5: PASS
+Note: Chromium live DOM dump was unavailable in this environment during this run; no claim of end-to-end browser execution is made.

@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.1-certificate-refinement";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.5-workshop-actions-fix";
 (function(){
   "use strict";
 
@@ -332,18 +332,6 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.1-certificate-refinement";
     const hiddenId=document.getElementById("certWorkshopId"),name=document.getElementById("certTeacherName"),panel=document.getElementById("certIssuePanel"),msg=document.getElementById("certMsg"),preview=document.getElementById("certPreviewWrap"),previewBtn=document.getElementById("certPreviewBtn"),editBtn=document.getElementById("certEditNameBtn"),downloadBtn=document.getElementById("certDownloadBtn"),selected=document.getElementById("certSelectedWorkshop");
 
     wireWorkshopManagement();
-    document.querySelectorAll(".cert-choose").forEach(btn=>btn.addEventListener("click",()=>{
-      const w=getWorkshop(btn.dataset.id);
-      if(!isAvailable(w)) return;
-      hiddenId.value=w.id;
-      const sd=normalizeWorkshopDate(w.date); selected.innerHTML=`<strong>${esc(w.title)}</strong><span>${esc(sd.day)} ${dateSpan(sd.date)} • ${esc(workshopDurationLabel(w))} • ${esc(w.trainingType||"—")}</span>${implementersLabel(w)?`<small>${implementersLabel(w)}</small>`:""}`;
-      panel.style.display="grid";
-      preview.classList.remove("is-visible");
-      msg.textContent="";
-      name.value="";name.disabled=false;editBtn.disabled=true;downloadBtn.disabled=true;
-      panel.scrollIntoView({behavior:"smooth",block:"start"});
-      name.focus();
-    }));
 
     document.getElementById("certBackBtn")?.addEventListener("click",()=>{
       panel.style.display="none";preview.classList.remove("is-visible");msg.textContent="";hiddenId.value="";name.value="";
@@ -366,6 +354,55 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.1-certificate-refinement";
       if(!w||!n||!preview.classList.contains("is-visible")){msg.className="cert-message error";msg.textContent="أنشئي الشهادة أولًا";return;}
       downloadPDF(w,n);
     });
+  }
+
+
+  function openWorkshopIssuer(id){
+    const w=getWorkshop(id);
+    if(!w||!isAvailable(w)) return false;
+    const hiddenId=document.getElementById("certWorkshopId");
+    const name=document.getElementById("certTeacherName");
+    const panel=document.getElementById("certIssuePanel");
+    const msg=document.getElementById("certMsg");
+    const preview=document.getElementById("certPreviewWrap");
+    const editBtn=document.getElementById("certEditNameBtn");
+    const downloadBtn=document.getElementById("certDownloadBtn");
+    const selected=document.getElementById("certSelectedWorkshop");
+    if(!hiddenId||!name||!panel||!msg||!preview||!selected) return false;
+    hiddenId.value=w.id;
+    const sd=normalizeWorkshopDate(w.date);
+    selected.innerHTML=`<strong>${esc(w.title)}</strong><span>${esc(sd.day)} ${dateSpan(sd.date)} • ${esc(workshopDurationLabel(w))} • ${esc(w.trainingType||"—")}</span>${implementersLabel(w)?`<small>${implementersLabel(w)}</small>`:""}`;
+    panel.style.display="grid";
+    preview.classList.remove("is-visible");
+    msg.className="cert-message";
+    msg.textContent="";
+    name.value="";
+    name.disabled=false;
+    if(editBtn) editBtn.disabled=true;
+    if(downloadBtn) downloadBtn.disabled=true;
+    panel.scrollIntoView({behavior:"smooth",block:"start"});
+    setTimeout(()=>name.focus(),0);
+    return true;
+  }
+
+  function installWorkshopActionDelegation(){
+    if(document.documentElement.dataset.workshopActions125==="1") return;
+    document.documentElement.dataset.workshopActions125="1";
+    const activate=e=>{
+      const btn=e.target.closest?.(".cert-choose");
+      if(!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openWorkshopIssuer(btn.dataset.id);
+    };
+    document.addEventListener("click",activate,true);
+    document.addEventListener("touchend",e=>{
+      const btn=e.target.closest?.(".cert-choose");
+      if(!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openWorkshopIssuer(btn.dataset.id);
+    },{capture:true,passive:false});
   }
 
   function renderPage(force=false){
@@ -392,7 +429,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.1-certificate-refinement";
   }
 
   function boot(){
-    injectStyle();injectNav();observeAppRenders();
+    injectStyle();injectNav();observeAppRenders();installWorkshopActionDelegation();
     if(document.documentElement.dataset.certDirectOpen!=="1"){
       document.documentElement.dataset.certDirectOpen="1";
       document.addEventListener("click",e=>{
