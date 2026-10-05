@@ -728,17 +728,17 @@
 }
 
 
-/* MANJAZ 13.5 — authoritative certificate placement */
+/* MANJAZ 13.6 — visible certificate placement: facilitator up 30px, stamp up 24px */
 .certificate-paper.cert-final .cert-facilitators-inline,
 .certificate-paper.cert-final.lesson-certificate .cert-facilitators-inline{
   position:relative!important;
-  top:-5px!important;
+  top:-30px!important;
   transform:none!important;
 }
 .certificate-paper.cert-final .cert-final-stamp,
 .certificate-paper.cert-final.lesson-certificate .cert-final-stamp{
   position:relative!important;
-  top:-4px!important;
+  top:-24px!important;
   transform:none!important;
 }
 .certificate-paper.cert-final .cert-final-stamp img,
