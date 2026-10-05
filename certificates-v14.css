@@ -1,0 +1,48 @@
+/* MANJAZ 14.0 — canonical certificate + lesson/workshop UI */
+.certificates-page{display:grid;gap:18px}
+.certificates-intro{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.certificates-intro h2{margin:4px 0 6px;color:#0b3047;font-size:clamp(24px,3vw,36px)}
+.certificates-intro p{margin:0;color:#64727d;max-width:760px;line-height:1.9}
+.cert-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cert-workshop-card,.applied-lesson-card{border:1px solid #e2e7ea;background:#fff;border-radius:18px;padding:18px;display:grid;gap:12px;box-shadow:0 10px 28px rgba(11,48,71,.06)}
+.cert-workshop-card h3,.applied-lesson-card h3{margin:0;color:#0b3047;font-size:18px}
+.cert-meta{display:flex;gap:8px;flex-wrap:wrap;color:#6b7881;font-size:13px}
+.cert-meta-stack{display:grid;gap:7px;line-height:1.65}.cert-meta-stack span{display:block}
+.cert-status{display:inline-flex;align-items:center;width:max-content;padding:5px 10px;border-radius:999px;background:#e8f4f2;color:#0f5f59;font-weight:800;font-size:12px}
+.cert-status.off{background:#f2f2f2;color:#7a7a7a}
+.cert-card-actions{display:grid;gap:7px;margin-top:2px}
+.record-mini-actions{display:flex;gap:8px;align-items:center;justify-content:flex-start}
+.cert-btn{border:0;border-radius:11px;padding:11px 16px;font:800 14px/1.2 inherit;cursor:pointer;touch-action:manipulation}
+.cert-btn.primary{background:#0f5f59;color:#fff}.cert-btn.secondary{background:#edf2f3;color:#0b3047}.cert-btn.gold{background:#d2aa55;color:#0b3047}.cert-btn:disabled{opacity:.5;cursor:not-allowed}
+.cert-mini-action{width:auto;min-width:70px;min-height:30px;padding:6px 10px;border:1px solid #d8e1e4;border-radius:9px;background:#fff;font:800 12px/1 inherit;cursor:pointer;touch-action:manipulation}
+.cert-mini-action:not(.danger){color:#0f5f59;border-color:#b9d3d0}.cert-mini-action.danger{color:#9b2525;border-color:#e4c3c3}
+.cert-empty{padding:34px;text-align:center;border:1px dashed #ccd5da;border-radius:18px;background:#fff;color:#65737c}
+.cert-form{background:#fff;border:1px solid #e2e7ea;border-radius:18px;padding:20px;display:grid;gap:16px;box-shadow:0 10px 28px rgba(11,48,71,.06)}
+.cert-form label,.cert-manage-form label{display:grid;gap:8px;font-weight:800;color:#0b3047}
+.cert-form input,.cert-manage-form input,.cert-manage-form select,.cert-manage-form textarea{width:100%;box-sizing:border-box;border:1px solid #ced7dc;border-radius:12px;padding:13px 14px;font:inherit;background:#fff;color:#193847}
+.cert-actions,.cert-manage-actions{display:flex;gap:10px;flex-wrap:wrap}.cert-message{min-height:24px;font-weight:800}.cert-message.error{color:#a12626}.cert-message.success{color:#17623b}.cert-message.info{color:#0f5f59}
+.cert-selected-workshop{border:1px solid #d8e2e5;border-radius:14px;padding:14px;background:#f8fbfb;display:grid;gap:6px;color:#52656f}.cert-selected-workshop strong{font-size:18px;color:#0b3047}
+.cert-manage{border:1px solid #e2e7ea;border-radius:14px;background:#fbfcfc;margin:0 0 14px;overflow:hidden}.cert-manage>summary{cursor:pointer;padding:13px 16px;font-weight:900;color:#0b3047}.cert-manage-form{padding:0 16px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cert-manage-actions,.cert-message{grid-column:1/-1}
+.cert-preview-wrap{display:none;gap:12px}.cert-preview-wrap.is-visible{display:grid}.cert-preview-note{font-size:13px;color:#687780;text-align:center}
+.certificate-stage{overflow:auto;padding:8px;background:#eef3f4;border:1px solid #d8e0e3;border-radius:16px}
+.v43-cert-dialog{border:0;padding:0;background:transparent;max-width:96vw}.v43-cert-dialog::backdrop{background:rgba(5,24,36,.55)}.v43-cert-shell{background:#eef3f4;padding:10px;border-radius:16px;max-width:96vw;max-height:94vh;overflow:auto}.v43-cert-controls{display:flex;gap:8px;justify-content:center;margin-bottom:8px;position:sticky;top:0;z-index:20;flex-wrap:wrap}.v43-cert-controls input{min-width:260px;border:1px solid #ced7dc;border-radius:11px;padding:11px 13px;font:inherit}
+.lesson-details-dialog{border:0;padding:0;border-radius:16px;max-width:min(520px,92vw)}.lesson-details-dialog::backdrop{background:rgba(5,24,36,.52)}.lesson-details-shell{padding:20px;background:#fff;display:grid;gap:16px;direction:rtl}
+
+/* Canonical certificate: one source of truth for workshops + applied lessons */
+.certificate-paper.cert-final{--cert-safe-x:78px;--cert-safe-top:52px;--cert-ministry-logo-width:194px;--cert-manjaz-logo-width:154px;--cert-stamp-width:124px;position:relative;margin:auto;width:1123px;height:794px;overflow:hidden;direction:rtl;box-sizing:border-box;background-color:#fffdf8;background-size:100% 100%;background-position:center;background-repeat:no-repeat;color:#17394a;font-family:Tahoma,"Segoe UI",Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.10)}
+.cert-final-header{position:absolute;z-index:3;top:var(--cert-safe-top);right:var(--cert-safe-x);left:var(--cert-safe-x);min-height:104px;display:grid;grid-template-columns:1fr 230px 1fr;align-items:start;gap:24px;box-sizing:border-box;max-width:calc(100% - 2 * var(--cert-safe-x))}
+.cert-final-org{grid-column:1;justify-self:start;text-align:right;display:grid;gap:5px;line-height:1.35;max-width:310px;color:#0b3047}.cert-final-org strong{font-size:17px;font-weight:900}.cert-final-org span{font-size:14px;font-weight:700}
+.cert-final-ministry{grid-column:2;justify-self:center;align-self:start;width:220px;height:96px;display:flex;align-items:center;justify-content:center}.cert-final-ministry img{width:var(--cert-ministry-logo-width);max-width:100%;max-height:94px;object-fit:contain;display:block}
+.cert-final-manjaz{grid-column:3;justify-self:end;align-self:start;width:190px;height:96px;display:flex;align-items:center;justify-content:flex-end}.cert-final-manjaz img{width:var(--cert-manjaz-logo-width);max-width:100%;max-height:92px;object-fit:contain;display:block}
+.cert-final-main{position:absolute;z-index:3;top:168px;right:112px;left:112px;bottom:174px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;box-sizing:border-box;overflow:visible;max-width:calc(100% - 2 * var(--cert-safe-x))}
+.cert-final-title{margin:0 0 8px;font-size:43px;line-height:1.15;font-weight:900;color:#0b3047}.cert-final-workshop{max-width:850px;margin:0 0 15px;font-size:25px;line-height:1.42;font-weight:900;color:#0f5f59;text-align:center;overflow-wrap:anywhere}.cert-final-testimony{max-width:820px;font-size:19px;line-height:1.65;font-weight:700;color:#405762;text-align:center}
+.cert-final-name{width:min(625px,100%);max-width:725px;margin:8px auto 14px;padding:9px 28px 11px;box-sizing:border-box;border:0;border-radius:9px;background:#dcefed;color:#0b5960;position:relative;z-index:2;box-shadow:none;font-size:34px;line-height:1.25;font-weight:900;text-align:center;overflow-wrap:anywhere}
+.cert-final-attendance,.cert-final-wish{max-width:850px;margin-inline:auto;color:#405762;text-align:center;overflow-wrap:anywhere}.cert-final-attendance{font-size:18px;line-height:1.78;font-weight:700}.cert-final-wish{margin-top:2px;position:relative;top:-5px;font-size:17px;line-height:1.62;font-weight:700;color:#52656f}
+.cert-facilitators-inline{margin-top:auto;position:relative;top:-48px;width:min(82%,820px);display:flex;justify-content:center;align-items:flex-end;gap:28px;text-align:center}.cert-facilitator-inline{min-width:230px;max-width:390px;display:grid;gap:4px;padding:4px 10px 5px;color:#17394a;text-align:center}.cert-facilitator-inline b{font-size:14px}.cert-facilitator-inline span{font-size:15px;font-weight:800;line-height:1.45}
+.cert-final-footer{position:absolute;z-index:4;right:92px;left:92px;bottom:65px;min-height:94px;display:grid;grid-template-columns:1fr 170px 1fr;align-items:end;box-sizing:border-box;max-width:calc(100% - 2 * var(--cert-safe-x))}
+.cert-final-principal{grid-column:3;justify-self:end;align-self:end;width:260px;display:grid;gap:5px;text-align:center;color:#0b3047;position:relative;top:18px}.cert-final-principal strong{font-size:15px;font-weight:900;text-align:center}.cert-final-principal span{font-size:18px;font-weight:900;text-align:center;line-height:1.35}
+.cert-final-stamp{grid-column:2;justify-self:center;align-self:end;width:170px;height:98px;display:flex;align-items:flex-end;justify-content:center;position:relative;top:-42px}.cert-final-stamp img{width:var(--cert-stamp-width);max-width:var(--cert-stamp-width);max-height:94px;object-fit:contain;opacity:.96;display:block}
+.cert-card-actions button,.cert-card-actions a{pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:20}.lesson-cert-open{pointer-events:auto!important;touch-action:manipulation!important;position:relative!important;z-index:40!important}
+@media(max-width:1000px){.cert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.certificate-paper.cert-final{transform-origin:top right;transform:scale(.72);margin-bottom:-220px}}
+@media(max-width:680px){.cert-grid{grid-template-columns:1fr}.cert-manage-form{grid-template-columns:1fr}.certificate-stage{padding:4px}.certificate-paper.cert-final{transform:scale(.34);margin-bottom:-520px}.cert-actions{display:grid;grid-template-columns:1fr}.cert-btn{width:100%}.record-mini-actions .cert-mini-action{min-width:64px}.v43-cert-controls input{min-width:100%;box-sizing:border-box}}
+@media print{.sidebar,.topbar,.mobile-nav,.footer,#manjazTrialBanner,#manjazVersionBadge{display:none!important}.content{margin:0!important;padding:0!important}.certificate-stage{border:0;padding:0;background:#fff}.certificate-paper.cert-final{transform:none!important;box-shadow:none;margin:0}}
