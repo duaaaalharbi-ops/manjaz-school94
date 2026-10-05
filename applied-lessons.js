@@ -74,6 +74,17 @@ function removeLegacyLessonViewActions(root=document){
 
 window.wireAppliedLessons=function(){
  const list=document.getElementById("lessonList"),empty=document.getElementById("lessonEmpty");if(!list||!empty)return;
+ /* Block the legacy community-sections renderer from taking over #lessons.
+    Its observer only rewires when #communityForm is absent, so this route-scoped
+    sentinel keeps the canonical lesson renderer authoritative without affecting
+    any other section; it disappears automatically when #view is replaced. */
+ if(!document.getElementById("communityForm")){
+   const guard=document.createElement("span");
+   guard.id="communityForm";
+   guard.hidden=true;
+   guard.setAttribute("aria-hidden","true");
+   list.parentNode.insertBefore(guard,list);
+ }
  if(!document.getElementById("lessonManageForm")){list.insertAdjacentHTML("beforebegin",editorHTML());wireEditor();}
  const items=lessons();list.className="cert-grid";list.innerHTML="";empty.style.display=items.length?"none":"block";items.forEach(x=>list.appendChild(lessonCard(x)));removeLegacyLessonViewActions(document);
  try{if(sessionStorage.getItem("manjaz_home_open_add")==="lesson"){sessionStorage.removeItem("manjaz_home_open_add");const d=document.querySelector(".lesson-manage");if(d){d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"})}}}catch(_){ }
