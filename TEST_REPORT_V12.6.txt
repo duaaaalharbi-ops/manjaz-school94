@@ -1,0 +1,11 @@
+MANJAZ v12.6 structural verification
+- app.js handles #certificates explicitly: PASS
+- certificates.js exposes renderCertificatesPage(): PASS
+- workshop certificate buttons have direct onclick binding in wirePage(): PASS
+- workshop buttons remain certificate/edit/delete only: PASS
+- applied lesson cards contain certificate/edit/delete only: PASS
+- no browse/view action exists in applied lesson card renderer: PASS
+- canonical certificates/applied-lessons scripts load after community-sections.js: PASS
+- cache versions raised to 12.6: PASS
+- JS syntax checks for app.js/certificates.js/applied-lessons.js: PASS
+- Chromium end-to-end dump test: NOT COMPLETED (environment timeout)

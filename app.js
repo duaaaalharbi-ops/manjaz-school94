@@ -912,6 +912,9 @@ function render(){
   } else if(route==="lessons"){
     view.appendChild(clone("lessonsTpl"));
     if(typeof window.wireAppliedLessons==="function") window.wireAppliedLessons();
+  } else if(route==="certificates"){
+    if(typeof window.renderCertificatesPage==="function") window.renderCertificatesPage();
+    else view.innerHTML='<div class="surface empty-state"><h3>جاري تحميل الورش التدريبية…</h3></div>';
   } else {
     view.appendChild(clone("placeholderTpl"));
     byId("placeholderTitle").textContent=placeholders[route] || "قريبًا";

@@ -1,4 +1,4 @@
-/* MANJAZ 5.1 — applied lessons: exact actions (certificate/edit/delete) + persistent CRUD */
+/* MANJAZ 5.2 — canonical applied lessons: certificate/edit/delete only */
 (()=>{"use strict";
 const STORE="manjaz_applied_lessons_managed_v1";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -78,4 +78,15 @@ window.wireAppliedLessons=function(){
  const items=lessons();list.className="cert-grid unified-record-grid";list.innerHTML="";empty.style.display=items.length?"none":"block";items.forEach(x=>list.appendChild(lessonCard(x)));removeLegacyLessonViewActions(document);
  try{if(sessionStorage.getItem("manjaz_home_open_add")==="lesson"){sessionStorage.removeItem("manjaz_home_open_add");const d=document.querySelector(".lesson-manage");if(d){d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"})}}}catch(_){ }
 };
+
+function ensureCanonicalLessons(){
+ if((location.hash||"").slice(1)!=="lessons") return;
+ const list=document.getElementById("lessonList");
+ if(!list) return;
+ const hasCards=list.querySelector(".applied-lesson-card");
+ const canonical=list.querySelector("[data-lesson-actions='canonical']");
+ if(!hasCards || !canonical) window.wireAppliedLessons();
+}
+window.addEventListener("hashchange",()=>setTimeout(ensureCanonicalLessons,0));
+window.addEventListener("load",()=>setTimeout(ensureCanonicalLessons,0),{once:true});
 })();

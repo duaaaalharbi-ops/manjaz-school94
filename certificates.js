@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.5-workshop-actions-fix";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.6-canonical-routing";
 (function(){
   "use strict";
 
@@ -41,7 +41,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.5-workshop-actions-fix";
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=12.4"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=12.6"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -333,6 +333,16 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.5-workshop-actions-fix";
 
     wireWorkshopManagement();
 
+    // ربط مباشر لكل زر إصدار ورشة — المصدر الأساسي، بدون الاعتماد على التفويض العام فقط
+    document.querySelectorAll(".cert-choose").forEach(btn=>{
+      btn.type="button";
+      btn.onclick=e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        openWorkshopIssuer(btn.dataset.id);
+      };
+    });
+
     document.getElementById("certBackBtn")?.addEventListener("click",()=>{
       panel.style.display="none";preview.classList.remove("is-visible");msg.textContent="";hiddenId.value="";name.value="";
     });
@@ -457,6 +467,9 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.5-workshop-actions-fix";
     setTimeout(injectCertificatesAnnouncement,900);
     if((location.hash||"").slice(1)===ROUTE) setTimeout(renderPage,0);
   }
+
+  // المسار الرسمي الذي يستدعيه Router الرئيسي في app.js
+  window.renderCertificatesPage=()=>renderPage(true);
 
   window.addEventListener("hashchange",()=>{
     setTimeout(()=>{
