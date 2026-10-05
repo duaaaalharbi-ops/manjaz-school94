@@ -581,13 +581,12 @@
   padding:9px 28px 11px;
   box-sizing:border-box;
   border:0;
-  border-radius:0;
-  background:#fff!important;
+  border-radius:9px;
+  background:#dcefed!important;
   color:#0b5960;
   position:relative;
   z-index:2;
-  box-shadow:0 0 0 100vmax #fff!important;
-  clip-path:inset(0 -100vmax);
+  box-shadow:none!important;
   font-size:34px;
   line-height:1.25;
   font-weight:900;
@@ -607,7 +606,8 @@
 .cert-facilitators-inline{
   margin-top:auto;
   position:relative;
-  top:-5px;
+  top:auto;
+  transform:translateY(-5px)!important;
   width:min(82%,820px);
   display:flex;
   justify-content:center;
@@ -709,13 +709,20 @@
 }
 
 
-/* MANJAZ 13.0 — certificate source of truth */
+
+/* MANJAZ 13.2 — certificate source of truth */
 .certificate-paper.cert-final .cert-final-name{
-  background:#fff!important;
+  background:#dcefed!important;
   border:0!important;
-  border-radius:0!important;
-  box-shadow:0 0 0 100vmax #fff!important;
-  clip-path:inset(0 -100vmax)!important;
+  border-radius:9px!important;
+  box-shadow:none!important;
+  clip-path:none!important;
 }
-.certificate-paper.cert-final .cert-facilitators-inline{position:relative!important;top:-5px!important;}
-.certificate-paper.cert-final .cert-final-stamp img{transform:translateY(-4px)!important;}
+.certificate-paper.cert-final .cert-facilitators-inline{
+  position:relative!important;
+  top:auto!important;
+  transform:translateY(-5px)!important;
+}
+.certificate-paper.cert-final .cert-final-stamp img{
+  transform:translateY(-4px)!important;
+}

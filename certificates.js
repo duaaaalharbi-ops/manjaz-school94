@@ -39,10 +39,15 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.0-certificate-cleanup";
   const getWorkshop=id=>workshops().find(w=>String(w.id)===String(id));
 
   function injectStyle(){
-    if(document.querySelector('link[data-certificates-style]')) return;
-    const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=13.0"; link.dataset.certificatesStyle="1";
-    document.head.appendChild(link);
+    const href="certificates.css?v=13.2";
+    let link=document.querySelector('link[data-certificates-style]');
+    if(!link){
+      link=document.createElement("link");
+      link.rel="stylesheet";
+      link.dataset.certificatesStyle="1";
+      document.head.appendChild(link);
+    }
+    if(link.getAttribute("href")!==href) link.setAttribute("href",href);
   }
 
   function injectLibraries(){

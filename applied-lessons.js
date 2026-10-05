@@ -1,4 +1,4 @@
-/* MANJAZ 13.0 — canonical applied-lessons route; workshop-parity cards; no legacy view action */
+/* MANJAZ 13.1 — canonical applied-lessons route; persistent certificate issue action */
 (()=>{"use strict";
 const STORE="manjaz_applied_lessons_managed_v1";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -25,7 +25,8 @@ window.openAppliedLessonCertificate=function(x){
  document.getElementById("lessonCertDialog")?.remove();
  const d=document.createElement("dialog");d.id="lessonCertDialog";d.className="v43-cert-dialog";
  d.innerHTML=`<div class="v43-cert-shell"><div class="v43-cert-controls"><input id="lessonCertName" maxlength="80" placeholder="اسم المستفيدة"><button class="cert-btn primary" id="lessonCertPreview">معاينة</button><button class="cert-btn gold" id="lessonCertDownload" disabled>تحميل PDF</button><button class="cert-btn secondary" id="lessonCertClose">إغلاق</button></div><div id="lessonCertPreviewArea"></div></div>`;
- document.body.appendChild(d);d.showModal();
+ document.body.appendChild(d);
+ if(typeof d.showModal==="function"){try{d.showModal()}catch(_){d.setAttribute("open","")}}else{d.setAttribute("open","")}
  const input=d.querySelector("#lessonCertName"),area=d.querySelector("#lessonCertPreviewArea"),download=d.querySelector("#lessonCertDownload");
  d.querySelector("#lessonCertClose").onclick=()=>d.close();
  d.querySelector("#lessonCertPreview").onclick=()=>{const n=clean(input.value);input.value=n;if(n.length<3){input.focus();return}area.innerHTML=`<div class="certificate-stage">${certificateHTML(x,n)}</div>`;download.disabled=false};
@@ -40,7 +41,7 @@ function openDetails(x){
 }
 function lessonCard(x){
  const card=document.createElement("article");card.className="manjaz-record-card cert-workshop-card applied-lesson-card";card.dataset.lessonId=x.id;
- card.innerHTML=`<span class="cert-status">متاحة للإصدار</span><h3>${esc(x.lessonName||x.title||"بدون عنوان")}</h3><div class="cert-meta cert-meta-stack">${x.date?`<span><b>التاريخ:</b> ${esc(x.date)}</span>`:""}${x.subject?`<span><b>المادة:</b> ${esc(x.subject)}</span>`:""}${x.strategies?`<span><b>الاستراتيجيات:</b> ${esc(x.strategies)}</span>`:""}${x.grade?`<span><b>الصف:</b> ${esc(x.grade)}</span>`:""}${x.teacher?`<span><b>المعلمة:</b> ${esc(x.teacher)}</span>`:""}</div><div class="cert-card-actions" data-lesson-actions="canonical"><button type="button" class="cert-btn primary cert-choose certificate">إصدار الشهادة</button><div class="record-mini-actions"><button type="button" class="cert-mini-action edit">تعديل</button><button type="button" class="cert-mini-action danger delete">حذف</button></div></div>`;
+ card.innerHTML=`<span class="cert-status">متاحة للإصدار</span><h3>${esc(x.lessonName||x.title||"بدون عنوان")}</h3><div class="cert-meta cert-meta-stack">${x.date?`<span><b>التاريخ:</b> ${esc(x.date)}</span>`:""}${x.subject?`<span><b>المادة:</b> ${esc(x.subject)}</span>`:""}${x.strategies?`<span><b>الاستراتيجيات:</b> ${esc(x.strategies)}</span>`:""}${x.grade?`<span><b>الصف:</b> ${esc(x.grade)}</span>`:""}${x.teacher?`<span><b>المعلمة:</b> ${esc(x.teacher)}</span>`:""}</div><div class="cert-card-actions" data-lesson-actions="canonical"><button type="button" class="cert-btn primary cert-choose certificate" data-lesson-cert-id="${esc(x.id)}">إصدار الشهادة</button><div class="record-mini-actions"><button type="button" class="cert-mini-action edit">تعديل</button><button type="button" class="cert-mini-action danger delete">حذف</button></div></div>`;
  card.querySelector(".certificate").onclick=()=>window.openAppliedLessonCertificate(x);
  card.querySelector(".edit").onclick=()=>fillEditor(x);
  card.querySelector(".delete").onclick=()=>deleteLesson(x);
@@ -121,6 +122,20 @@ function observeLessonRendererConflicts(){
    timer=setTimeout(ensureCanonicalLessons,35);
  }).observe(view,{childList:true,subtree:true});
 }
+
+// Persistent delegated certificate action: survives card re-renders and Safari DOM replacement.
+if(!window.__MANJAZ_LESSON_CERT_DELEGATED__){
+ window.__MANJAZ_LESSON_CERT_DELEGATED__=true;
+ document.addEventListener("click",function(e){
+   const btn=e.target.closest?.(".applied-lesson-card [data-lesson-cert-id]");
+   if(!btn) return;
+   e.preventDefault();
+   e.stopPropagation();
+   const x=getLesson(btn.getAttribute("data-lesson-cert-id"));
+   if(x) window.openAppliedLessonCertificate(x);
+ },true);
+}
+
 window.addEventListener("hashchange",()=>setTimeout(()=>{observeLessonRendererConflicts();ensureCanonicalLessons();},0));
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>{observeLessonRendererConflicts();setTimeout(ensureCanonicalLessons,0)},{once:true});
 else {observeLessonRendererConflicts();setTimeout(ensureCanonicalLessons,0);}
