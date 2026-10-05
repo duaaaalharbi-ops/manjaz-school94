@@ -39,7 +39,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
   const getWorkshop=id=>workshops().find(w=>String(w.id)===String(id));
 
   function injectStyle(){
-    const href="certificates.css?v=13.6";
+    const href="certificates.css?v=13.7";
     let link=document.querySelector('link[data-certificates-style]');
     if(!link){
       link=document.createElement("link");

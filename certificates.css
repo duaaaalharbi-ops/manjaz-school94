@@ -728,20 +728,25 @@
 }
 
 
-/* MANJAZ 13.6 — visible certificate placement: facilitator up 30px, stamp up 24px */
+/* MANJAZ 13.7 — certificate placement refinement: facilitator +3 درجات, stamp +3 درجات, principal -3 درجات */
 .certificate-paper.cert-final .cert-facilitators-inline,
 .certificate-paper.cert-final.lesson-certificate .cert-facilitators-inline{
   position:relative!important;
-  top:-30px!important;
+  top:-48px!important;
   transform:none!important;
 }
 .certificate-paper.cert-final .cert-final-stamp,
 .certificate-paper.cert-final.lesson-certificate .cert-final-stamp{
   position:relative!important;
-  top:-24px!important;
+  top:-42px!important;
   transform:none!important;
 }
 .certificate-paper.cert-final .cert-final-stamp img,
 .certificate-paper.cert-final.lesson-certificate .cert-final-stamp img{
   transform:none!important;
+}
+.certificate-paper.cert-final .cert-final-principal,
+.certificate-paper.cert-final.lesson-certificate .cert-final-principal{
+  position:relative!important;
+  top:18px!important;
 }
