@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.0-certificate-cleanup";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.3-certificate-final";
 (function(){
   "use strict";
 
@@ -39,7 +39,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.0-certificate-cleanup";
   const getWorkshop=id=>workshops().find(w=>String(w.id)===String(id));
 
   function injectStyle(){
-    const href="certificates.css?v=13.2";
+    const href="certificates.css?v=13.3";
     let link=document.querySelector('link[data-certificates-style]');
     if(!link){
       link=document.createElement("link");
