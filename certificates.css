@@ -726,3 +726,22 @@
 .certificate-paper.cert-final .cert-final-stamp img{
   transform:translateY(-4px)!important;
 }
+
+
+/* MANJAZ 13.5 — authoritative certificate placement */
+.certificate-paper.cert-final .cert-facilitators-inline,
+.certificate-paper.cert-final.lesson-certificate .cert-facilitators-inline{
+  position:relative!important;
+  top:-5px!important;
+  transform:none!important;
+}
+.certificate-paper.cert-final .cert-final-stamp,
+.certificate-paper.cert-final.lesson-certificate .cert-final-stamp{
+  position:relative!important;
+  top:-4px!important;
+  transform:none!important;
+}
+.certificate-paper.cert-final .cert-final-stamp img,
+.certificate-paper.cert-final.lesson-certificate .cert-final-stamp img{
+  transform:none!important;
+}

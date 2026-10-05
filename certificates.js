@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.3-certificate-final";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
 (function(){
   "use strict";
 
@@ -39,7 +39,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.3-certificate-final";
   const getWorkshop=id=>workshops().find(w=>String(w.id)===String(id));
 
   function injectStyle(){
-    const href="certificates.css?v=13.4";
+    const href="certificates.css?v=13.5";
     let link=document.querySelector('link[data-certificates-style]');
     if(!link){
       link=document.createElement("link");
@@ -48,26 +48,6 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.3-certificate-final";
       document.head.appendChild(link);
     }
     if(link.getAttribute("href")!==href) link.setAttribute("href",href);
-
-    // 13.4: lock the two requested vertical adjustments for BOTH workshop and lesson certificates.
-    // Neutralize older positional rules first, then apply the exact upward offset.
-    let pos=document.getElementById("manjazCertificatePositionLock");
-    if(!pos){
-      pos=document.createElement("style");
-      pos.id="manjazCertificatePositionLock";
-      document.head.appendChild(pos);
-    }
-    pos.textContent=`
-      .certificate-paper.cert-final .cert-facilitators-inline,
-      .lesson-certificate.cert-final .cert-facilitators-inline{
-        top:0!important;
-        transform:translateY(-5px)!important;
-      }
-      .certificate-paper.cert-final .cert-final-stamp img,
-      .lesson-certificate.cert-final .cert-final-stamp img{
-        transform:translateY(-4px)!important;
-      }
-    `;
   }
 
   function injectLibraries(){

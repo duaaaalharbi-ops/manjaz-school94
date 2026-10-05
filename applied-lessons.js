@@ -1,4 +1,4 @@
-/* MANJAZ 13.1 — canonical applied-lessons route; persistent certificate issue action */
+/* MANJAZ 13.5 — stable applied lesson certificate issuing */
 (()=>{"use strict";
 const STORE="manjaz_applied_lessons_managed_v1";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -41,8 +41,8 @@ function openDetails(x){
 }
 function lessonCard(x){
  const card=document.createElement("article");card.className="manjaz-record-card cert-workshop-card applied-lesson-card";card.dataset.lessonId=x.id;
- card.innerHTML=`<span class="cert-status">متاحة للإصدار</span><h3>${esc(x.lessonName||x.title||"بدون عنوان")}</h3><div class="cert-meta cert-meta-stack">${x.date?`<span><b>التاريخ:</b> ${esc(x.date)}</span>`:""}${x.subject?`<span><b>المادة:</b> ${esc(x.subject)}</span>`:""}${x.strategies?`<span><b>الاستراتيجيات:</b> ${esc(x.strategies)}</span>`:""}${x.grade?`<span><b>الصف:</b> ${esc(x.grade)}</span>`:""}${x.teacher?`<span><b>المعلمة:</b> ${esc(x.teacher)}</span>`:""}</div><div class="cert-card-actions" data-lesson-actions="canonical"><button type="button" class="cert-btn primary cert-choose certificate" data-lesson-cert-id="${esc(x.id)}">إصدار الشهادة</button><div class="record-mini-actions"><button type="button" class="cert-mini-action edit">تعديل</button><button type="button" class="cert-mini-action danger delete">حذف</button></div></div>`;
- card.querySelector(".certificate").onclick=()=>window.openAppliedLessonCertificate(x);
+ card.innerHTML=`<span class="cert-status">متاحة للإصدار</span><h3>${esc(x.lessonName||x.title||"بدون عنوان")}</h3><div class="cert-meta cert-meta-stack">${x.date?`<span><b>التاريخ:</b> ${esc(x.date)}</span>`:""}${x.subject?`<span><b>المادة:</b> ${esc(x.subject)}</span>`:""}${x.strategies?`<span><b>الاستراتيجيات:</b> ${esc(x.strategies)}</span>`:""}${x.grade?`<span><b>الصف:</b> ${esc(x.grade)}</span>`:""}${x.teacher?`<span><b>المعلمة:</b> ${esc(x.teacher)}</span>`:""}</div><div class="cert-card-actions" data-lesson-actions="canonical"><button type="button" class="cert-btn primary cert-choose certificate lesson-cert-open" data-lesson-cert-id="${esc(x.id)}">إصدار الشهادة</button><div class="record-mini-actions"><button type="button" class="cert-mini-action edit">تعديل</button><button type="button" class="cert-mini-action danger delete">حذف</button></div></div>`;
+ card.querySelector(".certificate").style.cssText+=";pointer-events:auto!important;touch-action:manipulation;position:relative;z-index:30"; card.querySelector(".certificate").onclick=(e)=>{e.preventDefault();e.stopPropagation();window.openAppliedLessonCertificate(x)};
  card.querySelector(".edit").onclick=()=>fillEditor(x);
  card.querySelector(".delete").onclick=()=>deleteLesson(x);
  return card;
@@ -140,4 +140,21 @@ window.addEventListener("hashchange",()=>setTimeout(()=>{observeLessonRendererCo
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>{observeLessonRendererConflicts();setTimeout(ensureCanonicalLessons,0)},{once:true});
 else {observeLessonRendererConflicts();setTimeout(ensureCanonicalLessons,0);}
 window.addEventListener("load",()=>setTimeout(ensureCanonicalLessons,0),{once:true});
+
+
+// MANJAZ 13.5: permanent certificate action independent of card re-rendering.
+if(!window.__MANJAZ_LESSON_CERT_135__){
+  window.__MANJAZ_LESSON_CERT_135__=true;
+  document.addEventListener("click",function(e){
+    const btn=e.target && e.target.closest ? e.target.closest(".lesson-cert-open,[data-lesson-cert-id]") : null;
+    if(!btn) return;
+    const card=btn.closest("[data-lesson-id]");
+    const id=btn.getAttribute("data-lesson-cert-id") || (card && card.getAttribute("data-lesson-id"));
+    const x=getLesson(id);
+    if(!x) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    window.openAppliedLessonCertificate(x);
+  },true);
+}
 })();
