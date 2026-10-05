@@ -427,3 +427,13 @@
 .v43-cert-dialog{border:0;padding:0;background:transparent;max-width:96vw}.v43-cert-dialog::backdrop{background:rgba(5,24,36,.55)}
 .v43-cert-shell{background:#eef3f4;padding:10px;border-radius:16px;max-width:96vw;max-height:94vh;overflow:auto}
 .v43-cert-controls{display:flex;gap:8px;justify-content:center;margin-bottom:8px;position:sticky;top:0;z-index:20}
+
+
+/* MANJAZ 4.4 — same card output for workshops and applied lessons */
+.v44-lesson-card{background:#fff;border:1px solid #e2e7ea;border-radius:18px;padding:18px;display:grid;gap:12px;box-shadow:0 10px 28px rgba(11,48,71,.06)}
+.v44-mini-actions{display:flex;gap:8px;justify-content:flex-start;margin-top:2px;padding-top:8px;border-top:1px solid #edf1f2}
+.v44-icon{border:0;background:transparent!important;padding:3px 5px!important;min-height:auto!important;width:auto!important;font-size:13px!important;line-height:1!important;cursor:pointer}
+.v44-edit{color:#0f5f59!important}.v44-delete{color:#9b3b3b!important}
+.v44-cert-dialog{border:0;padding:0;background:transparent;max-width:96vw}.v44-cert-dialog::backdrop{background:rgba(5,24,36,.55)}
+.v44-cert-shell{background:#eef3f4;padding:10px;border-radius:16px;max-width:96vw;max-height:94vh;overflow:auto}
+.v44-cert-controls{display:flex;gap:8px;justify-content:center;margin-bottom:8px;position:sticky;top:0;z-index:20}

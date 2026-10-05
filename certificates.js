@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.2-certificate-approved-layout";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.8.4-workshop-lessons";
 (function(){
   "use strict";
 
@@ -66,6 +66,10 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.2-certificate-approved-layout
         ${implementersLabel(w)?`<span><b>${Array.isArray(w.implementers)&&w.implementers.length>1?'منفذات الورشة':'منفذة الورشة'}:</b> ${(w.implementers||[]).map(esc).join('، ')}</span>`:""}
       </div>
       ${w.available===false?'':'<button class="cert-btn primary cert-choose" data-id="'+esc(w.id)+'">إصدار الشهادة</button>'}
+      <div class="v44-mini-actions">
+        <button type="button" class="v44-icon v44-edit cert-edit-workshop" data-id="${esc(w.id)}">تعديل</button>
+        <button type="button" class="v44-icon v44-delete cert-delete-workshop" data-id="${esc(w.id)}">حذف</button>
+      </div>
     </article>`).join("")}</div>`;
   }
 
@@ -283,10 +287,39 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.2-certificate-approved-layout
     });
   }
 
+
+  const WORKSHOP_STORAGE_KEY="manjaz_certificate_workshops_v44";
+  function saveWorkshops(){
+    try{localStorage.setItem(WORKSHOP_STORAGE_KEY,JSON.stringify(workshops()));return true}catch(_){return false}
+  }
+  function restoreWorkshops(){
+    try{
+      const saved=JSON.parse(localStorage.getItem(WORKSHOP_STORAGE_KEY)||"null");
+      if(Array.isArray(saved)&&Array.isArray(window.MANJAZ_CERTIFICATE_WORKSHOPS)){
+        window.MANJAZ_CERTIFICATE_WORKSHOPS.splice(0,window.MANJAZ_CERTIFICATE_WORKSHOPS.length,...saved);
+      }
+    }catch(_){}
+  }
+  function wireWorkshopManagement(){
+    document.querySelectorAll(".cert-edit-workshop").forEach(btn=>btn.addEventListener("click",()=>{
+      const w=getWorkshop(btn.dataset.id);if(!w)return;
+      const title=prompt("عنوان الورشة",w.title||"");if(title===null)return;
+      const date=prompt("التاريخ",w.date||"");if(date===null)return;
+      const duration=prompt("المدة",w.duration||"");if(duration===null)return;
+      w.title=title.trim()||w.title;w.date=date.trim();w.duration=duration.trim();
+      saveWorkshops();renderPage(true);
+    }));
+    document.querySelectorAll(".cert-delete-workshop").forEach(btn=>btn.addEventListener("click",()=>{
+      const w=getWorkshop(btn.dataset.id);if(!w||!confirm(`حذف ورشة «${w.title||""}»؟`))return;
+      const a=workshops(),i=a.findIndex(x=>String(x.id)===String(w.id));
+      if(i>-1){a.splice(i,1);saveWorkshops();renderPage(true)}
+    }));
+  }
+
   function renderPage(force=false){
     if(!force && (location.hash||"").slice(1)!==ROUTE) return;
     const view=document.getElementById("view"); if(!view) return;
-    setActiveNav();view.innerHTML=pageHTML();wirePage();
+    setActiveNav();view.innerHTML=pageHTML();wirePage();wireWorkshopManagement();
   }
 
   function observeAppRenders(){
@@ -306,7 +339,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.2-certificate-approved-layout
   }
 
   function boot(){
-    injectStyle();injectNav();observeAppRenders();
+    restoreWorkshops();injectStyle();injectNav();observeAppRenders();
     if(document.documentElement.dataset.certDirectOpen!=="1"){
       document.documentElement.dataset.certDirectOpen="1";
       document.addEventListener("click",e=>{
