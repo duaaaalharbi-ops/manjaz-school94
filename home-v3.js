@@ -1,83 +1,22 @@
-/* MANJAZ HOME 4.1 — single-source home renderer */
+/* MANJAZ HOME 4.0 */
 (()=>{"use strict";
-const sections=[
-  ["1","الممارسات الميدانية",[
-    ["1","أبرز المنجزات","استعراض أبرز منجزات المدرسة وشواهد الأثر",
-      [["استعراض","#achievements"],["إضافة","#add"]]]
-  ]],
-  ["2","النمو المهني",[
-    ["2-1","الورش التدريبية","الورش المنفذة وتوثيق حضورها",
-      [["استعراض","#certificates"],["إضافة","#certificates"]]],
-    ["2-2","الدروس التطبيقية","توثيق الدروس التطبيقية وحضورها",
-      [["استعراض","#lessons"],["إضافة","#lessons"]]],
-    ["2-3","نماذج الإنتاج المعرفي","نماذج وأدوات معرفية قابلة للاستفادة والتطبيق",
-      [["استعراض","#knowledge"],["إضافة","#knowledge"]]]
-  ]],
-  ["3","الشراكة المجتمعية",[
-    ["3","الشراكة المجتمعية","توثيق الشراكات والمبادرات المشتركة وأثرها",
-      [["استعراض","#partners"],["إضافة","#partners"]]]
-  ]],
-  ["4","برامج الهيكل الإداري",[
-    ["4","برامج الهيكل الإداري","إدارة برامج الهيكل الإداري واستعراضها",
-      [["استعراض","#admin-programs"],["إضافة","#admin-programs"]]]
-  ]]
+const S=[
+["1","الممارسات الميدانية",[["1","أبرز المنجزات",["أبرز المنجزات"],[["استعراض","v"],["إضافة","a"]]]]],
+["2","النمو المهني",[
+["2-1","الورش التدريبية",["الورش التدريبية"],[["استعراض","v"],["إضافة","a"]]],
+["2-2","الدروس التطبيقية",["الدروس التطبيقية"],[["استعراض","v"],["إضافة","a"]]],
+["2-3","نماذج الإنتاج المعرفي",["نماذج الإنتاج المعرفي","نماذج الانتاج المعرفي"],[["استعراض","v"],["إضافة","a"]]]]],
+["3","الشراكة المجتمعية",[["3","الشراكة المجتمعية",["الشراكة المجتمعية"],[["استعراض","v"],["إضافة","a"]]]]],
+["4","برامج الهيكل الإداري",[["4","برامج الهيكل الإداري",["برامج الهيكل الإداري"],[["استعراض","v"],["إضافة","a"]]]]]
 ];
-
-const isHome=()=>!location.hash || location.hash==="#home";
-const actionClass=(label)=>label.includes("شهادة")?"certificate":label==="إضافة"?"add":"view";
-
-function buildHome(){
-  const view=document.getElementById("view");
-  if(!view || !isHome()) return;
-  view.innerHTML="";
-  const main=document.createElement("main");
-  main.id="manjazHome";
-  main.dir="rtl";
-
-  const header=document.createElement("header");
-  header.className="manjaz-brand-header";
-  header.innerHTML=`
-    <div class="manjaz-mark" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
-    <div class="manjaz-brand-copy">
-      <strong>منجز</strong>
-      <small>بوابة منجزات المدرسة الرقمية</small>
-      <span>الثانوية الرابعة والتسعون</span>
-    </div>`;
-  main.append(header);
-
-  sections.forEach(([no,title,cards])=>{
-    const section=document.createElement("section");
-    section.className="manjaz-section";
-    section.innerHTML=`<div class="manjaz-section-title"><span>${no}</span><h2>${title}</h2></div><div class="manjaz-grid"></div>`;
-    const grid=section.querySelector(".manjaz-grid");
-
-    cards.forEach(([cardNo,cardTitle,desc,actions])=>{
-      const card=document.createElement("article");
-      card.className="manjaz-card";
-      card.innerHTML=`
-        <div class="manjaz-card-head"><span>${cardNo}</span><h3>${cardTitle}</h3></div>
-        <p>${desc}</p>
-        <div class="manjaz-actions"></div>`;
-      const actionBox=card.querySelector(".manjaz-actions");
-      actions.forEach(([label,href])=>{
-        const a=document.createElement("a");
-        a.className=`manjaz-action ${actionClass(label)}`;
-        a.href=href;
-        a.textContent=label;
-        actionBox.append(a);
-      });
-      grid.append(card);
-    });
-    main.append(section);
-  });
-  view.append(main);
-}
-
-function render(){
-  if(isHome()) buildHome();
-}
-addEventListener("hashchange",()=>setTimeout(render,0));
-if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",render,{once:true});
-else render();
-addEventListener("load",render,{once:true});
+const n=x=>String(x||"").replace(/\s+/g," ").trim(),home=()=>(location.hash||"#home")==="#home";
+function all(v){return [...v.querySelectorAll(".category-card,.home-service-card,.home-section-card,.service-card,[data-home-service-card],.section-block")].filter(x=>!x.closest("#manjazHome"))}
+function src(v,k){return all(v).find(x=>k.some(y=>n(x.textContent).includes(y)))}
+function old(s,t){if(!s)return null;const r=t==="a"?/إضافة/:t==="c"?/إصدار.*شهادة|شهادة/:/استعراض|عرض|فتح/;return [...s.querySelectorAll("a,button")].find(x=>r.test(n(x.textContent)))}
+function btn(s,l,t){const b=document.createElement("button");b.type="button";b.className="manjaz-action "+t;b.textContent=l;const o=old(s,t);if(o)b.onclick=()=>o.click();else{b.disabled=true;b.classList.add("off")}return b}
+function card(v,no,title,keys,acts){const s=src(v,keys),c=document.createElement("article");c.className="manjaz-card";const d=s?.querySelector("small,p");c.innerHTML=`<div class="manjaz-card-head"><span>${no}</span><h3>${title}</h3></div>${d&&n(d.textContent)?`<p>${n(d.textContent)}</p>`:""}<div class="manjaz-actions"></div>`;acts.forEach(a=>c.querySelector(".manjaz-actions").append(btn(s,...a)));return c}
+function render(){if(!home())return;const v=document.getElementById("view");if(!v)return;document.getElementById("manjazHome")?.remove();const r=document.createElement("main");r.id="manjazHome";r.dir="rtl";r.innerHTML=`<header class="manjaz-brand-header"><div class="manjaz-mark"><i></i><i></i><i></i><b></b></div><div class="manjaz-brand-copy"><strong>منجز</strong><small>بوابة منجزات المدرسة الرقمية</small><span>الثانوية الرابعة والتسعون</span></div></header>`;
+S.forEach(([no,title,defs])=>{const s=document.createElement("section");s.className="manjaz-section";s.innerHTML=`<div class="manjaz-section-title"><span>${no}</span><h2>${title}</h2></div><div class="manjaz-grid"></div>`;defs.forEach(d=>s.querySelector(".manjaz-grid").append(card(v,...d)));r.append(s)});
+all(v).forEach(x=>x.classList.add("manjaz-legacy-hidden"));[...v.querySelectorAll(".hero,.school-home-header,.cert-home-section,#home4")].forEach(x=>x.classList.add("manjaz-legacy-hidden"));v.prepend(r)}
+let t;const go=()=>{clearTimeout(t);t=setTimeout(render,80)};addEventListener("hashchange",go);document.readyState==="loading"?document.addEventListener("DOMContentLoaded",go,{once:true}):go();addEventListener("load",go,{once:true});
 })();

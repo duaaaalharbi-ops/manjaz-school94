@@ -345,7 +345,7 @@
   z-index:4;
   right:76px;
   left:76px;
-  bottom:65px;
+  bottom:58px;
   display:grid;
   grid-template-columns:1fr 190px 1fr;
   align-items:end;
@@ -405,35 +405,22 @@
   display:none !important;
 }
 
-/* MANJAZ 4.2 — certificate typography lock + footer adjustment */
-.certificate-paper,
-.certificate-paper.cert-approved{
-  font-family:Tahoma,"Segoe UI",Arial,sans-serif !important;
-}
-.cert-approved-heading{font-weight:900}
-.cert-approved-program{font-weight:900}
-.cert-approved-testimony,.cert-approved-text{font-weight:700}
-.cert-approved-name{font-weight:900}
-.cert-approved-footer{bottom:65px !important}
-
-/* MANJAZ 4.3 — professional cards */
+/* MANJAZ 4.3 — approved workshop/lesson cards and editors */
+.cert-final-footer{bottom:65px !important}
 .v43-lesson-card{background:#fff!important;border:1px solid #dce4e7!important;border-radius:16px!important;padding:16px!important;box-shadow:0 7px 18px rgba(11,48,71,.05)!important}
 .v43-lesson-card h3{color:#0b3047!important;font-size:18px!important;margin:8px 0 10px!important}
-.v43-lesson-card .cert-meta{display:grid!important;gap:7px!important;color:#52656f!important;font-size:14px!important}
 .v43-mini-actions{display:flex;gap:8px;justify-content:flex-start;margin-top:9px;padding-top:8px;border-top:1px solid #edf1f2}
 .v43-icon{border:0;background:transparent!important;padding:3px 5px!important;min-height:auto!important;width:auto!important;font-size:13px!important;line-height:1!important;cursor:pointer}
 .v43-edit{color:#0f5f59!important}.v43-delete{color:#9b3b3b!important}
-.v43-add-workshop,.v43-add-lesson{width:auto!important;min-height:38px!important;margin-top:8px}
-.v43-cert-dialog{border:0;padding:0;background:transparent;max-width:96vw}.v43-cert-dialog::backdrop{background:rgba(5,24,36,.55)}
+.v43-add-workshop,.v43-add-lesson{width:auto!important;min-height:38px!important;margin:8px 0 12px}
+.v43-editor-dialog,.v43-cert-dialog{border:0;padding:0;background:transparent;max-width:96vw}
+.v43-editor-dialog::backdrop,.v43-cert-dialog::backdrop{background:rgba(5,24,36,.55)}
+.v43-editor-form{width:min(520px,92vw);background:#fff;border-radius:18px;padding:18px;display:grid;gap:12px;direction:rtl}
+.v43-editor-form h3{margin:0;color:#0b3047}.v43-editor-form label{display:grid;gap:6px;font-weight:800;color:#0b3047}
+.v43-editor-form input{width:100%;box-sizing:border-box;border:1px solid #ced7dc;border-radius:11px;padding:11px 12px;font:inherit}
+.v43-editor-form .v43-check{display:flex;align-items:center;gap:8px}.v43-editor-form .v43-check input{width:auto}
 .v43-cert-shell{background:#eef3f4;padding:10px;border-radius:16px;max-width:96vw;max-height:94vh;overflow:auto}
-.v43-cert-controls{display:flex;gap:8px;justify-content:center;margin-bottom:8px;position:sticky;top:0;z-index:20}
-
-
-/* MANJAZ 4.4 — same card output for workshops and applied lessons */
-.v44-lesson-card{background:#fff;border:1px solid #e2e7ea;border-radius:18px;padding:18px;display:grid;gap:12px;box-shadow:0 10px 28px rgba(11,48,71,.06)}
-.v44-mini-actions{display:flex;gap:8px;justify-content:flex-start;margin-top:2px;padding-top:8px;border-top:1px solid #edf1f2}
-.v44-icon{border:0;background:transparent!important;padding:3px 5px!important;min-height:auto!important;width:auto!important;font-size:13px!important;line-height:1!important;cursor:pointer}
-.v44-edit{color:#0f5f59!important}.v44-delete{color:#9b3b3b!important}
-.v44-cert-dialog{border:0;padding:0;background:transparent;max-width:96vw}.v44-cert-dialog::backdrop{background:rgba(5,24,36,.55)}
-.v44-cert-shell{background:#eef3f4;padding:10px;border-radius:16px;max-width:96vw;max-height:94vh;overflow:auto}
-.v44-cert-controls{display:flex;gap:8px;justify-content:center;margin-bottom:8px;position:sticky;top:0;z-index:20}
+.v43-cert-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;position:sticky;top:0;z-index:20;background:#eef3f4;padding:6px}
+.v43-cert-controls input{min-width:220px;border:1px solid #ced7dc;border-radius:10px;padding:10px 12px;font:inherit}
+.v43-lesson-certificate{font-family:Tahoma,"Segoe UI",Arial,sans-serif!important}
+@media(max-width:680px){.v43-cert-controls{display:grid;grid-template-columns:1fr}.v43-cert-controls input,.v43-cert-controls button{width:100%}}
