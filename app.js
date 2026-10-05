@@ -911,9 +911,11 @@ function render(){
   } else if(route==="reports"){
     view.appendChild(clone("reportsTpl"));
     wireReports();
-  } else if(route==="lessons"){
+  } else if(route==="lessons" || route==="lessons-add"){
     view.appendChild(clone("lessonsTpl"));
     wireAppliedLessons();
+  } else if(route==="certificates" || route==="certificates-add"){
+    if(typeof window.renderCertificatesPage==="function") window.renderCertificatesPage();
   } else {
     view.appendChild(clone("placeholderTpl"));
     byId("placeholderTitle").textContent=placeholders[route] || "قريبًا";
@@ -998,7 +1000,7 @@ function wireForm(){
     }
 
     isSubmitting=true;
-    form.dataset.busy="1";
+form.dataset.busy="1";
     if(submitBtn){
       submitBtn.disabled=true;
       submitBtn.dataset.originalText=submitBtn.textContent;
@@ -1550,20 +1552,9 @@ async function openDetails(kind,id){
 }
 
 
-/* V4.3 — الدروس التطبيقية: بطاقات موحدة + حفظ/تعديل/حذف */
-const APPLIED_LESSON_STORE="manjaz_applied_lessons_managed_v1";
-const BASE_APPLIED_LESSONS=Array.isArray(window.MANJAZ_APPLIED_LESSONS)?window.MANJAZ_APPLIED_LESSONS:[];
-function getManagedLessons(){try{return JSON.parse(localStorage.getItem(APPLIED_LESSON_STORE)||"[]")}catch(_){return []}}
-function saveManagedLessons(x){localStorage.setItem(APPLIED_LESSON_STORE,JSON.stringify(x))}
-function getAppliedLessons(){const m=getManagedLessons(),map=new Map(m.map(x=>[String(x.id),x]));return [...BASE_APPLIED_LESSONS.map(x=>map.get(String(x.id))||x),...m.filter(x=>!BASE_APPLIED_LESSONS.some(b=>String(b.id)===String(x.id)))];}
-function fillLessonForm(x){const d=document.querySelector(".lesson-manage");if(d)d.open=true;byId("lmId").value=x.id||"";byId("lmTitle").value=x.lessonName||x.title||"";byId("lmDate").value=x.date||"";byId("lmStrategies").value=x.strategies||"";byId("lmGrade").value=x.grade||"";byId("lmTeacher").value=x.teacher||"";d?.scrollIntoView({behavior:"smooth"});}
+/* قسم الدروس التطبيقية — مصدر البطاقات الوحيد هو applied-lessons.js */
 function wireAppliedLessons(){
- const list=byId("lessonList"),empty=byId("lessonEmpty");if(!list||!empty)return;const items=getAppliedLessons().filter(x=>x&&x.available!==false);
- list.innerHTML=`<details class="cert-manage lesson-manage"><summary>إضافة درس تطبيقي</summary><form id="lessonManageForm" class="cert-manage-form"><input type="hidden" id="lmId"><label>اسم الدرس<input id="lmTitle" required></label><label>التاريخ<input id="lmDate" required></label><label>الاستراتيجيات<input id="lmStrategies"></label><label>الصف<input id="lmGrade"></label><label>المعلمة<input id="lmTeacher"></label><div class="cert-manage-actions"><button class="cert-btn primary" type="submit">حفظ</button><button class="cert-btn secondary" id="lmCancel" type="button">إلغاء</button></div><div id="lmMsg" class="cert-message"></div></form></details>`;empty.style.display=items.length?"none":"block";
- items.forEach(x=>{const card=document.createElement("article");card.className="cert-workshop-card applied-lesson-card";card.innerHTML=`<span class="cert-status">متاح للإصدار</span><h3>${esc(x.lessonName||x.title||"")}</h3><div class="cert-meta cert-meta-stack"><span><b>التاريخ:</b> ${esc(x.date||"—")}</span><span><b>الاستراتيجيات:</b> ${esc(x.strategies||"—")}</span><span><b>الصف:</b> ${esc(x.grade||"—")}</span><span><b>المعلمة:</b> ${esc(x.teacher||"—")}</span></div><div class="cert-card-actions"><button type="button" class="cert-btn primary applied-certificate-btn">إصدار شهادة الحضور</button><button type="button" class="cert-mini-action lesson-edit">تعديل</button><button type="button" class="cert-mini-action danger lesson-delete">حذف</button></div>`;
- card.querySelector(".applied-certificate-btn").onclick=()=>{window.dispatchEvent(new CustomEvent("manjaz:applied-lesson-certificate",{detail:x}));if(typeof window.openAppliedLessonCertificate==="function")window.openAppliedLessonCertificate(x);else alert("تعذر فتح الشهادة")};
- card.querySelector(".lesson-edit").onclick=()=>fillLessonForm(x);card.querySelector(".lesson-delete").onclick=()=>{if(!confirm(`حذف درس «${x.lessonName||x.title||""}»؟`))return;const m=getManagedLessons(),i=m.findIndex(y=>String(y.id)===String(x.id));if(i>=0)m.splice(i,1);else m.push({...x,available:false});saveManagedLessons(m);wireAppliedLessons()};list.appendChild(card)});
- const f=byId("lessonManageForm");f?.addEventListener("submit",e=>{e.preventDefault();const r={id:byId("lmId").value||"lesson-"+Date.now(),lessonName:byId("lmTitle").value.trim(),date:byId("lmDate").value.trim(),strategies:byId("lmStrategies").value.trim(),grade:byId("lmGrade").value.trim(),teacher:byId("lmTeacher").value.trim(),available:true};if(!r.lessonName||!r.date){byId("lmMsg").textContent="أكملي اسم الدرس والتاريخ";return}const m=getManagedLessons(),i=m.findIndex(y=>String(y.id)===String(r.id));if(i>=0)m[i]={...m[i],...r};else m.push(r);saveManagedLessons(m);byId("lmMsg").textContent="تم الحفظ بنجاح";setTimeout(wireAppliedLessons,250)});byId("lmCancel")?.addEventListener("click",()=>{f.reset();byId("lmId").value=""});
+  if(typeof window.renderAppliedLessonsSection==="function") window.renderAppliedLessonsSection();
 }
 
 function setupDetailDialog(){

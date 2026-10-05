@@ -8,7 +8,6 @@ window.MANJAZ_CERTIFICATE_WORKSHOPS = [
     durationHours: 2,
     durationText: "ساعتان",
     attendanceText: "بواقع ساعتين تدريبيتين",
-    trainingType: "مباشر",
     availability: "available"
   },
   {
@@ -20,7 +19,6 @@ window.MANJAZ_CERTIFICATE_WORKSHOPS = [
     durationHours: 2,
     durationText: "ساعتان",
     attendanceText: "بواقع ساعتين تدريبيتين",
-    trainingType: "مباشر",
     availability: "available"
   },
   {
@@ -31,18 +29,6 @@ window.MANJAZ_CERTIFICATE_WORKSHOPS = [
     durationHours: 2,
     durationText: "ساعتان",
     attendanceText: "بواقع ساعتين تدريبيتين",
-    trainingType: "مباشر",
-    availability: "available"
-  },
-  {
-    id: "successful-class-equation",
-    title: "معادلة الصف الناجح",
-    implementers: ["أ. عايدة الصاعدي"],
-    date: "16.9.2026",
-    durationHours: 2,
-    durationText: "ساعتان",
-    attendanceText: "بواقع ساعتين تدريبيتين",
-    trainingType: "مباشر",
     availability: "available"
   }
 ];

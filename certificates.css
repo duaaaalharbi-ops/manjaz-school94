@@ -345,7 +345,7 @@
   z-index:4;
   right:76px;
   left:76px;
-  bottom:58px;
+  bottom:65px;
   display:grid;
   grid-template-columns:1fr 190px 1fr;
   align-items:end;
@@ -405,5 +405,54 @@
   display:none !important;
 }
 
-/* MANJAZ 4.3 */
-.cert-manage{border:1px solid #e2e7ea;border-radius:14px;background:#fbfcfc;margin:0 0 14px;overflow:hidden}.cert-manage summary{cursor:pointer;padding:12px 14px;font-weight:800;color:#0b3047}.cert-manage-form{display:grid;gap:10px;padding:0 14px 14px}.cert-manage-form label{display:grid;gap:6px;font-size:13px;font-weight:800;color:#0b3047}.cert-manage-form input{width:100%;box-sizing:border-box;border:1px solid #ced7dc;border-radius:10px;padding:10px 11px;font:inherit;background:#fff}.cert-manage-actions,.cert-card-actions{display:grid;gap:7px}.cert-mini-action{border:0;background:transparent;color:#0f5f59;padding:4px 2px;font:700 12px/1.2 inherit;text-align:right;cursor:pointer}.cert-mini-action.danger{color:#9b2525}.cert-workshop-card{border:1px solid #e2e7ea;background:#fff;border-radius:18px;padding:18px;display:grid;gap:12px;box-shadow:0 10px 28px rgba(11,48,71,.06)}.cert-workshop-card h3{margin:0;color:#0b3047;font-size:18px}.cert-meta-stack{display:grid;gap:7px;line-height:1.65}.cert-status{display:inline-flex;align-items:center;width:max-content;padding:5px 10px;border-radius:999px;background:#e8f4f2;color:#0f5f59;font-weight:800;font-size:12px}#lessonList{display:grid;gap:14px}.cert-final-footer{bottom:65px !important}
+/* MANJAZ 4.2 — certificate typography lock + footer adjustment */
+.certificate-paper,
+.certificate-paper.cert-approved{
+  font-family:Tahoma,"Segoe UI",Arial,sans-serif !important;
+}
+.cert-approved-heading{font-weight:900}
+.cert-approved-program{font-weight:900}
+.cert-approved-testimony,.cert-approved-text{font-weight:700}
+.cert-approved-name{font-weight:900}
+.cert-approved-footer{bottom:65px !important}
+
+/* MANJAZ 4.3 — professional cards */
+.v43-lesson-card{background:#fff!important;border:1px solid #dce4e7!important;border-radius:16px!important;padding:16px!important;box-shadow:0 7px 18px rgba(11,48,71,.05)!important}
+.v43-lesson-card h3{color:#0b3047!important;font-size:18px!important;margin:8px 0 10px!important}
+.v43-lesson-card .cert-meta{display:grid!important;gap:7px!important;color:#52656f!important;font-size:14px!important}
+.v43-mini-actions{display:flex;gap:8px;justify-content:flex-start;margin-top:9px;padding-top:8px;border-top:1px solid #edf1f2}
+.v43-icon{border:0;background:transparent!important;padding:3px 5px!important;min-height:auto!important;width:auto!important;font-size:13px!important;line-height:1!important;cursor:pointer}
+.v43-edit{color:#0f5f59!important}.v43-delete{color:#9b3b3b!important}
+.v43-add-workshop,.v43-add-lesson{width:auto!important;min-height:38px!important;margin-top:8px}
+.v43-cert-dialog{border:0;padding:0;background:transparent;max-width:96vw}.v43-cert-dialog::backdrop{background:rgba(5,24,36,.55)}
+.v43-cert-shell{background:#eef3f4;padding:10px;border-radius:16px;max-width:96vw;max-height:94vh;overflow:auto}
+.v43-cert-controls{display:flex;gap:8px;justify-content:center;margin-bottom:8px;position:sticky;top:0;z-index:20}
+/* MANJAZ 11.0 — unified workshop/applied-lesson cards; action colors/sizes remain unchanged */
+.lesson-tools-span{grid-column:1/-1}
+.applied-lessons-grid{align-items:start}
+.applied-lesson-card{min-height:0!important}
+.applied-lesson-card .cert-card-actions,.cert-workshop-card .cert-card-actions{margin-top:auto;padding-top:4px}
+.lesson-cert-selected{display:grid;gap:5px;padding:10px 12px;margin-bottom:8px;background:#fff;border:1px solid #dce4e7;border-radius:11px;color:#52656f;direction:rtl}
+.lesson-cert-selected strong{color:#0b3047;font-size:15px}.lesson-cert-selected span{font-size:12px}
+.v43-cert-controls input{min-width:260px;border:1px solid #ced7dc;border-radius:10px;padding:10px 12px;font:inherit;direction:rtl}
+@media(max-width:680px){.v43-cert-controls{display:grid;grid-template-columns:1fr}.v43-cert-controls input{min-width:0;width:100%}}
+
+/* القالب القديم المعتمد: نفس التوزيع؛ التغيير المقصود الوحيد للتذييل هو +7px (58 -> 65) */
+.certificate-paper.cert-final{background-size:100% 100%;background-position:center;background-repeat:no-repeat;color:#17394a}
+.cert-final-header{position:absolute;top:48px;right:70px;left:70px;height:102px;display:grid;grid-template-columns:1fr 210px 1fr;align-items:start;z-index:4;direction:rtl}
+.cert-final-org{justify-self:start;text-align:right;display:grid;gap:4px;color:#0b3047;line-height:1.25}.cert-final-org strong{font-size:17px}.cert-final-org span{font-size:13px}
+.cert-final-ministry{justify-self:center;width:190px;height:88px;display:flex;align-items:center;justify-content:center}.cert-final-ministry img{max-width:180px;max-height:84px;object-fit:contain}
+.cert-final-manjaz{justify-self:end;width:150px;height:82px;display:flex;align-items:flex-start;justify-content:flex-end}.cert-final-manjaz img{max-width:145px;max-height:76px;object-fit:contain}
+.cert-final-main{position:absolute;z-index:4;top:175px;right:100px;left:100px;bottom:165px;display:flex;flex-direction:column;align-items:center;text-align:center;direction:rtl}
+.cert-final-title{font-size:42px;font-weight:900;color:#0b3047;line-height:1.15;margin:0 0 8px}
+.cert-final-workshop{font-size:25px;font-weight:900;color:#0f5f59;line-height:1.35;margin-bottom:18px}
+.cert-final-testimony{font-size:19px;font-weight:700;color:#405762;line-height:1.65}
+.cert-final-name{min-width:560px;max-width:850px;margin:5px 0 10px;padding:4px 26px 7px;border-bottom:1px solid #d2aa55;font-size:33px;font-weight:900;color:#0f5f59;line-height:1.25}
+.cert-final-attendance{max-width:900px;font-size:18px;font-weight:700;color:#405762;line-height:1.85}
+.cert-final-wish{margin-top:7px;font-size:16px;color:#5a6b74;line-height:1.6}
+.cert-facilitators-inline{margin-top:auto;width:90%;display:flex;gap:28px;justify-content:center;align-items:flex-end;flex-wrap:wrap}.cert-facilitator-inline{display:grid;gap:3px;min-width:220px;color:#17394a;font-size:14px}.cert-facilitator-inline b{font-size:13px;color:#0b3047}.cert-facilitator-inline span{font-weight:800;border-bottom:1px solid rgba(210,170,85,.7);padding:0 8px 4px}
+.cert-final-footer{position:absolute;z-index:4;right:76px;left:76px;bottom:65px!important;display:flex;align-items:flex-end;justify-content:space-between;min-height:88px;direction:rtl}
+.cert-final-principal{display:grid;gap:5px;text-align:right;color:#0b3047;min-width:240px}.cert-final-principal strong{font-size:15px}.cert-final-principal span{font-size:18px;font-weight:900}
+.cert-final-stamp{width:180px;height:88px;display:flex;align-items:flex-end;justify-content:center}.cert-final-stamp img{max-width:118px;max-height:82px;object-fit:contain;opacity:.96}
+@media(max-width:1000px){.v43-cert-shell .certificate-paper{transform-origin:top right;transform:scale(.72);margin-bottom:-220px}}
+@media(max-width:680px){.v43-cert-shell .certificate-paper{transform:scale(.34);margin-bottom:-520px}.cert-final-name{min-width:0}}

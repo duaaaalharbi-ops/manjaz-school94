@@ -1,0 +1,126 @@
+{
+  "passed": 24,
+  "total": 24,
+  "results": [
+    {
+      "name": "13 no cert on home",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "14 no under construction",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "home add links",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "workshop form",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1 add workshop",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1 persisted workshop",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1 re-render workshop remains",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "2 workshop edit no duplicate",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "4 workshop selected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "5 workshop preview",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "6 workshop download",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "footer +7",
+      "passed": true,
+      "detail": "65px"
+    },
+    {
+      "name": "3 workshop delete",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "lesson form",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "7 add lesson",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "7 lesson persisted",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "7 lesson re-render remains",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "same card template",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "8 edit lesson",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "10 lesson selected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "11 lesson preview",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "12 lesson download",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "9 delete lesson",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "15 single lesson renderer",
+      "passed": true,
+      "detail": ""
+    }
+  ]
+}

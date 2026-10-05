@@ -1,1 +1,1 @@
-/* MANJAZ 4.1: intentionally empty; renderer lives only in home-v3.js */
+/* MANJAZ 4.0: renderer moved to home-v3.js; intentionally empty */

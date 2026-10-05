@@ -1,8 +1,11 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "11.0-unified-cards-crud";
 (function(){
   "use strict";
 
   const ROUTE="certificates";
+  const ADD_ROUTE="certificates-add";
+  const routeName=()=>String((location.hash||"#home").slice(1));
+  const isCertificateRoute=()=>[ROUTE,ADD_ROUTE].includes(routeName());
   const MAX_NAME=80;
   const SCHOOL="الثانوية الرابعة والتسعون - مسارات";
   const SECTION_TITLE="إصدار شهادات الورش المنفذة الرقمية";
@@ -41,7 +44,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=10.7.24"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=11.0"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -60,7 +63,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
     const nav=document.getElementById("nav");
     if(nav && !nav.querySelector('[data-route="certificates"]')){
       const a=document.createElement("a");
-      a.href="#home";a.dataset.openCertificates="1";a.dataset.route="certificates";
+      a.href="#certificates";a.dataset.route="certificates";
       a.innerHTML='<span class="icon">▧</span><span>إصدار شهادات الورش</span>';
       const settings=nav.querySelector('[data-route="settings"]');
       nav.insertBefore(a,settings||null);
@@ -90,7 +93,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
     return `${n} ساعات`;
   }
 
-  function workshopEditor(){return `<details class="cert-manage"><summary>إضافة ورشة تدريبية</summary><form id="workshopManageForm" class="cert-manage-form"><input type="hidden" id="wmId"><label>عنوان الورشة<input id="wmTitle" required></label><label>التاريخ<input id="wmDate" required></label><label>المدة<input id="wmDuration"></label><label>نوع التدريب<input id="wmType"></label><label>المنفذة / المنفذات<input id="wmImplementers"></label><div class="cert-manage-actions"><button class="cert-btn primary" type="submit">حفظ</button><button class="cert-btn secondary" id="wmCancel" type="button">إلغاء</button></div><div id="wmMsg" class="cert-message"></div></form></details>`;}
+  function workshopEditor(){return `<details id="workshopManageDetails" class="cert-manage"><summary>إضافة ورشة تدريبية</summary><form id="workshopManageForm" class="cert-manage-form"><input type="hidden" id="wmId"><label>عنوان الورشة<input id="wmTitle" required></label><label>التاريخ<input id="wmDate" required></label><label>المدة<input id="wmDuration"></label><label>نوع التدريب<input id="wmType"></label><label>المنفذة / المنفذات<input id="wmImplementers"></label><div class="cert-manage-actions"><button class="cert-btn primary" type="submit">حفظ</button><button class="cert-btn secondary" id="wmCancel" type="button">إلغاء</button></div><div id="wmMsg" class="cert-message"></div></form></details>`;}
   function workshopCards(){
     const all=workshops();
     if(!all.length) return '<div class="cert-empty"><h3>لا توجد شهادات متاحة حاليًا</h3><p>ستظهر الورش هنا عند إضافتها إلى بيانات القسم</p></div>';
@@ -109,7 +112,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
   function pageHTML(){
     return `<div class="certificates-page">
       <section class="page-intro certificates-intro"><div><span class="kicker">منجز</span><h2>${SECTION_TITLE}</h2><p>اختاري الورشة المنفذة، ثم اكتبي اسمك واضغطي إنشاء الشهادة. الشهادة الظاهرة هي النسخة النهائية نفسها التي سيتم تحميلها بصيغة PDF</p></div></section>
-      <section class="surface panel"><div class="panel-head"><h3>الورش المتاحة</h3><span>${getActive().length} متاحة حاليًا</span></div>${workshopEditor()}${workshopCards()}</section>
+      <section class="surface panel"><div class="panel-head"><h3>الورش التدريبية</h3><span>${getActive().length} ورشة متاحة</span></div><div id="workshopFlash" class="cert-message success"></div>${workshopEditor()}${workshopCards()}</section>
       <section id="certIssuePanel" class="cert-form" style="display:none">
         <div class="form-section-title">إصدار الشهادة</div>
         <div id="certSelectedWorkshop" class="cert-selected-workshop"></div>
@@ -251,7 +254,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
     try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
     const imgs=[...root.querySelectorAll("img")];
     await Promise.all(imgs.map(img=>new Promise(resolve=>{
-      if(img.complete && img.naturalWidth>0) return resolve();
+      if(img.complete) return resolve();
       const done=()=>resolve();
       img.addEventListener("load",done,{once:true});
       img.addEventListener("error",done,{once:true});
@@ -320,17 +323,35 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
     }finally{btn.disabled=false;}
   }
 
+  let workshopFlash="";
   function wireWorkshopManagement(){
- const f=document.getElementById("workshopManageForm");if(!f)return;
- const q=x=>document.getElementById(x),id=q("wmId"),title=q("wmTitle"),date=q("wmDate"),dur=q("wmDuration"),type=q("wmType"),impl=q("wmImplementers"),msg=q("wmMsg");
- q("wmCancel")?.addEventListener("click",()=>{f.reset();id.value="";msg.textContent=""});
- f.addEventListener("submit",e=>{e.preventDefault();const r={id:id.value||"workshop-"+Date.now(),title:title.value.trim(),date:date.value.trim(),durationText:dur.value.trim(),duration:dur.value.trim(),trainingType:type.value.trim(),implementers:impl.value.split(/[،,]/).map(x=>x.trim()).filter(Boolean),availability:"available",available:true};if(!r.title||!r.date){msg.textContent="أكملي عنوان الورشة والتاريخ";return}const m=managedWorkshops(),i=m.findIndex(x=>String(x.id)===String(r.id));if(i>=0)m[i]={...m[i],...r};else m.push(r);saveManagedWorkshops(m);msg.textContent="تم الحفظ بنجاح";setTimeout(()=>renderPage(true),250)});
- document.querySelectorAll(".cert-edit-workshop").forEach(b=>b.onclick=()=>{const w=getWorkshop(b.dataset.id);if(!w)return;id.value=w.id;title.value=w.title||"";date.value=w.date||"";dur.value=w.durationText||w.duration||"";type.value=w.trainingType||"";impl.value=(w.implementers||[]).join("، ");f.closest("details").open=true;f.scrollIntoView({behavior:"smooth"})});
- document.querySelectorAll(".cert-delete-workshop").forEach(b=>b.onclick=()=>{const w=getWorkshop(b.dataset.id);if(!w||!confirm(`حذف ورشة «${w.title||""}»؟`))return;const m=managedWorkshops(),i=m.findIndex(x=>String(x.id)===String(w.id));if(i>=0)m.splice(i,1);else m.push({...w,available:false,availability:"hidden"});saveManagedWorkshops(m);renderPage(true)});
-}
+    const f=document.getElementById("workshopManageForm"); if(!f) return;
+    const q=x=>document.getElementById(x), id=q("wmId"), title=q("wmTitle"), date=q("wmDate"), dur=q("wmDuration"), type=q("wmType"), impl=q("wmImplementers"), msg=q("wmMsg");
+    const submit=f.querySelector('button[type="submit"]');
+    const reset=()=>{f.reset();id.value="";msg.textContent="";delete f.dataset.busy;if(submit){submit.disabled=false;submit.textContent="حفظ";}};
+    q("wmCancel")?.addEventListener("click",reset);
+    f.addEventListener("submit",e=>{
+      e.preventDefault(); if(f.dataset.busy==="1") return;
+      const existingId=id.value.trim();
+      const previous=existingId?(getWorkshop(existingId)||{}):{};const r={...previous,id:existingId||`workshop-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,title:title.value.trim(),date:date.value.trim(),durationText:dur.value.trim(),duration:dur.value.trim(),trainingType:type.value.trim(),implementers:impl.value.split(/[،,]/).map(x=>x.trim()).filter(Boolean),availability:"available",available:true};
+      if(!r.title||!r.date){msg.className="cert-message error";msg.textContent="أكملي عنوان الورشة والتاريخ";return;}
+      f.dataset.busy="1"; if(submit){submit.disabled=true;submit.textContent="جارٍ الحفظ...";}
+      try{
+        const m=managedWorkshops(), i=m.findIndex(x=>String(x.id)===String(r.id));
+        if(i>=0)m[i]={...m[i],...r};else m.push(r);
+        saveManagedWorkshops(m);
+        workshopFlash=existingId?"تم تحديث الورشة بنجاح":"تمت إضافة الورشة وحفظها بنجاح";
+        renderPage(true);
+      }catch(err){console.error(err);delete f.dataset.busy;if(submit){submit.disabled=false;submit.textContent="حفظ";}msg.className="cert-message error";msg.textContent="تعذر حفظ الورشة. لم يتم تغيير البيانات السابقة";}
+    });
+    document.querySelectorAll(".cert-edit-workshop").forEach(b=>b.onclick=()=>{const w=getWorkshop(b.dataset.id);if(!w)return;id.value=w.id;title.value=w.title||"";date.value=w.date||"";dur.value=w.durationText||w.duration||"";type.value=w.trainingType||"";impl.value=(w.implementers||[]).join("، ");const details=f.closest("details");if(details)details.open=true;msg.textContent="";f.scrollIntoView({behavior:"smooth",block:"start"});});
+    document.querySelectorAll(".cert-delete-workshop").forEach(b=>b.onclick=()=>{const w=getWorkshop(b.dataset.id);if(!w||!confirm(`حذف ورشة «${w.title||""}»؟`))return;const m=managedWorkshops(),i=m.findIndex(x=>String(x.id)===String(w.id));if(i>=0)m.splice(i,1);else m.push({...w,available:false,availability:"hidden"});saveManagedWorkshops(m);workshopFlash="تم حذف الورشة المحددة";renderPage(true);});
+    if(routeName()===ADD_ROUTE){const d=q("workshopManageDetails");if(d)d.open=true;setTimeout(()=>title?.focus(),0);}
+  }
   function wirePage(){
     const hiddenId=document.getElementById("certWorkshopId"),name=document.getElementById("certTeacherName"),panel=document.getElementById("certIssuePanel"),msg=document.getElementById("certMsg"),preview=document.getElementById("certPreviewWrap"),previewBtn=document.getElementById("certPreviewBtn"),editBtn=document.getElementById("certEditNameBtn"),downloadBtn=document.getElementById("certDownloadBtn"),selected=document.getElementById("certSelectedWorkshop");
 
+    const flash=document.getElementById("workshopFlash");if(flash&&workshopFlash){flash.textContent=workshopFlash;workshopFlash="";}
     wireWorkshopManagement();
     document.querySelectorAll(".cert-choose").forEach(btn=>btn.addEventListener("click",()=>{
       const w=getWorkshop(btn.dataset.id);
@@ -369,10 +390,12 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
   }
 
   function renderPage(force=false){
-    if(!force && (location.hash||"").slice(1)!==ROUTE) return;
+    if(!force && !isCertificateRoute()) return;
     const view=document.getElementById("view"); if(!view) return;
     setActiveNav();view.innerHTML=pageHTML();wirePage();
   }
+
+  window.renderCertificatesPage=()=>renderPage(true);
 
   function observeAppRenders(){
     const view=document.getElementById("view");
@@ -383,7 +406,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
       clearTimeout(timer);
       timer=setTimeout(()=>{
         const route=(location.hash||"#home").slice(1);
-        if(route===ROUTE) renderPage();
+        if((route===ROUTE || route===ADD_ROUTE) && !view.querySelector(".certificates-page")) renderPage();
         else if(route==="home") injectHomeCertificatesSection();
       },40);
     });
@@ -417,12 +440,12 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
     setTimeout(injectCertificatesAnnouncement,0);
     setTimeout(injectCertificatesAnnouncement,250);
     setTimeout(injectCertificatesAnnouncement,900);
-    if((location.hash||"").slice(1)===ROUTE) setTimeout(renderPage,0);
+    if(isCertificateRoute()) setTimeout(renderPage,0);
   }
 
   window.addEventListener("hashchange",()=>{
     setTimeout(()=>{
-      if((location.hash||"").slice(1)===ROUTE) renderPage(); else injectHomeCertificatesSection(); injectCertificatesAnnouncement();
+      if(isCertificateRoute()) renderPage(); else injectHomeCertificatesSection(); injectCertificatesAnnouncement();
     },0);
   });
   if(document.readyState==="loading"){
