@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.6-canonical-routing";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.7-final-source-fix";
 (function(){
   "use strict";
 
@@ -41,7 +41,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.6-canonical-routing";
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=12.6"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=12.7"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -431,8 +431,10 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.6-canonical-routing";
       clearTimeout(timer);
       timer=setTimeout(()=>{
         const route=(location.hash||"#home").slice(1);
-        if(route===ROUTE) renderPage();
-        else if(route==="home") injectHomeCertificatesSection();
+        if(route===ROUTE){
+          // Do not redraw our own live certificate page. Redraw only when another renderer replaced it.
+          if(!view.querySelector(".certificates-page")) renderPage();
+        } else if(route==="home") injectHomeCertificatesSection();
       },40);
     });
     observer.observe(view,{childList:true,subtree:true});

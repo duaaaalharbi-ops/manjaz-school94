@@ -1,4 +1,4 @@
-/* MANJAZ 5.2 — canonical applied lessons: certificate/edit/delete only */
+/* MANJAZ 12.7 — canonical applied lessons: same visual component as workshops; certificate/edit/delete only */
 (()=>{"use strict";
 const STORE="manjaz_applied_lessons_managed_v1";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -79,14 +79,30 @@ window.wireAppliedLessons=function(){
  try{if(sessionStorage.getItem("manjaz_home_open_add")==="lesson"){sessionStorage.removeItem("manjaz_home_open_add");const d=document.querySelector(".lesson-manage");if(d){d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"})}}}catch(_){ }
 };
 
+let repairingLessons=false;
 function ensureCanonicalLessons(){
- if((location.hash||"").slice(1)!=="lessons") return;
+ if(repairingLessons || (location.hash||"").slice(1)!=="lessons") return;
  const list=document.getElementById("lessonList");
  if(!list) return;
- const hasCards=list.querySelector(".applied-lesson-card");
  const canonical=list.querySelector("[data-lesson-actions='canonical']");
- if(!hasCards || !canonical) window.wireAppliedLessons();
+ const legacy=[...list.querySelectorAll("a,button")].some(el=>/استعراض|عرض المنجز|فتح المنجز/.test(clean(el.textContent)));
+ if(!canonical || legacy){
+   repairingLessons=true;
+   try{ window.wireAppliedLessons(); } finally { setTimeout(()=>{repairingLessons=false},0); }
+ }
 }
-window.addEventListener("hashchange",()=>setTimeout(ensureCanonicalLessons,0));
+function observeLessonRendererConflicts(){
+ const view=document.getElementById("view");
+ if(!view || view.dataset.lessonCanonicalObserver==="1") return;
+ view.dataset.lessonCanonicalObserver="1";
+ let timer;
+ new MutationObserver(()=>{
+   clearTimeout(timer);
+   timer=setTimeout(ensureCanonicalLessons,35);
+ }).observe(view,{childList:true,subtree:true});
+}
+window.addEventListener("hashchange",()=>setTimeout(()=>{observeLessonRendererConflicts();ensureCanonicalLessons();},0));
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>{observeLessonRendererConflicts();setTimeout(ensureCanonicalLessons,0)},{once:true});
+else {observeLessonRendererConflicts();setTimeout(ensureCanonicalLessons,0);}
 window.addEventListener("load",()=>setTimeout(ensureCanonicalLessons,0),{once:true});
 })();
