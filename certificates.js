@@ -41,7 +41,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.1-certificate-refinement";
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=12.1"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=12.4"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -103,7 +103,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.1-certificate-refinement";
         <span><b>نوع التدريب:</b> ${esc(w.trainingType||"—")}</span>
         ${implementersLabel(w)?`<span><b>${Array.isArray(w.implementers)&&w.implementers.length>1?'منفذات الورشة':'منفذة الورشة'}:</b> ${(w.implementers||[]).map(esc).join('، ')}</span>`:""}
       </div>
-      <div class="cert-card-actions">${!isAvailable(w)?'':'<button class="cert-btn primary cert-choose" data-id="'+esc(w.id)+'">إصدار الشهادة</button>'}<button type="button" class="cert-mini-action cert-edit-workshop" data-id="${esc(w.id)}">تعديل</button><button type="button" class="cert-mini-action danger cert-delete-workshop" data-id="${esc(w.id)}">حذف</button></div></article>`).join("")}</div>`;
+      <div class="cert-card-actions">${!isAvailable(w)?'':'<button class="cert-btn primary cert-choose" data-id="'+esc(w.id)+'">إصدار الشهادة</button>'}<div class="record-mini-actions"><button type="button" class="cert-mini-action cert-edit-workshop" data-id="${esc(w.id)}">تعديل</button><button type="button" class="cert-mini-action danger cert-delete-workshop" data-id="${esc(w.id)}">حذف</button></div></div></article>`).join("")}</div>`;
   }
 
   function pageHTML(){
