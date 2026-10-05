@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.21-dynamic-training-hours";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.24-successful-class";
 (function(){
   "use strict";
 
@@ -6,21 +6,11 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.21-dynamic-training-hours";
   const MAX_NAME=80;
   const SCHOOL="الثانوية الرابعة والتسعون - مسارات";
   const SECTION_TITLE="إصدار شهادات الورش المنفذة الرقمية";
-  const WORKSHOP_STORE="manjaz_workshops_v43";
+  const WORKSHOP_STORE="manjaz_workshops_managed_v1";
   const baseWorkshops=()=>Array.isArray(window.MANJAZ_CERTIFICATE_WORKSHOPS)?window.MANJAZ_CERTIFICATE_WORKSHOPS:[];
-  function storedWorkshops(){try{return JSON.parse(localStorage.getItem(WORKSHOP_STORE)||"[]")}catch(_){return []}}
-  function workshops(){
-    const saved=storedWorkshops();
-    if(!saved.length) return baseWorkshops();
-    return saved;
-  }
-  function persistWorkshops(items){
-    localStorage.setItem(WORKSHOP_STORE,JSON.stringify(items));
-    window.MANJAZ_CERTIFICATE_WORKSHOPS=items;
-  }
-  function ensureWorkshopStore(){
-    if(!localStorage.getItem(WORKSHOP_STORE)) persistWorkshops(baseWorkshops().map(x=>({...x})));
-  }
+  const managedWorkshops=()=>{try{return JSON.parse(localStorage.getItem(WORKSHOP_STORE)||"[]")}catch(_){return []}};
+  const workshops=()=>{const m=managedWorkshops(),map=new Map(m.map(x=>[String(x.id),x]));return [...baseWorkshops().map(x=>map.get(String(x.id))||x),...m.filter(x=>!baseWorkshops().some(b=>String(b.id)===String(x.id)))];};
+  const saveManagedWorkshops=x=>localStorage.setItem(WORKSHOP_STORE,JSON.stringify(x));
 
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
   const cleanName=value=>String(value||"").replace(/\s+/g," ").trim().slice(0,MAX_NAME);
@@ -44,13 +34,14 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.21-dynamic-training-hours";
   function dateSpan(text){
     return `<span class="cert-ar-date" dir="ltr">${esc(text)}</span>`;
   }
-  const getActive=()=>workshops().filter(w=>w&&w.available!==false);
+  const isAvailable=w=>!!w && w.available!==false && w.availability!=="unavailable" && w.availability!=="hidden";
+  const getActive=()=>workshops().filter(isAvailable);
   const getWorkshop=id=>workshops().find(w=>String(w.id)===String(id));
 
   function injectStyle(){
     if(document.querySelector('link[data-certificates-style]')) return;
     const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=4.3.21"; link.dataset.certificatesStyle="1";
+    link.rel="stylesheet"; link.href="certificates.css?v=10.7.24"; link.dataset.certificatesStyle="1";
     document.head.appendChild(link);
   }
 
@@ -76,38 +67,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.21-dynamic-training-hours";
     }
   }
 
-  function injectHomeCertificatesSection(){ return; /* 4.3: no certificate action on home */
-
-    if((location.hash||"#home")!=="#home") return;
-    const view=document.getElementById("view");
-    if(!view || view.querySelector(".cert-home-section")) return;
-
-    const categoryGrid=view.querySelector(".category-grid");
-    if(!categoryGrid) return;
-
-    const section=document.createElement("section");
-    section.className="section-block cert-home-section";
-    section.innerHTML=`
-      <div class="section-title">
-        <div>
-          <h3>الخدمات الرقمية</h3>
-        </div>
-      </div>
-      <article class="category-card cert-home-card" role="button" tabindex="0" aria-label="فتح إصدار الشهادات للورش المنفذة رقميًا">
-        <strong>إصدار الشهادات للورش المنفذة رقميًا</strong>
-        <small>أنشئي شهادتك الرقمية بعد اختيار الورشة من قائمة الورش المنفذة</small>
-        <a class="cert-home-link cert-home-action" href="#home" data-open-certificates="1">إصدار شهادة</a>
-      </article>`;
-    const open=()=>{ renderPage(true); setTimeout(()=>window.scrollTo({top:0,behavior:"smooth"}),0); };
-    const card=section.querySelector(".cert-home-card");
-    card.addEventListener("click",e=>{ e.preventDefault(); open(); });
-    card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
-    section.querySelector(".cert-home-action")?.addEventListener("click",e=>{
-      e.preventDefault(); e.stopPropagation(); open();
-    });
-    const categorySection=categoryGrid.closest(".section-block") || categoryGrid.parentElement;
-    categorySection.insertAdjacentElement("afterend",section);
-  }
+  function injectHomeCertificatesSection(){ /* disabled on home */ }
 
   function setActiveNav(){
     document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("active",a.dataset.route===ROUTE));
@@ -119,67 +79,37 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.21-dynamic-training-hours";
     return `${names.length>1?"المنفذتان":"المنفذة"}: ${names.map(esc).join("، ")}`;
   }
 
+
+  function workshopDurationLabel(w){
+    const text=String((w&&w.durationText)||(w&&w.duration)||"").trim();
+    if(text) return text;
+    const n=Number(w&&w.durationHours);
+    if(!Number.isFinite(n)||n<=0) return "—";
+    if(n===1) return "ساعة واحدة";
+    if(n===2) return "ساعتان";
+    return `${n} ساعات`;
+  }
+
+  function workshopEditor(){return `<details class="cert-manage"><summary>إضافة ورشة تدريبية</summary><form id="workshopManageForm" class="cert-manage-form"><input type="hidden" id="wmId"><label>عنوان الورشة<input id="wmTitle" required></label><label>التاريخ<input id="wmDate" required></label><label>المدة<input id="wmDuration"></label><label>نوع التدريب<input id="wmType"></label><label>المنفذة / المنفذات<input id="wmImplementers"></label><div class="cert-manage-actions"><button class="cert-btn primary" type="submit">حفظ</button><button class="cert-btn secondary" id="wmCancel" type="button">إلغاء</button></div><div id="wmMsg" class="cert-message"></div></form></details>`;}
   function workshopCards(){
     const all=workshops();
-    if(!all.length) return '<div class="cert-empty"><h3>لا توجد ورش متاحة حاليًا</h3><p>أضيفي ورشة لتظهر هنا</p></div>';
+    if(!all.length) return '<div class="cert-empty"><h3>لا توجد شهادات متاحة حاليًا</h3><p>ستظهر الورش هنا عند إضافتها إلى بيانات القسم</p></div>';
     return `<div class="cert-grid">${all.map(w=>`<article class="cert-workshop-card" data-workshop-id="${esc(w.id)}">
-      <span class="cert-status ${w.available===false?'off':''}">${w.available===false?'غير متاحة':'متاحة للإصدار'}</span>
+      <span class="cert-status ${!isAvailable(w)?'off':''}">${!isAvailable(w)?'غير متاحة':'متاحة للإصدار'}</span>
       <h3>ورشة «${esc(w.title||"بدون عنوان")}»</h3>
       <div class="cert-meta cert-meta-stack">
-        <span><b>التاريخ:</b> ${esc(w.date||"—")}</span>
-        <span><b>المدة:</b> ${esc(w.duration||"—")}</span>
+        <span><b>التاريخ:</b> ${(()=>{const d=normalizeWorkshopDate(w.date);return `${esc(d.day)} ${dateSpan(d.date||"—")}`.trim();})()}</span>
+        <span><b>المدة:</b> ${esc(workshopDurationLabel(w))}</span>
         <span><b>نوع التدريب:</b> ${esc(w.trainingType||"—")}</span>
         ${implementersLabel(w)?`<span><b>${Array.isArray(w.implementers)&&w.implementers.length>1?'منفذات الورشة':'منفذة الورشة'}:</b> ${(w.implementers||[]).map(esc).join('، ')}</span>`:""}
       </div>
-      ${w.available===false?'':'<button type="button" class="cert-btn primary cert-choose" data-id="'+esc(w.id)+'">إصدار الشهادة</button>'}
-      <div class="v43-mini-actions">
-        <button type="button" class="v43-icon v43-edit" data-edit-workshop="${esc(w.id)}">✎ تعديل</button>
-        <button type="button" class="v43-icon v43-delete" data-delete-workshop="${esc(w.id)}">⌫ حذف</button>
-      </div>
-    </article>`).join("")}</div>`;
-  }
-
-  function workshopEditor(w){
-    const edit=!!w;
-    return `<dialog id="v43WorkshopDialog" class="v43-editor-dialog"><form method="dialog" id="v43WorkshopForm" class="v43-editor-form">
-      <h3>${edit?'تعديل الورشة':'إضافة ورشة تدريبية'}</h3>
-      <input type="hidden" name="id" value="${edit?esc(w.id):''}">
-      <label>عنوان الورشة<input name="title" required value="${edit?esc(w.title||''):''}"></label>
-      <label>التاريخ<input name="date" required value="${edit?esc(w.date||''):''}"></label>
-      <label>المدة<input name="duration" required value="${edit?esc(w.duration||''):''}"></label>
-      <label>نوع التدريب<input name="trainingType" value="${edit?esc(w.trainingType||''):''}"></label>
-      <label>منفذة/منفذات الورشة<input name="implementers" required value="${edit?esc((w.implementers||[]).join('، ')):''}" placeholder="افصلي بين الأسماء بفاصلة"></label>
-      <label class="v43-check"><input type="checkbox" name="available" ${!edit||w.available!==false?'checked':''}> متاحة لإصدار الشهادة</label>
-      <div class="cert-actions"><button type="submit" class="cert-btn primary">حفظ</button><button type="button" class="cert-btn secondary v43-cancel">إلغاء</button></div>
-    </form></dialog>`;
-  }
-
-  function openWorkshopEditor(w){
-    document.getElementById("v43WorkshopDialog")?.remove();
-    document.body.insertAdjacentHTML("beforeend",workshopEditor(w));
-    const d=document.getElementById("v43WorkshopDialog"),f=document.getElementById("v43WorkshopForm");
-    d.querySelector(".v43-cancel").onclick=()=>d.close();
-    f.onsubmit=e=>{
-      e.preventDefault();
-      const fd=new FormData(f),id=String(fd.get("id")||"").trim()||("workshop-"+Date.now());
-      const item={
-        ...(w||{}),id,title:String(fd.get("title")||"").trim(),date:String(fd.get("date")||"").trim(),
-        duration:String(fd.get("duration")||"").trim(),trainingType:String(fd.get("trainingType")||"").trim(),
-        implementers:String(fd.get("implementers")||"").split(/[،,]/).map(x=>x.trim()).filter(Boolean),
-        available:fd.get("available")==="on"
-      };
-      if(!item.title||!item.date||!item.duration||!item.implementers.length) return;
-      const items=workshops().map(x=>({...x})),i=items.findIndex(x=>String(x.id)===id);
-      if(i>=0) items[i]=item; else items.unshift(item);
-      persistWorkshops(items); d.close(); renderPage(true);
-    };
-    d.showModal();
+      <div class="cert-card-actions">${!isAvailable(w)?'':'<button class="cert-btn primary cert-choose" data-id="'+esc(w.id)+'">إصدار الشهادة</button>'}<button type="button" class="cert-mini-action cert-edit-workshop" data-id="${esc(w.id)}">تعديل</button><button type="button" class="cert-mini-action danger cert-delete-workshop" data-id="${esc(w.id)}">حذف</button></div></article>`).join("")}</div>`;
   }
 
   function pageHTML(){
     return `<div class="certificates-page">
       <section class="page-intro certificates-intro"><div><span class="kicker">منجز</span><h2>${SECTION_TITLE}</h2><p>اختاري الورشة المنفذة، ثم اكتبي اسمك واضغطي إنشاء الشهادة. الشهادة الظاهرة هي النسخة النهائية نفسها التي سيتم تحميلها بصيغة PDF</p></div></section>
-      <section class="surface panel"><div class="panel-head"><h3>الورش المتاحة</h3><span>${getActive().length} متاحة حاليًا</span></div><button type="button" class="cert-btn secondary v43-add-workshop" id="v43AddWorkshop">إضافة ورشة</button>${workshopCards()}</section>
+      <section class="surface panel"><div class="panel-head"><h3>الورش المتاحة</h3><span>${getActive().length} متاحة حاليًا</span></div>${workshopEditor()}${workshopCards()}</section>
       <section id="certIssuePanel" class="cert-form" style="display:none">
         <div class="form-section-title">إصدار الشهادة</div>
         <div id="certSelectedWorkshop" class="cert-selected-workshop"></div>
@@ -390,24 +320,23 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.21-dynamic-training-hours";
     }finally{btn.disabled=false;}
   }
 
+  function wireWorkshopManagement(){
+ const f=document.getElementById("workshopManageForm");if(!f)return;
+ const q=x=>document.getElementById(x),id=q("wmId"),title=q("wmTitle"),date=q("wmDate"),dur=q("wmDuration"),type=q("wmType"),impl=q("wmImplementers"),msg=q("wmMsg");
+ q("wmCancel")?.addEventListener("click",()=>{f.reset();id.value="";msg.textContent=""});
+ f.addEventListener("submit",e=>{e.preventDefault();const r={id:id.value||"workshop-"+Date.now(),title:title.value.trim(),date:date.value.trim(),durationText:dur.value.trim(),duration:dur.value.trim(),trainingType:type.value.trim(),implementers:impl.value.split(/[،,]/).map(x=>x.trim()).filter(Boolean),availability:"available",available:true};if(!r.title||!r.date){msg.textContent="أكملي عنوان الورشة والتاريخ";return}const m=managedWorkshops(),i=m.findIndex(x=>String(x.id)===String(r.id));if(i>=0)m[i]={...m[i],...r};else m.push(r);saveManagedWorkshops(m);msg.textContent="تم الحفظ بنجاح";setTimeout(()=>renderPage(true),250)});
+ document.querySelectorAll(".cert-edit-workshop").forEach(b=>b.onclick=()=>{const w=getWorkshop(b.dataset.id);if(!w)return;id.value=w.id;title.value=w.title||"";date.value=w.date||"";dur.value=w.durationText||w.duration||"";type.value=w.trainingType||"";impl.value=(w.implementers||[]).join("، ");f.closest("details").open=true;f.scrollIntoView({behavior:"smooth"})});
+ document.querySelectorAll(".cert-delete-workshop").forEach(b=>b.onclick=()=>{const w=getWorkshop(b.dataset.id);if(!w||!confirm(`حذف ورشة «${w.title||""}»؟`))return;const m=managedWorkshops(),i=m.findIndex(x=>String(x.id)===String(w.id));if(i>=0)m.splice(i,1);else m.push({...w,available:false,availability:"hidden"});saveManagedWorkshops(m);renderPage(true)});
+}
   function wirePage(){
     const hiddenId=document.getElementById("certWorkshopId"),name=document.getElementById("certTeacherName"),panel=document.getElementById("certIssuePanel"),msg=document.getElementById("certMsg"),preview=document.getElementById("certPreviewWrap"),previewBtn=document.getElementById("certPreviewBtn"),editBtn=document.getElementById("certEditNameBtn"),downloadBtn=document.getElementById("certDownloadBtn"),selected=document.getElementById("certSelectedWorkshop");
 
-    document.getElementById("v43AddWorkshop")?.addEventListener("click",()=>openWorkshopEditor(null));
-    document.querySelectorAll("[data-edit-workshop]").forEach(btn=>btn.addEventListener("click",()=>{
-      const w=getWorkshop(btn.dataset.editWorkshop); if(w) openWorkshopEditor(w);
-    }));
-    document.querySelectorAll("[data-delete-workshop]").forEach(btn=>btn.addEventListener("click",()=>{
-      const w=getWorkshop(btn.dataset.deleteWorkshop); if(!w) return;
-      if(!confirm(`حذف ورشة «${w.title||""}»؟`)) return;
-      persistWorkshops(workshops().filter(x=>String(x.id)!==String(w.id))); renderPage(true);
-    }));
-
+    wireWorkshopManagement();
     document.querySelectorAll(".cert-choose").forEach(btn=>btn.addEventListener("click",()=>{
       const w=getWorkshop(btn.dataset.id);
-      if(!w||w.available===false) return;
+      if(!isAvailable(w)) return;
       hiddenId.value=w.id;
-      const sd=normalizeWorkshopDate(w.date); selected.innerHTML=`<strong>${esc(w.title)}</strong><span>${esc(sd.day)} ${dateSpan(sd.date)} • ${esc(w.duration||"")}</span>${implementersLabel(w)?`<small>${implementersLabel(w)}</small>`:""}`;
+      const sd=normalizeWorkshopDate(w.date); selected.innerHTML=`<strong>${esc(w.title)}</strong><span>${esc(sd.day)} ${dateSpan(sd.date)} • ${esc(workshopDurationLabel(w))} • ${esc(w.trainingType||"—")}</span>${implementersLabel(w)?`<small>${implementersLabel(w)}</small>`:""}`;
       panel.style.display="grid";
       preview.classList.remove("is-visible");
       msg.textContent="";
@@ -462,7 +391,6 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "10.7.21-dynamic-training-hours";
   }
 
   function boot(){
-    ensureWorkshopStore();
     injectStyle();injectNav();observeAppRenders();
     if(document.documentElement.dataset.certDirectOpen!=="1"){
       document.documentElement.dataset.certDirectOpen="1";
