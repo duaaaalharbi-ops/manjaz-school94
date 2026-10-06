@@ -189,7 +189,6 @@ function databaseSectionHTML(kind,idPrefix,title){
   return `<section id="${idPrefix}Panel" class="surface panel" style="margin-top:18px">
     <div class="panel-head">
       <h3>${title}</h3>
-      <span id="${idPrefix}Count">0 إصدار</span>
     </div>
     <div class="form-grid" style="margin-top:12px">
       <label class="wide">${kind==="ورشة تدريبية"?"اختيار الورشة":"اختيار الدرس التطبيقي"}
@@ -249,13 +248,11 @@ function populateSelector(kind,idPrefix){
 function renderSelected(kind,idPrefix){
   const select=document.getElementById(`${idPrefix}Select`);
   const body=document.querySelector(`#${idPrefix}Table tbody`);
-  const count=document.getElementById(`${idPrefix}Count`);
   const excel=document.getElementById(`${idPrefix}Excel`);
-  if(!select||!body||!count||!excel) return;
+  if(!select||!body||!excel) return;
 
   const id=clean(select.value);
   if(!id){
-    count.textContent="0 إصدار";
     excel.disabled=true;
     body.innerHTML='<tr><td colspan="3" style="padding:10px">لم يتم اختيار سجل بعد.</td></tr>';
     return;
@@ -263,7 +260,6 @@ function renderSelected(kind,idPrefix){
 
   const item=activityCatalog(kind).find(x=>x.id===id);
   const rows=rowsForId(kind,id);
-  count.textContent=`${rows.length} إصدار`;
   excel.disabled=false;
 
   body.innerHTML=rows.length?rows.map(x=>`<tr>
