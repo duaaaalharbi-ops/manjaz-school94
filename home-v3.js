@@ -27,7 +27,7 @@ function action(label,href,kind,addKind){
 function ensureCloudLinksScript(){
   if(document.querySelector('script[data-manjaz-cloud-links="1"]')) return;
   const s=document.createElement("script");
-  s.src="cloud-links.js?v=1.0";
+  s.src="cloud-links.js?v=1.1";
   s.dataset.manjazCloudLinks="1";
   document.head.appendChild(s);
 }
@@ -70,7 +70,6 @@ function buildHome(){
   view.append(main);
 }
 function render(){ if(isHome()) buildHome(); }
-/* المصدر الرسمي لرسم الرئيسية: يستخدمه app.js أيضًا بعد اكتمال المزامنة السحابية */
 window.renderManjazHome=buildHome;
 ensureCloudLinksScript();
 addEventListener("hashchange",()=>setTimeout(render,0));

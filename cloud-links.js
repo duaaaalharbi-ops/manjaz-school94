@@ -1,4 +1,4 @@
-/* MANJAZ CLOUD LINKS 1.0 — Google Drive links only */
+/* MANJAZ CLOUD LINKS 1.1 — Google Drive links only + edit/delete */
 (()=>{"use strict";
 
 const SUPABASE_URL="https://idkjuqfxcweqekdkcktk.supabase.co";
@@ -26,6 +26,7 @@ const SECTIONS={
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const clean=s=>String(s||"").replace(/\s+/g," ").trim();
 const currentRoute=()=>(location.hash||"#home").slice(1);
+let currentItems=[];
 
 function validDriveUrl(value){
   try{
@@ -73,6 +74,38 @@ async function addLink(kind,title,url){
   return true;
 }
 
+async function updateLink(id,kind,title,url,createdAt){
+  const p=new URLSearchParams({id:`eq.${id}`,kind:`eq.${kind}`});
+  const payload={
+    data:{title,url,createdAt:createdAt||new Date().toISOString()},
+    status:"معتمد",
+    updated_at:new Date().toISOString()
+  };
+  const r=await fetch(`${ENDPOINT}?${p.toString()}`,{
+    method:"PATCH",
+    headers:{...HEADERS,"Prefer":"return=representation"},
+    body:JSON.stringify(payload)
+  });
+  if(!r.ok){
+    const t=await r.text().catch(()=> "");
+    throw new Error(`تعذر تعديل الرابط (${r.status}) ${t}`);
+  }
+  return true;
+}
+
+async function deleteLink(id,kind){
+  const p=new URLSearchParams({id:`eq.${id}`,kind:`eq.${kind}`});
+  const r=await fetch(`${ENDPOINT}?${p.toString()}`,{
+    method:"DELETE",
+    headers:{...HEADERS,"Prefer":"return=minimal"}
+  });
+  if(!r.ok){
+    const t=await r.text().catch(()=> "");
+    throw new Error(`تعذر حذف الرابط (${r.status}) ${t}`);
+  }
+  return true;
+}
+
 function pageShell(section){
   return `
     <section class="page-intro">
@@ -88,7 +121,8 @@ function pageShell(section){
     </div>
 
     <form id="cloudLinkForm" class="surface form-card" style="display:none">
-      <div class="form-section-title">إضافة منجز الرابط</div>
+      <input type="hidden" id="cloudLinkId">
+      <div class="form-section-title" id="cloudFormTitle">إضافة منجز الرابط</div>
       <div class="form-grid">
         <label>اسم المنجز *
           <input id="cloudLinkTitle" required>
@@ -98,7 +132,7 @@ function pageShell(section){
         </label>
       </div>
       <div class="form-actions">
-        <button class="btn btn-primary" type="submit">حفظ الرابط</button>
+        <button class="btn btn-primary" type="submit" id="cloudSubmitBtn">حفظ الرابط</button>
         <button class="btn btn-ghost" type="button" id="cloudCancelAdd">إلغاء</button>
       </div>
       <div id="cloudMsg"></div>
@@ -111,7 +145,8 @@ function pageShell(section){
     </div>`;
 }
 
-function renderCards(items){
+function renderCards(items,section){
+  currentItems=items;
   const list=document.getElementById("cloudLinksList");
   const empty=document.getElementById("cloudLinksEmpty");
   if(!list||!empty) return;
@@ -125,8 +160,45 @@ function renderCards(items){
       <h3>${esc(x.title||"رابط بدون عنوان")}</h3>
       <div class="form-actions">
         <a class="btn btn-primary" href="${esc(x.url)}" target="_blank" rel="noopener">فتح الرابط</a>
+        <button type="button" class="btn btn-ghost cloud-edit" data-id="${esc(x.id)}">تعديل</button>
+        <button type="button" class="btn btn-ghost cloud-delete" data-id="${esc(x.id)}">حذف</button>
       </div>`;
     list.appendChild(card);
+  });
+
+  list.querySelectorAll(".cloud-edit").forEach(btn=>{
+    btn.onclick=()=>{
+      const x=currentItems.find(r=>String(r.id)===String(btn.dataset.id));
+      if(!x) return;
+      const form=document.getElementById("cloudLinkForm");
+      document.getElementById("cloudLinkId").value=x.id;
+      document.getElementById("cloudLinkTitle").value=x.title||"";
+      document.getElementById("cloudLinkUrl").value=x.url||"";
+      document.getElementById("cloudFormTitle").textContent="تعديل منجز الرابط";
+      document.getElementById("cloudSubmitBtn").textContent="حفظ التعديل";
+      document.getElementById("cloudMsg").textContent="";
+      form.style.display="block";
+      document.getElementById("cloudLinkTitle").focus();
+      form.scrollIntoView({behavior:"smooth",block:"start"});
+    };
+  });
+
+  list.querySelectorAll(".cloud-delete").forEach(btn=>{
+    btn.onclick=async()=>{
+      const x=currentItems.find(r=>String(r.id)===String(btn.dataset.id));
+      if(!x) return;
+      if(!confirm(`هل تريدين حذف «${x.title||"هذا الرابط"}»؟`)) return;
+      btn.disabled=true;
+      try{
+        await deleteLink(x.id,section.kind);
+        renderCards(await fetchLinks(section.kind),section);
+      }catch(err){
+        console.error(err);
+        alert("تعذر حذف الرابط، أعيدي المحاولة");
+      }finally{
+        btn.disabled=false;
+      }
+    };
   });
 }
 
@@ -141,24 +213,34 @@ async function renderCloudPage(){
   const form=document.getElementById("cloudLinkForm");
   const show=document.getElementById("cloudShowAdd");
   const cancel=document.getElementById("cloudCancelAdd");
+  const id=document.getElementById("cloudLinkId");
   const title=document.getElementById("cloudLinkTitle");
   const url=document.getElementById("cloudLinkUrl");
   const msg=document.getElementById("cloudMsg");
+  const formTitle=document.getElementById("cloudFormTitle");
+  const submitBtn=document.getElementById("cloudSubmitBtn");
+
+  function resetForm(){
+    form.reset();
+    id.value="";
+    formTitle.textContent="إضافة منجز الرابط";
+    submitBtn.textContent="حفظ الرابط";
+    msg.textContent="";
+  }
 
   show.onclick=()=>{
     form.style.display="block";
-    form.reset();
-    msg.textContent="";
+    resetForm();
     title.focus();
   };
   cancel.onclick=()=>{
-    form.reset();
+    resetForm();
     form.style.display="none";
-    msg.textContent="";
   };
 
   form.onsubmit=async e=>{
     e.preventDefault();
+    const recordId=clean(id.value);
     const t=clean(title.value),u=clean(url.value);
     if(!t){title.focus();return;}
     if(!validDriveUrl(u)){
@@ -170,30 +252,33 @@ async function renderCloudPage(){
     const submit=form.querySelector('button[type="submit"]');
     submit.disabled=true;
     msg.className="";
-    msg.textContent="جارٍ حفظ الرابط...";
+    msg.textContent=recordId?"جارٍ حفظ التعديل...":"جارٍ حفظ الرابط...";
     try{
-      await addLink(section.kind,t,u);
-      form.reset();
+      if(recordId){
+        const old=currentItems.find(x=>String(x.id)===String(recordId));
+        await updateLink(recordId,section.kind,t,u,old?.createdAt||"");
+      }else{
+        await addLink(section.kind,t,u);
+      }
+      resetForm();
       form.style.display="none";
-      msg.className="success";
-      msg.textContent="تم حفظ الرابط بنجاح";
-      renderCards(await fetchLinks(section.kind));
+      renderCards(await fetchLinks(section.kind),section);
     }catch(err){
       console.error(err);
       msg.className="error";
-      msg.textContent="تعذر حفظ الرابط، أعيدي المحاولة";
+      msg.textContent=recordId?"تعذر حفظ التعديل، أعيدي المحاولة":"تعذر حفظ الرابط، أعيدي المحاولة";
     }finally{
       submit.disabled=false;
     }
   };
 
   try{
-    renderCards(await fetchLinks(section.kind));
+    renderCards(await fetchLinks(section.kind),section);
   }catch(err){
     console.error(err);
     msg.className="error";
     msg.textContent="تعذر تحميل الروابط حاليًا";
-    renderCards([]);
+    renderCards([],section);
   }
 }
 
