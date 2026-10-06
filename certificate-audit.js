@@ -14,8 +14,6 @@ const HEADERS={
   "Content-Type":"application/json"
 };
 
-let pending=null;
-let savePatched=false;
 let activeWorkshopId="";
 let activeLessonId="";
 
@@ -97,36 +95,18 @@ function armFromDownloadButton(e){
   if(workshopOpen?.dataset?.id) activeWorkshopId=clean(workshopOpen.dataset.id);
 
   const btn=e.target?.closest?.("#certDownloadBtn,#lessonCertDownload");
-  if(!btn) return;
-  pending={
-    data:btn.id==="certDownloadBtn" ? workshopContext() : lessonContext(),
-    armedAt:Date.now()
-  };
+  if(!btn || btn.disabled) return;
+
+  const data=btn.id==="certDownloadBtn" ? workshopContext() : lessonContext();
+  if(!data) return;
+
+  // تسجيل عملية الإصدار فور طلب تحميل PDF من الشهادة الجاهزة.
+  // لا يتم حفظ أي ملف PDF أو Excel في قاعدة البيانات.
+  setTimeout(()=>recordIssue(data),0);
 }
 
-function patchJsPdfSave(){
-  if(savePatched) return;
-  const proto=window.jspdf?.jsPDF?.API;
-  if(!proto || typeof proto.save!=="function") return;
-  const original=proto.save;
-  if(original.__manjazAuditWrapped){savePatched=true;return;}
-
-  function wrappedSave(...args){
-    const result=original.apply(this,args);
-    const snap=pending;
-    pending=null;
-    if(snap?.data && Date.now()-snap.armedAt<120000){
-      setTimeout(()=>recordIssue(snap.data),0);
-    }
-    return result;
-  }
-  wrappedSave.__manjazAuditWrapped=true;
-  proto.save=wrappedSave;
-  savePatched=true;
-}
 
 document.addEventListener("click",armFromDownloadButton,true);
-setInterval(patchJsPdfSave,250);
 
 async function fetchIssues(){
   const p=new URLSearchParams({
@@ -218,9 +198,6 @@ function databaseSectionHTML(kind,idPrefix,title){
         </select>
       </label>
     </div>
-    <div id="${idPrefix}Summary" class="upload-note" style="margin-top:10px">
-      اختاري ${kind==="ورشة تدريبية"?"ورشة":"درسًا"} لعرض سجل الإصدار.
-    </div>
     <div class="section-actions" style="margin-top:12px">
       <button type="button" class="btn btn-primary" id="${idPrefix}Excel" disabled>
         ${kind==="ورشة تدريبية"?"تصدير Excel للورشة المحددة":"تصدير Excel للدرس المحدد"}
@@ -272,16 +249,14 @@ function populateSelector(kind,idPrefix){
 function renderSelected(kind,idPrefix){
   const select=document.getElementById(`${idPrefix}Select`);
   const body=document.querySelector(`#${idPrefix}Table tbody`);
-  const summary=document.getElementById(`${idPrefix}Summary`);
   const count=document.getElementById(`${idPrefix}Count`);
   const excel=document.getElementById(`${idPrefix}Excel`);
-  if(!select||!body||!summary||!count||!excel) return;
+  if(!select||!body||!count||!excel) return;
 
   const id=clean(select.value);
   if(!id){
     count.textContent="0 إصدار";
     excel.disabled=true;
-    summary.textContent=`اختاري ${kind==="ورشة تدريبية"?"ورشة":"درسًا"} لعرض سجل الإصدار.`;
     body.innerHTML='<tr><td colspan="3" style="padding:10px">لم يتم اختيار سجل بعد.</td></tr>';
     return;
   }
@@ -290,7 +265,6 @@ function renderSelected(kind,idPrefix){
   const rows=rowsForId(kind,id);
   count.textContent=`${rows.length} إصدار`;
   excel.disabled=false;
-  summary.textContent=`${item?.title||""} — عدد الشهادات الصادرة: ${rows.length}`;
 
   body.innerHTML=rows.length?rows.map(x=>`<tr>
     <td style="padding:9px;border-bottom:1px solid #eef1f4">${esc(x.beneficiaryName)}</td>
@@ -314,10 +288,6 @@ async function refreshAdminAudit(){
     drawRows(rows);
   }catch(err){
     console.error(err);
-    const w=document.getElementById("workshopAuditSummary");
-    const l=document.getElementById("lessonAuditSummary");
-    if(w) w.textContent="تعذر تحميل قاعدة بيانات شهادات الورش حاليًا.";
-    if(l) l.textContent="تعذر تحميل قاعدة بيانات شهادات الدروس حاليًا.";
   }
 }
 
