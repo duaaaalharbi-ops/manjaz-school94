@@ -1,4 +1,4 @@
-/* MANJAZ HOME 5.0 — card-based home, no visible numbering */
+/* MANJAZ HOME 5.1 — add two view-only cloud sections */
 (()=>{"use strict";
 const cards=[
   {title:"أبرز المنجزات",view:"#achievements",add:"#add",icon:"▤"},
@@ -6,7 +6,9 @@ const cards=[
   {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons-add",addKind:"lesson",icon:"▣"},
   {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
   {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
-  {title:"برامج الهيكل الإداري",view:"#admin-programs",add:"#admin-programs",icon:"▦"}
+  {title:"برامج الهيكل الإداري",view:"#admin-programs",add:"#admin-programs",icon:"▦"},
+  {title:"الحوسبة السحابية | منجزات النشاط",view:"#cloud-activity",icon:"☁",viewOnly:true},
+  {title:"الحوسبة السحابية | ملفات الإنجاز",view:"#cloud-portfolios",icon:"☁",viewOnly:true}
 ];
 
 const isHome=()=>!location.hash || location.hash==="#home";
@@ -21,6 +23,13 @@ function action(label,href,kind,addKind){
     });
   }
   return a;
+}
+function ensureCloudLinksScript(){
+  if(document.querySelector('script[data-manjaz-cloud-links="1"]')) return;
+  const s=document.createElement("script");
+  s.src="cloud-links.js?v=1.0";
+  s.dataset.manjazCloudLinks="1";
+  document.head.appendChild(s);
 }
 function buildHome(){
   const view=document.getElementById("view");
@@ -54,7 +63,7 @@ function buildHome(){
     card.innerHTML=`<div class="manjaz-home-card-title"><span class="manjaz-home-icon" aria-hidden="true">${item.icon}</span><h3>${item.title}</h3></div><div class="manjaz-home-actions"></div>`;
     const actions=card.querySelector(".manjaz-home-actions");
     actions.append(action("استعراض",item.view,"view"));
-    actions.append(action("إضافة",item.add,"add",item.addKind));
+    if(!item.viewOnly && item.add) actions.append(action("إضافة",item.add,"add",item.addKind));
     grid.append(card);
   });
   main.append(grid);
@@ -63,6 +72,7 @@ function buildHome(){
 function render(){ if(isHome()) buildHome(); }
 /* المصدر الرسمي لرسم الرئيسية: يستخدمه app.js أيضًا بعد اكتمال المزامنة السحابية */
 window.renderManjazHome=buildHome;
+ensureCloudLinksScript();
 addEventListener("hashchange",()=>setTimeout(render,0));
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",render,{once:true}); else render();
 addEventListener("load",render,{once:true});
