@@ -1,4 +1,4 @@
-/* MANJAZ 14.0 — canonical certificate + lesson/workshop UI */
+/* MANJAZ 14.1 — canonical certificate + lesson/workshop UI */
 .certificates-page{display:grid;gap:18px}
 .certificates-intro{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
 .certificates-intro h2{margin:4px 0 6px;color:#0b3047;font-size:clamp(24px,3vw,36px)}
@@ -29,7 +29,7 @@
 .lesson-details-dialog{border:0;padding:0;border-radius:16px;max-width:min(520px,92vw)}.lesson-details-dialog::backdrop{background:rgba(5,24,36,.52)}.lesson-details-shell{padding:20px;background:#fff;display:grid;gap:16px;direction:rtl}
 
 /* Canonical certificate: one source of truth for workshops + applied lessons */
-.certificate-paper.cert-final{--cert-safe-x:78px;--cert-safe-top:52px;--cert-ministry-logo-width:194px;--cert-manjaz-logo-width:154px;--cert-stamp-width:124px;position:relative;margin:auto;width:1123px;height:794px;overflow:hidden;direction:rtl;box-sizing:border-box;background-color:#fffdf8;background-size:100% 100%;background-position:center;background-repeat:no-repeat;color:#17394a;font-family:Tahoma,"Segoe UI",Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.10)}
+.certificate-paper.cert-final{--cert-safe-x:78px;--cert-safe-top:52px;--cert-ministry-logo-width:194px;--cert-manjaz-logo-width:154px;--cert-stamp-width:124px;position:relative;margin:auto;width:1123px;height:794px;min-width:1123px;min-height:794px;aspect-ratio:1123/794;overflow:hidden;direction:rtl;box-sizing:border-box;background-color:#fffdf8;background-size:100% 100%;background-position:center;background-repeat:no-repeat;color:#17394a;font-family:Tahoma,"Segoe UI",Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.10)}
 .cert-final-header{position:absolute;z-index:3;top:var(--cert-safe-top);right:var(--cert-safe-x);left:var(--cert-safe-x);min-height:104px;display:grid;grid-template-columns:1fr 230px 1fr;align-items:start;gap:24px;box-sizing:border-box;max-width:calc(100% - 2 * var(--cert-safe-x))}
 .cert-final-org{grid-column:1;justify-self:start;text-align:right;display:grid;gap:5px;line-height:1.35;max-width:310px;color:#0b3047}.cert-final-org strong{font-size:17px;font-weight:900}.cert-final-org span{font-size:14px;font-weight:700}
 .cert-final-ministry{grid-column:2;justify-self:center;align-self:start;width:220px;height:96px;display:flex;align-items:center;justify-content:center}.cert-final-ministry img{width:var(--cert-ministry-logo-width);max-width:100%;max-height:94px;object-fit:contain;display:block}
@@ -43,6 +43,35 @@
 .cert-final-principal{grid-column:3;justify-self:end;align-self:end;width:260px;display:grid;gap:5px;text-align:center;color:#0b3047;position:relative;top:18px}.cert-final-principal strong{font-size:15px;font-weight:900;text-align:center}.cert-final-principal span{font-size:18px;font-weight:900;text-align:center;line-height:1.35}
 .cert-final-stamp{grid-column:2;justify-self:center;align-self:end;width:170px;height:98px;display:flex;align-items:flex-end;justify-content:center;position:relative;top:-42px}.cert-final-stamp img{width:var(--cert-stamp-width);max-width:var(--cert-stamp-width);max-height:94px;object-fit:contain;opacity:.96;display:block}
 .cert-card-actions button,.cert-card-actions a{pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:20}.lesson-cert-open{pointer-events:auto!important;touch-action:manipulation!important;position:relative!important;z-index:40!important}
-@media(max-width:1000px){.cert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.certificate-paper.cert-final{transform-origin:top right;transform:scale(.72);margin-bottom:-220px}}
-@media(max-width:680px){.cert-grid{grid-template-columns:1fr}.cert-manage-form{grid-template-columns:1fr}.certificate-stage{padding:4px}.certificate-paper.cert-final{transform:scale(.34);margin-bottom:-520px}.cert-actions{display:grid;grid-template-columns:1fr}.cert-btn{width:100%}.record-mini-actions .cert-mini-action{min-width:64px}.v43-cert-controls input{min-width:100%;box-sizing:border-box}}
-@media print{.sidebar,.topbar,.mobile-nav,.footer,#manjazTrialBanner,#manjazVersionBadge{display:none!important}.content{margin:0!important;padding:0!important}.certificate-stage{border:0;padding:0;background:#fff}.certificate-paper.cert-final{transform:none!important;box-shadow:none;margin:0}}
+
+/* Restore compact workshop action layout even when old v14 markup has no wrapper */
+.cert-workshop-card .cert-card-actions{grid-template-columns:1fr 1fr;align-items:center}
+.cert-workshop-card .cert-card-actions>.cert-btn.primary,
+.cert-workshop-card .cert-card-actions>.cert-choose{grid-column:1/-1;width:100%}
+.cert-workshop-card .cert-card-actions>.cert-mini-action{width:100%}
+.cert-workshop-card .cert-card-actions>.record-mini-actions{grid-column:1/-1}
+
+/* Always preserve a LANDSCAPE preview canvas. Mobile scales it visually only. */
+.lesson-certificate-stage{direction:ltr}
+.lesson-certificate-stage .lesson-certificate{direction:rtl;transform-origin:top left}
+
+@media(max-width:1000px){
+  .cert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .certificate-paper.cert-final{transform-origin:top right;transform:scale(.72);margin-bottom:-220px}
+}
+@media(max-width:680px){
+  .cert-grid{grid-template-columns:1fr}
+  .cert-manage-form{grid-template-columns:1fr}
+  .certificate-stage{padding:4px}
+  .certificate-paper.cert-final{transform-origin:top left;transform:scale(.34);margin-bottom:-520px}
+  .cert-actions{display:grid;grid-template-columns:1fr}
+  .cert-btn{width:100%}
+  .record-mini-actions .cert-mini-action{min-width:64px}
+  .v43-cert-controls input{min-width:100%;box-sizing:border-box}
+}
+@media print{
+  .sidebar,.topbar,.mobile-nav,.footer,#manjazTrialBanner,#manjazVersionBadge{display:none!important}
+  .content{margin:0!important;padding:0!important}
+  .certificate-stage{border:0;padding:0;background:#fff}
+  .certificate-paper.cert-final{transform:none!important;box-shadow:none;margin:0!important;width:1123px!important;height:794px!important}
+}
