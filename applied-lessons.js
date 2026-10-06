@@ -1,4 +1,4 @@
-/* MANJAZ 5.2 — canonical applied lessons: certificate/edit/delete only */
+/* MANJAZ 13.5 — stable applied lesson certificate issuing */
 (()=>{"use strict";
 const STORE="manjaz_applied_lessons_managed_v1";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -25,7 +25,8 @@ window.openAppliedLessonCertificate=function(x){
  document.getElementById("lessonCertDialog")?.remove();
  const d=document.createElement("dialog");d.id="lessonCertDialog";d.className="v43-cert-dialog";
  d.innerHTML=`<div class="v43-cert-shell"><div class="v43-cert-controls"><input id="lessonCertName" maxlength="80" placeholder="اسم المستفيدة"><button class="cert-btn primary" id="lessonCertPreview">معاينة</button><button class="cert-btn gold" id="lessonCertDownload" disabled>تحميل PDF</button><button class="cert-btn secondary" id="lessonCertClose">إغلاق</button></div><div id="lessonCertPreviewArea"></div></div>`;
- document.body.appendChild(d);d.showModal();
+ document.body.appendChild(d);
+ if(typeof d.showModal==="function"){try{d.showModal()}catch(_){d.setAttribute("open","")}}else{d.setAttribute("open","")}
  const input=d.querySelector("#lessonCertName"),area=d.querySelector("#lessonCertPreviewArea"),download=d.querySelector("#lessonCertDownload");
  d.querySelector("#lessonCertClose").onclick=()=>d.close();
  d.querySelector("#lessonCertPreview").onclick=()=>{const n=clean(input.value);input.value=n;if(n.length<3){input.focus();return}area.innerHTML=`<div class="certificate-stage">${certificateHTML(x,n)}</div>`;download.disabled=false};
@@ -40,8 +41,8 @@ function openDetails(x){
 }
 function lessonCard(x){
  const card=document.createElement("article");card.className="manjaz-record-card cert-workshop-card applied-lesson-card";card.dataset.lessonId=x.id;
- card.innerHTML=`<span class="cert-status">${esc(x.status||"معتمد")}</span><h3>${esc(x.lessonName||x.title||"بدون عنوان")}</h3><div class="cert-meta cert-meta-stack">${x.date?`<span><b>التاريخ:</b> ${esc(x.date)}</span>`:""}${x.subject?`<span><b>المادة:</b> ${esc(x.subject)}</span>`:""}${x.strategies?`<span><b>الاستراتيجيات:</b> ${esc(x.strategies)}</span>`:""}${x.grade?`<span><b>الصف:</b> ${esc(x.grade)}</span>`:""}${x.teacher?`<span><b>المعلمة:</b> ${esc(x.teacher)}</span>`:""}</div><div class="cert-card-actions lesson-card-actions" data-lesson-actions="canonical"><button type="button" class="cert-btn primary certificate">إصدار الشهادة</button><div class="record-mini-actions"><button type="button" class="cert-mini-action edit">تعديل</button><button type="button" class="cert-mini-action danger delete">حذف</button></div></div>`;
- card.querySelector(".certificate").onclick=()=>window.openAppliedLessonCertificate(x);
+ card.innerHTML=`<span class="cert-status">متاحة للإصدار</span><h3>${esc(x.lessonName||x.title||"بدون عنوان")}</h3><div class="cert-meta cert-meta-stack">${x.date?`<span><b>التاريخ:</b> ${esc(x.date)}</span>`:""}${x.subject?`<span><b>المادة:</b> ${esc(x.subject)}</span>`:""}${x.strategies?`<span><b>الاستراتيجيات:</b> ${esc(x.strategies)}</span>`:""}${x.grade?`<span><b>الصف:</b> ${esc(x.grade)}</span>`:""}${x.teacher?`<span><b>المعلمة:</b> ${esc(x.teacher)}</span>`:""}</div><div class="cert-card-actions" data-lesson-actions="canonical"><button type="button" class="cert-btn primary cert-choose certificate lesson-cert-open" data-lesson-cert-id="${esc(x.id)}">إصدار الشهادة</button><div class="record-mini-actions"><button type="button" class="cert-mini-action edit">تعديل</button><button type="button" class="cert-mini-action danger delete">حذف</button></div></div>`;
+ card.querySelector(".certificate").style.cssText+=";pointer-events:auto!important;touch-action:manipulation;position:relative;z-index:30"; card.querySelector(".certificate").onclick=(e)=>{e.preventDefault();e.stopPropagation();window.openAppliedLessonCertificate(x)};
  card.querySelector(".edit").onclick=()=>fillEditor(x);
  card.querySelector(".delete").onclick=()=>deleteLesson(x);
  return card;
@@ -74,19 +75,86 @@ function removeLegacyLessonViewActions(root=document){
 
 window.wireAppliedLessons=function(){
  const list=document.getElementById("lessonList"),empty=document.getElementById("lessonEmpty");if(!list||!empty)return;
+ /* Block the legacy community-sections renderer from taking over #lessons.
+    Its observer only rewires when #communityForm is absent, so this route-scoped
+    sentinel keeps the canonical lesson renderer authoritative without affecting
+    any other section; it disappears automatically when #view is replaced. */
+ if(!document.getElementById("communityForm")){
+   const guard=document.createElement("span");
+   guard.id="communityForm";
+   guard.hidden=true;
+   guard.setAttribute("aria-hidden","true");
+   list.parentNode.insertBefore(guard,list);
+ }
  if(!document.getElementById("lessonManageForm")){list.insertAdjacentHTML("beforebegin",editorHTML());wireEditor();}
- const items=lessons();list.className="cert-grid unified-record-grid";list.innerHTML="";empty.style.display=items.length?"none":"block";items.forEach(x=>list.appendChild(lessonCard(x)));removeLegacyLessonViewActions(document);
+ const items=lessons();list.className="cert-grid";list.innerHTML="";empty.style.display=items.length?"none":"block";items.forEach(x=>list.appendChild(lessonCard(x)));removeLegacyLessonViewActions(document);
  try{if(sessionStorage.getItem("manjaz_home_open_add")==="lesson"){sessionStorage.removeItem("manjaz_home_open_add");const d=document.querySelector(".lesson-manage");if(d){d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"})}}}catch(_){ }
 };
 
+let repairingLessons=false;
 function ensureCanonicalLessons(){
- if((location.hash||"").slice(1)!=="lessons") return;
- const list=document.getElementById("lessonList");
- if(!list) return;
- const hasCards=list.querySelector(".applied-lesson-card");
+ if(repairingLessons || (location.hash||"").slice(1)!=="lessons") return;
+ const view=document.getElementById("view");
+ if(!view) return;
+ let list=document.getElementById("lessonList");
+ if(!list){
+   repairingLessons=true;
+   try{
+     view.innerHTML=`<section class="page-intro"><div><span class="kicker">التطوير المهني</span><h2>الدروس التطبيقية</h2><p>توثيق الدروس التطبيقية وإصدار شهادات الحضور</p></div></section><span id="communityForm" hidden aria-hidden="true"></span><div id="lessonList" class="cert-grid"></div><div id="lessonEmpty" class="surface empty-state"><div class="empty-mark">▣</div><h3>لا توجد دروس تطبيقية متاحة حاليًا</h3><p>ستظهر الدروس المتاحة هنا عند إضافتها</p></div>`;
+     window.wireAppliedLessons();
+   } finally { setTimeout(()=>{repairingLessons=false},0); }
+   return;
+ }
  const canonical=list.querySelector("[data-lesson-actions='canonical']");
- if(!hasCards || !canonical) window.wireAppliedLessons();
+ const legacy=[...list.querySelectorAll("a,button")].some(el=>/استعراض|عرض المنجز|فتح المنجز/.test(clean(el.textContent)));
+ if(!canonical || legacy){
+   repairingLessons=true;
+   try{ window.wireAppliedLessons(); } finally { setTimeout(()=>{repairingLessons=false},0); }
+ }
 }
-window.addEventListener("hashchange",()=>setTimeout(ensureCanonicalLessons,0));
+function observeLessonRendererConflicts(){
+ const view=document.getElementById("view");
+ if(!view || view.dataset.lessonCanonicalObserver==="1") return;
+ view.dataset.lessonCanonicalObserver="1";
+ let timer;
+ new MutationObserver(()=>{
+   clearTimeout(timer);
+   timer=setTimeout(ensureCanonicalLessons,35);
+ }).observe(view,{childList:true,subtree:true});
+}
+
+// Persistent delegated certificate action: survives card re-renders and Safari DOM replacement.
+if(!window.__MANJAZ_LESSON_CERT_DELEGATED__){
+ window.__MANJAZ_LESSON_CERT_DELEGATED__=true;
+ document.addEventListener("click",function(e){
+   const btn=e.target.closest?.(".applied-lesson-card [data-lesson-cert-id]");
+   if(!btn) return;
+   e.preventDefault();
+   e.stopPropagation();
+   const x=getLesson(btn.getAttribute("data-lesson-cert-id"));
+   if(x) window.openAppliedLessonCertificate(x);
+ },true);
+}
+
+window.addEventListener("hashchange",()=>setTimeout(()=>{observeLessonRendererConflicts();ensureCanonicalLessons();},0));
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>{observeLessonRendererConflicts();setTimeout(ensureCanonicalLessons,0)},{once:true});
+else {observeLessonRendererConflicts();setTimeout(ensureCanonicalLessons,0);}
 window.addEventListener("load",()=>setTimeout(ensureCanonicalLessons,0),{once:true});
+
+
+// MANJAZ 13.5: permanent certificate action independent of card re-rendering.
+if(!window.__MANJAZ_LESSON_CERT_135__){
+  window.__MANJAZ_LESSON_CERT_135__=true;
+  document.addEventListener("click",function(e){
+    const btn=e.target && e.target.closest ? e.target.closest(".lesson-cert-open,[data-lesson-cert-id]") : null;
+    if(!btn) return;
+    const card=btn.closest("[data-lesson-id]");
+    const id=btn.getAttribute("data-lesson-cert-id") || (card && card.getAttribute("data-lesson-id"));
+    const x=getLesson(id);
+    if(!x) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    window.openAppliedLessonCertificate(x);
+  },true);
+}
 })();

@@ -1,4 +1,4 @@
-window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.6-canonical-routing";
+window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
 (function(){
   "use strict";
 
@@ -39,10 +39,15 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.6-canonical-routing";
   const getWorkshop=id=>workshops().find(w=>String(w.id)===String(id));
 
   function injectStyle(){
-    if(document.querySelector('link[data-certificates-style]')) return;
-    const link=document.createElement("link");
-    link.rel="stylesheet"; link.href="certificates.css?v=12.6"; link.dataset.certificatesStyle="1";
-    document.head.appendChild(link);
+    const href="certificates.css?v=13.7";
+    let link=document.querySelector('link[data-certificates-style]');
+    if(!link){
+      link=document.createElement("link");
+      link.rel="stylesheet";
+      link.dataset.certificatesStyle="1";
+      document.head.appendChild(link);
+    }
+    if(link.getAttribute("href")!==href) link.setAttribute("href",href);
   }
 
   function injectLibraries(){
@@ -431,8 +436,10 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "12.6-canonical-routing";
       clearTimeout(timer);
       timer=setTimeout(()=>{
         const route=(location.hash||"#home").slice(1);
-        if(route===ROUTE) renderPage();
-        else if(route==="home") injectHomeCertificatesSection();
+        if(route===ROUTE){
+          // Do not redraw our own live certificate page. Redraw only when another renderer replaced it.
+          if(!view.querySelector(".certificates-page")) renderPage();
+        } else if(route==="home") injectHomeCertificatesSection();
       },40);
     });
     observer.observe(view,{childList:true,subtree:true});
