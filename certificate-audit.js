@@ -72,16 +72,16 @@ async function recordIssue(data){
   const payload={
     kind:KIND,
     data,
-    status:"مسجل",
+    status:"معتمد",
     updated_at:new Date().toISOString()
   };
   try{
     const r=await fetch(ENDPOINT,{
       method:"POST",
-      headers:{...HEADERS,"Prefer":"return=minimal"},
+      headers:{...HEADERS,"Prefer":"return=representation"},
       body:JSON.stringify(payload)
     });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    if(!r.ok){const t=await r.text().catch(()=> "");throw new Error(`HTTP ${r.status} ${t}`);}
   }catch(err){
     console.error("Certificate audit save failed:",err);
   }
