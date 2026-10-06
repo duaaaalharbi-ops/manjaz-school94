@@ -1,3 +1,10 @@
+/* MANJAZ UPDATE GUARDRAILS
+   - Surgical change only; do not alter stable UI, routes, storage keys, certificates, or existing functions.
+   - Preserve all historical certificate/export records; never clear, replace, or re-key prior data.
+   - Maintain backward compatibility with records created by earlier audit versions.
+   - Keep workshop/lesson certificate rendering and PDF output untouched.
+   - Excel is generated on demand only; no PDF/XLSX files are stored in the database.
+*/
 /* MANJAZ CERTIFICATE AUDIT 1.0
    Records successful PDF saves for workshop and applied-lesson certificates,
    then exposes a cumulative admin log with Excel export.
@@ -100,13 +107,23 @@ function armFromDownloadButton(e){
   const data=btn.id==="certDownloadBtn" ? workshopContext() : lessonContext();
   if(!data) return;
 
-  // تسجيل عملية الإصدار فور طلب تحميل PDF من الشهادة الجاهزة.
-  // لا يتم حفظ أي ملف PDF أو Excel في قاعدة البيانات.
   setTimeout(()=>recordIssue(data),0);
 }
 
-
 document.addEventListener("click",armFromDownloadButton,true);
+
+function patchLessonCertificateOpen(){
+  const original=window.openAppliedLessonCertificate;
+  if(typeof original!=="function" || original.__manjazAuditWrapped) return;
+  function wrappedLessonCertificateOpen(x){
+    if(x?.id) activeLessonId=clean(x.id);
+    return original.apply(this,arguments);
+  }
+  wrappedLessonCertificateOpen.__manjazAuditWrapped=true;
+  window.openAppliedLessonCertificate=wrappedLessonCertificateOpen;
+}
+patchLessonCertificateOpen();
+setInterval(patchLessonCertificateOpen,500);
 
 async function fetchIssues(){
   const p=new URLSearchParams({
@@ -138,8 +155,6 @@ function formatDateTime(iso){
     }).format(new Date(iso));
   }catch(_){return iso;}
 }
-
-
 
 function availableWorkshops(){
   const out=[];
@@ -222,7 +237,14 @@ function activityCatalog(kind){
 }
 
 function rowsForId(kind,id){
-  return lastRows.filter(x=>x.certificateType===kind && clean(x.activityId)===clean(id));
+  const selected=activityCatalog(kind).find(x=>clean(x.id)===clean(id));
+  const selectedTitle=clean(selected?.title);
+  return lastRows.filter(x=>{
+    if(x.certificateType!==kind) return false;
+    if(clean(x.activityId)===clean(id)) return true;
+    if(kind==="درس تطبيقي" && !clean(x.activityId) && selectedTitle && clean(x.activityTitle)===selectedTitle) return true;
+    return false;
+  });
 }
 
 function populateSelector(kind,idPrefix){
@@ -239,15 +261,8 @@ function renderSelected(kind,idPrefix){
   const select=document.getElementById(`${idPrefix}Select`);
   const excel=document.getElementById(`${idPrefix}Excel`);
   if(!select||!excel) return;
-
   const id=clean(select.value);
-  if(!id){
-    excel.disabled=true;
-    return;
-  }
-
-  const item=activityCatalog(kind).find(x=>x.id===id);
-  const rows=rowsForId(kind,id);
+  if(!id){ excel.disabled=true; return; }
   excel.disabled=false;
 }
 
@@ -282,7 +297,6 @@ function ensureXlsx(){
     s.addEventListener("error",reject,{once:true});
   });
 }
-
 
 async function exportSelectedExcel(kind,idPrefix){
   const select=document.getElementById(`${idPrefix}Select`);
