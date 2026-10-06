@@ -909,12 +909,10 @@ function render(){
   } else if(route==="reports"){
     view.appendChild(clone("reportsTpl"));
     wireReports();
-  } else if(route==="lessons" || route==="lessons-add"){
+  } else if(route==="lessons"){
     view.appendChild(clone("lessonsTpl"));
-    if(route==="lessons-add") try{sessionStorage.setItem("manjaz_home_open_add","lesson")}catch(_){ }
     if(typeof window.wireAppliedLessons==="function") window.wireAppliedLessons();
-  } else if(route==="certificates" || route==="certificates-add"){
-    if(route==="certificates-add") try{sessionStorage.setItem("manjaz_home_open_add","workshop")}catch(_){ }
+  } else if(route==="certificates"){
     if(typeof window.renderCertificatesPage==="function") window.renderCertificatesPage();
     else view.innerHTML='<div class="surface empty-state"><h3>جاري تحميل الورش التدريبية…</h3></div>';
   } else {

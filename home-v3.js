@@ -2,8 +2,8 @@
 (()=>{"use strict";
 const cards=[
   {title:"أبرز المنجزات",view:"#achievements",add:"#add",icon:"▤"},
-  {title:"الورش التدريبية",view:"#certificates",add:"#certificates-add",addKind:"workshop",icon:"▧"},
-  {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons-add",addKind:"lesson",icon:"▣"},
+  {title:"الورش التدريبية",view:"#certificates",add:"#certificates",addKind:"workshop",icon:"▧"},
+  {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons",addKind:"lesson",icon:"▣"},
   {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
   {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
   {title:"برامج الهيكل الإداري",view:"#admin-programs",add:"#admin-programs",icon:"▦"}
