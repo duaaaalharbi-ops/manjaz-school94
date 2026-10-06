@@ -75,7 +75,7 @@ function removeLegacyLessonViewActions(root=document){
 window.wireAppliedLessons=function(){
  const list=document.getElementById("lessonList"),empty=document.getElementById("lessonEmpty");if(!list||!empty)return;
  if(!document.getElementById("lessonManageForm")){list.insertAdjacentHTML("beforebegin",editorHTML());wireEditor();}
- const items=lessons();list.className="cert-grid unified-record-grid";list.innerHTML="";empty.style.display=items.length?"none":"block";items.forEach(x=>list.appendChild(lessonCard(x)));removeLegacyLessonViewActions(document);activateLessonCertificateButtons(list);
+ const items=lessons();list.className="cert-grid unified-record-grid";list.innerHTML="";empty.style.display=items.length?"none":"block";items.forEach(x=>list.appendChild(lessonCard(x)));removeLegacyLessonViewActions(document);
  try{if(sessionStorage.getItem("manjaz_home_open_add")==="lesson"){sessionStorage.removeItem("manjaz_home_open_add");const d=document.querySelector(".lesson-manage");if(d){d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"})}}}catch(_){ }
 };
 
@@ -86,29 +86,6 @@ function ensureCanonicalLessons(){
  const hasCards=list.querySelector(".applied-lesson-card");
  const canonical=list.querySelector("[data-lesson-actions='canonical']");
  if(!hasCards || !canonical) window.wireAppliedLessons();
- activateLessonCertificateButtons(list);
-}
-
-/* 13.7 hotfix — activate only the applied-lesson certificate action.
-   Delegation keeps the action working for cards restored from storage or re-rendered later. */
-function activateLessonCertificateButtons(root=document){
- const list=root?.id==="lessonList"?root:(root.querySelector?.("#lessonList")||document.getElementById("lessonList"));
- if(!list)return;
- list.querySelectorAll(".applied-lesson-card .certificate").forEach(btn=>{
-  btn.disabled=false;
-  btn.removeAttribute("aria-disabled");
- });
- if(list.dataset.lessonCertificateActive==="1")return;
- list.dataset.lessonCertificateActive="1";
- list.addEventListener("click",e=>{
-  const btn=e.target.closest?.(".applied-lesson-card .certificate");
-  if(!btn||!list.contains(btn))return;
-  e.preventDefault();
-  e.stopPropagation();
-  const card=btn.closest(".applied-lesson-card");
-  const x=getLesson(card?.dataset?.lessonId);
-  if(x) window.openAppliedLessonCertificate(x);
- });
 }
 window.addEventListener("hashchange",()=>setTimeout(ensureCanonicalLessons,0));
 window.addEventListener("load",()=>setTimeout(ensureCanonicalLessons,0),{once:true});
