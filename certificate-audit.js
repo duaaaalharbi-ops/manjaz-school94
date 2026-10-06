@@ -202,16 +202,6 @@ function databaseSectionHTML(kind,idPrefix,title){
         ${kind==="ورشة تدريبية"?"تصدير Excel للورشة المحددة":"تصدير Excel للدرس المحدد"}
       </button>
     </div>
-    <div style="overflow:auto;margin-top:12px">
-      <table id="${idPrefix}Table" style="width:100%;border-collapse:collapse;min-width:700px">
-        <thead><tr>
-          <th style="padding:9px;border-bottom:1px solid #d9dee7;text-align:right">اسم المستفيدة</th>
-          <th style="padding:9px;border-bottom:1px solid #d9dee7;text-align:right">تاريخ النشاط</th>
-          <th style="padding:9px;border-bottom:1px solid #d9dee7;text-align:right">تاريخ ووقت الإصدار</th>
-        </tr></thead>
-        <tbody><tr><td colspan="3" style="padding:10px">لم يتم اختيار سجل بعد.</td></tr></tbody>
-      </table>
-    </div>
   </section>`;
 }
 
@@ -247,27 +237,18 @@ function populateSelector(kind,idPrefix){
 
 function renderSelected(kind,idPrefix){
   const select=document.getElementById(`${idPrefix}Select`);
-  const body=document.querySelector(`#${idPrefix}Table tbody`);
   const excel=document.getElementById(`${idPrefix}Excel`);
-  if(!select||!body||!excel) return;
+  if(!select||!excel) return;
 
   const id=clean(select.value);
   if(!id){
     excel.disabled=true;
-    body.innerHTML='<tr><td colspan="3" style="padding:10px">لم يتم اختيار سجل بعد.</td></tr>';
     return;
   }
 
   const item=activityCatalog(kind).find(x=>x.id===id);
   const rows=rowsForId(kind,id);
   excel.disabled=false;
-
-  body.innerHTML=rows.length?rows.map(x=>`<tr>
-    <td style="padding:9px;border-bottom:1px solid #eef1f4">${esc(x.beneficiaryName)}</td>
-    <td style="padding:9px;border-bottom:1px solid #eef1f4">${esc(x.activityDate||"—")}</td>
-    <td style="padding:9px;border-bottom:1px solid #eef1f4">${esc(formatDateTime(x.issuedAt))}</td>
-  </tr>`).join(""):
-  '<tr><td colspan="3" style="padding:10px">لا توجد شهادات مصدرة لهذا النشاط حتى الآن.</td></tr>';
 }
 
 function drawRows(rows){
