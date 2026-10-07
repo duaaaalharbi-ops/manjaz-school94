@@ -1,9 +1,10 @@
-/* MANJAZ HOME 5.1 — add two view-only cloud sections */
+/* MANJAZ HOME 5.2 — awards & thank-you certificates section */
 (()=>{"use strict";
 const cards=[
   {title:"أبرز المنجزات",view:"#achievements",add:"#add",icon:"▤"},
   {title:"الورش التدريبية",view:"#certificates",add:"#certificates-add",addKind:"workshop",icon:"▧"},
   {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons-add",addKind:"lesson",icon:"▣"},
+  {title:"التكريمات وشهادات الشكر",view:"#awards",add:"#awards",addKind:"award",icon:"◇",singleLine:true},
   {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
   {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
   {title:"برامج الهيكل الإداري",view:"#admin-programs",add:"#admin-programs",icon:"▦"},
@@ -12,6 +13,55 @@ const cards=[
 ];
 
 const isHome=()=>!location.hash || location.hash==="#home";
+
+function enhanceAwardsSection(){
+  if((location.hash||"").slice(1)!=="awards") return;
+  const view=document.getElementById("view");
+  if(!view) return;
+
+  const intro=view.querySelector(".page-intro");
+  const kicker=intro?.querySelector(".kicker");
+  const heading=intro?.querySelector("h2");
+  const description=intro?.querySelector("p");
+  if(kicker) kicker.textContent="التكريمات وشهادات الشكر";
+  if(heading) heading.textContent="التكريمات وشهادات الشكر";
+  if(description) description.textContent="إضافة التكريمات وشهادات الشكر واستعراضها ضمن سجل موحد";
+
+  const show=document.getElementById("showAwardForm");
+  if(show) show.textContent="إضافة تكريم أو شهادة شكر";
+
+  const form=document.getElementById("awardForm");
+  if(form){
+    const formTitle=form.querySelector(".form-section-title");
+    if(formTitle) formTitle.textContent="بيانات التكريم أو شهادة الشكر";
+
+    const type=form.querySelector('select[name="type"]');
+    if(type && ![...type.options].some(o=>o.value==="شهادة شكر")){
+      const opt=document.createElement("option");
+      opt.value="شهادة شكر";
+      opt.textContent="شهادة شكر";
+      type.insertBefore(opt,type.options[1]||null);
+    }
+
+    const imageInput=form.querySelector('input[name="images"]');
+    if(imageInput){
+      const label=imageInput.closest("label");
+      if(label && label.firstChild) label.firstChild.textContent="إضافة الصور ";
+      imageInput.multiple=true;
+      imageInput.accept="image/*";
+    }
+  }
+
+  let openAdd=false;
+  try{openAdd=sessionStorage.getItem("manjaz_home_open_add")==="award"}catch(_){}
+  if(openAdd && show){
+    try{sessionStorage.removeItem("manjaz_home_open_add")}catch(_){}
+    show.click();
+  }else if(openAdd){
+    setTimeout(enhanceAwardsSection,70);
+  }
+}
+
 function action(label,href,kind,addKind){
   const a=document.createElement("a");
   a.className=`manjaz-home-action ${kind}`;
@@ -20,6 +70,7 @@ function action(label,href,kind,addKind){
   if(addKind){
     a.addEventListener("click",()=>{
       try{sessionStorage.setItem("manjaz_home_open_add",addKind)}catch(_){ }
+      if(addKind==="award") setTimeout(enhanceAwardsSection,70);
     });
   }
   return a;
@@ -60,7 +111,8 @@ function buildHome(){
   cards.forEach(item=>{
     const card=document.createElement("article");
     card.className="manjaz-home-card";
-    card.innerHTML=`<div class="manjaz-home-card-title"><span class="manjaz-home-icon" aria-hidden="true">${item.icon}</span><h3>${item.title}</h3></div><div class="manjaz-home-actions"></div>`;
+    const titleStyle=item.singleLine?' style="white-space:nowrap;font-size:clamp(13px,1.4vw,17px)"':'';
+    card.innerHTML=`<div class="manjaz-home-card-title"><span class="manjaz-home-icon" aria-hidden="true">${item.icon}</span><h3${titleStyle}>${item.title}</h3></div><div class="manjaz-home-actions"></div>`;
     const actions=card.querySelector(".manjaz-home-actions");
     actions.append(action("استعراض",item.view,"view"));
     if(!item.viewOnly && item.add) actions.append(action("إضافة",item.add,"add",item.addKind));
@@ -69,10 +121,14 @@ function buildHome(){
   main.append(grid);
   view.append(main);
 }
-function render(){ if(isHome()) buildHome(); }
+function render(){
+  if(isHome()) buildHome();
+  else if((location.hash||"").slice(1)==="awards") setTimeout(enhanceAwardsSection,70);
+}
+/* المصدر الرسمي لرسم الرئيسية: يستخدمه app.js أيضًا بعد اكتمال المزامنة السحابية */
 window.renderManjazHome=buildHome;
 ensureCloudLinksScript();
 addEventListener("hashchange",()=>setTimeout(render,0));
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",render,{once:true}); else render();
-addEventListener("load",render,{once:true});
+addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once:true});
 })();
