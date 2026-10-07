@@ -304,7 +304,7 @@ async function refreshAwardRoute(){
     await fetchAwardsCloud();
     if((location.hash||"").slice(1)==="awards"){
       try{ if(typeof render==="function") render(); }catch(_){}
-      setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();},30);
+      setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();},30);
     }
   }catch(err){
     console.error("Award cloud refresh failed:",err);
@@ -328,8 +328,78 @@ function enhanceAwardCards(){
   });
 }
 
+let activeAwardDetails=null;
+
+function awardFullDetailsHtml(item){
+  const rows=[
+    ["العنوان",item.title],
+    ["النوع",item.type],
+    ["الجهة المانحة",item.grantor],
+    ["المكرَّمة / الفئة",item.recipient],
+    ["التاريخ",item.date],
+    ["عدد المستفيدات",item.beneficiaries || "—"],
+    ["موجز التكريم / شهادة الشكر",item.summary],
+    ["سبب التكريم",item.reason],
+    ["الأثر / القيمة المضافة",item.impact]
+  ].filter(([,value])=>String(value??"").trim()!=="");
+
+  return `<div class="detail-section award-full-details" dir="rtl">
+    <h3>تفاصيل التكريم / شهادة الشكر</h3>
+    <div style="display:grid;gap:12px">
+      ${rows.map(([label,value])=>`<div>
+        <strong style="display:block;margin-bottom:4px">${esc(label)}</strong>
+        <p style="margin:0;white-space:pre-wrap;overflow:visible;max-height:none;-webkit-line-clamp:unset">${esc(value)}</p>
+      </div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function injectActiveAwardDetails(){
+  if(!activeAwardDetails) return;
+  const content=document.getElementById("detailContent");
+  if(!content) return;
+  if(content.querySelector(".award-full-details")) return;
+
+  const hero=content.querySelector(".detail-hero");
+  const mediaSection=[...content.querySelectorAll(".detail-section")].find(x=>{
+    const h=x.querySelector("h3")?.textContent?.trim();
+    return h==="الصور" || h==="الملفات والمستندات";
+  });
+
+  const holder=document.createElement("div");
+  holder.innerHTML=awardFullDetailsHtml(activeAwardDetails);
+  const block=holder.firstElementChild;
+  if(hero) hero.insertAdjacentElement("afterend",block);
+  else if(mediaSection) mediaSection.insertAdjacentElement("beforebegin",block);
+  else content.prepend(block);
+}
+
+function bindAwardDetailsEnhancer(){
+  const list=document.getElementById("awardList");
+  if(!list || list.dataset.awardDetailsReady==="1") return;
+  list.dataset.awardDetailsReady="1";
+
+  list.addEventListener("click",e=>{
+    const btn=e.target.closest(".details-btn");
+    if(!btn) return;
+    const card=btn.closest(".achievement-card");
+    const cards=[...list.querySelectorAll(".achievement-card")];
+    const index=cards.indexOf(card);
+    activeAwardDetails=index>=0 ? awardsCache[index] : null;
+    if(!activeAwardDetails) return;
+
+    let attempts=0;
+    const timer=setInterval(()=>{
+      attempts++;
+      injectActiveAwardDetails();
+      const content=document.getElementById("detailContent");
+      if(content?.querySelector(".award-full-details") || attempts>30) clearInterval(timer);
+    },50);
+  },true);
+}
+
 function scheduleEnhance(){
-  setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();},40);
+  setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();},40);
 }
 
 addEventListener("hashchange",()=>{
@@ -359,7 +429,7 @@ if(view){
   let t;
   new MutationObserver(()=>{
     clearTimeout(t);
-    t=setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();},35);
+    t=setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();},35);
   }).observe(view,{childList:true,subtree:true});
 }
 })();
