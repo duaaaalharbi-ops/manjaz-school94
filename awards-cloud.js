@@ -34,6 +34,7 @@ function normalizeAward(x){
     recipient:clean(x?.recipient),
     date:clean(x?.date),
     beneficiaries:Number(x?.beneficiaries||0),
+    summary:clean(x?.summary),
     reason:clean(x?.reason),
     impact:clean(x?.impact),
     status:x?.status||"تحت المراجعة",
@@ -209,6 +210,7 @@ async function cloudAwardSubmit(e){
       recipient:fd.get("recipient"),
       date:fd.get("date"),
       beneficiaries:Number(fd.get("beneficiaries")||0),
+      summary:fd.get("summary"),
       reason:fd.get("reason"),
       impact:fd.get("impact"),
       status:"تحت المراجعة",
@@ -261,6 +263,16 @@ function enhanceAwardForm(){
 
   form.dataset.awardsCloudReady="1";
 
+  if(!form.querySelector('[name="summary"]')){
+    const reason=form.querySelector('[name="reason"]')?.closest("label");
+    if(reason){
+      const label=document.createElement("label");
+      label.className="wide";
+      label.innerHTML='موجز التكريم / شهادة الشكر<textarea name="summary" placeholder="اكتبي موجزًا واضحًا يظهر كاملًا في البطاقة"></textarea>';
+      reason.insertAdjacentElement("beforebegin",label);
+    }
+  }
+
   const imageInput=form.querySelector('input[name="images"]');
   const docInput=form.querySelector('input[name="documents"]');
   if(imageInput){
@@ -292,15 +304,32 @@ async function refreshAwardRoute(){
     await fetchAwardsCloud();
     if((location.hash||"").slice(1)==="awards"){
       try{ if(typeof render==="function") render(); }catch(_){}
-      setTimeout(enhanceAwardForm,30);
+      setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();},30);
     }
   }catch(err){
     console.error("Award cloud refresh failed:",err);
   }
 }
 
+function enhanceAwardCards(){
+  if((location.hash||"").slice(1)!=="awards") return;
+  const cards=[...document.querySelectorAll("#awardList .achievement-card")];
+  cards.forEach((card,index)=>{
+    const item=awardsCache[index];
+    if(!item) return;
+    const p=card.querySelector("p");
+    if(!p) return;
+    p.textContent=item.summary || item.reason || "";
+    p.style.display="block";
+    p.style.webkitLineClamp="unset";
+    p.style.maxHeight="none";
+    p.style.overflow="visible";
+    p.style.whiteSpace="normal";
+  });
+}
+
 function scheduleEnhance(){
-  setTimeout(enhanceAwardForm,40);
+  setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();},40);
 }
 
 addEventListener("hashchange",()=>{
@@ -330,7 +359,7 @@ if(view){
   let t;
   new MutationObserver(()=>{
     clearTimeout(t);
-    t=setTimeout(enhanceAwardForm,35);
+    t=setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();},35);
   }).observe(view,{childList:true,subtree:true});
 }
 })();
