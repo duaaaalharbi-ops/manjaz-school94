@@ -5,6 +5,7 @@ const cards=[
   {title:"الورش التدريبية",view:"#certificates",add:"#certificates-add",addKind:"workshop",icon:"▧"},
   {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons-add",addKind:"lesson",icon:"▣"},
   {title:"التكريمات وشهادات الشكر",view:"#awards",add:"#awards",addKind:"award",icon:"◇",singleLine:true},
+  {title:"الموهبة",view:"#talent",add:"#talent",addKind:"talent",icon:"✦"},
   {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
   {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
   {title:"برامج الهيكل الإداري",view:"#admin-programs",add:"#admin-programs",icon:"▦"},
