@@ -1,4 +1,4 @@
-/* MANJAZ HOME 5.2 — awards & thank-you certificates section */
+/* MANJAZ HOME 5.3 — cloud excellence team + admin card last */
 (()=>{"use strict";
 const cards=[
   {title:"أبرز المنجزات",view:"#achievements",add:"#add",icon:"▤"},
@@ -9,9 +9,10 @@ const cards=[
   {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
   {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
   {title:"برامج الهيكل الإداري",view:"#admin-programs",add:"#admin-programs",icon:"▦"},
-  {title:"صلاحيات إدارية",view:"#admin-permissions",icon:"▥",viewOnly:true,singleLine:true},
   {title:"الحوسبة السحابية | منجزات النشاط",view:"#cloud-activity",icon:"☁",viewOnly:true},
-  {title:"الحوسبة السحابية | ملفات الإنجاز",view:"#cloud-portfolios",icon:"☁",viewOnly:true}
+  {title:"الحوسبة السحابية | فريق التميز",view:"#cloud-excellence",icon:"☁",viewOnly:true},
+  {title:"الحوسبة السحابية | ملفات الإنجاز",view:"#cloud-portfolios",icon:"☁",viewOnly:true},
+  {title:"صلاحيات إدارية",view:"#admin-permissions",icon:"▥",viewOnly:true,singleLine:true}
 ];
 
 const isHome=()=>!location.hash || location.hash==="#home";
@@ -80,7 +81,7 @@ function action(label,href,kind,addKind){
 function ensureCloudLinksScript(){
   if(document.querySelector('script[data-manjaz-cloud-links="1"]')) return;
   const s=document.createElement("script");
-  s.src="cloud-links.js?v=1.1";
+  s.src="cloud-links.js?v=1.2";
   s.dataset.manjazCloudLinks="1";
   document.head.appendChild(s);
 }

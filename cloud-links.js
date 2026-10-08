@@ -1,4 +1,4 @@
-/* MANJAZ CLOUD LINKS 1.1 — Google Drive links only + edit/delete */
+/* MANJAZ CLOUD LINKS 1.2 — activity, excellence team and portfolios */
 (()=>{"use strict";
 
 const SUPABASE_URL="https://idkjuqfxcweqekdkcktk.supabase.co";
@@ -15,6 +15,11 @@ const SECTIONS={
     title:"الحوسبة السحابية | منجزات النشاط",
     kind:"cloud_activity",
     empty:"لا توجد روابط منجزات نشاط مضافة حتى الآن"
+  },
+  "cloud-excellence":{
+    title:"الحوسبة السحابية | فريق التميز",
+    kind:"cloud_excellence",
+    empty:"لا توجد روابط لفريق التميز مضافة حتى الآن"
   },
   "cloud-portfolios":{
     title:"الحوسبة السحابية | ملفات الإنجاز",
