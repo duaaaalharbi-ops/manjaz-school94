@@ -1,0 +1,10 @@
+إعداد الحساب الإداري في Supabase Auth
+
+1) افتحي مشروع Manjaz في Supabase.
+2) Authentication > Users > Add user.
+3) أنشئي حساب المدير بالبريد الإلكتروني وكلمة المرور.
+4) يفضّل تعطيل التسجيل العام Sign ups إذا لم يكن مستخدمًا في الموقع.
+5) أضيفي رابط GitHub Pages الخاص بالموقع إلى Authentication > URL Configuration > Redirect URLs حتى تعمل استعادة كلمة المرور.
+
+لا تضعي كلمة المرور داخل ملفات GitHub أو JavaScript.
+الموقع لا يحتوي كلمة مرور ثابتة في الكود.
