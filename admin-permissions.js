@@ -1,9 +1,9 @@
-/* MANJAZ ADMIN PERMISSIONS 1.0
+/* MANJAZ ADMIN PERMISSIONS 1.1
    - Visible section on home.
    - Supabase Auth login gate.
    - Password recovery.
    - Two tools only: execution certificate + thanks certificate.
-   - Certificate issue records saved to Supabase.
+   - Certificates are issued immediately; cloud logging is best-effort.
    - Does not alter workshop/lesson certificates.
 */
 (()=>{"use strict";
@@ -502,7 +502,7 @@ async function mountTool(type,session){
   document.getElementById("cancelAdminCert").onclick=()=>{workspace.innerHTML=""};
 
   const form=document.getElementById("adminCertificateForm");
-  form.onsubmit=async e=>{
+  form.onsubmit=e=>{
     e.preventDefault();
     if(!form.checkValidity()){form.reportValidity();return;}
     const fd=new FormData(form),data={};
@@ -515,18 +515,22 @@ async function mountTool(type,session){
     const submit=form.querySelector('button[type="submit"]');
     const msg=document.getElementById("adminCertificateMsg");
     submit.disabled=true;
-    msg.textContent="جارٍ حفظ سجل الإصدار سحابيًا...";
-    try{
-      await saveIssue(type,data,session);
-      renderCertificate(type,data);
-      document.getElementById("adminCertificatePreview").classList.add("is-visible");
-      document.getElementById("adminCertificateDownload").onclick=()=>downloadPDF(type,data);
-      msg.textContent="تم حفظ سجل الإصدار في Supabase وإنشاء الشهادة";
-      document.getElementById("adminCertificatePreview").scrollIntoView({behavior:"smooth",block:"start"});
-    }catch(err){
+
+    // Both administrative certificate types follow the workshop flow:
+    // issue and enable download immediately, then log to the cloud in the background.
+    renderCertificate(type,data);
+    document.getElementById("adminCertificatePreview").classList.add("is-visible");
+    document.getElementById("adminCertificateDownload").onclick=()=>downloadPDF(type,data);
+    msg.textContent="تم إصدار الشهادة، وجارٍ توثيقها سحابيًا...";
+    document.getElementById("adminCertificatePreview").scrollIntoView({behavior:"smooth",block:"start"});
+    submit.disabled=false;
+
+    saveIssue(type,data,session).then(()=>{
+      msg.textContent="تم إصدار الشهادة وتوثيقها سحابيًا";
+    }).catch(err=>{
       console.error(err);
-      msg.textContent="تعذر حفظ سجل الإصدار السحابي؛ لم يتم إصدار الشهادة";
-    }finally{submit.disabled=false}
+      msg.textContent="تم إصدار الشهادة، وتعذر حفظ سجلها السحابي مؤقتًا";
+    });
   };
 }
 
