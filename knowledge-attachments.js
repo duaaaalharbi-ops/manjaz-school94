@@ -1,6 +1,8 @@
-/* MANJAZ KNOWLEDGE ATTACHMENTS 1.0
-   Adds cumulative Supabase attachments to "نماذج الإنتاج المعرفي" cards only.
-   Does not modify the existing knowledge records or their current storage.
+/* MANJAZ KNOWLEDGE ATTACHMENTS 2.0
+   Knowledge-production section only:
+   - external cards show Preview / Edit / Delete
+   - first attached image is the card preview
+   - attachment controls live only inside Add / Edit
 */
 (()=>{"use strict";
 
@@ -55,6 +57,14 @@ async function fetchAllAttachments(){
 
 function attachmentsFor(parentId){
   return allAttachments.filter(x=>String(x.parentId)===String(parentId));
+}
+
+function isImage(x){
+  return String(x?.mime||"").startsWith("image/") || /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(String(x?.name||""));
+}
+
+function firstImage(parentId){
+  return attachmentsFor(parentId).find(isImage)||null;
 }
 
 async function uploadFile(parentId,file){
@@ -159,86 +169,133 @@ function attachmentRow(x){
   </div>`;
 }
 
-function blockHTML(parentId){
-  const rows=attachmentsFor(parentId);
-  return `<div class="knowledge-attachments-block" data-parent-id="${esc(parentId)}" style="margin-top:14px;padding-top:12px;border-top:1px solid #e1e6eb">
-    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-      <strong>مرفقات الإنتاج</strong>
-      <span class="badge">${rows.length} مرفق</span>
-    </div>
-    <div class="knowledge-attachments-list" style="display:grid;gap:8px">
-      ${rows.length?rows.map(attachmentRow).join(""):'<div class="empty-inline">لا توجد مرفقات حتى الآن</div>'}
-    </div>
-    <div style="display:grid;gap:8px;margin-top:12px">
-      <input class="knowledge-file-input" type="file" multiple accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
-      <button type="button" class="btn btn-primary knowledge-upload-btn">إضافة المرفقات</button>
-      <div class="knowledge-attachment-msg"></div>
-    </div>
-  </div>`;
+function injectStyle(){
+  if(document.getElementById("knowledgeAttachmentsV2Style")) return;
+  const style=document.createElement("style");
+  style.id="knowledgeAttachmentsV2Style";
+  style.textContent=`
+    #communityList .community-card .knowledge-card-cover{height:190px;margin:-1px -1px 14px;border-radius:15px 15px 10px 10px;overflow:hidden;background:#eef2f5;display:flex;align-items:center;justify-content:center}
+    #communityList .community-card .knowledge-card-cover img{width:100%;height:100%;object-fit:cover;display:block}
+    #communityList .community-card .knowledge-cover-empty{color:#7b8794;font-weight:700}
+    #communityList .community-card .knowledge-record-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+    #communityList .community-card .knowledge-record-actions .btn{margin:0;min-width:0}
+    .knowledge-editor-attachments{grid-column:1/-1;border-top:1px solid #e1e6eb;padding-top:14px;margin-top:4px;display:grid;gap:10px}
+    .knowledge-editor-list{display:grid;gap:8px}
+    .knowledge-editor-upload{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+    .knowledge-detail-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+    .knowledge-detail-gallery img{width:100%;height:150px;object-fit:cover;border-radius:10px;display:block}
+    @media(max-width:620px){#communityList .community-card .knowledge-record-actions{grid-template-columns:1fr}.knowledge-editor-upload{grid-template-columns:1fr}}
+  `;
+  document.head.appendChild(style);
 }
 
-function bindBlock(block){
-  if(!block||block.dataset.ready==="1") return;
-  block.dataset.ready="1";
-  const parentId=block.dataset.parentId;
-  const input=block.querySelector(".knowledge-file-input");
-  const upload=block.querySelector(".knowledge-upload-btn");
-  const msg=block.querySelector(".knowledge-attachment-msg");
+function editorHTML(parentId){
+  const rows=attachmentsFor(parentId);
+  return `<section class="knowledge-editor-attachments" data-parent-id="${esc(parentId)}">
+    <strong>مرفقات الإنتاج المعرفي</strong>
+    <div class="knowledge-editor-list">${rows.length?rows.map(attachmentRow).join(""):'<div class="empty-inline">لا توجد مرفقات حتى الآن</div>'}</div>
+    <div class="knowledge-editor-upload">
+      <input class="knowledge-file-input" type="file" multiple accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+      <button type="button" class="btn btn-primary knowledge-upload-btn">إضافة مرفق</button>
+    </div>
+    <div class="knowledge-attachment-msg"></div>
+  </section>`;
+}
 
+function bindEditor(section){
+  if(!section||section.dataset.ready==="1") return;
+  section.dataset.ready="1";
+  const parentId=section.dataset.parentId;
+  const input=section.querySelector(".knowledge-file-input");
+  const upload=section.querySelector(".knowledge-upload-btn");
+  const msg=section.querySelector(".knowledge-attachment-msg");
   upload.onclick=async()=>{
     const files=Array.from(input.files||[]);
     if(!files.length){msg.textContent="اختاري مرفقًا واحدًا على الأقل";return;}
-    upload.disabled=true;
-    input.disabled=true;
-    let done=0;
-    msg.textContent=`جارٍ رفع 0 من ${files.length}...`;
+    upload.disabled=true;input.disabled=true;
     try{
-      for(const file of files){
-        await uploadFile(parentId,file);
-        done++;
-        msg.textContent=`جارٍ رفع ${done} من ${files.length}...`;
+      for(let i=0;i<files.length;i++){
+        msg.textContent=`جارٍ رفع ${i+1} من ${files.length}...`;
+        await uploadFile(parentId,files[i]);
       }
+      msg.textContent="تمت إضافة المرفقات";
       input.value="";
-      msg.textContent="تمت إضافة المرفقات إلى البطاقة";
-      renderBlock(block);
-    }catch(err){
-      console.error(err);
-      msg.textContent="تعذر رفع بعض المرفقات، ولم يتم حذف المرفقات السابقة";
-      renderBlock(block);
-    }finally{
-      upload.disabled=false;
-      input.disabled=false;
-    }
+      refreshEditor(section);
+      enhanceCards();
+    }catch(err){console.error(err);msg.textContent="تعذر رفع بعض المرفقات"}
+    finally{upload.disabled=false;input.disabled=false}
   };
-
-  block.addEventListener("click",async e=>{
+  section.addEventListener("click",async e=>{
     const btn=e.target.closest(".knowledge-delete-attachment");
-    if(!btn) return;
+    if(!btn)return;
     const record=allAttachments.find(x=>String(x.id)===String(btn.dataset.id));
-    if(!record) return;
+    if(!record)return;
     btn.disabled=true;
-    const old=btn.textContent;
-    btn.textContent="جارٍ الحذف...";
-    try{
-      await deleteAttachment(record);
-      renderBlock(block);
-    }catch(err){
-      console.error(err);
-      alert("تعذر حذف المرفق. لم يتم حذف أي مرفق آخر");
-      btn.disabled=false;
-      btn.textContent=old;
-    }
+    try{await deleteAttachment(record);refreshEditor(section);enhanceCards()}
+    catch(err){console.error(err);alert("تعذر حذف المرفق")}
   });
 }
 
-function renderBlock(block){
-  if(!block) return;
-  const parentId=block.dataset.parentId;
-  const wrapper=document.createElement("div");
-  wrapper.innerHTML=blockHTML(parentId);
-  const fresh=wrapper.firstElementChild;
-  block.replaceWith(fresh);
-  bindBlock(fresh);
+function refreshEditor(section){
+  const holder=document.createElement("div");
+  holder.innerHTML=editorHTML(section.dataset.parentId);
+  const fresh=holder.firstElementChild;
+  section.replaceWith(fresh);
+  bindEditor(fresh);
+}
+
+function knowledgeRecords(){
+  try{return JSON.parse(localStorage.getItem("manjaz_public_section_submissions_v1")||"[]").filter(x=>x&&x.kind==="knowledge"&&!x._deletedBase)}catch(_){return[]}
+}
+
+function enhanceAddForm(){
+  const form=document.getElementById("communityForm");
+  if(!form||form.dataset.knowledgeAttachments==="1")return;
+  form.dataset.knowledgeAttachments="1";
+  const grid=form.querySelector(".form-grid");
+  if(!grid)return;
+  const wrap=document.createElement("label");
+  wrap.className="wide";
+  wrap.innerHTML=`إضافة المرفقات<input class="knowledge-add-files" type="file" multiple accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"><small>ستظهر أول صورة تلقائيًا في معاينة البطاقة</small>`;
+  grid.appendChild(wrap);
+  form.addEventListener("submit",()=>{
+    const files=Array.from(form.querySelector(".knowledge-add-files")?.files||[]);
+    if(!files.length)return;
+    const before=new Set(knowledgeRecords().map(x=>String(x.id)));
+    setTimeout(async()=>{
+      const created=knowledgeRecords().filter(x=>!before.has(String(x.id))).sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")))[0];
+      if(!created)return;
+      try{for(const file of files)await uploadFile(created.id,file);setTimeout(enhanceCards,80)}
+      catch(err){console.error(err);alert("تم حفظ الإنتاج المعرفي، لكن تعذر رفع بعض المرفقات")}
+    },40);
+  },true);
+}
+
+let activeParentId="";
+
+function enhanceEditOverlay(){
+  const overlay=document.getElementById("communityEditOverlay");
+  const form=overlay?.querySelector("#communityEditForm");
+  if(!form||!overlay.classList.contains("open")||!activeParentId)return;
+  let section=form.querySelector(".knowledge-editor-attachments");
+  if(!section){form.querySelector(".form-grid")?.insertAdjacentHTML("beforeend",editorHTML(activeParentId));section=form.querySelector(".knowledge-editor-attachments")}
+  bindEditor(section);
+}
+
+function enhanceDetailOverlay(){
+  const overlay=document.getElementById("communityDetail");
+  const panel=overlay?.querySelector(".panel");
+  if(!panel||overlay.style.display==="none"||!activeParentId)return;
+  const current=overlay.querySelector(".knowledge-detail-attachments");
+  if(current?.dataset.parentId===String(activeParentId))return;
+  current?.remove();
+  const rows=attachmentsFor(activeParentId),images=rows.filter(isImage),docs=rows.filter(x=>!isImage(x));
+  panel.insertAdjacentHTML("beforeend",`<section class="knowledge-detail-attachments" data-parent-id="${esc(activeParentId)}" style="display:grid;gap:12px;margin-top:18px">
+    <h3>المرفقات</h3>
+    ${images.length?`<div class="knowledge-detail-gallery">${images.map(x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener"><img src="${esc(x.url)}" alt="${esc(x.name)}"></a>`).join("")}</div>`:""}
+    ${docs.length?`<div style="display:grid;gap:8px">${docs.map(x=>`<a class="file-link" href="${esc(x.url)}" target="_blank" rel="noopener"><span>${esc(x.name)}</span><strong>فتح المرفق</strong></a>`).join("")}</div>`:""}
+    ${rows.length?"":'<div class="empty-inline">لا توجد مرفقات</div>'}
+  </section>`);
 }
 
 async function enhanceCards(){
@@ -252,12 +309,26 @@ async function enhanceCards(){
   }
 
   cards.forEach(card=>{
-    if(card.querySelector(".knowledge-attachments-block")) return;
     const parentId=card.dataset.id;
     if(!parentId) return;
-    card.insertAdjacentHTML("beforeend",blockHTML(parentId));
-    bindBlock(card.querySelector(".knowledge-attachments-block"));
+    card.querySelector(".knowledge-attachments-block")?.remove();
+    let cover=card.querySelector(".knowledge-card-cover");
+    if(!cover){cover=document.createElement("div");cover.className="knowledge-card-cover";card.prepend(cover)}
+    const image=firstImage(parentId);
+    cover.innerHTML=image?`<img src="${esc(image.url)}" alt="معاينة الإنتاج المعرفي">`:'<span class="knowledge-cover-empty">لا توجد صورة مرفقة</span>';
+
+    const view=card.querySelector(".c-view"),edit=card.querySelector(".c-edit"),del=card.querySelector(".c-delete");
+    if(view)view.textContent="استعراض";
+    if(edit)edit.textContent="تعديل";
+    if(del)del.textContent="حذف";
+    let actions=card.querySelector(".knowledge-record-actions");
+    if(!actions){actions=document.createElement("div");actions.className="knowledge-record-actions";card.appendChild(actions)}
+    [view,edit,del].filter(Boolean).forEach(btn=>{if(btn.parentElement!==actions)actions.appendChild(btn)});
+    [...card.querySelectorAll(":scope > .form-actions,:scope > .community-manage-actions")].forEach(x=>{if(!x.children.length)x.remove()});
+    if(view&&view.dataset.knowledgeHook!=="1"){view.dataset.knowledgeHook="1";view.addEventListener("click",()=>{activeParentId=parentId;setTimeout(enhanceDetailOverlay,0)})}
+    if(edit&&edit.dataset.knowledgeHook!=="1"){edit.dataset.knowledgeHook="1";edit.addEventListener("click",()=>{activeParentId=parentId;setTimeout(enhanceEditOverlay,0)})}
   });
+  enhanceAddForm();
 }
 
 function schedule(){
@@ -276,7 +347,8 @@ if(view){
   new MutationObserver(()=>{
     if(!isKnowledge()) return;
     clearTimeout(timer);
-    timer=setTimeout(enhanceCards,70);
+  timer=setTimeout(()=>{enhanceCards();enhanceEditOverlay();enhanceDetailOverlay()},70);
   }).observe(view,{childList:true,subtree:true});
 }
+injectStyle();
 })();
