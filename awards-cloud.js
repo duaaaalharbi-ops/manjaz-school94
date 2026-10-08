@@ -254,11 +254,14 @@ async function cloudAwardSubmit(e){
 
   const msg=document.getElementById("awardMsg");
   const controls=[...form.querySelectorAll("input,select,textarea,button")];
+
+  /* اقرأ بيانات النموذج قبل تعطيل الحقول؛ عناصر disabled لا تدخل في FormData. */
+  const fd=new FormData(form);
+
   form.dataset.awardCloudBusy="1";
   controls.forEach(el=>el.disabled=true);
 
   try{
-    const fd=new FormData(form);
     const item=normalizeAward({
       title:fd.get("title"),
       type:fd.get("type"),
@@ -273,6 +276,17 @@ async function cloudAwardSubmit(e){
       createdAt:new Date().toISOString(),
       media:[]
     });
+
+    const requiredCloudFields=[
+      ["العنوان",item.title],
+      ["النوع",item.type],
+      ["الجهة المانحة",item.grantor],
+      ["المكرَّمة / الفئة",item.recipient],
+      ["التاريخ",item.date],
+      ["سبب التكريم",item.reason]
+    ];
+    const missing=requiredCloudFields.filter(([,v])=>!String(v||"").trim()).map(([k])=>k);
+    if(missing.length) throw new Error(`بيانات ناقصة قبل الحفظ: ${missing.join("، ")}`);
 
     if(msg){
       msg.className="success";
