@@ -374,7 +374,7 @@ async function refreshAwardRoute(){
     await fetchAwardsCloud();
     if((location.hash||"").slice(1)==="awards"){
       try{ if(typeof render==="function") render(); }catch(_){}
-      setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();},30);
+      setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();bindAwardAttachmentDelete();},30);
     }
   }catch(err){
     console.error("Award cloud refresh failed:",err);
@@ -447,7 +447,107 @@ function injectActiveAwardDetails(){
 function enhanceAwardAttachmentMessage(){
   if((location.hash||"").slice(1)!=="awards") return;
   const status=document.getElementById("detailAttachmentStatus");
-  if(status) status.textContent="الصور والملفات الجديدة تُضاف تراكميًا إلى نفس البطاقة ولا تستبدل المرفقات السابقة";
+  if(status) status.textContent="الصور والملفات الجديدة تُضاف تراكميًا إلى نفس البطاقة ولا يُحذف أي مرفق إلا بأمر حذف صريح";
+}
+
+async function patchAwardExact(item){
+  const payload={
+    data:{...item},
+    status:item.status||"تحت المراجعة",
+    updated_at:new Date().toISOString()
+  };
+  const p=new URLSearchParams({id:`eq.${item.id}`,kind:"eq.award"});
+  const r=await fetch(`${RECORDS_ENDPOINT}?${p.toString()}`,{
+    method:"PATCH",
+    headers:{...HEADERS,"Prefer":"return=representation"},
+    body:JSON.stringify(payload)
+  });
+  if(!r.ok){
+    const t=await r.text().catch(()=> "");
+    throw new Error(`تعذر حذف المرفق من البطاقة (${r.status}) ${t}`);
+  }
+  const rows=await r.json();
+  return Array.isArray(rows)&&rows[0] ? rowToAward(rows[0]) : normalizeAward(item);
+}
+
+async function deleteAwardAttachmentExplicit(path){
+  if(!activeAwardDetails || !path) return false;
+
+  // اقرأ أحدث نسخة سحابية حتى لا تتأثر مرفقات أضافها مستخدم آخر.
+  const latest=await fetchAwardById(activeAwardDetails.id);
+  if(!latest) throw new Error("تعذر العثور على بطاقة التكريم");
+
+  const target=(latest.media||[]).find(x=>String(x?.path||"")===String(path));
+  if(!target) return true;
+
+  const ok=window.confirm(`حذف المرفق «${target.name||"ملف"}» فقط؟`);
+  if(!ok) return false;
+
+  // احذف فقط المرفق المطلوب، واترك كل البقية كما هي.
+  const nextMedia=(latest.media||[]).filter(x=>String(x?.path||"")!==String(path));
+  const updated={...latest,media:nextMedia};
+
+  if(latest.coverUrl===target.url){
+    const nextImage=nextMedia.find(x=>x?.kind==="image");
+    updated.coverUrl=nextImage?.url||"";
+  }
+
+  // تحديث دقيق للسجل بدون دمج يعيد المرفق المحذوف.
+  const saved=await patchAwardExact(updated);
+
+  // حذف الملف الفعلي من التخزين إن سمحت السياسة؛ فشل حذف الملف لا يعيد ربطه بالبطاقة.
+  try{
+    if(typeof deleteCloudMedia==="function") await deleteCloudMedia([target]);
+  }catch(err){
+    console.warn("تعذر حذف الملف الفعلي من التخزين بعد إزالة ربطه بالبطاقة:",err);
+  }
+
+  const i=awardsCache.findIndex(x=>String(x.id)===String(saved.id));
+  if(i>=0) awardsCache[i]=saved;
+  activeAwardDetails=saved;
+  return true;
+}
+
+function bindAwardAttachmentDelete(){
+  if(document.documentElement.dataset.awardDeleteReady==="1") return;
+  document.documentElement.dataset.awardDeleteReady="1";
+
+  document.addEventListener("click",async e=>{
+    if((location.hash||"").slice(1)!=="awards") return;
+    const btn=e.target.closest(".delete-attachment");
+    if(!btn || !activeAwardDetails) return;
+
+    // أوقف معالج app.js القديم لأنه يعيد المرفق بسبب الدمج التراكمي.
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    btn.disabled=true;
+    const oldText=btn.textContent;
+    btn.textContent="جارٍ الحذف...";
+    try{
+      const deleted=await deleteAwardAttachmentExplicit(btn.dataset.path);
+      if(!deleted){
+        btn.disabled=false;
+        btn.textContent=oldText;
+        return;
+      }
+
+      await fetchAwardsCloud();
+      // أعد فتح نفس التفاصيل فورًا بعد الحذف لعرض النتيجة.
+      if(typeof openDetails==="function"){
+        await openDetails("award",activeAwardDetails.id);
+        setTimeout(()=>{
+          injectActiveAwardDetails();
+          enhanceAwardAttachmentMessage();
+        },50);
+      }
+    }catch(err){
+      console.error("Award attachment delete:",err);
+      alert("تعذر حذف المرفق. لم يتم حذف أي مرفق آخر");
+      btn.disabled=false;
+      btn.textContent=oldText;
+    }
+  },true);
 }
 
 function bindAwardDetailsEnhancer(){
@@ -476,7 +576,7 @@ function bindAwardDetailsEnhancer(){
 }
 
 function scheduleEnhance(){
-  setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();},40);
+  setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();bindAwardAttachmentDelete();},40);
 }
 
 addEventListener("hashchange",()=>{
@@ -506,7 +606,7 @@ if(view){
   let t;
   new MutationObserver(()=>{
     clearTimeout(t);
-    t=setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();},35);
+    t=setTimeout(()=>{enhanceAwardForm();enhanceAwardCards();bindAwardDetailsEnhancer();bindAwardAttachmentDelete();},35);
   }).observe(view,{childList:true,subtree:true});
 }
 })();
