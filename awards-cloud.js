@@ -51,6 +51,34 @@ function cloudSaveAwards(items){
   awardsCache=Array.isArray(items)?items.map(normalizeAward):[];
 }
 
+function mediaKey(x){
+  return String(x?.path || x?.clientKey || x?.url || "");
+}
+function mergeMedia(existing=[],incoming=[]){
+  const out=[];
+  const seen=new Set();
+  [...existing,...incoming].forEach(x=>{
+    if(!x) return;
+    const k=mediaKey(x);
+    if(k && seen.has(k)) return;
+    if(k) seen.add(k);
+    out.push(x);
+  });
+  return out;
+}
+async function fetchAwardById(id){
+  const p=new URLSearchParams({
+    select:"id,kind,data,status,created_at,updated_at",
+    id:`eq.${id}`,
+    kind:"eq.award",
+    limit:"1"
+  });
+  const r=await fetch(`${RECORDS_ENDPOINT}?${p.toString()}`,{headers:HEADERS,cache:"no-store"});
+  if(!r.ok) throw new Error(`تعذر قراءة بطاقة التكريم (${r.status})`);
+  const rows=await r.json();
+  return Array.isArray(rows)&&rows[0] ? rowToAward(rows[0]) : null;
+}
+
 /* Replace only the award collection's persistence layer.
    Other Manjaz sections keep their existing behavior. */
 try{
@@ -108,6 +136,34 @@ async function insertAwardCloud(item){
   const rows=await r.json();
   if(!Array.isArray(rows)||!rows[0]) throw new Error("لم يرجع Supabase السجل المحفوظ");
   return rowToAward(rows[0]);
+}
+
+try{
+  const originalUpdateCloudRecord=updateCloudRecord;
+  updateCloudRecord=async function(kind,item){
+    if(kind!=="award") return originalUpdateCloudRecord(kind,item);
+
+    const latest=await fetchAwardById(item.id).catch(()=>null);
+    const merged={
+      ...(latest||{}),
+      ...item,
+      id:item.id,
+      media:mergeMedia(latest?.media||[],item?.media||[])
+    };
+    if(!merged.coverUrl){
+      const firstImage=merged.media.find(x=>x?.kind==="image");
+      if(firstImage) merged.coverUrl=firstImage.url||"";
+    }
+
+    const saved=await originalUpdateCloudRecord(kind,merged);
+    const normalized=normalizeAward(saved||merged);
+    const i=awardsCache.findIndex(x=>String(x.id)===String(normalized.id));
+    if(i>=0) awardsCache[i]=normalized;
+    else awardsCache.unshift(normalized);
+    return normalized;
+  };
+}catch(err){
+  console.warn("تعذر تفعيل الدمج التراكمي لمرفقات التكريم:",err);
 }
 
 function awardSignature(x){
@@ -374,6 +430,12 @@ function injectActiveAwardDetails(){
   else content.prepend(block);
 }
 
+function enhanceAwardAttachmentMessage(){
+  if((location.hash||"").slice(1)!=="awards") return;
+  const status=document.getElementById("detailAttachmentStatus");
+  if(status) status.textContent="الصور والملفات الجديدة تُضاف تراكميًا إلى نفس البطاقة ولا تستبدل المرفقات السابقة";
+}
+
 function bindAwardDetailsEnhancer(){
   const list=document.getElementById("awardList");
   if(!list || list.dataset.awardDetailsReady==="1") return;
@@ -393,6 +455,7 @@ function bindAwardDetailsEnhancer(){
       attempts++;
       injectActiveAwardDetails();
       const content=document.getElementById("detailContent");
+      if(content?.querySelector(".award-full-details")) enhanceAwardAttachmentMessage();
       if(content?.querySelector(".award-full-details") || attempts>30) clearInterval(timer);
     },50);
   },true);
