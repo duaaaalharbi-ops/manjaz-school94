@@ -112,7 +112,7 @@ function bindHijriDateControl(id,onChange){
 function baseHeaders(token){
   return {
     "apikey":SUPABASE_KEY,
-    "Authorization":`Bearer ${token||SUPABASE_KEY}`,
+    ...(token?{"Authorization":`Bearer ${token}`} : {}),
     "Content-Type":"application/json"
   };
 }
@@ -794,6 +794,7 @@ function publicHTML(){
         <button class="btn btn-primary" type="button" id="reservePublish">جدول النشر</button>
         <button class="btn btn-ghost" type="button" id="reserveAdminOpen">دخول الإدارة</button>
         </div>
+        <p class="reserve-public-note">حالتا الاطلاع والتفعيل أدناه للمتابعة فقط. لتأكيد الاطلاع وكتابة موضوع الحصة، افتحي <strong>رابط التكليف الشخصي</strong> المرسل من إدارة المدرسة.</p>
       </div>
       <div class="reserve-table-wrap">
         <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th><th>التفعيل</th></tr></thead>
@@ -911,7 +912,7 @@ function adminAssignmentsHTML(items){
     <td>${(a.candidates||[]).map((c,i)=>`<div class="reserve-candidate"><strong>${i+1}. ${esc(c.name)}</strong></div>`).join("")||"لا توجد مرشحات"}</td>
     <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select><small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small></td>
     <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
-    <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack">نسخ رابط الاطلاع</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
+    <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
   </tr>`}).join("")}</tbody></table></div>`;
 }
 
@@ -986,6 +987,18 @@ function currentReserveWarnings(date){
   const cached=state.lastReserveWarnings;
   return cached?.date===date?[...new Set([...savedReserveWarnings(date),...cached.warnings])]:savedReserveWarnings(date);
 }
+function manualTeacherLinksHTML(date){
+  const items=assignmentsOn(date).filter(a=>a.published===true&&a.ackToken&&a.assignedTeacherId)
+    .sort((a,b)=>Number(a.period)-Number(b.period)||clean(a.assignedTeacherName).localeCompare(clean(b.assignedTeacherName),"ar"));
+  if(!items.length)return '<div class="empty-inline">بعد اعتماد التكليفات، تظهر هنا روابط الاطلاع وعنوان الموضوع للمعلمات.</div>';
+  return `<p class="reserve-public-note">انسخي رابط كل معلمة وأرسليه إليها لتؤكد اطلاعها ثم تكتب موضوع الحصة. الروابط للإدارة فقط.</p>
+  <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>معلمة الاحتياط</th><th>الحصة</th><th>الفصل</th><th>حالة الاطلاع</th><th>عنوان الموضوع</th><th>إجراءات</th></tr></thead><tbody>
+  ${items.map(a=>`<tr data-manual-action="${esc(a.id)}"><td>${esc(a.assignedTeacherName)}</td><td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td>
+  <td>${a.ackAt?"تم الاطلاع":"لم يتم الاطلاع"}</td><td>${a.activationTitle?esc(a.activationTitle):"لم يتم التفعيل"}</td>
+  <td><div class="reserve-actions"><button type="button" class="reserve-mini reserve-manual-copy-action">نسخ رابط المعلمة</button>
+  <button type="button" class="reserve-mini reserve-manual-open-action">فتح نموذج المعلمة</button></div></td></tr>`).join("")}
+  </tbody></table></div>`;
+}
 function manualAdminHTML(){
   const date=state.currentDate;
   const selected=(state.manualAbsentIds||[]).map(String);
@@ -1008,6 +1021,9 @@ function manualAdminHTML(){
     <div id="reserveManualMsg"></div>
     <section class="reserve-admin-warnings"><strong>مساحة تحذيرات الإسناد</strong><div id="reserveManualWarnings">${reserveWarningsMarkup(currentReserveWarnings(date))}</div></section>
     <div id="reserveManualRows" style="margin-top:12px"></div>
+    <section class="surface panel" style="margin-top:16px"><div class="panel-head"><h3>روابط اطلاع المعلمات وموضوع الحصة</h3></div>
+      <div id="reserveManualTeacherLinks">${manualTeacherLinksHTML(date)}</div>
+    </section>
   </section>`;
 }
 function manualRowsHTML(absentIds,date){
@@ -1126,7 +1142,23 @@ async function saveManualAssignments(){
   }catch(err){console.error(err);msg.textContent="تعذر حفظ الجدول اليدوي."}
 }
 function bindManualAdmin(){
-  bindHijriDateControl("reserveManualDate",next=>{state.currentDate=next;state.manualRows=[];byId("reserveManualRows").innerHTML="";});
+  bindHijriDateControl("reserveManualDate",next=>{
+    state.currentDate=next;state.manualRows=[];byId("reserveManualRows").innerHTML="";
+    if(byId("reserveManualTeacherLinks"))byId("reserveManualTeacherLinks").innerHTML=manualTeacherLinksHTML(next);
+  });
+  byId("reserveManualTeacherLinks")?.addEventListener("click",async event=>{
+    const b=event.target.closest(".reserve-manual-copy-action,.reserve-manual-open-action");
+    if(!b)return;
+    const tr=b.closest("[data-manual-action]");
+    const a=state.assignments.find(x=>String(x.id)===String(tr?.dataset.manualAction));
+    if(!a?.published||!a.ackToken)return;
+    const url=`${location.origin}${location.pathname}?reserve_ack=${encodeURIComponent(a.ackToken)}#daily-reserve`;
+    if(b.classList.contains("reserve-manual-open-action")){
+      const win=window.open(url,"_blank");if(win)win.opener=null;else window.location.assign(url);
+      return;
+    }
+    try{await navigator.clipboard.writeText(url);b.textContent="تم النسخ"}catch(_){prompt("انسخي رابط المعلمة:",url)}
+  });
   byId("reserveManualBuild")?.addEventListener("click",()=>{
     const sel=byId("reserveManualAbsent");
     const ids=[...(sel?.selectedOptions||[])].map(o=>String(o.value));
@@ -1607,6 +1639,7 @@ function bindPublic(){
     btn.disabled=true;msg.textContent="جارٍ تسجيل الاطلاع...";
     try{
       await reserveTeacherCloudAction(ack,"ack");
+      msg.textContent="تم تسجيل الاطلاع. جارٍ تحديث الحالة...";
       await refreshAndRenderPublic();
     }catch(err){
       console.error(err);msg.textContent="تعذر تسجيل الاطلاع. تحققي من الاتصال وأعيدي المحاولة.";
@@ -1621,6 +1654,7 @@ function bindPublic(){
     btn.disabled=true;msg.textContent="جارٍ حفظ عنوان الموضوع...";
     try{
       await reserveTeacherCloudAction(ack,"title",title);
+      msg.textContent="تم حفظ الموضوع. جارٍ تحديث الحالة...";
       await refreshAndRenderPublic();
     }catch(err){
       console.error(err);msg.textContent="تعذر حفظ عنوان الموضوع. تحققي من الاتصال وأعيدي المحاولة.";
@@ -1762,11 +1796,21 @@ function bindDayAdmin(){
     const tr=b.closest("[data-assignment]"); if(!confirm("حذف هذا التكليف؟"))return;
     await deleteKind(K.assignment,tr.dataset.assignment,token()); await loadAll(); renderWorkspaceCard("auto");
   });
+  // The teacher link is generated only for the assigned teacher; status badges in the public table are read-only.
+  const teacherActionUrl=a=>`${location.origin}${location.pathname}?reserve_ack=${encodeURIComponent(a.ackToken)}#daily-reserve`;
   document.querySelectorAll(".reserve-copy-ack").forEach(b=>b.onclick=async()=>{
-    const tr=b.closest("[data-assignment]"),a=state.assignments.find(x=>String(x.id)===String(tr.dataset.assignment));
-    if(!a)return;
-    const url=`${location.origin}${location.pathname}?reserve_ack=${encodeURIComponent(a.ackToken)}#daily-reserve`;
-    try{await navigator.clipboard.writeText(url);b.textContent="تم النسخ"}catch(_){prompt("انسخي رابط الاطلاع:",url)}
+    const tr=b.closest("[data-assignment]"),a=state.assignments.find(x=>String(x.id)===String(tr?.dataset.assignment));
+    if(!a?.ackToken)return;
+    const url=teacherActionUrl(a);
+    try{await navigator.clipboard.writeText(url);b.textContent="تم النسخ"}catch(_){prompt("انسخي رابط المعلمة:",url)}
+  });
+  document.querySelectorAll(".reserve-open-ack").forEach(b=>b.onclick=()=>{
+    const tr=b.closest("[data-assignment]"),a=state.assignments.find(x=>String(x.id)===String(tr?.dataset.assignment));
+    if(!a?.ackToken)return;
+    const url=teacherActionUrl(a);
+    const opened=window.open(url,"_blank");
+    if(opened)opened.opener=null;
+    else window.location.assign(url);
   });
   byId("reserveApproveAuto")?.addEventListener("click",async()=>{
     const msg=byId("reserveDayMsg");
