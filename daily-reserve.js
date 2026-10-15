@@ -1,4 +1,4 @@
-/* MANJAZ DAILY RESERVE 2.0
+/* MANJAZ DAILY RESERVE 2.2
    Public read-only daily reserve + weekly cumulative view.
    Admin-only editing through Supabase Auth session.
    Cloud-first: all operational data lives in Supabase records.
@@ -872,8 +872,9 @@ function dayAdminHTML(){
 
     <section class="surface panel">
       <div class="panel-head"><h3>توزيع الاحتياط</h3><span>${assign.length} تكليف</span></div>
+      <section class="reserve-admin-warnings"><strong>مساحة تحذيرات الإسناد</strong><div id="reserveAutoWarnings">${reserveWarningsMarkup(currentReserveWarnings(date))}</div></section>
       <div id="reserveAssignmentsAdmin">${adminAssignmentsHTML(assign)}</div>
-      <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reservePublish" type="button">اعتماد ونشر جدول اليوم</button></div>
+      <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveApproveAuto" type="button">اعتماد جدول اليوم</button></div>
     </section>
   </div>`;
 }
@@ -955,6 +956,21 @@ function manualPhysicalCandidates(date,period,absentIds=[],allNames=false,except
   // Additional staff have no timetable in edition six. Their availability must be confirmed by administration.
   return [...teachers,...MANUAL_SUPPORT_STAFF.filter(t=>!occupiedByReserve(t.id,date,period,exceptAssignmentId))];
 }
+function savedReserveWarnings(date){
+  return [...new Set(assignmentsOn(date).flatMap(a=>Array.isArray(a.manualOverrideWarnings)?a.manualOverrideWarnings:[]).filter(Boolean))];
+}
+function reserveWarningsMarkup(warnings){
+  if(!warnings.length)return '<p class="reserve-public-note">لا توجد تحذيرات إسناد مسجلة حاليًا.</p>';
+  return `<div class="reserve-warning-box" role="status"><strong>تنبيهات الإسناد — للعرض الإداري فقط (لا تظهر في جدول النشر)</strong><ul>${warnings.map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>`;
+}
+function showReserveWorkspaceWarnings(id,warnings){
+  const el=byId(id);
+  if(el)el.innerHTML=reserveWarningsMarkup([...new Set(warnings)]);
+}
+function currentReserveWarnings(date){
+  const cached=state.lastReserveWarnings;
+  return cached?.date===date?[...new Set([...savedReserveWarnings(date),...cached.warnings])]:savedReserveWarnings(date);
+}
 function manualAdminHTML(){
   const date=state.currentDate;
   const selected=(state.manualAbsentIds||[]).map(String);
@@ -975,6 +991,7 @@ function manualAdminHTML(){
     </label>
     <div class="form-actions"><button class="btn btn-primary" id="reserveManualBuild" type="button">إظهار جدول التسديد الكامل</button></div>
     <div id="reserveManualMsg"></div>
+    <section class="reserve-admin-warnings"><strong>مساحة تحذيرات الإسناد</strong><div id="reserveManualWarnings">${reserveWarningsMarkup(currentReserveWarnings(date))}</div></section>
     <div id="reserveManualRows" style="margin-top:12px"></div>
   </section>`;
 }
@@ -1009,7 +1026,7 @@ function manualRowsHTML(absentIds,date){
       <td><select class="reserve-manual-assignee"><option value="">اختاري معلمة التسديد</option>${r.candidates.map(t=>`<option value="${esc(t.id)}" ${String(t.id)===r.existingTeacherId?"selected":""}>${esc(t.name)}${t.supportStaff?" — التوجيه / المختبر":""}</option>`).join("")}</select></td>
     </tr>`).join("")}
   </tbody></table></div>
-  <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveManualSave" type="button">حفظ واعتماد وتصدير جدول اليوم</button></div>`;
+  <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveManualSave" type="button">حفظ</button></div>`;
 }
 function manualConflictMessages(date,selections,absentIds){
   const warnings=[],slotUse=new Map();
@@ -1087,10 +1104,10 @@ async function saveManualAssignments(){
     await loadAll();
     state.currentDate=date;
     renderWorkspaceCard("manual");
-    // Export one consolidated daily table (not one file per absent teacher).
-    exportDailyReserveExcel(date);
     const done=byId("reserveManualMsg");
-    if(done)done.textContent=`تم حفظ واعتماد جميع الحصص وتصدير جدول اليوم.${warnings.length?` تم تجاوز ${warnings.length} تنبيهًا إداريًا مع توثيقها في السجلات.`:""}`;
+    if(done)done.textContent="تم حفظ واعتماد الحصص. النسخة النهائية متاحة من أيقونة «جدول النشر» بالأعلى.";
+    state.lastReserveWarnings={date,source:"manual",warnings};
+    showReserveWorkspaceWarnings("reserveManualWarnings",warnings);
   }catch(err){console.error(err);msg.textContent="تعذر حفظ الجدول اليدوي."}
 }
 function bindManualAdmin(){
@@ -1105,6 +1122,16 @@ function bindManualAdmin(){
     const date=byId("reserveManualDate")?.value||state.currentDate;
     byId("reserveManualRows").innerHTML=manualRowsHTML(ids,date);
     msg.textContent=`تم إدخال ${ids.length} غائبات. اختاري معلمة تسديد لكل حصة.`;
+    const currentSelections=()=>[...document.querySelectorAll("[data-manual-row]")].flatMap(tr=>{
+      const r=state.manualRows?.[Number(tr.dataset.manualRow)];
+      const teacherId=tr.querySelector(".reserve-manual-assignee")?.value;
+      return r&&teacherId?[{...r,teacherId,existingId:r.existingId||""}]:[];
+    });
+    byId("reserveManualRows")?.addEventListener("change",()=>{
+      const warnings=manualConflictMessages(date,currentSelections(),ids);
+      state.lastReserveWarnings={date,source:"manual",warnings};
+      showReserveWorkspaceWarnings("reserveManualWarnings",warnings);
+    });
     byId("reserveManualSave")?.addEventListener("click",saveManualAssignments);
   });
 }
@@ -1312,9 +1339,17 @@ function exportRange(range){
   return {start:termStart()||COUNT_START,end:state.currentDate};
 }
 function dailyPublicationRows(date){
-  return publishedAssignments().filter(a=>a.date===date)
-    .sort((a,b)=>Number(a.period)-Number(b.period)||
-      clean(a.absentTeacherName||"").localeCompare(clean(b.absentTeacherName||""),"ar"));
+  // Sole final publication source shared by manual, automatic and (when integrated)
+  // image-assisted manual input. Dedupe by real daily slot, not by input method.
+  const slots=new Map();
+  for(const a of publishedAssignments().filter(x=>x.date===date)){
+    if(!a.assignedTeacherId||!a.assignedTeacherName)continue;
+    const key=[date,String(a.absentTeacherId||a.absentTeacherName||""),Number(a.period),clean(a.className||"")].join("|");
+    const prior=slots.get(key);
+    if(!prior||String(a.updatedAt||a.createdAt||"")>=String(prior.updatedAt||prior.createdAt||""))slots.set(key,a);
+  }
+  return [...slots.values()].sort((a,b)=>Number(a.period)-Number(b.period||0)||
+    clean(a.absentTeacherName||"").localeCompare(clean(b.absentTeacherName||""),"ar"));
 }
 function dailyPublicationStats(items){
   const absent=new Set(items.map(a=>String(a.absentTeacherId||a.absentTeacherName||"")));
@@ -1325,17 +1360,6 @@ function dailyPublicationStats(items){
   });
   const breakdown=[...assigned.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ar"));
   return {periods:items.length,absentTeachers:absent.size,assignedTeachers:assigned.size,breakdown};
-}
-function exportDailyReserveExcel(date){
-  const rows=dailyPublicationRows(date),stats=dailyPublicationStats(rows);
-  const headers=["المعلمة الغائبة","الحصة","الفصل","معلمة الاحتياط","التوقيع"];
-  const content=rows.map(a=>[a.absentTeacherName||"",a.period,a.className||"",a.assignedTeacherName||"",""]);
-  content.push(["إحصائية اليوم","","","",""]);
-  content.push(["إجمالي حصص الاحتياط",stats.periods,"عدد المعلمات الغائبات",stats.absentTeachers,""]);
-  content.push(["عدد المكلفات بالاحتياط",stats.assignedTeachers,"","",""]);
-  stats.breakdown.forEach(([name,n])=>content.push([name,n,"حصة احتياط","",""]));
-  // Internal filename uses ISO only for safe filename uniqueness; all displayed dates are Hijri.
-  downloadXls(`جدول_الاحتياط_اليومي_${date}`,headers,content,`اليوم ${dayName(date)}`);
 }
 function publicationHTML(date){
   const items=dailyPublicationRows(date),stats=dailyPublicationStats(items);
@@ -1361,44 +1385,109 @@ function publicationHTML(date){
     <div class="reserve-publication-footer">الثانوية الرابعة والتسعون – مسارات | الاحتياط اليومي</div>
   </div>`;
 }
-function printReservePublication(date){
-  const old=document.getElementById("reservePublishSheet");
-  if(old)old.remove();
-  let style=document.getElementById("reservePublishPrintStyle");
-  if(!style){
-    style=document.createElement("style");style.id="reservePublishPrintStyle";
-    style.textContent=`
-      #reservePublishSheet{display:none}
-      @media print {
-        @page{size:A4 portrait;margin:12mm}
-        body > :not(#reservePublishSheet):not(#reservePublishPrintStyle){display:none!important}
-        html,body{background:white!important;color:#172c34!important;margin:0!important;padding:0!important;width:100%!important}
-        body #reservePublishSheet{display:block!important;direction:rtl;font-family:Tahoma,Arial,sans-serif;font-size:11px;line-height:1.6}
-        #reservePublishSheet .reserve-publication-date{display:flex;justify-content:space-between;gap:16px;border-bottom:2px solid #0f5f59;padding-bottom:7px;font-size:13px}
-        #reservePublishSheet h1{text-align:center;margin:9px 0 0;font-size:19px;color:#123e50}
-        #reservePublishSheet .reserve-publication-school{text-align:center;margin:0 0 12px;color:#576c72;font-size:12px}
-        #reservePublishSheet table{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center}
-        #reservePublishSheet th,#reservePublishSheet td{border:1px solid #637982;padding:8px 5px;vertical-align:middle;word-break:break-word}
-        #reservePublishSheet th{background:#edf3f3!important;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-        #reservePublishSheet th:nth-child(1){width:24%}
-        #reservePublishSheet th:nth-child(2){width:9%}
-        #reservePublishSheet th:nth-child(3){width:14%}
-        #reservePublishSheet th:nth-child(4){width:34%}
-        #reservePublishSheet th:nth-child(5){width:19%}
-        #reservePublishSheet tr{break-inside:avoid;page-break-inside:avoid}
-        #reservePublishSheet .reserve-publication-signature{height:20px}
-        #reservePublishSheet .reserve-publication-summary{border:1px solid #637982;margin-top:14px;padding:9px;break-inside:avoid;page-break-inside:avoid}
-        #reservePublishSheet h2{margin:0 0 8px;color:#123e50;font-size:14px}
-        #reservePublishSheet .reserve-publication-totals{display:flex;gap:12px;flex-wrap:wrap}
-        #reservePublishSheet .reserve-publication-summary p{margin:8px 0 0}
-        #reservePublishSheet .reserve-publication-footer{text-align:center;border-top:1px solid #9cb3b7;margin-top:14px;padding-top:6px;font-size:10px}
-      }`;
-    document.head.appendChild(style);
-  }
-  document.body.insertAdjacentHTML("beforeend",publicationHTML(date));
-  window.print();
+function ensureReservePublicationStyles(){
+  if(byId("reservePublishPrintStyle"))return;
+  const style=document.createElement("style");
+  style.id="reservePublishPrintStyle";
+  style.textContent=`
+    #reservePublishOverlay{position:fixed;inset:0;z-index:2147481000;background:rgba(21,39,47,.68);overflow:auto;padding:16px;box-sizing:border-box;direction:rtl}
+    #reservePublishOverlay .reserve-publish-content{max-width:850px;margin:0 auto 20px;background:#fff;border-radius:12px;box-shadow:0 12px 50px rgba(0,0,0,.18);padding:14px;box-sizing:border-box}
+    #reservePublishOverlay .reserve-publish-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+    #reservePublishOverlay .reserve-publish-status{color:#36515a;font-size:12px;flex:1;min-width:180px}
+    #reservePublishSheet{display:block!important;color:#172c34;background:white;direction:rtl;line-height:1.6;font:12px Tahoma,Arial,sans-serif}
+    #reservePublishSheet .reserve-publication-date{display:flex;justify-content:space-between;gap:12px;border-bottom:2px solid #0f5f59;padding-bottom:7px;font-size:14px;flex-wrap:wrap}
+    #reservePublishSheet h1{text-align:center;margin:9px 0 0;font-size:20px;color:#123e50}
+    #reservePublishSheet .reserve-publication-school{text-align:center;margin:0 0 12px;color:#576c72;font-size:12px}
+    #reservePublishSheet table{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center}
+    #reservePublishSheet th,#reservePublishSheet td{border:1px solid #637982;padding:8px 5px;vertical-align:middle;overflow-wrap:anywhere}
+    #reservePublishSheet th{background:#edf3f3!important;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #reservePublishSheet th:nth-child(1){width:24%}
+    #reservePublishSheet th:nth-child(2){width:9%}
+    #reservePublishSheet th:nth-child(3){width:14%}
+    #reservePublishSheet th:nth-child(4){width:34%}
+    #reservePublishSheet th:nth-child(5){width:19%}
+    #reservePublishSheet tr{break-inside:avoid;page-break-inside:avoid}
+    #reservePublishSheet .reserve-publication-signature{height:24px}
+    #reservePublishSheet .reserve-publication-summary{border:1px solid #637982;margin-top:14px;padding:9px;break-inside:avoid;page-break-inside:avoid}
+    #reservePublishSheet h2{margin:0 0 8px;color:#123e50;font-size:14px}
+    #reservePublishSheet .reserve-publication-totals{display:flex;gap:12px;flex-wrap:wrap}
+    #reservePublishSheet .reserve-publication-summary p{margin:8px 0 0}
+    #reservePublishSheet .reserve-publication-footer{text-align:center;border-top:1px solid #9cb3b7;margin-top:14px;padding-top:6px;font-size:10px}
+    @media(max-width:480px){
+      #reservePublishOverlay{padding:8px}
+      #reservePublishOverlay .reserve-publish-content{padding:8px}
+      #reservePublishSheet{font-size:10px}
+      #reservePublishSheet th,#reservePublishSheet td{padding:4px 2px}
+      #reservePublishSheet h1{font-size:17px}
+    }
+    @media print{
+      @page{size:A4 portrait;margin:12mm}
+      body > :not(#reservePublishOverlay):not(#reservePublishPrintStyle){display:none!important}
+      html,body{background:#fff!important;color:#172c34!important;margin:0!important;padding:0!important;width:100%!important}
+      #reservePublishOverlay{position:static!important;inset:auto!important;padding:0!important;background:#fff!important;overflow:visible!important}
+      #reservePublishOverlay .reserve-publish-content{max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;border:0!important}
+      #reservePublishOverlay .reserve-publish-actions{display:none!important}
+      #reservePublishSheet{font-size:11px!important}
+      #reservePublishSheet th,#reservePublishSheet td{padding:8px 5px!important}
+      #reservePublishSheet h1{font-size:19px!important}
+    }`;
+  document.head.appendChild(style);
 }
-
+function openReservePublication(date){
+  // Do not combine printed pages with warnings, ranking, or internal audit records.
+  byId("reservePublishOverlay")?.remove();
+  ensureReservePublicationStyles();
+  const overlay=document.createElement("div");
+  overlay.id="reservePublishOverlay";
+  overlay.setAttribute("role","dialog");
+  overlay.setAttribute("aria-modal","true");
+  overlay.setAttribute("aria-label","معاينة جدول النشر");
+  overlay.innerHTML=`<div class="reserve-publish-content">
+    <div class="reserve-publish-actions">
+      <button type="button" class="btn btn-primary" id="reservePublishPDF">تنزيل PDF</button>
+      <button type="button" class="btn btn-ghost" id="reservePublishPrintCopy">طباعة</button>
+      <button type="button" class="btn btn-ghost" id="reservePublishClose">إغلاق</button>
+      <span class="reserve-publish-status" id="reservePublishStatus">نسخة موحدة لجميع التكليفات المعتمدة لهذا اليوم، سواء أُنشئت يدويًا أو آليًا.</span>
+    </div>${publicationHTML(date)}</div>`;
+  document.body.appendChild(overlay);
+  byId("reservePublishClose")?.addEventListener("click",()=>overlay.remove());
+  overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove()});
+  byId("reservePublishPrintCopy")?.addEventListener("click",()=>window.print());
+  byId("reservePublishPDF")?.addEventListener("click",()=>downloadReservePublicationPDF(date));
+}
+let reservePdfLoader=null;
+function loadReservePdfEngine(){
+  if(window.html2pdf)return Promise.resolve(window.html2pdf);
+  if(reservePdfLoader)return reservePdfLoader;
+  reservePdfLoader=new Promise((resolve,reject)=>{
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+    s.onload=()=>window.html2pdf?resolve(window.html2pdf):reject(new Error("PDF unavailable"));
+    s.onerror=()=>reject(new Error("PDF download component failed"));
+    document.head.appendChild(s);
+  }).catch(err=>{reservePdfLoader=null;throw err});
+  return reservePdfLoader;
+}
+async function downloadReservePublicationPDF(date){
+  const msg=byId("reservePublishStatus"),btn=byId("reservePublishPDF"),sheet=byId("reservePublishSheet");
+  if(!sheet)return;
+  btn.disabled=true;
+  msg.textContent="جارٍ إعداد ملف PDF لجدول النشر...";
+  try{
+    const engine=await loadReservePdfEngine();
+    await engine().set({
+      margin:[10,9,10,9],filename:`جدول_النشر_${date}.pdf`,
+      image:{type:"jpeg",quality:0.98},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      pagebreak:{mode:["css","legacy"]}
+    }).from(sheet).save();
+    msg.textContent="تم إعداد ملف جدول النشر بصيغة PDF.";
+  }catch(err){
+    console.error("تعذر إنشاء PDF مباشر",err);
+    msg.textContent="تعذر التنزيل المباشر. استخدمي «طباعة» ثم «حفظ كملف PDF» من الجهاز.";
+  }finally{btn.disabled=false}
+}
 function xlsEsc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 function downloadXls(fileBase,headers,rows,sheetName="البيانات",extraSheet=""){
   const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
@@ -1436,7 +1525,7 @@ function mountAdminShell(){
 function bindPublic(){
   bindHijriDateControl("reservePublicDate",async next=>{state.currentDate=next;renderPage()});
   byId("reservePrint")?.addEventListener("click",()=>window.print());
-  byId("reservePublish")?.addEventListener("click",()=>printReservePublication(state.currentDate));
+  byId("reservePublish")?.addEventListener("click",()=>openReservePublication(state.currentDate));
   byId("reserveAdminOpen")?.addEventListener("click",async()=>{
     const s=await validateSession().catch(()=>null);
     if(s){
@@ -1597,14 +1686,14 @@ function bindDayAdmin(){
     const teacherId=tr.querySelector(".reserve-assignee").value;
     const t=teacherOf(teacherId); if(!t)return;
     const changed=String(a.assignedTeacherId)!==String(teacherId);
-    if(changed){
-      const warnings=manualConflictMessages(a.date,[{
-        teacherId:String(t.id),period:Number(a.period),className:a.className,
-        existingId:String(a.id)
-      }],[...new Set(absencesOn(a.date).map(x=>String(x.teacherId)))]);
-      if(warnings.length&&!confirm(`تحذير للإدارة عند التعديل اليدوي:\n\n${warnings.join("\n")}\n\nتجاوز التحذيرات وحفظ التكليف؟`))return;
-    }
-    const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,manualOverride:changed||a.manualOverride===true};
+    const warnings=changed?manualConflictMessages(a.date,[{
+      teacherId:String(t.id),period:Number(a.period),className:a.className,
+      existingId:String(a.id)
+    }],[...new Set(absencesOn(a.date).map(x=>String(x.teacherId)))])
+      :(Array.isArray(a.manualOverrideWarnings)?a.manualOverrideWarnings:[]);
+    const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,
+      manualOverride:changed||a.manualOverride===true,manualOverrideWarnings:warnings};
+    state.lastReserveWarnings={date:a.date,source:"auto",warnings};
     if(changed){data.ackAt="";data.activationTitle="";data.activationAt="";data.ackToken=uid()}
     await patchKind(K.assignment,id,data,token(),a.published?"معتمد":"مسودة");
     await loadAll();
@@ -1621,7 +1710,7 @@ function bindDayAdmin(){
     const url=`${location.origin}${location.pathname}?reserve_ack=${encodeURIComponent(a.ackToken)}#daily-reserve`;
     try{await navigator.clipboard.writeText(url);b.textContent="تم النسخ"}catch(_){prompt("انسخي رابط الاطلاع:",url)}
   });
-  byId("reservePublish")?.addEventListener("click",async()=>{
+  byId("reserveApproveAuto")?.addEventListener("click",async()=>{
     const msg=byId("reserveDayMsg");
     try{
       const items=assignmentsOn(state.currentDate);
@@ -1630,7 +1719,7 @@ function bindDayAdmin(){
         if(!a.assignedTeacherId)continue;
         await patchKind(K.assignment,a.id,{...plainData(a),published:true,status:"معتمد"},token(),"معتمد");
       }
-      await loadAll(); renderPage(); await validateSession(); mountAdminShell();
+      await loadAll(); await renderPage(); await validateSession(); mountAdminShell();
     }catch(err){console.error(err);msg.textContent="تعذر اعتماد الجدول"}
   });
 }
