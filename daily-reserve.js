@@ -546,6 +546,16 @@ function injectStyle(){
   .reserve-table td:first-child,.reserve-table th:first-child{text-align:right}
   .reserve-status{display:inline-flex;padding:4px 8px;border-radius:999px;background:#e8f4f2;color:#0f5f59;font-weight:800;font-size:12px}
   .reserve-status.pending{background:#fff4db;color:#7c5a00}
+  /* Inline actions retain the original six-column public timetable layout. */
+  #dailyReserveRoot .reserve-inline-action{display:inline-flex;justify-content:center;align-items:center;gap:5px;margin:5px 4px 0;padding:6px 9px;border:1px solid #b6d5d0;border-radius:9px;background:#f6fbfa;color:#075c55;font:700 12px inherit;cursor:pointer;line-height:1.45;max-width:100%;white-space:normal}
+  #dailyReserveRoot .reserve-inline-action:disabled{opacity:.55;cursor:wait}
+  #dailyReserveRoot .reserve-row-topic-editor{margin-top:9px;padding:10px;background:#f7fafa;border:1px solid #dce6e8;border-radius:9px;min-width:0}
+  #dailyReserveRoot .reserve-row-topic-editor[hidden]{display:none!important}
+  #dailyReserveRoot .reserve-row-topic-editor label{display:grid;gap:6px;text-align:right;font-size:12px;font-weight:800}
+  #dailyReserveRoot .reserve-row-topic-input{box-sizing:border-box;width:100%;min-width:0;max-width:100%;border:1px solid #c3d1d5;border-radius:8px;padding:9px 8px;font:inherit;font-size:16px}
+  #dailyReserveRoot .reserve-inline-topic-title{display:block;overflow-wrap:anywhere;margin-top:5px;color:#234a54}
+  #dailyReserveRoot .reserve-inline-feedback{display:block;min-height:0;margin-top:4px;color:#9b352e;font-size:12px;line-height:1.5}
+  #dailyReserveRoot .reserve-inline-buttons{display:flex;flex-wrap:wrap;gap:5px}
   .reserve-candidate{display:grid;gap:2px;text-align:right;padding:7px 8px;border:1px solid #e1e7ea;border-radius:9px;background:#fff}
   .reserve-candidate small{color:#687a83}
   .reserve-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -721,6 +731,7 @@ function injectStyle(){
     #dailyReserveRoot{display:block}
     .reserve-table-wrap{border:0;overflow:visible}
     .reserve-table{min-width:0;font-size:11px}
+    .reserve-inline-action,.reserve-row-topic-editor,.reserve-inline-feedback{display:none!important}
   }`;
   document.head.appendChild(s);
 }
@@ -794,15 +805,26 @@ function publicHTML(){
         <button class="btn btn-primary" type="button" id="reservePublish">جدول النشر</button>
         <button class="btn btn-ghost" type="button" id="reserveAdminOpen">دخول الإدارة</button>
         </div>
-        <p class="reserve-public-note">حالتا الاطلاع والتفعيل أدناه للمتابعة فقط. لتأكيد الاطلاع وكتابة موضوع الحصة، افتحي <strong>رابط التكليف الشخصي</strong> المرسل من إدارة المدرسة.</p>
+        <p class="reserve-public-note">يمكن للمعلمة تأكيد الاطلاع وإدخال موضوع الحصة مباشرة من صف تكليفها في الجدول أدناه، دون رابط منفصل. <strong>يُرجى أن تستخدم كل معلمة صفها فقط.</strong></p>
       </div>
       <div class="reserve-table-wrap">
         <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th><th>التفعيل</th></tr></thead>
-        <tbody>${daily.length?daily.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>`<tr>
+        <tbody>${daily.length?daily.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>`<tr data-reserve-public-assignment="${esc(a.id)}">
           <td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td><td>${esc(a.absentTeacherName||"—")}</td>
           <td><strong>${esc(a.assignedTeacherName||"—")}</strong></td>
-          <td>${a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':'<span class="reserve-status pending">بانتظار الاطلاع</span>'}</td>
-          <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status pending">بانتظار التفعيل</span>':'—')}</td>
+          <td>
+            ${a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':`<span class="reserve-status pending">بانتظار الاطلاع</span><button class="reserve-inline-action reserve-row-ack reserve-no-print" type="button" aria-label="تأكيد اطلاع ${esc(a.assignedTeacherName||'المعلمة')} على الحصة ${esc(a.period)}">تأكيد الاطلاع</button>`}
+            <small class="reserve-inline-feedback" data-reserve-inline-feedback="ack" role="status" aria-live="polite"></small>
+          </td>
+          <td>
+            ${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><small class="reserve-inline-topic-title">${esc(a.activationTitle)}</small></div>`:'<span class="reserve-status pending">لم يتم التفعيل</span>'}
+            <button class="reserve-inline-action reserve-row-topic-open reserve-no-print" type="button">${a.activationTitle?'تعديل الموضوع':'إدخال الموضوع'}</button>
+            <div class="reserve-row-topic-editor reserve-no-print" hidden>
+              <label>عنوان موضوع الحصة<input class="reserve-row-topic-input" type="text" maxlength="160" value="${esc(a.activationTitle||'')}" placeholder="اكتبي موضوع حصة الاحتياط" autocomplete="off"></label>
+              <div class="reserve-inline-buttons"><button class="reserve-inline-action reserve-row-topic-save" type="button">حفظ الموضوع</button><button class="reserve-inline-action reserve-row-topic-cancel" type="button">إلغاء</button></div>
+            </div>
+            <small class="reserve-inline-feedback" data-reserve-inline-feedback="topic" role="status" aria-live="polite"></small>
+          </td>
         </tr>`).join(""):`<tr><td colspan="6">لا يوجد جدول احتياط معتمد لهذا اليوم</td></tr>`}</tbody></table>
       </div>
     </section>
@@ -1632,6 +1654,70 @@ function bindPublic(){
     byId("reserveWeeklyHolder").innerHTML=weeklyTableHTML(publicWeeklyRows(ref),ref);
     if(byId("reserveExcellenceHolder"))byId("reserveExcellenceHolder").innerHTML=excellenceTableHTML(ref);
   });
+  // The daily timetable itself contains the actions; no personal links are required.
+  // Each operation is restricted to the acknowledgement token of its own published row.
+  const findInlineAssignment=el=>{
+    const tr=el.closest("tr[data-reserve-public-assignment]");
+    const id=tr?.getAttribute("data-reserve-public-assignment")||"";
+    return state.assignments.find(a=>String(a.id)===id&&a.published===true&&a.status!=="ملغي")||null;
+  };
+  const inlineFeedback=(el,kind,message)=>{
+    const node=el.closest("tr")?.querySelector(`[data-reserve-inline-feedback="${kind}"]`);
+    if(node)node.textContent=message;
+  };
+  document.querySelectorAll(".reserve-row-ack").forEach(btn=>btn.addEventListener("click",async()=>{
+    const assignment=findInlineAssignment(btn);
+    if(!assignment?.ackToken)return inlineFeedback(btn,"ack","لا يوجد تكليف معتمد لهذا الصف.");
+    btn.disabled=true;
+    inlineFeedback(btn,"ack","جارٍ تسجيل الاطلاع...");
+    try{
+      await reserveTeacherCloudAction(assignment.ackToken,"ack");
+      await refreshAndRenderPublic();
+    }catch(err){
+      console.error(err);
+      inlineFeedback(btn,"ack","تعذر تسجيل الاطلاع؛ أعيدي المحاولة.");
+      btn.disabled=false;
+    }
+  }));
+  document.querySelectorAll(".reserve-row-topic-open").forEach(btn=>btn.addEventListener("click",()=>{
+    const assignment=findInlineAssignment(btn);
+    if(!assignment?.ackToken)return inlineFeedback(btn,"topic","لا يوجد تكليف معتمد لهذا الصف.");
+    if(!assignment.ackAt){
+      inlineFeedback(btn,"topic","اضغطي «تأكيد الاطلاع» في نفس الصف أولًا.");
+      return;
+    }
+    const editor=btn.closest("td")?.querySelector(".reserve-row-topic-editor");
+    if(!editor)return;
+    editor.hidden=!editor.hidden;
+    inlineFeedback(btn,"topic","");
+    if(!editor.hidden)editor.querySelector(".reserve-row-topic-input")?.focus();
+  }));
+  document.querySelectorAll(".reserve-row-topic-cancel").forEach(btn=>btn.addEventListener("click",()=>{
+    const editor=btn.closest(".reserve-row-topic-editor");
+    if(editor)editor.hidden=true;
+    inlineFeedback(btn,"topic","");
+  }));
+  document.querySelectorAll(".reserve-row-topic-save").forEach(btn=>btn.addEventListener("click",async()=>{
+    const assignment=findInlineAssignment(btn),editor=btn.closest(".reserve-row-topic-editor");
+    const input=editor?.querySelector(".reserve-row-topic-input");
+    if(!assignment?.ackToken||!assignment.ackAt){
+      inlineFeedback(btn,"topic","يجب تأكيد الاطلاع أولًا.");return;
+    }
+    const title=clean(input?.value||"");
+    if(title.length<3||title.length>160){
+      inlineFeedback(btn,"topic","اكتبي عنوان موضوع من 3 إلى 160 حرفًا.");input?.focus();return;
+    }
+    btn.disabled=true;
+    inlineFeedback(btn,"topic","جارٍ حفظ الموضوع...");
+    try{
+      await reserveTeacherCloudAction(assignment.ackToken,"title",title);
+      await refreshAndRenderPublic();
+    }catch(err){
+      console.error(err);
+      inlineFeedback(btn,"topic","تعذر حفظ الموضوع؛ أعيدي المحاولة.");
+      btn.disabled=false;
+    }
+  }));
   const ack=new URLSearchParams(location.search).get("reserve_ack")||"";
   byId("reserveAckBtn")?.addEventListener("click",async()=>{
     const msg=byId("reserveAckMsg"),btn=byId("reserveAckBtn");
