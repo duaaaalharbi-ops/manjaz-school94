@@ -532,6 +532,122 @@ function injectStyle(){
     .schedule-day{grid-template-columns:80px repeat(7,95px)}
     .schedule-matrix{overflow:auto}
   }
+  /* Reserve-only mobile portrait mode; desktop and print styles stay unchanged. */
+  #dailyReserveRoot .reserve-schedule-slot{display:block;min-width:0}
+  #dailyReserveRoot .reserve-schedule-slot>span{display:none}
+  @media screen and (max-width:900px){
+    #dailyReserveRoot,#dailyReserveRoot>section,
+    #dailyReserveRoot .surface,#dailyReserveRoot .panel,
+    #dailyReserveRoot .reserve-admin-block,
+    #dailyReserveRoot .reserve-admin-only,
+    #dailyReserveRoot .reserve-grid,
+    #dailyReserveRoot #reserveAdminBody,
+    #dailyReserveRoot #reserveWorkspaceBody,
+    #dailyReserveRoot .reserve-table-wrap{
+      min-width:0;max-width:100%;box-sizing:border-box;
+    }
+    #dailyReserveRoot{width:100%;overflow-wrap:anywhere}
+    #dailyReserveRoot .reserve-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+    #dailyReserveRoot .reserve-card-grid{grid-template-columns:minmax(0,1fr);gap:8px}
+    #dailyReserveRoot .reserve-work-card{min-height:0;padding:13px 15px;width:100%}
+    #dailyReserveRoot .reserve-work-card small{font-size:12px}
+    #dailyReserveRoot .reserve-admin-block{padding:12px}
+    #dailyReserveRoot .reserve-admin-only{padding-right:10px}
+    #dailyReserveRoot .panel-head{display:flex;flex-wrap:wrap;gap:8px}
+    #dailyReserveRoot .panel-head>*{max-width:100%;min-width:0}
+    #dailyReserveRoot .reserve-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    #dailyReserveRoot .reserve-tab{min-width:0;min-height:44px;padding:10px 8px;white-space:normal;line-height:1.5}
+    #dailyReserveRoot .form-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+    #dailyReserveRoot .form-grid>label,#dailyReserveRoot .form-grid>.wide{width:100%;min-width:0;max-width:100%;grid-column:1/-1}
+    #dailyReserveRoot input:not([type=hidden]),
+    #dailyReserveRoot select,
+    #dailyReserveRoot textarea{
+      box-sizing:border-box;max-width:100%;min-width:0;width:100%;
+      font-size:16px;min-height:44px;
+    }
+    #dailyReserveRoot .reserve-multi-select{min-height:190px;padding:10px}
+    #dailyReserveRoot .form-actions{display:flex;flex-wrap:wrap;gap:8px}
+    #dailyReserveRoot .form-actions>button{
+      flex:1 1 100%;width:100%;max-width:100%;min-height:46px;white-space:normal;
+    }
+    #dailyReserveRoot .reserve-hijri-date{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+      padding:11px;max-width:100%;
+    }
+    #dailyReserveRoot .reserve-hijri-date>strong{
+      grid-row:1;grid-column:1/-1;min-width:0;width:100%;line-height:1.5;
+    }
+    #dailyReserveRoot .reserve-hijri-date>button{min-width:0;min-height:44px;white-space:normal}
+    #dailyReserveRoot .reserve-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}
+    #dailyReserveRoot .reserve-table-wrap{overflow:visible;border:0;background:transparent}
+    #dailyReserveRoot .reserve-table,
+    #dailyReserveRoot .reserve-table tbody{
+      display:block;width:100%;min-width:0;max-width:100%;
+    }
+    #dailyReserveRoot .reserve-table thead{display:none}
+    #dailyReserveRoot .reserve-table tbody tr{
+      display:grid;grid-template-columns:minmax(0,1fr);
+      gap:0;margin:0 0 12px;padding:10px 12px;
+      width:100%;min-width:0;max-width:100%;box-sizing:border-box;
+      background:#fff;border:1px solid #dce6e7;border-radius:12px;
+    }
+    #dailyReserveRoot .reserve-table tbody td:not([colspan]){
+      display:grid;grid-template-columns:minmax(92px,36%) minmax(0,1fr);
+      gap:8px;align-items:start;min-width:0;max-width:100%;
+      padding:10px 0;text-align:right;vertical-align:top;
+      border-bottom:1px solid #eef1f2;
+      overflow-wrap:anywhere;
+    }
+    #dailyReserveRoot .reserve-table tbody td:last-child{border-bottom:0}
+    #dailyReserveRoot .reserve-table tbody td:not([colspan])::before{
+      content:attr(data-reserve-label);color:#58707b;
+      font-size:12px;font-weight:800;align-self:start;
+    }
+    #dailyReserveRoot .reserve-table tbody td.reserve-mobile-select-cell{
+      display:flex;flex-direction:column;align-items:stretch;gap:7px;
+    }
+    #dailyReserveRoot .reserve-table tbody td.reserve-mobile-select-cell::before{
+      display:block;content:attr(data-reserve-label);
+    }
+    #dailyReserveRoot .reserve-table tbody td select{
+      display:block;width:100%;max-width:100%;min-width:0;min-height:48px;
+      padding:12px 9px;background:#fff;border:1px solid #bdced2;
+      border-radius:10px;color:#102d3b;text-align:right;direction:rtl;
+    }
+    #dailyReserveRoot .reserve-table tbody td[colspan]{
+      display:block;text-align:center;white-space:normal;padding:13px 7px;
+    }
+    #dailyReserveRoot .reserve-table .reserve-candidate{min-width:0;padding:9px;margin-bottom:5px}
+    #dailyReserveRoot .reserve-table .reserve-actions{
+      display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%;
+    }
+    #dailyReserveRoot .reserve-table .reserve-actions button,
+    #dailyReserveRoot .reserve-table button.reserve-mini{
+      display:block;width:100%;min-height:44px;white-space:normal;
+    }
+    #dailyReserveRoot .reserve-table .reserve-count-approved,
+    #dailyReserveRoot .reserve-table .reserve-count-ack{border-radius:7px;padding-right:6px!important}
+    #dailyReserveRoot .reserve-admin-list,
+    #dailyReserveRoot .reserve-teacher-row{min-width:0;max-width:100%}
+    #dailyReserveRoot .reserve-teacher-row{overflow-wrap:anywhere}
+    #dailyReserveRoot .reserve-teacher-row .reserve-actions{
+      display:grid;grid-template-columns:minmax(0,1fr);gap:8px;
+    }
+    #dailyReserveRoot .reserve-teacher-row .reserve-actions button{min-height:44px}
+    #dailyReserveRoot .schedule-matrix{overflow:visible;max-width:100%;width:100%}
+    #dailyReserveRoot .schedule-day{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;padding:12px 10px;margin-bottom:10px;
+      border:1px solid #dce6e7;border-radius:12px;
+      min-width:0;max-width:100%;box-sizing:border-box;
+    }
+    #dailyReserveRoot .schedule-day>strong{grid-column:1/-1}
+    #dailyReserveRoot .reserve-schedule-slot{display:grid;gap:5px;min-width:0}
+    #dailyReserveRoot .reserve-schedule-slot>span{display:block;color:#536b74;font-size:12px;font-weight:800}
+    #dailyReserveRoot .reserve-schedule-slot>input{width:100%;min-width:0}
+    #dailyReserveRoot .reserve-activation-box,
+    #dailyReserveRoot .reserve-ack{min-width:0;max-width:100%;box-sizing:border-box}
+  }
   @media print{
     .sidebar,.mobile-nav,.reserve-no-print,.manjaz-brand-header,#manjazVersionBadge{display:none!important}
     .content{margin:0!important;padding:0!important}
@@ -540,6 +656,30 @@ function injectStyle(){
     .reserve-table{min-width:0;font-size:11px}
   }`;
   document.head.appendChild(s);
+}
+
+
+// Layout-only enhancement: attach readable field captions to each table cell.
+// This does not change records, nominations, saves, or existing event handlers.
+function decorateReservePortraitTables(root){
+  if(!root)return;
+  const decorate=()=>{
+    root.querySelectorAll(".reserve-table").forEach(table=>{
+      const headings=[...table.querySelectorAll("thead tr:first-child th")]
+        .map(th=>th.textContent.trim());
+      table.querySelectorAll("tbody tr").forEach(tr=>{
+        [...tr.children].forEach((cell,i)=>{
+          if(cell.tagName!=="TD"||cell.hasAttribute("colspan"))return;
+          if(headings[i])cell.setAttribute("data-reserve-label",headings[i]);
+          cell.classList.toggle("reserve-mobile-select-cell",!!cell.querySelector("select"));
+        });
+      });
+    });
+  };
+  decorate();
+  if(root.dataset.reservePortraitObserver==="1")return;
+  root.dataset.reservePortraitObserver="1";
+  new MutationObserver(decorate).observe(root,{childList:true,subtree:true});
 }
 
 function publicHTML(){
@@ -1039,7 +1179,7 @@ function scheduleEditorHTML(t){
   const s=scheduleOf(t.id),tt=s?.timetable||{};
   return `<div class="panel-head"><h3>الجدول المدرسي — ${esc(t.name)}</h3><button class="reserve-mini" id="reserveCloseTeacherEditor">إغلاق</button></div>
     <p class="reserve-public-note">اكتبي اسم الفصل/الحصة في الخانة المشغولة، واتركي الخانة فارغة إذا كانت المعلمة متاحة للاحتياط.</p>
-    <div class="schedule-matrix">${DAYS.map(d=>{const ps=(d[0]==="sun"||d[0]==="mon")?PERIODS:PERIODS.slice(0,6);return `<div class="schedule-day"><strong>${d[1]}</strong>${ps.map(p=>`<input data-day="${d[0]}" data-period="${p}" placeholder="ح${p}" value="${esc(tt?.[d[0]]?.[p-1]||"")}">`).join("")}</div>`}).join("")}</div>
+    <div class="schedule-matrix">${DAYS.map(d=>{const ps=(d[0]==="sun"||d[0]==="mon")?PERIODS:PERIODS.slice(0,6);return `<div class="schedule-day"><strong>${d[1]}</strong>${ps.map(p=>`<label class="reserve-schedule-slot"><span>الحصة ${p}</span><input aria-label="${d[1]} الحصة ${p}" data-day="${d[0]}" data-period="${p}" placeholder="ح${p}" value="${esc(tt?.[d[0]]?.[p-1]||"")}"></label>`).join("")}</div>`}).join("")}</div>
     <div class="form-actions"><button class="btn btn-primary" id="reserveSaveSchedule" data-teacher="${esc(t.id)}">حفظ الجدول</button></div>`;
 }
 function settingsHTML(){
@@ -1393,6 +1533,7 @@ async function renderPage(){
     await loadAll();
     if(!isRoute())return;
     view.innerHTML=publicHTML();
+    decorateReservePortraitTables(byId("dailyReserveRoot"));
     bindPublic();
     const s=await validateSession().catch(()=>null);
     if(s)state.admin=s;
