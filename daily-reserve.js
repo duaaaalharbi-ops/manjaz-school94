@@ -370,7 +370,9 @@ function publishedAssignments(){
 }
 function assignmentCounts(referenceDate){
   const wr=weekRange(referenceDate),start=termStart()||COUNT_START,countStart=state.settings?.countStart||COUNT_START;
-  const pub=publishedAssignments().filter(a=>!countStart||a.date>=countStart);
+  // Count approved substitutions for their actual date/week. Keep the official
+  // countStart/termStart limits for cumulative totals only.
+  const pub=publishedAssignments();
   const map=new Map();
   [...state.teachers,...MANUAL_SUPPORT_STAFF].forEach(t=>map.set(String(t.id),{
     daily:0,week:0,term:0,
@@ -381,7 +383,7 @@ function assignmentCounts(referenceDate){
   const dailyBuckets=new Map();
   pub.forEach(a=>{
     const s=map.get(String(a.assignedTeacherId)); if(!s)return;
-    if(!start||a.date>=start)s.term++;
+    if(a.date<=referenceDate&&(!start||a.date>=start)&&(!countStart||a.date>=countStart))s.term++;
     if(inRange(a.date,wr.start,wr.end)){
       s.week++;
       if(s.days[a.dayKey]!=null){
@@ -402,7 +404,9 @@ function assignmentCounts(referenceDate){
   state.adjustments.forEach(a=>{
     const s=map.get(String(a.teacherId)); if(!s)return;
     const delta=Number(a.delta||0); if(!delta)return;
-    if(!start||clean(a.date||a.weekStart)>=start)s.term=Math.max(0,Number(s.term||0)+delta);
+    const adjustmentDate=clean(a.date||a.weekStart);
+    if(adjustmentDate<=referenceDate&&(!start||adjustmentDate>=start)&&(!countStart||adjustmentDate>=countStart))
+      s.term=Math.max(0,Number(s.term||0)+delta);
     if(clean(a.weekStart)===wr.start){
       s.week=Math.max(0,Number(s.week||0)+delta);
       if(a.date===referenceDate)s.daily=Math.max(0,Number(s.daily||0)+delta);
@@ -760,9 +764,30 @@ function decorateReservePortraitTables(root){
   new MutationObserver(decorate).observe(root,{childList:true,subtree:true});
 }
 
+// One renderer for initial display and for refresh after manual/automatic saves.
+function publicDayRowsHTML(date){
+  const daily=assignmentsOn(date).filter(x=>x.published===true);
+  return `${daily.length?daily.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>`<tr data-reserve-public-assignment="${esc(a.id)}">
+          <td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td><td>${esc(a.absentTeacherName||"—")}</td>
+          <td><strong>${esc(a.assignedTeacherName||"—")}</strong></td>
+          <td>
+            ${a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':`<span class="reserve-status pending">بانتظار الاطلاع</span><button class="reserve-inline-action reserve-row-ack reserve-no-print" type="button" aria-label="تأكيد اطلاع ${esc(a.assignedTeacherName||'المعلمة')} على الحصة ${esc(a.period)}">تأكيد الاطلاع</button>`}
+            <small class="reserve-inline-feedback" data-reserve-inline-feedback="ack" role="status" aria-live="polite"></small>
+          </td>
+          <td>
+            ${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><small class="reserve-inline-topic-title">${esc(a.activationTitle)}</small></div>`:'<span class="reserve-status pending">لم يتم التفعيل</span>'}
+            <button class="reserve-inline-action reserve-row-topic-open reserve-no-print" type="button">${a.activationTitle?'تعديل الموضوع':'إدخال الموضوع'}</button>
+            <div class="reserve-row-topic-editor reserve-no-print" hidden>
+              <label>عنوان موضوع الحصة<input class="reserve-row-topic-input" type="text" maxlength="160" value="${esc(a.activationTitle||'')}" placeholder="اكتبي موضوع حصة الاحتياط" autocomplete="off"></label>
+              <div class="reserve-inline-buttons"><button class="reserve-inline-action reserve-row-topic-save" type="button">حفظ الموضوع</button><button class="reserve-inline-action reserve-row-topic-cancel" type="button">إلغاء</button></div>
+            </div>
+            <small class="reserve-inline-feedback" data-reserve-inline-feedback="topic" role="status" aria-live="polite"></small>
+          </td>
+        </tr>`).join(""):`<tr><td colspan="6">لا يوجد جدول احتياط معتمد لهذا اليوم</td></tr>`}`;
+}
+
 function publicHTML(){
   const date=state.currentDate,wr=weekRange(date);
-  const daily=assignmentsOn(date).filter(x=>x.published===true);
   const rows=publicWeeklyRows(date);
   const ackToken=new URLSearchParams(location.search).get("reserve_ack")||"";
   const ack=ackToken?state.assignments.find(x=>x.ackToken===ackToken&&x.published===true):null;
@@ -809,23 +834,7 @@ function publicHTML(){
       </div>
       <div class="reserve-table-wrap">
         <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th><th>التفعيل</th></tr></thead>
-        <tbody>${daily.length?daily.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>`<tr data-reserve-public-assignment="${esc(a.id)}">
-          <td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td><td>${esc(a.absentTeacherName||"—")}</td>
-          <td><strong>${esc(a.assignedTeacherName||"—")}</strong></td>
-          <td>
-            ${a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':`<span class="reserve-status pending">بانتظار الاطلاع</span><button class="reserve-inline-action reserve-row-ack reserve-no-print" type="button" aria-label="تأكيد اطلاع ${esc(a.assignedTeacherName||'المعلمة')} على الحصة ${esc(a.period)}">تأكيد الاطلاع</button>`}
-            <small class="reserve-inline-feedback" data-reserve-inline-feedback="ack" role="status" aria-live="polite"></small>
-          </td>
-          <td>
-            ${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><small class="reserve-inline-topic-title">${esc(a.activationTitle)}</small></div>`:'<span class="reserve-status pending">لم يتم التفعيل</span>'}
-            <button class="reserve-inline-action reserve-row-topic-open reserve-no-print" type="button">${a.activationTitle?'تعديل الموضوع':'إدخال الموضوع'}</button>
-            <div class="reserve-row-topic-editor reserve-no-print" hidden>
-              <label>عنوان موضوع الحصة<input class="reserve-row-topic-input" type="text" maxlength="160" value="${esc(a.activationTitle||'')}" placeholder="اكتبي موضوع حصة الاحتياط" autocomplete="off"></label>
-              <div class="reserve-inline-buttons"><button class="reserve-inline-action reserve-row-topic-save" type="button">حفظ الموضوع</button><button class="reserve-inline-action reserve-row-topic-cancel" type="button">إلغاء</button></div>
-            </div>
-            <small class="reserve-inline-feedback" data-reserve-inline-feedback="topic" role="status" aria-live="polite"></small>
-          </td>
-        </tr>`).join(""):`<tr><td colspan="6">لا يوجد جدول احتياط معتمد لهذا اليوم</td></tr>`}</tbody></table>
+        <tbody id="reservePublicDayBody">${publicDayRowsHTML(date)}</tbody></table>
       </div>
     </section>
 
@@ -1156,6 +1165,7 @@ async function saveManualAssignments(){
     }
     await loadAll();
     state.currentDate=date;
+    refreshReserveStatisticsViews();
     renderWorkspaceCard("manual");
     const done=byId("reserveManualMsg");
     if(done)done.textContent="تم حفظ واعتماد الحصص. النسخة النهائية متاحة من أيقونة «جدول النشر» بالأعلى.";
@@ -1207,7 +1217,8 @@ function bindManualAdmin(){
 
 function rankingOverviewRows(referenceDate){
   const counts=assignmentCounts(referenceDate),wrPrev=previousWeekRange(referenceDate);
-  const rows=state.teachers.filter(reserveSummaryEligible).map(t=>{
+  const rows=state.teachers.filter(t=>reserveSummaryEligible(t)||
+    (!teacherFlags(t).absolute&&Number(counts.get(String(t.id))?.week||0)>0)).map(t=>{
     const c=counts.get(String(t.id))||{daily:0,week:0,term:0};
     const flags=teacherFlags(t),missed=currentWeekAbsenceLoad(t.id,referenceDate);
     const effective=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
@@ -1253,7 +1264,8 @@ function bindRankingAdmin(){
 
 function excellenceMetrics(referenceDate){
   const wr=weekRange(referenceDate),start=termStart()||COUNT_START;
-  const items=publishedAssignments().filter(a=>a.date>=start&&a.date<=wr.end);
+  const countStart=state.settings?.countStart||COUNT_START;
+  const items=publishedAssignments().filter(a=>a.date<=wr.end);
   const byTeacher=new Map();
   const ensure=id=>{
     if(!byTeacher.has(id))byTeacher.set(id,{teacher:teacherOf(id),weekAssignments:[],allAssignments:[],daily:{},titles:[]});
@@ -1261,7 +1273,8 @@ function excellenceMetrics(referenceDate){
   };
   items.forEach(a=>{
     const id=String(a.assignedTeacherId),x=ensure(id); if(!x.teacher)return;
-    x.allAssignments.push(a);
+    // Cumulative merit never includes dates before the approved counting start.
+    if(a.date>=start&&a.date>=countStart)x.allAssignments.push(a);
     if(inRange(a.date,wr.start,wr.end)){
       x.weekAssignments.push(a);
       x.daily[a.date]=(x.daily[a.date]||[]).concat(a);
@@ -1628,6 +1641,23 @@ function bindStatsAdmin(){
   document.querySelectorAll(".reserve-export-xls").forEach(b=>b.onclick=()=>exportExcel(b.dataset.range));
 }
 
+// Update the daily table, weekly counters and excellence board in place;
+// retain the selected week, admin workspace and all existing event listeners.
+function refreshReserveStatisticsViews(){
+  const dailyBody=byId("reservePublicDayBody");
+  if(dailyBody){
+    dailyBody.innerHTML=publicDayRowsHTML(state.currentDate);
+    decorateReservePortraitTables(byId("dailyReserveRoot"));
+    bindPublicDailyActions();
+  }
+  const shift=Number(document.querySelector("[data-week-shift].active")?.dataset.weekShift||0);
+  const reference=addDays(state.currentDate,shift);
+  const weekly=byId("reserveWeeklyHolder");
+  if(weekly)weekly.innerHTML=weeklyTableHTML(publicWeeklyRows(reference),reference);
+  const excellence=byId("reserveExcellenceHolder");
+  if(excellence)excellence.innerHTML=excellenceTableHTML(reference);
+}
+
 async function refreshAndRenderPublic(){
   await loadAll(); renderPage();
 }
@@ -1636,26 +1666,7 @@ function mountAdminShell(){
   mount.innerHTML=state.admin?adminHTML():loginHTML();
   if(state.admin)bindAdminShell(); else bindLogin();
 }
-function bindPublic(){
-  bindHijriDateControl("reservePublicDate",async next=>{state.currentDate=next;renderPage()});
-  byId("reservePrint")?.addEventListener("click",()=>window.print());
-  byId("reservePublish")?.addEventListener("click",()=>openReservePublication(state.currentDate));
-  byId("reserveAdminOpen")?.addEventListener("click",async()=>{
-    const s=await validateSession().catch(()=>null);
-    if(s){
-      state.admin=s;
-      try{await ensureSeedV6()}catch(err){console.error("تعذر تهيئة بيانات الإصدار السادس",err)}
-    }
-    mountAdminShell(); byId("reserveAdminMount")?.scrollIntoView({behavior:"smooth"});
-  });
-  document.querySelectorAll("[data-week-shift]").forEach(b=>b.onclick=()=>{
-    document.querySelectorAll("[data-week-shift]").forEach(x=>x.classList.toggle("active",x===b));
-    const ref=addDays(state.currentDate,Number(b.dataset.weekShift||0));
-    byId("reserveWeeklyHolder").innerHTML=weeklyTableHTML(publicWeeklyRows(ref),ref);
-    if(byId("reserveExcellenceHolder"))byId("reserveExcellenceHolder").innerHTML=excellenceTableHTML(ref);
-  });
-  // The daily timetable itself contains the actions; no personal links are required.
-  // Each operation is restricted to the acknowledgement token of its own published row.
+function bindPublicDailyActions(){
   const findInlineAssignment=el=>{
     const tr=el.closest("tr[data-reserve-public-assignment]");
     const id=tr?.getAttribute("data-reserve-public-assignment")||"";
@@ -1718,6 +1729,29 @@ function bindPublic(){
       btn.disabled=false;
     }
   }));
+}
+
+function bindPublic(){
+  bindHijriDateControl("reservePublicDate",async next=>{state.currentDate=next;renderPage()});
+  byId("reservePrint")?.addEventListener("click",()=>window.print());
+  byId("reservePublish")?.addEventListener("click",()=>openReservePublication(state.currentDate));
+  byId("reserveAdminOpen")?.addEventListener("click",async()=>{
+    const s=await validateSession().catch(()=>null);
+    if(s){
+      state.admin=s;
+      try{await ensureSeedV6()}catch(err){console.error("تعذر تهيئة بيانات الإصدار السادس",err)}
+    }
+    mountAdminShell(); byId("reserveAdminMount")?.scrollIntoView({behavior:"smooth"});
+  });
+  document.querySelectorAll("[data-week-shift]").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll("[data-week-shift]").forEach(x=>x.classList.toggle("active",x===b));
+    const ref=addDays(state.currentDate,Number(b.dataset.weekShift||0));
+    byId("reserveWeeklyHolder").innerHTML=weeklyTableHTML(publicWeeklyRows(ref),ref);
+    if(byId("reserveExcellenceHolder"))byId("reserveExcellenceHolder").innerHTML=excellenceTableHTML(ref);
+  });
+  // The daily timetable itself contains the actions; no personal links are required.
+  // Each operation is restricted to the acknowledgement token of its own published row.
+  bindPublicDailyActions();
   const ack=new URLSearchParams(location.search).get("reserve_ack")||"";
   byId("reserveAckBtn")?.addEventListener("click",async()=>{
     const msg=byId("reserveAckMsg"),btn=byId("reserveAckBtn");
@@ -1876,11 +1910,13 @@ function bindDayAdmin(){
     await patchKind(K.assignment,id,data,token(),a.published?"معتمد":"مسودة");
     await loadAll();
     await refreshDayCandidates(state.currentDate);
+    refreshReserveStatisticsViews();
     renderWorkspaceCard("auto");
   });
   document.querySelectorAll(".reserve-delete-assignment").forEach(b=>b.onclick=async()=>{
     const tr=b.closest("[data-assignment]"); if(!confirm("حذف هذا التكليف؟"))return;
-    await deleteKind(K.assignment,tr.dataset.assignment,token()); await loadAll(); renderWorkspaceCard("auto");
+    await deleteKind(K.assignment,tr.dataset.assignment,token()); await loadAll();
+    refreshReserveStatisticsViews();renderWorkspaceCard("auto");
   });
   // The teacher link is generated only for the assigned teacher; status badges in the public table are read-only.
   const teacherActionUrl=a=>`${location.origin}${location.pathname}?reserve_ack=${encodeURIComponent(a.ackToken)}#daily-reserve`;
