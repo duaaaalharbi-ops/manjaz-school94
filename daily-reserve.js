@@ -1369,12 +1369,18 @@ function publicationHTML(date){
     <h1>جدول النشر — الاحتياط اليومي</h1>
     <p class="reserve-publication-school">الثانوية الرابعة والتسعون – مسارات</p>
     <table><thead><tr>
-      <th>المعلمة الغائبة</th><th>الحصة</th><th>الفصل</th><th>المعلمة المسند لها الاحتياط</th><th>التوقيع</th>
-    </tr></thead><tbody>${items.length?items.map(a=>`<tr>
+      <th>المعلمة الغائبة</th><th>الحصة</th><th>الفصل</th><th>المعلمة المسند لها الاحتياط</th><th>عنوان التفعيل</th><th>حالة الاطلاع</th><th>حالة التفعيل</th><th>التوقيع</th>
+    </tr></thead><tbody>${items.length?items.map(a=>{
+      const title=clean(a.activationTitle||"");
+      const acknowledged=Boolean(clean(a.ackAt||""));
+      return `<tr class="reserve-publication-period reserve-publication-period-${Number(a.period)}">
       <td>${esc(a.absentTeacherName||"—")}</td><td>${esc(a.period)}</td>
       <td>${esc(a.className||"—")}</td><td>${esc(a.assignedTeacherName||"—")}</td>
+      <td class="reserve-publication-title">${title?esc(title):"—"}</td>
+      <td><span class="reserve-publication-status ${acknowledged?"reserve-publication-read":"reserve-publication-unread"}">${acknowledged?"تم الاطلاع":"لم يتم الاطلاع"}</span></td>
+      <td><span class="reserve-publication-status ${title?"reserve-publication-activated":"reserve-publication-not-activated"}">${title?"تم التفعيل":"لم يتم التفعيل"}</span></td>
       <td class="reserve-publication-signature"></td>
-    </tr>`).join(""):`<tr><td colspan="5">لا توجد حصص احتياط معتمدة لهذا اليوم</td></tr>`}</tbody></table>
+    </tr>`}).join(""):`<tr><td colspan="8">لا توجد حصص احتياط معتمدة لهذا اليوم</td></tr>`}</tbody></table>
     <section class="reserve-publication-summary">
       <h2>إحصائية نهاية الجدول</h2>
       <div class="reserve-publication-totals"><span>إجمالي حصص الاحتياط: <b>${stats.periods}</b></span>
@@ -1391,9 +1397,10 @@ function ensureReservePublicationStyles(){
   style.id="reservePublishPrintStyle";
   style.textContent=`
     #reservePublishOverlay{position:fixed;inset:0;z-index:2147481000;background:rgba(21,39,47,.68);overflow:auto;padding:16px;box-sizing:border-box;direction:rtl}
-    #reservePublishOverlay .reserve-publish-content{max-width:850px;margin:0 auto 20px;background:#fff;border-radius:12px;box-shadow:0 12px 50px rgba(0,0,0,.18);padding:14px;box-sizing:border-box}
+    #reservePublishOverlay .reserve-publish-content{max-width:1150px;margin:0 auto 20px;background:#fff;border-radius:12px;box-shadow:0 12px 50px rgba(0,0,0,.18);padding:14px;box-sizing:border-box}
     #reservePublishOverlay .reserve-publish-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
     #reservePublishOverlay .reserve-publish-status{color:#36515a;font-size:12px;flex:1;min-width:180px}
+    #reservePublishOverlay .reserve-publish-preview-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
     #reservePublishSheet{display:block!important;color:#172c34;background:white;direction:rtl;line-height:1.6;font:12px Tahoma,Arial,sans-serif}
     #reservePublishSheet .reserve-publication-date{display:flex;justify-content:space-between;gap:12px;border-bottom:2px solid #0f5f59;padding-bottom:7px;font-size:14px;flex-wrap:wrap}
     #reservePublishSheet h1{text-align:center;margin:9px 0 0;font-size:20px;color:#123e50}
@@ -1401,11 +1408,29 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet table{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center}
     #reservePublishSheet th,#reservePublishSheet td{border:1px solid #637982;padding:8px 5px;vertical-align:middle;overflow-wrap:anywhere}
     #reservePublishSheet th{background:#edf3f3!important;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #reservePublishSheet th:nth-child(1){width:24%}
-    #reservePublishSheet th:nth-child(2){width:9%}
-    #reservePublishSheet th:nth-child(3){width:14%}
-    #reservePublishSheet th:nth-child(4){width:34%}
-    #reservePublishSheet th:nth-child(5){width:19%}
+    /* لكل حصة لون موحّد عبر كل صفوفها، في المعاينة وملف PDF والطباعة */
+    #reservePublishSheet tr.reserve-publication-period-1 > td{background-color:#DDF4F0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #reservePublishSheet tr.reserve-publication-period-2 > td{background-color:#E6F0FB!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #reservePublishSheet tr.reserve-publication-period-3 > td{background-color:#FFF2D8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #reservePublishSheet tr.reserve-publication-period-4 > td{background-color:#E8F4DA!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #reservePublishSheet tr.reserve-publication-period-5 > td{background-color:#FAE5ED!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #reservePublishSheet tr.reserve-publication-period-6 > td{background-color:#EFE7FA!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #reservePublishSheet tr.reserve-publication-period-7 > td{background-color:#F8E9D7!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #reservePublishSheet .reserve-publication-period > td{color:#172c34!important}
+    #reservePublishSheet th:nth-child(1){width:17%}
+    #reservePublishSheet th:nth-child(2){width:6%}
+    #reservePublishSheet th:nth-child(3){width:9%}
+    #reservePublishSheet th:nth-child(4){width:18%}
+    #reservePublishSheet th:nth-child(5){width:17%}
+    #reservePublishSheet th:nth-child(6){width:12%}
+    #reservePublishSheet th:nth-child(7){width:12%}
+    #reservePublishSheet th:nth-child(8){width:9%}
+    #reservePublishSheet .reserve-publication-status{display:inline-block;padding:3px 4px;border-radius:5px;font-weight:700;line-height:1.35;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    #reservePublishSheet .reserve-publication-read{background:#d5f4df!important;color:#126536!important;border:1px solid #57ae78!important}
+    #reservePublishSheet .reserve-publication-unread{background:#ffe4e5!important;color:#b21d29!important;border:1px solid #d9878c!important}
+    #reservePublishSheet .reserve-publication-activated{background:#e3eef8!important;color:#23557a!important;border:1px solid #9dbcd2!important}
+    #reservePublishSheet .reserve-publication-not-activated{background:#f1f1f1!important;color:#4e545a!important;border:1px solid #bdc5c8!important}
+    #reservePublishSheet .reserve-publication-title{overflow-wrap:anywhere;white-space:normal}
     #reservePublishSheet tr{break-inside:avoid;page-break-inside:avoid}
     #reservePublishSheet .reserve-publication-signature{height:24px}
     #reservePublishSheet .reserve-publication-summary{border:1px solid #637982;margin-top:14px;padding:9px;break-inside:avoid;page-break-inside:avoid}
@@ -1413,6 +1438,9 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet .reserve-publication-totals{display:flex;gap:12px;flex-wrap:wrap}
     #reservePublishSheet .reserve-publication-summary p{margin:8px 0 0}
     #reservePublishSheet .reserve-publication-footer{text-align:center;border-top:1px solid #9cb3b7;margin-top:14px;padding-top:6px;font-size:10px}
+    @media(max-width:700px){
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{min-width:940px}
+    }
     @media(max-width:480px){
       #reservePublishOverlay{padding:8px}
       #reservePublishOverlay .reserve-publish-content{padding:8px}
@@ -1421,15 +1449,22 @@ function ensureReservePublicationStyles(){
       #reservePublishSheet h1{font-size:17px}
     }
     @media print{
-      @page{size:A4 portrait;margin:12mm}
+      @page{size:A4 landscape;margin:10mm}
       body > :not(#reservePublishOverlay):not(#reservePublishPrintStyle){display:none!important}
       html,body{background:#fff!important;color:#172c34!important;margin:0!important;padding:0!important;width:100%!important}
       #reservePublishOverlay{position:static!important;inset:auto!important;padding:0!important;background:#fff!important;overflow:visible!important}
       #reservePublishOverlay .reserve-publish-content{max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;border:0!important}
       #reservePublishOverlay .reserve-publish-actions{display:none!important}
-      #reservePublishSheet{font-size:11px!important}
-      #reservePublishSheet th,#reservePublishSheet td{padding:8px 5px!important}
-      #reservePublishSheet h1{font-size:19px!important}
+      #reservePublishOverlay .reserve-publish-preview-scroll{overflow:visible!important}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{min-width:0!important}
+      #reservePublishSheet{font-size:11px!important;line-height:1.28!important}
+      #reservePublishSheet th,#reservePublishSheet td{padding:2px 4px!important;line-height:1.28!important}
+      #reservePublishSheet .reserve-publication-status{padding:2px 3px!important}
+      #reservePublishSheet .reserve-publication-signature{height:17px!important}
+      #reservePublishSheet h1{font-size:18px!important;margin:6px 0 0!important}
+      #reservePublishSheet .reserve-publication-school{margin:0 0 7px!important}
+      #reservePublishSheet .reserve-publication-summary{margin-top:8px!important;padding:7px!important}
+      #reservePublishSheet .reserve-publication-footer{margin-top:6px!important;padding-top:3px!important}
     }`;
   document.head.appendChild(style);
 }
@@ -1448,7 +1483,7 @@ function openReservePublication(date){
       <button type="button" class="btn btn-ghost" id="reservePublishPrintCopy">طباعة</button>
       <button type="button" class="btn btn-ghost" id="reservePublishClose">إغلاق</button>
       <span class="reserve-publish-status" id="reservePublishStatus">نسخة موحدة لجميع التكليفات المعتمدة لهذا اليوم، سواء أُنشئت يدويًا أو آليًا.</span>
-    </div>${publicationHTML(date)}</div>`;
+    </div><div class="reserve-publish-preview-scroll">${publicationHTML(date)}</div></div>`;
   document.body.appendChild(overlay);
   byId("reservePublishClose")?.addEventListener("click",()=>overlay.remove());
   overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove()});
@@ -1479,7 +1514,7 @@ async function downloadReservePublicationPDF(date){
       margin:[10,9,10,9],filename:`جدول_النشر_${date}.pdf`,
       image:{type:"jpeg",quality:0.98},
       html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
-      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
       pagebreak:{mode:["css","legacy"]}
     }).from(sheet).save();
     msg.textContent="تم إعداد ملف جدول النشر بصيغة PDF.";
