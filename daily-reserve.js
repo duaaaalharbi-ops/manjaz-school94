@@ -40,7 +40,7 @@ const MANUAL_SUPPORT_STAFF=[
   {id:"reserve_support_3",name:"نجلاء هوساوي",supportStaff:true,role:"التوجيه الطلابي / المختبر"}
 ];
 const V6_SEED=[{"name":"أفراح الجدعاني","workload":9,"timetable":{"sun":["","","","","","أول6","ثالث3"],"mon":["أول6","","أول4","","","ثالث3",""],"tue":["","أول5","","","",""],"wed":["أول5","","","أول4","",""],"thu":["","ثالث3","","","",""]}},{"name":"أيمان الجدعاني","workload":20,"timetable":{"sun":["ثاني6","","","","ثاني3","ثاني1","ثاني2"],"mon":["ثاني2","","ثاني6","ثاني1","","","ثاني4"],"tue":["ثاني6","","","ثاني4","ثاني3","ثاني1"],"wed":["ثاني2","ثاني4","","","ثاني3","ثاني6"],"thu":["ثاني3","ثاني1","","ثاني2","ثاني4",""]}},{"name":"بدريه الحربي","workload":11,"timetable":{"sun":["","ثاني4","","","ثاني4|نشاط","","ثاني5"],"mon":["ثاني6","","","ثاني5","ثاني4|نشاط","",""],"tue":["","","","","","ثاني4"],"wed":["","","","ثاني6","ثاني4",""],"thu":["ثاني5","ثاني6","","","",""]}},{"name":"بدريه السلمي","workload":16,"timetable":{"sun":["","ثالث1|نشاط","ثالث2","ثالث3","","","ثالث1"],"mon":["","","ثالث3","","","ثالث1","ثالث2"],"tue":["","ثالث2","ثالث1","","","ثالث3"],"wed":["ثالث1","","","","ثالث3","ثالث2"],"thu":["","ثالث1","","ثالث2","ثالث3",""]}},{"name":"تهاني العتيبي","workload":22,"timetable":{"sun":["أول1","أول2","","ثالث2","ثالث3","ثالث1",""],"mon":["ثالث2","ثالث3","","أول2","ثالث1","أول1",""],"tue":["ثالث1","أول1","","أول2","ثالث3",""],"wed":["ثالث2","ثالث1","","أول1","أول2",""],"thu":["ثالث3","","","أول1","أول2","ثالث2"]}},{"name":"حصة المنتشري","workload":20,"timetable":{"sun":["أول6","ثاني2","ثاني1","ثاني3","","",""],"mon":["","ثاني3","ثاني1","أول6","","ثاني2",""],"tue":["أول6","","ثاني3","ثاني2","ثاني1",""],"wed":["ثاني3","أول6","","ثاني2","ثاني1",""],"thu":["ثاني2","ثاني3","ثاني1","أول6","",""]}},{"name":"حنان المجنوني","workload":13,"timetable":{"sun":["ثالث5","ثالث2","","","","ثالث3","ثالث4"],"mon":["","ثالث1","","","ثالث6","","ثالث3"],"tue":["","ثالث5","","","ثالث2|نشاط","ثالث6"],"wed":["","","ثالث2","","",""],"thu":["ثالث4","","","","ثالث1",""]}},{"name":"خزماء الجبيري","workload":18,"timetable":{"sun":["","أول4","أول6","أول3","أول1","",""],"mon":["أول5","أول2","","","","أول6","أول3"],"tue":["","","أول2","","أول4","أول1"],"wed":["","أول2","أول4","","أول5",""],"thu":["أول3","","أول6","أول5","أول1",""]}},{"name":"خلود الكثيري","workload":18,"timetable":{"sun":["أول5","","أول2","","أول6","أول1",""],"mon":["أول1","أول3","","أول5","","","أول4"],"tue":["","أول3","","أول6","",""],"wed":["","أول4","أول1","أول6","","أول2"],"thu":["","أول3","أول4","","أول5","أول2"]}},{"name":"دعاء الحربي","workload":20,"timetable":{"sun":["","أول6","","ثاني6","ثاني5","","أول5"],"mon":["","أول5","أول6","","ثاني5","","ثاني6"],"tue":["","أول6","أول5","ثاني5","","ثاني6"],"wed":["ثاني5","ثاني6","","أول5","أول6",""],"thu":["ثاني6","ثاني5","","","أول6","أول5"]}},{"name":"رحمة العيسي","workload":4,"timetable":{"sun":["","","","","","","أول4"],"mon":["أول4","","","","","",""],"tue":["أول4","","","","",""],"wed":["","","","","",""],"thu":["","","","","","أول4"]}},{"name":"ريم الحربي","workload":18,"timetable":{"sun":["ثالث4","","ثالث5","","ثالث1","ثالث6",""],"mon":["","","ثالث2","ثالث3","","ثالث4",""],"tue":["ثالث3","ثالث6","","ثالث5","ثالث1",""],"wed":["ثالث3","","ثالث4","","ثالث2",""],"thu":["ثالث1","","ثالث5","ثالث6","ثالث2",""]}},{"name":"ريم القحطاني","workload":16,"timetable":{"sun":["","ثاني3","","ثاني2|نشاط","ثاني1","",""],"mon":["ثاني1","","","ثاني2","ثاني3","",""],"tue":["ثاني2","","ثاني1","","ثاني2|نشاط","ثاني3"],"wed":["","ثاني3","","ثاني1","","ثاني2"],"thu":["","","ثاني2","ثاني1","ثاني3",""]}},{"name":"رية الحربي","workload":13,"timetable":{"sun":["ثالث3|نشاط","","","","ثالث2","","ثالث6"],"mon":["","","","ثالث4","","ثالث1","ثالث5"],"tue":["ثالث4","","","ثالث1","","ثالث2"],"wed":["","","","ثالث3","","ثالث5"],"thu":["","","ثالث6","","","ثالث3"]}},{"name":"سحر الشمراني","workload":17,"timetable":{"sun":["ثاني4","ثاني6","","ثاني5","","ثاني5|نشاط",""],"mon":["","ثاني5","","ثاني4","ثاني6","",""],"tue":["ثاني5","ثاني4","","ثاني6","",""],"wed":["","","ثاني6","","ثاني5","ثاني4"],"thu":["","ثاني4","ثاني6","","ثاني5","ثاني5|نشاط"]}},{"name":"سندس الغامدي","workload":20,"timetable":{"sun":["ثاني1","","","ثاني4","ثاني2","","ثاني3"],"mon":["","ثاني4","ثاني2","","","ثاني1","ثاني3"],"tue":["ثاني4","ثاني3","ثاني2","ثاني1","",""],"wed":["","ثاني2","ثاني3","ثاني4","","ثاني1"],"thu":["","ثاني2","ثاني3","ثاني4","","ثاني1"]}},{"name":"شوق المطيري","workload":8,"timetable":{"sun":["","","","","","أول2",""],"mon":["","","","","أول1","","أول2"],"tue":["","","","","أول1","أول2"],"wed":["أول1","","","","",""],"thu":["","أول2","أول1","","",""]}},{"name":"شيخة المالكي","workload":16,"timetable":{"sun":["ثالث2","ثالث3","","","ثالث6","",""],"mon":["","ثالث2","ثالث6","","ثالث3","ثالث6|نشاط",""],"tue":["","","ثالث3","ثالث2","ثالث6",""],"wed":["","ثالث6","","ثالث2","","ثالث3"],"thu":["","ثالث2","","ثالث3","","ثالث6"]}},{"name":"عايدة الصاعدي","workload":18,"timetable":{"sun":["","","ثالث1","ثالث6","ثالث4","","ثالث2"],"mon":["ثالث3","ثالث5","","ثالث2","ثالث4","","ثالث1"],"tue":["","","","ثالث3","","ثالث5"],"wed":["","ثالث3","ثالث1","ثالث4","ثالث6",""],"thu":["","","ثالث2","","ثالث6","ثالث5"]}},{"name":"عبير المولد","workload":9,"timetable":{"sun":["","","ثالث4","","ثالث5","",""],"mon":["","","","ثالث5","","","ثالث6"],"tue":["","","","ثالث6","","ثالث4"],"wed":["","","","","","ثالث6"],"thu":["","ثالث5","","","","ثالث4"]}},{"name":"علوه الحربي","workload":11,"timetable":{"sun":["","","ثاني2","","","ثاني3","ثاني1|نشاط"],"mon":["ثاني3","","","","ثاني1","","ثاني2"],"tue":["ثاني1|نشاط","","","","",""],"wed":["","ثاني1","","","","ثاني3"],"thu":["","","","","ثاني1","ثاني2"]}},{"name":"علية القاسمي","workload":4,"timetable":{"sun":["","","أول3","","","",""],"mon":["","","","","","أول3",""],"tue":["أول3","","","","",""],"wed":["","","","أول3","",""],"thu":["","","","","",""]}},{"name":"عواطف الحربي","workload":12,"timetable":{"sun":["ثاني3","","ثاني4","","ثاني6","",""],"mon":["","","ثاني3","ثاني6","","ثاني4",""],"tue":["","","ثاني6","ثاني3","",""],"wed":["","","ثاني4","","",""],"thu":["","","ثاني4","ثاني6","","ثاني3"]}},{"name":"عوالي السبيعي","workload":20,"timetable":{"sun":["","أول1","أول5","أول4","","أول3",""],"mon":["أول3","أول4","","أول1","أول2","",""],"tue":["أول2","أول4","","أول3","أول5",""],"wed":["أول2","","أول5","","أول1","أول3"],"thu":["أول5","","أول2","","أول4","أول1"]}},{"name":"غاليه المزمومي","workload":15,"timetable":{"sun":["","ثالث6","","","","ثالث4","ثالث5"],"mon":["","","ثالث5","ثالث6","","",""],"tue":["ثالث5","ثالث4","ثالث6","","",""],"wed":["ثالث4","","","ثالث6","ثالث5","ثالث4|نشاط"],"thu":["ثالث6","ثالث4","","ثالث5","",""]}},{"name":"فاطمة الزهراني","workload":13,"timetable":{"sun":["","","ثاني5","","","ثاني6","ثاني6|نشاط"],"mon":["","أول6","","","","ثاني6","ثاني5"],"tue":["","","أول6","","ثاني6","ثاني5"],"wed":["ثاني6","","أول6","","",""],"thu":["","","ثاني5","","","ثاني6|نشاط"]}},{"name":"فاطمة العماري","workload":16,"timetable":{"sun":["ثالث1","ثالث4","","ثالث5","","",""],"mon":["ثالث5","","ثالث4","ثالث1","","",""],"tue":["","ثالث1","ثالث5","ثالث4","",""],"wed":["ثالث5","ثالث4","ثالث5|نشاط","","ثالث1",""],"thu":["ثالث5","","ثالث1","ثالث4","",""]}},{"name":"فاطمة الغامدي","workload":18,"timetable":{"sun":["","ثاني1","ثاني3","","","","ثاني4"],"mon":["","ثاني2","ثاني4","ثاني3|نشاط","","ثاني3","ثاني1"],"tue":["ثاني3|نشاط","ثاني2","","","ثاني4",""],"wed":["","","ثاني1","ثاني3","ثاني2",""],"thu":["ثاني1","","","ثاني3","ثاني2","ثاني4"]}},{"name":"فاطمة حسن","workload":9,"timetable":{"sun":["","أول3","","","","","أول2"],"mon":["","","أول2","","","","أول1"],"tue":["","","أول1","","","أول3"],"wed":["","أول1","","","أول3",""],"thu":["","","","","","أول2"]}},{"name":"لمياء البالدي","workload":22,"timetable":{"sun":["أول4","","ثالث6","ثالث4","أول3","ثالث5",""],"mon":["ثالث4","ثالث6","","أول4","أول3","ثالث5",""],"tue":["ثالث6","","أول3","أول4","ثالث4",""],"wed":["أول3","","ثالث6","ثالث5","أول4",""],"thu":["أول4","","ثالث4","أول3","ثالث5",""]}},{"name":"ليلى مجرشي","workload":20,"timetable":{"sun":["","","أول4","أول1","أول2","","أول3"],"mon":["","أول1","أول3","","أول4","أول2",""],"tue":["","أول2","أول4","أول1","أول3",""],"wed":["أول4","","أول3","أول2","","أول1"],"thu":["أول1","أول4","","أول2","","أول3"]}},{"name":"منال الجابري","workload":14,"timetable":{"sun":["أول2","أول5","","","","","أول1"],"mon":["أول2","","أول1","أول3","","أول5",""],"tue":["أول1","","","","","أول4"],"wed":["","أول3","أول2","","","أول4"],"thu":["","أول5","","","أول3",""]}},{"name":"نجوى الغامدي","workload":12,"timetable":{"sun":["ثاني5","","","ثاني1","","ثاني2",""],"mon":["","ثاني1","","","ثاني2","",""],"tue":["","ثاني1","ثاني5","","","ثاني2"],"wed":["ثاني1","","ثاني2","","","ثاني5"],"thu":["","","","","ثاني5",""]}},{"name":"نورة الهودان","workload":23,"timetable":{"sun":["ثالث6","ثالث5","ثالث3","ثالث1","","",""],"mon":["ثالث6","ثالث4","ثالث1","","ثالث5","ثالث2",""],"tue":["ثالث2","ثالث3","ثالث4","","ثالث5",""],"wed":["ثالث6","ثالث5","ثالث3","ثالث1","ثالث4",""],"thu":["ثالث2","ثالث6","ثالث3","ثالث1","ثالث4",""]}},{"name":"نورة العنزي","workload":12,"timetable":{"sun":["أول3","","أول1","أول2","","",""],"mon":["","","","","ثالث2","",""],"tue":["","","ثالث2","","أول2","ثالث1"],"wed":["","ثالث2","","","","ثالث1"],"thu":["","أول1","أول3","","","ثالث1"]}},{"name":"هاجر السلمي","workload":9,"timetable":{"sun":["","","","أول5","","أول4",""],"mon":["","","","","","أول4","أول5"],"tue":["أول5","","","","","أول6"],"wed":["أول6","","","","",""],"thu":["أول6","","","أول4","",""]}},{"name":"وحش القحطاني","workload":20,"timetable":{"sun":["","ثاني5","ثاني6","","أول5","ثاني4",""],"mon":["ثاني4","ثاني6","ثاني5","","أول5","",""],"tue":["","ثاني6","ثاني4","أول5","ثاني5",""],"wed":["ثاني4","أول5","","ثاني5","ثاني6",""],"thu":["ثاني4","","أول5","ثاني5","ثاني6",""]}},{"name":"وضحه المحمادي","workload":7,"timetable":{"sun":["","","","أول6","","","أول6"],"mon":["","","أول5","","","",""],"tue":["","","","","أول6","أول5"],"wed":["","","","","","أول5"],"thu":["","أول6","","","",""]}},{"name":"دخنه الشهري","workload":8,"timetable":{"sun":["","","","","","",""],"mon":["ثاني5","","","","أول6","ثاني5","أول6"],"tue":["","","","","",""],"wed":["","ثاني5","ثاني5","أول6","","أول6"],"thu":["","","","","",""]}}];
-let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],settings:null,admin:null,currentDate:todayISO(),workspaceCard:"manual"};
+let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],settings:null,admin:null,currentDate:todayISO(),workspaceCard:"manual",autoAllNames:true,autoAbsentIds:[],publicOpenCards:[]};
 let renderBusy=false;
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -242,7 +242,7 @@ function parseScheduleValue(v){
 function dateRangeAssignments(start,end){
   const cs=state.settings?.countStart||COUNT_START;
   const effectiveStart=start<cs?cs:start;
-  return publishedAssignments().filter(a=>a.date>=effectiveStart&&a.date<=end);
+  return publicationAssignmentsUntil(end,effectiveStart);
 }
 function previousWeekRange(date){
   const wr=weekRange(addDays(date,-7)); return wr;
@@ -259,7 +259,7 @@ function currentWeekAbsenceLoad(teacherId,date){
 }
 function previousWeekReserveCount(teacherId,date){
   const wr=previousWeekRange(date);
-  return publishedAssignments().filter(a=>String(a.assignedTeacherId)===String(teacherId)&&inRange(a.date,wr.start,wr.end)).length;
+  return publicationAssignmentsUntil(wr.end,wr.start).filter(a=>String(a.assignedTeacherId)===String(teacherId)).length;
 }
 function dailyOriginalCount(teacherId,date){
   const s=scheduleOf(teacherId),dk=dayKey(date);
@@ -368,11 +368,18 @@ function termStart(){return state.settings?.termStart||""}
 function publishedAssignments(){
   return state.assignments.filter(x=>x.published===true&&x.status!=="ملغي");
 }
+// Every summary and merit board reads the same canonical daily publication rows.
+// This is a read-only projection; duplicate raw cloud records remain untouched.
+function publicationAssignmentsUntil(endDate,startDate=""){
+  const days=[...new Set(publishedAssignments().map(a=>a.date))]
+    .filter(d=>d&&d<=endDate&&(!startDate||d>=startDate)).sort();
+  return days.flatMap(date=>dailyPublicationRows(date));
+}
 function assignmentCounts(referenceDate){
   const wr=weekRange(referenceDate),start=termStart()||COUNT_START,countStart=state.settings?.countStart||COUNT_START;
   // Count approved substitutions for their actual date/week. Keep the official
   // countStart/termStart limits for cumulative totals only.
-  const pub=publishedAssignments();
+  const pub=publicationAssignmentsUntil(referenceDate);
   const map=new Map();
   [...state.teachers,...MANUAL_SUPPORT_STAFF].forEach(t=>map.set(String(t.id),{
     daily:0,week:0,term:0,
@@ -429,9 +436,8 @@ function publicWeeklyRows(referenceDate){
   });
   const eligible=state.teachers.filter(t=>{
     if(reserveSummaryEligible(t))return true;
-    if(teacherFlags(t).absolute)return false;
     const c=counts.get(String(t.id));
-    return !!c&&Number(c.week||0)>0;
+    return !!c&&(Number(c.week||0)>0||Number(c.term||0)>0);
   });
   return [...eligible,...usedStaff]
     .sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"))
@@ -585,6 +591,19 @@ function injectStyle(){
   .reserve-activation-box input{border:1px solid #cfdadd;border-radius:10px;padding:10px 11px;font:inherit;background:#fff}
   .reserve-count-approved{background:#fff0d8!important;color:#9a4d00;font-weight:900}
   .reserve-count-ack{background:#e5f6ec!important;color:#176b3a;font-weight:900}
+  .reserve-public-card-stack{display:grid;gap:12px}
+  .reserve-public-card{border:1px solid #dbe5e7;border-radius:15px;background:#fff;overflow:hidden;min-width:0;box-shadow:0 3px 12px rgba(11,48,71,.035)}
+  .reserve-public-card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:70px;padding:16px 18px;user-select:none}
+  .reserve-public-card>summary::-webkit-details-marker{display:none}
+  .reserve-public-card>summary::after{content:"⌄";margin-right:auto;color:#0f5f59;font-size:26px;font-weight:700;line-height:1}
+  .reserve-public-card[open]>summary::after{content:"⌃"}
+  .reserve-public-card>summary strong{color:#0b3047;font-size:17px}
+  .reserve-public-card>summary span{font-size:12px;color:#627980}
+  .reserve-public-card>summary:focus-visible{outline:3px solid #0f5f59;outline-offset:-3px}
+  .reserve-public-card[open]>summary{border-bottom:1px solid #e3e9eb;background:#f8fbfb}
+  .reserve-public-card-content{padding:15px;min-width:0}
+  @media(max-width:760px){.reserve-public-card>summary{display:grid;grid-template-columns:1fr auto}.reserve-public-card>summary strong{font-size:15px}.reserve-public-card>summary span{grid-row:2}.reserve-public-card>summary::after{grid-column:2;grid-row:1/3}}
+  @media print{.reserve-public-card-content{display:block!important}.reserve-public-card{break-inside:avoid}.reserve-public-card:not([open]) .reserve-public-card-content{display:block!important}}
   .reserve-excellence{display:grid;gap:10px}
   .reserve-rank-badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;background:#eef5f4;font-size:12px;font-weight:900}
   .reserve-rank-badge.star{background:#fff4d7;color:#8a5a00}
@@ -766,7 +785,7 @@ function decorateReservePortraitTables(root){
 
 // One renderer for initial display and for refresh after manual/automatic saves.
 function publicDayRowsHTML(date){
-  const daily=assignmentsOn(date).filter(x=>x.published===true);
+  const daily=dailyPublicationRows(date);
   return `${daily.length?daily.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>`<tr data-reserve-public-assignment="${esc(a.id)}">
           <td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td><td>${esc(a.absentTeacherName||"—")}</td>
           <td><strong>${esc(a.assignedTeacherName||"—")}</strong></td>
@@ -821,34 +840,49 @@ function publicHTML(){
       </div>
     </section>`:""}
 
-    <section class="surface panel">
-      <div class="panel-head"><h3>جدول الاحتياط اليومي</h3><span>${esc(dayName(date))} — ${esc(fmtDate(date))}</span></div>
-      <div class="reserve-no-print" style="display:grid;gap:8px;margin-bottom:12px">
-        ${hijriDateControl("reservePublicDate",date)}
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <section class="surface panel reserve-main-toolbar reserve-no-print">
+      <div class="panel-head"><h3>عرض الاحتياط</h3><span>${esc(dayName(date))} — ${esc(fmtDate(date))}</span></div>
+      ${hijriDateControl("reservePublicDate",date)}
+      <div class="form-actions" style="margin-top:10px">
         <button class="btn btn-ghost" type="button" id="reservePrint">طباعة الجدول</button>
         <button class="btn btn-primary" type="button" id="reservePublish">جدول النشر</button>
         <button class="btn btn-ghost" type="button" id="reserveAdminOpen">دخول الإدارة</button>
+      </div>
+    </section>
+
+    <div class="reserve-public-card-stack">
+      <details id="reservePublicCardDaily" class="reserve-public-card" data-reserve-public-card="daily" ${state.publicOpenCards?.includes("daily")?"open":""}>
+        <summary><strong>جدول حصص الاحتياط اليومي</strong><span>عرض التكليفات والاطلاع والموضوع</span></summary>
+        <div class="reserve-public-card-content">
+          <p class="reserve-public-note">تؤكد كل معلمة اطلاعها وتكتب موضوع الحصة من صفها مباشرة، دون رابط شخصي.</p>
+          <div class="reserve-table-wrap">
+            <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th><th>التفعيل</th></tr></thead>
+            <tbody id="reservePublicDayBody">${publicDayRowsHTML(date)}</tbody></table>
+          </div>
         </div>
-        <p class="reserve-public-note">يمكن للمعلمة تأكيد الاطلاع وإدخال موضوع الحصة مباشرة من صف تكليفها في الجدول أدناه، دون رابط منفصل. <strong>يُرجى أن تستخدم كل معلمة صفها فقط.</strong></p>
-      </div>
-      <div class="reserve-table-wrap">
-        <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th><th>التفعيل</th></tr></thead>
-        <tbody id="reservePublicDayBody">${publicDayRowsHTML(date)}</tbody></table>
-      </div>
-    </section>
+      </details>
 
-    <section class="surface panel">
-      <div class="panel-head"><h3>الحسبة الأسبوعية التراكمية للاحتياط</h3><span>${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))}</span></div>
-      <div class="reserve-no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        <button class="reserve-tab active" type="button" data-week-shift="0">الأسبوع الحالي</button>
-        <button class="reserve-tab" type="button" data-week-shift="-7">الأسبوع السابق</button>
-      </div>
-      <div id="reserveWeeklyHolder">${weeklyTableHTML(rows,date)}</div>
-      <div id="reserveExcellenceHolder" style="margin-top:14px">${excellenceTableHTML(date)}</div>
-      <p class="reserve-public-note">البرتقالي = معتمد من الإدارة، الأخضر = تم اطلاع المعلمة. الأرقام تتحدث تلقائيًا بعد أي تحديث معتمد.</p>
-    </section>
+      <details id="reservePublicCardStatistics" class="reserve-public-card" data-reserve-public-card="stats" ${state.publicOpenCards?.includes("stats")?"open":""}>
+        <summary><strong>إحصائيات حصص الاحتياط</strong><span>الحسبة الأسبوعية والتراكمية</span></summary>
+        <div class="reserve-public-card-content">
+          <div class="panel-head"><h3>الحسبة الأسبوعية والتراكمية</h3><span>${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))}</span></div>
+          <div class="reserve-no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+            <button class="reserve-tab active" type="button" data-week-shift="0">الأسبوع الحالي</button>
+            <button class="reserve-tab" type="button" data-week-shift="-7">الأسبوع السابق</button>
+          </div>
+          <div id="reserveWeeklyHolder">${weeklyTableHTML(rows,date)}</div>
+          <p class="reserve-public-note">الأرقام من الحصص المعتمدة في جدول النشر، دون تكرار الحصص.</p>
+        </div>
+      </details>
 
+      <details id="reservePublicCardExcellence" class="reserve-public-card" data-reserve-public-card="excellence" ${state.publicOpenCards?.includes("excellence")?"open":""}>
+        <summary><strong>لوحة التميز في تسديد الاحتياط</strong><span>ترتيب أسبوعي يبدأ من جديد كل أحد</span></summary>
+        <div class="reserve-public-card-content">
+          <p class="reserve-public-note">الأكثر حصصًا في الأسبوع أولًا، ثم من أكملت الاطلاع والموضوع. عند تطابق المعايير يُمنح المركز نفسه.</p>
+          <div id="reserveExcellenceHolder">${excellenceTableHTML(date)}</div>
+        </div>
+      </details>
+    </div>
     <section id="reserveAdminMount" class="reserve-no-print"></section>
   </div>`;
 }
@@ -870,8 +904,8 @@ function excellenceTableHTML(referenceDate){
   const rows=excellenceMetrics(referenceDate);
   return `<div class="reserve-excellence">
     <div class="panel-head"><h3>المتميزات في تسديد الاحتياط</h3><span>أسبوعي وتراكمي</span></div>
-    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المركز</th><th>المعلمة</th><th>المسند أسبوعيًا</th><th>المحتسب في التميز</th><th>التراكمي</th></tr></thead>
-    <tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td><td>${r.weekCount}</td><td><strong>${r.qualifiedWeek}</strong></td><td>${r.cumulativeQualified}</td></tr>`).join(""):'<tr><td colspan="5">لا توجد بيانات تميز محتسبة لهذا الأسبوع</td></tr>'}</tbody></table></div>
+    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المركز</th><th>المعلمة</th><th>حصص الأسبوع</th><th>تم الاطلاع</th><th>تم تفعيل الموضوع</th><th>التراكمي للفصل</th></tr></thead>
+    <tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td><td><strong>${r.weekCount}</strong></td><td>${r.weekAcknowledged}</td><td>${r.weekActivated}</td><td>${r.cumulativeQualified}</td></tr>`).join(""):'<tr><td colspan="6">لا توجد بيانات تميز لهذا الأسبوع</td></tr>'}</tbody></table></div>
   </div>`;
 }
 
@@ -900,15 +934,21 @@ function adminHTML(){
 
 function dayAdminHTML(){
   const date=state.currentDate,abs=absencesOn(date),assign=assignmentsOn(date);
+  const autoSelected=new Set((state.autoAbsentIds?.length?state.autoAbsentIds:abs.map(a=>a.teacherId)).map(String));
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
       ${hijriDateControl("reserveAdminDate",date)}
       <div class="form-grid" style="margin-top:12px">
-        <label>المعلمة الغائبة<select id="reserveAbsentTeacher"><option value="">اختاري المعلمة</option>${state.teachers.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("")}</select></label>
+        <label class="wide">جميع المعلمات الغائبات (اختيار متعدد)
+          <select id="reserveAbsentTeacher" class="reserve-multi-select" multiple>${state.teachers.map(t=>`<option value="${esc(t.id)}" ${autoSelected.has(String(t.id))?"selected":""}>${esc(t.name)}</option>`).join("")}</select>
+        </label>
         <label>سبب الاحتياط<select id="reserveAbsenceReason"><option>غياب</option><option>دورة</option><option>اجتماع</option><option>انتداب</option><option>تكليف خارجي</option><option>أخرى</option></select></label>
       </div>
-      <div class="form-actions"><button class="btn btn-primary" id="reserveAddAbsence" type="button">تسجيل الغياب واستخراج الحصص</button></div>
+      <div class="form-actions"><button class="btn btn-primary" id="reserveAddAbsence" type="button">تسجيل جميع الغائبات واستخراج حصصهن</button></div>
+      <label class="reserve-admin-manual-toggle"><input type="checkbox" id="reserveAutoAllNames" ${state.autoAllNames!==false?"checked":""}>
+        <span><strong>إتاحة جميع الكادر للتعديل:</strong> إظهار المعلمات جميعًا، بمن فيهن المستثنيات، إضافة إلى الموجهات الطلابيات ومحضرة المختبر. تبقى المرشحات الثلاث بالترتيب الذكي، ويظهر تحذير عند الإسناد المخالف.</span>
+      </label>
       <div id="reserveDayMsg"></div>
       <div class="reserve-admin-list" style="margin-top:12px">${abs.length?abs.map(a=>`<div class="reserve-teacher-row">
         <strong>${esc(a.teacherName)}</strong><span>${esc(a.reason||"غياب")} — ${(a.periods||[]).map(p=>`ح${p.period}: ${esc(p.className)}${p.activity?" (نشاط)":""}`).join(" — ")||"لا توجد حصص مسجلة"}</span>
@@ -921,13 +961,18 @@ function dayAdminHTML(){
       <div class="panel-head"><h3>توزيع الاحتياط</h3><span>${assign.length} تكليف</span></div>
       <section class="reserve-admin-warnings"><strong>مساحة تحذيرات الإسناد</strong><div id="reserveAutoWarnings">${reserveWarningsMarkup(currentReserveWarnings(date))}</div></section>
       <div id="reserveAssignmentsAdmin">${adminAssignmentsHTML(assign)}</div>
-      <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveApproveAuto" type="button">اعتماد جدول اليوم</button></div>
+      <div class="form-actions" style="margin-top:12px">
+        <button class="btn btn-primary" id="reserveApproveAuto" type="button">حفظ واعتماد جدول اليوم</button>
+        <button class="reserve-mini danger" id="reserveDeleteAutoTable" type="button">حذف جدول الإنشاء الآلي لهذا اليوم</button>
+      </div>
     </section>
   </div>`;
 }
 function manualCandidateOptions(a){
-  // This dropdown is a deliberate ADMIN OVERRIDE, unlike candidateRanking (top-three engine).
-  const all=manualAssigneeDirectory().map(t=>({teacherId:String(t.id),name:t.name}));
+  // The original full-directory override remains available behind an explicit checkbox.
+  const all=(state.autoAllNames!==false?manualAssigneeDirectory():
+    (a.candidates||[]).map(c=>teacherOf(c.teacherId)).filter(Boolean))
+    .map(t=>({teacherId:String(t.id),name:t.name}));
   if(a.assignedTeacherId&&!all.some(t=>String(t.teacherId)===String(a.assignedTeacherId))){
     all.unshift({teacherId:String(a.assignedTeacherId),name:a.assignedTeacherName||"المكلفة سابقًا"});
   }
@@ -1262,49 +1307,56 @@ function bindRankingAdmin(){
   });
 }
 
+// Leadership ranking is derived exclusively from "جدول النشر" canonical rows.
+// New weeks start Sunday; history and term totals are not deleted.
 function excellenceMetrics(referenceDate){
   const wr=weekRange(referenceDate),start=termStart()||COUNT_START;
   const countStart=state.settings?.countStart||COUNT_START;
-  const items=publishedAssignments().filter(a=>a.date<=wr.end);
+  const weekItems=publicationAssignmentsUntil(referenceDate,wr.start);
+  const termItems=publicationAssignmentsUntil(referenceDate,start>countStart?start:countStart);
   const byTeacher=new Map();
   const ensure=id=>{
-    if(!byTeacher.has(id))byTeacher.set(id,{teacher:teacherOf(id),weekAssignments:[],allAssignments:[],daily:{},titles:[]});
-    return byTeacher.get(id);
+    const key=String(id);
+    if(!byTeacher.has(key))byTeacher.set(key,{
+      teacher:teacherOf(key),weekAssignments:[],allAssignments:[],daily:{},titles:[],
+      weekAcknowledged:0,weekActivated:0,weekBoth:0
+    });
+    return byTeacher.get(key);
   };
-  items.forEach(a=>{
-    const id=String(a.assignedTeacherId),x=ensure(id); if(!x.teacher)return;
-    // Cumulative merit never includes dates before the approved counting start.
-    if(a.date>=start&&a.date>=countStart)x.allAssignments.push(a);
-    if(inRange(a.date,wr.start,wr.end)){
-      x.weekAssignments.push(a);
-      x.daily[a.date]=(x.daily[a.date]||[]).concat(a);
-      if(a.activationTitle)x.titles.push(`${dayName(a.date)}: ${a.activationTitle}`);
-    }
+  weekItems.forEach(a=>{
+    const x=ensure(a.assignedTeacherId);
+    if(!x.teacher)return;
+    x.weekAssignments.push(a);
+    (x.daily[a.date]??=[]).push(a);
+    const ack=!!clean(a.ackAt),topic=!!clean(a.activationTitle);
+    if(ack)x.weekAcknowledged++;
+    if(topic){x.weekActivated++;x.titles.push(`${dayName(a.date)}: ${a.activationTitle}`)}
+    if(ack&&topic)x.weekBoth++;
+  });
+  termItems.forEach(a=>{
+    const x=ensure(a.assignedTeacherId);
+    if(x.teacher)x.allAssignments.push(a);
   });
   const rows=[];
   byTeacher.forEach(x=>{
-    let qualifiedWeek=0,maxDaily=0;
-    Object.values(x.daily).forEach(arr=>{
-      maxDaily=Math.max(maxDaily,arr.length);
-      if(arr.length>=2)qualifiedWeek+=arr.length;
-      else if(arr.length===1&&arr[0].activationTitle)qualifiedWeek+=1;
-    });
-    let cumulativeQualified=0;
-    const allByDate={};
-    x.allAssignments.forEach(a=>allByDate[a.date]=(allByDate[a.date]||[]).concat(a));
-    Object.values(allByDate).forEach(arr=>{
-      if(arr.length>=2)cumulativeQualified+=arr.length;
-      else if(arr.length===1&&arr[0].activationTitle)cumulativeQualified+=1;
-    });
-    const tier=maxDaily>=3?3:maxDaily>=2?2:(qualifiedWeek>0?1:0);
-    if(tier>0)rows.push({...x,qualifiedWeek,cumulativeQualified,maxDaily,tier,weekCount:x.weekAssignments.length});
+    const weekCount=x.weekAssignments.length;
+    if(!x.teacher||!weekCount)return;
+    const maxDaily=Math.max(...Object.values(x.daily).map(arr=>arr.length));
+    const tier=weekCount>=2?2:1;
+    // Keep old export fields; the weekly leaderboard is independent of term totals.
+    rows.push({...x,weekCount,qualifiedWeek:weekCount,
+      cumulativeQualified:x.allAssignments.length,maxDaily,tier});
   });
-  rows.sort((a,b)=>b.tier-a.tier||b.qualifiedWeek-a.qualifiedWeek||b.weekCount-a.weekCount||clean(a.teacher.name).localeCompare(clean(b.teacher.name),"ar"));
-  let lastKey="",rank=0;
+  // More distinct published lessons have priority. At equal lesson count:
+  // both icons first, then activated topics, then acknowledgements.
+  rows.sort((a,b)=>b.weekCount-a.weekCount||b.weekBoth-a.weekBoth||
+    b.weekActivated-a.weekActivated||b.weekAcknowledged-a.weekAcknowledged||
+    clean(a.teacher.name).localeCompare(clean(b.teacher.name),"ar"));
+  let previousKey="",rank=0;
   return rows.map(r=>{
-    const key=`${r.tier}|${r.qualifiedWeek}|${r.weekCount}`;
-    if(key!==lastKey)rank++;
-    lastKey=key;
+    const key=[r.weekCount,r.weekBoth,r.weekActivated,r.weekAcknowledged].join("|");
+    if(key!==previousKey)rank++;
+    previousKey=key;
     return {...r,rank};
   });
 }
@@ -1317,27 +1369,27 @@ function excellenceAdminHTML(){
       <button class="btn btn-ghost reserve-excellence-export" data-scope="cumulative" type="button">تصدير التراكمي</button>
     </div>
     <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr>
-      <th>المركز</th><th>المعلمة</th><th>تفصيل يومي</th><th>المسند أسبوعيًا</th><th>المحتسب في التميز</th><th>التراكمي</th><th>عناوين التفعيل</th>
+      <th>المركز</th><th>المعلمة</th><th>تفصيل يومي</th><th>حصص الأسبوع</th><th>تم الاطلاع</th><th>تم تفعيل الموضوع</th><th>الاثنتان معًا</th><th>التراكمي للفصل</th><th>عناوين التفعيل</th>
     </tr></thead><tbody>${rows.length?rows.map(r=>`<tr>
       <td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td>
       <td>${Object.entries(r.daily).sort().map(([d,a])=>`${dayName(d)}: ${a.length}`).join(" — ")||"—"}</td>
-      <td>${r.weekCount}</td><td><strong>${r.qualifiedWeek}</strong>${r.maxDaily>=3?' <span class="reserve-rank-badge star">3 في يوم واحد</span>':r.maxDaily>=2?' <span class="reserve-rank-badge">2 في يوم واحد</span>':""}</td>
+      <td><strong>${r.weekCount}</strong></td><td>${r.weekAcknowledged}</td><td>${r.weekActivated}</td><td>${r.weekBoth}</td>
       <td>${r.cumulativeQualified}</td><td>${r.titles.length?r.titles.map(t=>`<div>${esc(t)}</div>`).join(""):"—"}</td>
-    </tr>`).join(""):'<tr><td colspan="7">لا توجد بيانات تميز محتسبة لهذا الأسبوع</td></tr>'}</tbody></table></div>
-    <p class="reserve-public-note">الحصتان أو الثلاث فأكثر في اليوم تدخل في التميز مباشرة. الحصة الواحدة لا تدخل إلا بعد تسجيل عنوان التفعيل.</p>
+    </tr>`).join(""):'<tr><td colspan="9">لا توجد بيانات تميز لهذا الأسبوع</td></tr>'}</tbody></table></div>
+    <p class="reserve-public-note">الترتيب من جدول النشر فقط: الأكثر حصصًا منذ الأحد يتقدم، وعند التعادل يُفضّل اكتمال الاطلاع والموضوع، ثم الموضوع، ثم الاطلاع؛ وعند تساوي الجميع يتشاركون المركز. تبدأ المراكز من جديد كل أحد.</p>
   </section>`;
 }
 function exportExcellence(scope){
   const refs=scope==="week"?[state.currentDate]:[];
   let rows=[];
   if(scope==="week"){
-    rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.maxDaily,r.titles.join(" | ")]);
+    rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
   }else{
     const allDates=[...new Set(publishedAssignments().map(a=>a.date))].sort();
     const latest=allDates[allDates.length-1]||state.currentDate;
-    rows=excellenceMetrics(latest).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.maxDaily,r.titles.join(" | ")]);
+    rows=excellenceMetrics(latest).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
   }
-  const headers=["المركز","المعلمة","المسند أسبوعيًا","المحتسب في التميز","التراكمي","أعلى عدد يومي","عناوين التفعيل"];
+  const headers=["المركز","المعلمة","حصص الأسبوع","المحتسب","التراكمي للفصل","الحصص المكتملة الأيقونتين","عناوين التفعيل"];
   downloadXls(`تميز_الاحتياط_${scope}`,headers,rows,"التميز");
 }
 function bindExcellenceAdmin(){
@@ -1659,7 +1711,8 @@ function refreshReserveStatisticsViews(){
 }
 
 async function refreshAndRenderPublic(){
-  await loadAll(); renderPage();
+  await loadAll();
+  refreshReserveStatisticsViews();
 }
 function mountAdminShell(){
   const mount=byId("reserveAdminMount"); if(!mount)return;
@@ -1732,7 +1785,16 @@ function bindPublicDailyActions(){
 }
 
 function bindPublic(){
-  bindHijriDateControl("reservePublicDate",async next=>{state.currentDate=next;renderPage()});
+  bindHijriDateControl("reservePublicDate",async next=>{
+    state.publicOpenCards=[...document.querySelectorAll(".reserve-public-card[open]")]
+      .map(card=>card.dataset.reservePublicCard);
+    state.currentDate=next;await renderPage();
+  });
+  document.querySelectorAll(".reserve-public-card").forEach(card=>card.addEventListener("toggle",()=>{
+    const opened=new Set(state.publicOpenCards||[]),id=card.dataset.reservePublicCard;
+    if(card.open)opened.add(id);else opened.delete(id);
+    state.publicOpenCards=[...opened];
+  }));
   byId("reservePrint")?.addEventListener("click",()=>window.print());
   byId("reservePublish")?.addEventListener("click",()=>openReservePublication(state.currentDate));
   byId("reserveAdminOpen")?.addEventListener("click",async()=>{
@@ -1747,7 +1809,7 @@ function bindPublic(){
     document.querySelectorAll("[data-week-shift]").forEach(x=>x.classList.toggle("active",x===b));
     const ref=addDays(state.currentDate,Number(b.dataset.weekShift||0));
     byId("reserveWeeklyHolder").innerHTML=weeklyTableHTML(publicWeeklyRows(ref),ref);
-    if(byId("reserveExcellenceHolder"))byId("reserveExcellenceHolder").innerHTML=excellenceTableHTML(ref);
+    // The independent excellence card always follows its own selected day/week.
   });
   // The daily timetable itself contains the actions; no personal links are required.
   // Each operation is restricted to the acknowledgement token of its own published row.
@@ -1837,19 +1899,37 @@ function bindDayAdmin(){
     await loadAll();
     renderWorkspaceCard("auto");
   });
+  byId("reserveAutoAllNames")?.addEventListener("change",event=>{
+    state.autoAllNames=event.target.checked;
+    state.autoAbsentIds=[...(byId("reserveAbsentTeacher")?.selectedOptions||[])].map(o=>String(o.value));
+    renderWorkspaceCard("auto");
+  });
   byId("reserveAddAbsence")?.addEventListener("click",async()=>{
-    const msg=byId("reserveDayMsg"),teacherId=byId("reserveAbsentTeacher").value,date=state.currentDate;
-    const t=teacherOf(teacherId); if(!t){msg.textContent="اختاري المعلمة الغائبة";return}
+    const msg=byId("reserveDayMsg"),date=state.currentDate;
+    const ids=[...(byId("reserveAbsentTeacher")?.selectedOptions||[])].map(o=>String(o.value));
+    if(!ids.length){msg.textContent="اختاري أسماء جميع الغائبات أولًا";return}
     if(!dayKey(date)){msg.textContent="التاريخ المختار ليس من أيام الدوام الأحد–الخميس";return}
-    const s=scheduleOf(teacherId),cells=s?.timetable?.[dayKey(date)]||[];
-    const periods=cells.map((v,i)=>{const x=parseScheduleValue(v);return {period:i+1,className:x.className,activity:x.activity}}).filter(x=>x.className);
     const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
+    state.autoAbsentIds=ids;
+    msg.textContent="جارٍ تسجيل جميع الغائبات...";
     try{
       await ensureAdmin();
-      if(absencesOn(date).some(x=>String(x.teacherId)===String(teacherId))){msg.textContent="الغياب/التكليف مسجل مسبقًا لهذه المعلمة";return}
-      await insertKind(K.absence,{date,dayKey:dayKey(date),teacherId:String(teacherId),teacherName:t.name,reason,periods,createdAt:new Date().toISOString()},token());
-      await loadAll(); renderWorkspaceCard("auto");
-    }catch(err){console.error(err);msg.textContent="تعذر حفظ الغياب"}
+      const already=new Set(absencesOn(date).map(x=>String(x.teacherId)));
+      let added=0;
+      for(const teacherId of ids){
+        const t=teacherOf(teacherId);if(!t||already.has(teacherId))continue;
+        const s=scheduleOf(teacherId),cells=s?.timetable?.[dayKey(date)]||[];
+        const periods=cells.map((v,i)=>{const x=parseScheduleValue(v);return {period:i+1,className:x.className,activity:x.activity}}).filter(x=>x.className);
+        await insertKind(K.absence,{
+          date,dayKey:dayKey(date),teacherId,teacherName:t.name,reason,periods,
+          source:"auto",createdAt:new Date().toISOString()
+        },token());
+        already.add(teacherId);added++;
+      }
+      await loadAll();renderWorkspaceCard("auto");
+      const result=byId("reserveDayMsg");
+      if(result)result.textContent=`تم تسجيل ${added} غائبات جديدات. إجمالي المحددات ${ids.length}. اضغطي توليد المرشحات ثم حفظ واعتماد.`;
+    }catch(err){console.error(err);msg.textContent="تعذر استكمال تسجيل الغائبات. أعيدي المحاولة؛ المحفوظات السابقة لن تتكرر."}
   });
   document.querySelectorAll(".reserve-delete-absence").forEach(b=>b.onclick=async()=>{
     if(!confirm("حذف تسجيل الغياب؟"))return;
@@ -1934,16 +2014,37 @@ function bindDayAdmin(){
     if(opened)opened.opener=null;
     else window.location.assign(url);
   });
+  byId("reserveDeleteAutoTable")?.addEventListener("click",async()=>{
+    const date=state.currentDate;
+    const autoAssignments=assignmentsOn(date).filter(a=>a.manual!==true);
+    const autoAbsences=absencesOn(date).filter(a=>a.source==="auto"&&
+      !assignmentsOn(date).some(x=>x.manual===true&&String(x.absentTeacherId)===String(a.teacherId)));
+    if(!autoAssignments.length&&!autoAbsences.length){
+      const msg=byId("reserveDayMsg");if(msg)msg.textContent="لا يوجد جدول إنشاء آلي لحذفه.";return;
+    }
+    if(!confirm(`حذف جدول الإنشاء الآلي لهذا اليوم؟\nسيُحذف ${autoAssignments.length} تكليفًا آليًا و${autoAbsences.length} تسجيل غياب آلي.\nالتكليفات اليدوية ستبقى محفوظة. لا يمكن التراجع إلا من نسخة احتياطية.`))return;
+    const msg=byId("reserveDayMsg");if(msg)msg.textContent="جارٍ حذف الجدول الآلي...";
+    try{
+      await ensureAdmin();
+      for(const a of autoAssignments)await deleteKind(K.assignment,a.id,token());
+      for(const a of autoAbsences)await deleteKind(K.absence,a.id,token());
+      await loadAll();refreshReserveStatisticsViews();renderWorkspaceCard("auto");
+      const next=byId("reserveDayMsg");if(next)next.textContent="تم حذف جدول الإنشاء الآلي لهذا اليوم، مع الحفاظ على الجدول اليدوي.";
+    }catch(err){console.error(err);if(msg)msg.textContent="تعذر استكمال حذف الجدول. تحققي من الاتصال وأعيدي المحاولة."}
+  });
   byId("reserveApproveAuto")?.addEventListener("click",async()=>{
     const msg=byId("reserveDayMsg");
     try{
       const items=assignmentsOn(state.currentDate);
       if(!items.length){msg.textContent="لا توجد تكليفات لاعتمادها";return}
+      const pending=items.filter(a=>a.manual!==true&&!a.assignedTeacherId);
+      if(pending.length){msg.textContent=`يوجد ${pending.length} حصص دون معلمة مسندة. أكملي توزيعها قبل الحفظ والاعتماد.`;return;}
       for(const a of items){
-        if(!a.assignedTeacherId)continue;
+        if(a.manual===true||!a.assignedTeacherId||a.published===true)continue;
         await patchKind(K.assignment,a.id,{...plainData(a),published:true,status:"معتمد"},token(),"معتمد");
       }
-      await loadAll(); await renderPage(); await validateSession(); mountAdminShell();
+      await loadAll();refreshReserveStatisticsViews();renderWorkspaceCard("auto");
+      const result=byId("reserveDayMsg");if(result)result.textContent="تم حفظ واعتماد الجدول الآلي وظهر ضمن جدول النشر والإحصائيات ولوحة التميز.";
     }catch(err){console.error(err);msg.textContent="تعذر اعتماد الجدول"}
   });
 }
