@@ -141,4 +141,4 @@ addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once
 
 
 /* MANJAZ: isolated daily reserve section loader */
-(()=>{if(document.querySelector('script[data-manjaz-daily-reserve="1.4"]'))return;const s=document.createElement("script");s.src="daily-reserve.js?v=1.5";s.dataset.manjazDailyReserve="1.0";document.head.appendChild(s)})();
+(()=>{if(document.querySelector('script[data-manjaz-daily-reserve="1.4"]'))return;const s=document.createElement("script");s.src="daily-reserve.js?v=1.4";s.dataset.manjazDailyReserve="1.0";document.head.appendChild(s)})();
