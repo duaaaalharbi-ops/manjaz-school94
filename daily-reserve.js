@@ -1,4 +1,4 @@
-/* MANJAZ DAILY RESERVE 2.2
+/* MANJAZ DAILY RESERVE 2.6
    Public read-only daily reserve + weekly cumulative view.
    Admin-only editing through Supabase Auth session.
    Cloud-first: all operational data lives in Supabase records.
@@ -115,6 +115,18 @@ function baseHeaders(token){
     "Authorization":`Bearer ${token||SUPABASE_KEY}`,
     "Content-Type":"application/json"
   };
+}
+// A teacher's private assignment link only updates acknowledgement and the activation topic.
+// Other assignment details remain read-only; the database checks the assignment token.
+async function reserveTeacherCloudAction(ackToken,action,title=null){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/manjaz_reserve_teacher_action`,{
+    method:"POST",headers:baseHeaders(),cache:"no-store",
+    body:JSON.stringify({p_ack_token:ackToken,p_action:action,p_title:title})
+  });
+  if(!r.ok)throw new Error(`تعذر حفظ إجراء المعلمة (${r.status})`);
+  const result=await r.json();
+  if(result?.ok!==true)throw new Error(`تعذر حفظ إجراء المعلمة (${result?.error||"غير معروف"})`);
+  return result;
 }
 async function fetchKind(kind){
   const p=new URLSearchParams({
@@ -551,6 +563,9 @@ function injectStyle(){
   .reserve-public-note{font-size:13px;color:#687a83}
   .reserve-highlight{background:#f8fbfb}
   .reserve-ack{border:1px solid #cfe2dd;background:#f8fcfb;border-radius:14px;padding:14px;display:grid;gap:8px}
+  .reserve-teacher-action{display:grid;gap:8px;padding:10px;border-radius:10px;background:#eef7f4}
+  .reserve-teacher-action .btn,.reserve-activation-box .btn{justify-self:start;max-width:100%;white-space:normal}
+  .reserve-activation-box input:disabled{background:#f0f2f3;color:#6b7578;cursor:not-allowed}
   .reserve-activation-box{margin-top:6px;padding-top:12px;border-top:1px solid #d9e8e4;display:grid;gap:8px}
   .reserve-activation-box label{display:grid;gap:6px;font-weight:800;color:#0b3047}
   .reserve-activation-box input{border:1px solid #cfdadd;border-radius:10px;padding:10px 11px;font:inherit;background:#fff}
@@ -747,27 +762,27 @@ function publicHTML(){
       <p>جدول الاحتياط المعتمد والحسبة الأسبوعية التراكمية للمعلمات</p>
     </div></section>
 
-    ${ack?`<section class="reserve-ack reserve-no-print">
-      <strong>تأكيد الاطلاع على التكليف</strong>
+    ${ack?`<section class="reserve-ack reserve-no-print" aria-label="إجراءات معلمة الاحتياط">
+      <strong>تكليف الاحتياط — اطلاع المعلمة وعنوان الموضوع</strong>
       <div>${esc(ack.assignedTeacherName)} — الحصة ${esc(ack.period)} — ${esc(ack.className||"")}</div>
       <div>${esc(dayName(ack.date))} ${esc(fmtDate(ack.date))}</div>
-      ${ack.ackAt?`<span class="reserve-status">تم الاطلاع ${esc(fmtDateTimeHijri(ack.ackAt))}</span>`:
-      `<button class="btn btn-primary" id="reserveAckBtn">اطلعت</button>`}
-      <div id="reserveAckMsg"></div>
-      ${ack.ackAt?`<div class="reserve-activation-box">
-        <strong>تفعيل حصة الاحتياط</strong>
-        ${ack.activationTitle?`
-          <span class="reserve-status">تم التفعيل</span>
-          <div><b>عنوان التفعيل:</b> ${esc(ack.activationTitle)}</div>
-          ${ack.activationAt?`<small>وقت التسجيل: ${esc(fmtDateTimeHijri(ack.activationAt))}</small>`:""}
-        `:`
-          <label>عنوان التفعيل
-            <input id="reserveActivationTitle" maxlength="160" placeholder="مثال: مراجعة مهارات الوحدة الثالثة">
-          </label>
-          <button class="btn btn-primary" id="reserveActivationSave" type="button">حفظ التفعيل</button>
-          <div id="reserveActivationMsg"></div>
-        `}
-      </div>`:""}
+      <div class="reserve-teacher-action">
+        <strong>١. الاطلاع على التكليف</strong>
+        ${ack.ackAt?`<span class="reserve-status">تم الاطلاع ${esc(fmtDateTimeHijri(ack.ackAt))}</span>`:
+          `<button class="btn btn-primary" type="button" id="reserveAckBtn">تأكيد الاطلاع على التكليف</button>`}
+        <div id="reserveAckMsg" role="status" aria-live="polite"></div>
+      </div>
+      <div class="reserve-activation-box">
+        <strong>٢. موضوع الحصة (عنوان التفعيل)</strong>
+        ${!ack.ackAt?'<p class="reserve-public-note">لتفعيل كتابة الموضوع، اضغطي «تأكيد الاطلاع» أولًا.</p>':""}
+        ${ack.activationTitle?'<span class="reserve-status">تم تسجيل الموضوع، ويمكن تحديثه</span>':""}
+        <label for="reserveActivationTitle">عنوان الموضوع المنفذ خلال حصة الاحتياط
+          <input id="reserveActivationTitle" maxlength="160" value="${esc(ack.activationTitle||"")}" placeholder="مثال: مراجعة مهارات الوحدة الثالثة" ${ack.ackAt?"":"disabled"}>
+        </label>
+        <button class="btn btn-primary" id="reserveActivationSave" type="button" ${ack.ackAt?"":"disabled"}>${ack.activationTitle?"تحديث عنوان الموضوع":"حفظ عنوان الموضوع"}</button>
+        ${ack.activationAt?`<small>آخر تحديث: ${esc(fmtDateTimeHijri(ack.activationAt))}</small>`:""}
+        <div id="reserveActivationMsg" role="status" aria-live="polite"></div>
+      </div>
     </section>`:""}
 
     <section class="surface panel">
@@ -1587,31 +1602,29 @@ function bindPublic(){
   });
   const ack=new URLSearchParams(location.search).get("reserve_ack")||"";
   byId("reserveAckBtn")?.addEventListener("click",async()=>{
-    const a=state.assignments.find(x=>x.ackToken===ack&&x.published===true);
-    const msg=byId("reserveAckMsg"); if(!a||!msg)return;
+    const msg=byId("reserveAckMsg"),btn=byId("reserveAckBtn");
+    if(!ack||!msg||!btn)return;
+    btn.disabled=true;msg.textContent="جارٍ تسجيل الاطلاع...";
     try{
-      const data={...a,ackAt:new Date().toISOString()};
-      delete data.id; delete data.createdAt; delete data.updatedAt;
-      /* acknowledgement is the single public write allowed by this section */
-      await patchKind(K.assignment,a.id,data,"","معتمد");
-      msg.textContent="تم تسجيل اطلاعك بنجاح";
+      await reserveTeacherCloudAction(ack,"ack");
       await refreshAndRenderPublic();
-    }catch(err){console.error(err);msg.textContent="تعذر تسجيل الاطلاع، أعيدي المحاولة"}
+    }catch(err){
+      console.error(err);msg.textContent="تعذر تسجيل الاطلاع. تحققي من الاتصال وأعيدي المحاولة.";
+      btn.disabled=false;
+    }
   });
   byId("reserveActivationSave")?.addEventListener("click",async()=>{
-    const a=state.assignments.find(x=>x.ackToken===ack&&x.published===true&&x.ackAt);
-    const input=byId("reserveActivationTitle"),msg=byId("reserveActivationMsg");
-    if(!a||!input||!msg)return;
+    const input=byId("reserveActivationTitle"),msg=byId("reserveActivationMsg"),btn=byId("reserveActivationSave");
+    if(!ack||!input||!msg||!btn)return;
     const title=clean(input.value);
-    if(title.length<3){msg.textContent="اكتبي عنوان التفعيل";input.focus();return}
-    const btn=byId("reserveActivationSave");btn.disabled=true;msg.textContent="جارٍ حفظ التفعيل...";
+    if(title.length<3||title.length>160){msg.textContent="اكتبي عنوان موضوع من 3 إلى 160 حرفًا.";input.focus();return;}
+    btn.disabled=true;msg.textContent="جارٍ حفظ عنوان الموضوع...";
     try{
-      const data={...plainData(a),activationTitle:title,activationAt:new Date().toISOString()};
-      await patchKind(K.assignment,a.id,data,"","معتمد");
-      await loadAll();
-      renderPage();
+      await reserveTeacherCloudAction(ack,"title",title);
+      await refreshAndRenderPublic();
     }catch(err){
-      console.error(err);msg.textContent="تعذر حفظ التفعيل، أعيدي المحاولة";btn.disabled=false;
+      console.error(err);msg.textContent="تعذر حفظ عنوان الموضوع. تحققي من الاتصال وأعيدي المحاولة.";
+      btn.disabled=false;
     }
   });
 }
