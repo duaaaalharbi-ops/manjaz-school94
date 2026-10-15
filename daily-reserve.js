@@ -1,4 +1,4 @@
-/* MANJAZ DAILY RESERVE 1.0
+/* MANJAZ DAILY RESERVE 1.4
    Public read-only daily reserve + weekly cumulative view.
    Admin-only editing through Supabase Auth session.
    Cloud-first: all operational data lives in Supabase records.
@@ -17,7 +17,8 @@ const K={
   schedule:"reserve_schedule",
   absence:"reserve_absence",
   assignment:"reserve_assignment",
-  settings:"reserve_settings"
+  settings:"reserve_settings",
+  adjustment:"reserve_adjustment"
 };
 
 const DAYS=[
@@ -25,7 +26,14 @@ const DAYS=[
 ];
 const PERIODS=[1,2,3,4,5,6,7];
 const DEFAULT_WEIGHTS={week:30,term:10,daily:18,workload:0.35,consecutive:9};
-let state={teachers:[],schedules:[],absences:[],assignments:[],settings:null,admin:null,currentDate:todayISO()};
+const V6_SOURCE="v6-1448-04-27";
+const COUNT_START="2026-10-18";
+const EMERGENCY_DAILY_DEMAND=20;
+const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البلادي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
+const ADVANCED_RANK=new Set(["دعاء الحربي","سندس الغامدي","عايدة الصاعدي","ريم القحطاني","عوالي السبيعي","بدرية الحربي","حنان المجنوني"]);
+const ABSOLUTE_EXCLUDED=new Set(["نورة الهودان"]);
+const V6_SEED=[{"name":"أفراح الجدعاني","workload":9,"timetable":{"sun":["","","","","","أول6","ثالث3"],"mon":["أول6","","أول4","","","ثالث3",""],"tue":["","أول5","","","",""],"wed":["أول5","","","أول4","",""],"thu":["","ثالث3","","","",""]}},{"name":"إيمان الجدعاني","workload":20,"timetable":{"sun":["ثاني6","","","","ثاني3","ثاني1","ثاني2"],"mon":["ثاني2","","ثاني6","ثاني1","","","ثاني4"],"tue":["ثاني6","","","ثاني4","ثاني3","ثاني1"],"wed":["ثاني2","ثاني4","","","ثاني3","ثاني6"],"thu":["ثاني3","ثاني1","","ثاني2","ثاني4",""]}},{"name":"بدرية الحربي","workload":11,"timetable":{"sun":["","ثاني4","","","ثاني4|نشاط","","ثاني5"],"mon":["ثاني6","","","ثاني5","ثاني4|نشاط","",""],"tue":["","","","","","ثاني4"],"wed":["","","","ثاني6","ثاني4",""],"thu":["ثاني5","ثاني6","","","",""]}},{"name":"بدرية السلمي","workload":16,"timetable":{"sun":["","ثالث1|نشاط","ثالث2","ثالث3","","","ثالث1"],"mon":["","","ثالث3","","","ثالث1","ثالث2"],"tue":["","ثالث2","ثالث1","","","ثالث3"],"wed":["ثالث1","","","","ثالث3","ثالث2"],"thu":["","ثالث1","","ثالث2","ثالث3",""]}},{"name":"تهاني العتيبي","workload":22,"timetable":{"sun":["أول1","أول2","","ثالث2","ثالث3","ثالث1",""],"mon":["ثالث2","ثالث3","","أول2","ثالث1","أول1",""],"tue":["ثالث1","أول1","","أول2","ثالث3",""],"wed":["ثالث2","ثالث1","","أول1","أول2",""],"thu":["ثالث3","","","أول1","أول2","ثالث2"]}},{"name":"حصة المنتشري","workload":20,"timetable":{"sun":["أول6","ثاني2","ثاني1","ثاني3","","",""],"mon":["","ثاني3","ثاني1","أول6","","ثاني2",""],"tue":["أول6","","ثاني3","ثاني2","ثاني1",""],"wed":["ثاني3","أول6","","ثاني2","ثاني1",""],"thu":["ثاني2","ثاني3","ثاني1","أول6","",""]}},{"name":"حنان المجنوني","workload":13,"timetable":{"sun":["ثالث5","ثالث2","","","","ثالث3","ثالث4"],"mon":["","ثالث1","","","ثالث6","","ثالث3"],"tue":["","ثالث5","","","ثالث2|نشاط","ثالث6"],"wed":["","","ثالث2","","",""],"thu":["ثالث4","","","","ثالث1",""]}},{"name":"خزماء الجبيري","workload":18,"timetable":{"sun":["","أول4","أول6","أول3","أول1","",""],"mon":["أول5","أول2","","","","أول6","أول3"],"tue":["","","أول2","","أول4","أول1"],"wed":["","أول2","أول4","","أول5",""],"thu":["أول3","","أول6","أول5","أول1",""]}},{"name":"خلود الكثيري","workload":18,"timetable":{"sun":["أول5","","أول2","","أول6","أول1",""],"mon":["أول1","أول3","","أول5","","","أول4"],"tue":["","أول3","","أول6","",""],"wed":["","أول4","أول1","أول6","","أول2"],"thu":["","أول3","أول4","","أول5","أول2"]}},{"name":"دعاء الحربي","workload":20,"timetable":{"sun":["","أول6","","ثاني6","ثاني5","","أول5"],"mon":["","أول5","أول6","","ثاني5","","ثاني6"],"tue":["","أول6","أول5","ثاني5","","ثاني6"],"wed":["ثاني5","ثاني6","","أول5","أول6",""],"thu":["ثاني6","ثاني5","","","أول6","أول5"]}},{"name":"رحمة العيسي","workload":4,"timetable":{"sun":["","","","","","","أول4"],"mon":["أول4","","","","","",""],"tue":["أول4","","","","",""],"wed":["","","","","",""],"thu":["","","","","","أول4"]}},{"name":"ريم الحربي","workload":18,"timetable":{"sun":["ثالث4","","ثالث5","","ثالث1","ثالث6",""],"mon":["","","ثالث2","ثالث3","","ثالث4",""],"tue":["ثالث3","ثالث6","","ثالث5","ثالث1",""],"wed":["ثالث3","","ثالث4","","ثالث2",""],"thu":["ثالث1","","ثالث5","ثالث6","ثالث2",""]}},{"name":"ريم القحطاني","workload":16,"timetable":{"sun":["","ثاني3","","ثاني2|نشاط","ثاني1","",""],"mon":["ثاني1","","","ثاني2","ثاني3","",""],"tue":["ثاني2","","ثاني1","","ثاني2|نشاط","ثاني3"],"wed":["","ثاني3","","ثاني1","","ثاني2"],"thu":["","","ثاني2","ثاني1","ثاني3",""]}},{"name":"رية الحربي","workload":13,"timetable":{"sun":["ثالث3|نشاط","","","","ثالث2","","ثالث6"],"mon":["","","","ثالث4","","ثالث1","ثالث5"],"tue":["ثالث4","","","ثالث1","","ثالث2"],"wed":["","","","ثالث3","","ثالث5"],"thu":["","","ثالث6","","","ثالث3"]}},{"name":"سحر الشمراني","workload":17,"timetable":{"sun":["ثاني4","ثاني6","","ثاني5","","ثاني5|نشاط",""],"mon":["","ثاني5","","ثاني4","ثاني6","",""],"tue":["ثاني5","ثاني4","","ثاني6","",""],"wed":["","","ثاني6","","ثاني5","ثاني4"],"thu":["","ثاني4","ثاني6","","ثاني5","ثاني5|نشاط"]}},{"name":"سندس الغامدي","workload":20,"timetable":{"sun":["ثاني1","","","ثاني4","ثاني2","","ثاني3"],"mon":["","ثاني4","ثاني2","","","ثاني1","ثاني3"],"tue":["ثاني4","ثاني3","ثاني2","ثاني1","",""],"wed":["","ثاني2","ثاني3","ثاني4","","ثاني1"],"thu":["","ثاني2","ثاني3","ثاني4","","ثاني1"]}},{"name":"شوق المطيري","workload":8,"timetable":{"sun":["","","","","","أول2",""],"mon":["","","","","أول1","","أول2"],"tue":["","","","","أول1","أول2"],"wed":["أول1","","","","",""],"thu":["","أول2","أول1","","",""]}},{"name":"شيخة المالكي","workload":16,"timetable":{"sun":["ثالث2","ثالث3","","","ثالث6","",""],"mon":["","ثالث2","ثالث6","","ثالث3","ثالث6|نشاط",""],"tue":["","","ثالث3","ثالث2","ثالث6",""],"wed":["","ثالث6","","ثالث2","","ثالث3"],"thu":["","ثالث2","","ثالث3","","ثالث6"]}},{"name":"عايدة الصاعدي","workload":18,"timetable":{"sun":["","","ثالث1","ثالث6","ثالث4","","ثالث2"],"mon":["ثالث3","ثالث5","","ثالث2","ثالث4","","ثالث1"],"tue":["","","","ثالث3","","ثالث5"],"wed":["","ثالث3","ثالث1","ثالث4","ثالث6",""],"thu":["","","ثالث2","","ثالث6","ثالث5"]}},{"name":"عبير المولد","workload":9,"timetable":{"sun":["","","ثالث4","","ثالث5","",""],"mon":["","","","ثالث5","","","ثالث6"],"tue":["","","","ثالث6","","ثالث4"],"wed":["","","","","","ثالث6"],"thu":["","ثالث5","","","","ثالث4"]}},{"name":"علوة الحربي","workload":11,"timetable":{"sun":["","","ثاني2","","","ثاني3","ثاني1|نشاط"],"mon":["ثاني3","","","","ثاني1","","ثاني2"],"tue":["ثاني1|نشاط","","","","",""],"wed":["","ثاني1","","","","ثاني3"],"thu":["","","","","ثاني1","ثاني2"]}},{"name":"علية القاسمي","workload":4,"timetable":{"sun":["","","أول3","","","",""],"mon":["","","","","","أول3",""],"tue":["أول3","","","","",""],"wed":["","","","أول3","",""],"thu":["","","","","",""]}},{"name":"عواطف الحربي","workload":12,"timetable":{"sun":["ثاني3","","ثاني4","","ثاني6","",""],"mon":["","","ثاني3","ثاني6","","ثاني4",""],"tue":["","","ثاني6","ثاني3","",""],"wed":["","","ثاني4","","",""],"thu":["","","ثاني4","ثاني6","","ثاني3"]}},{"name":"عوالي السبيعي","workload":20,"timetable":{"sun":["","أول1","أول5","أول4","","أول3",""],"mon":["أول3","أول4","","أول1","أول2","",""],"tue":["أول2","أول4","","أول3","أول5",""],"wed":["أول2","","أول5","","أول1","أول3"],"thu":["أول5","","أول2","","أول4","أول1"]}},{"name":"غالية المزمومي","workload":15,"timetable":{"sun":["","ثالث6","","","","ثالث4","ثالث5"],"mon":["","","ثالث5","ثالث6","","",""],"tue":["ثالث5","ثالث4","ثالث6","","",""],"wed":["ثالث4","","","ثالث6","ثالث5","ثالث4|نشاط"],"thu":["ثالث6","ثالث4","","ثالث5","",""]}},{"name":"فاطمة الزهراني","workload":13,"timetable":{"sun":["","","ثاني5","","","ثاني6","ثاني6|نشاط"],"mon":["","أول6","","","","ثاني6","ثاني5"],"tue":["","","أول6","","ثاني6","ثاني5"],"wed":["ثاني6","","أول6","","",""],"thu":["","","ثاني5","","","ثاني6|نشاط"]}},{"name":"فاطمة العماري","workload":16,"timetable":{"sun":["ثالث1","ثالث4","","ثالث5","","",""],"mon":["ثالث5","","ثالث4","ثالث1","","",""],"tue":["","ثالث1","ثالث5","ثالث4","",""],"wed":["ثالث5","ثالث4","ثالث5|نشاط","","ثالث1",""],"thu":["ثالث5","","ثالث1","ثالث4","",""]}},{"name":"فاطمة الغامدي","workload":18,"timetable":{"sun":["","ثاني1","ثاني3","","","","ثاني4"],"mon":["","ثاني2","ثاني4","ثاني3|نشاط","","ثاني3","ثاني1"],"tue":["ثاني3|نشاط","ثاني2","","","ثاني4",""],"wed":["","","ثاني1","ثاني3","ثاني2",""],"thu":["ثاني1","","","ثاني3","ثاني2","ثاني4"]}},{"name":"فاطمة حسن","workload":9,"timetable":{"sun":["","أول3","","","","","أول2"],"mon":["","","أول2","","","","أول1"],"tue":["","","أول1","","","أول3"],"wed":["","أول1","","","أول3",""],"thu":["","","","","","أول2"]}},{"name":"لمياء البلادي","workload":22,"timetable":{"sun":["أول4","","ثالث6","ثالث4","أول3","ثالث5",""],"mon":["ثالث4","ثالث6","","أول4","أول3","ثالث5",""],"tue":["ثالث6","","أول3","أول4","ثالث4",""],"wed":["أول3","","ثالث6","ثالث5","أول4",""],"thu":["أول4","","ثالث4","أول3","ثالث5",""]}},{"name":"ليلى مجرشي","workload":20,"timetable":{"sun":["","","أول4","أول1","أول2","","أول3"],"mon":["","أول1","أول3","","أول4","أول2",""],"tue":["","أول2","أول4","أول1","أول3",""],"wed":["أول4","","أول3","أول2","","أول1"],"thu":["أول1","أول4","","أول2","","أول3"]}},{"name":"منال الجابري","workload":14,"timetable":{"sun":["أول2","أول5","","","","","أول1"],"mon":["أول2","","أول1","أول3","","أول5",""],"tue":["أول1","","","","","أول4"],"wed":["","أول3","أول2","","","أول4"],"thu":["","أول5","","","أول3",""]}},{"name":"نجوى الغامدي","workload":12,"timetable":{"sun":["ثاني5","","","ثاني1","","ثاني2",""],"mon":["","ثاني1","","","ثاني2","",""],"tue":["","ثاني1","ثاني5","","","ثاني2"],"wed":["ثاني1","","ثاني2","","","ثاني5"],"thu":["","","","","ثاني5",""]}},{"name":"نورة الهودان","workload":23,"timetable":{"sun":["ثالث6","ثالث5","ثالث3","ثالث1","","",""],"mon":["ثالث6","ثالث4","ثالث1","","ثالث5","ثالث2",""],"tue":["ثالث2","ثالث3","ثالث4","","ثالث5",""],"wed":["ثالث6","ثالث5","ثالث3","ثالث1","ثالث4",""],"thu":["ثالث2","ثالث6","ثالث3","ثالث1","ثالث4",""]}},{"name":"نورة العنزي","workload":12,"timetable":{"sun":["أول3","","أول1","أول2","","",""],"mon":["","","","","ثالث2","",""],"tue":["","","ثالث2","","أول2","ثالث1"],"wed":["","ثالث2","","","","ثالث1"],"thu":["","أول1","أول3","","","ثالث1"]}},{"name":"هاجر السلمي","workload":9,"timetable":{"sun":["","","","أول5","","أول4",""],"mon":["","","","","","أول4","أول5"],"tue":["أول5","","","","","أول6"],"wed":["أول6","","","","",""],"thu":["أول6","","","أول4","",""]}},{"name":"وحش القحطاني","workload":20,"timetable":{"sun":["","ثاني5","ثاني6","","أول5","ثاني4",""],"mon":["ثاني4","ثاني6","ثاني5","","أول5","",""],"tue":["","ثاني6","ثاني4","أول5","ثاني5",""],"wed":["ثاني4","أول5","","ثاني5","ثاني6",""],"thu":["ثاني4","","أول5","ثاني5","ثاني6",""]}},{"name":"وضحه المحمادي","workload":7,"timetable":{"sun":["","","","أول6","","","أول6"],"mon":["","","أول5","","","",""],"tue":["","","","","أول6","أول5"],"wed":["","","","","","أول5"],"thu":["","أول6","","","",""]}},{"name":"دخنة الشهري","workload":8,"timetable":{"sun":["","","","","","",""],"mon":["ثاني5","","","","أول6","ثاني5","أول6"],"tue":["","","","","",""],"wed":["","ثاني5","ثاني5","أول6","","أول6"],"thu":["","","","","",""]}}];
+let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],settings:null,admin:null,currentDate:todayISO(),workspaceCard:"manual"};
 let renderBusy=false;
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -63,8 +71,35 @@ function weekRange(date){
 function inRange(date,start,end){return date>=start&&date<=end}
 function fmtDate(s){
   if(!s)return"—";
-  try{return new Intl.DateTimeFormat("ar-SA",{year:"numeric",month:"2-digit",day:"2-digit"}).format(parseDate(s))}
-  catch(_){return s}
+  try{return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{year:"numeric",month:"long",day:"numeric"}).format(parseDate(s))}
+  catch(_){return "—"}
+}
+function fmtDateTimeHijri(s){
+  if(!s)return"—";
+  try{
+    const d=new Date(s);
+    const date=new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{year:"numeric",month:"long",day:"numeric"}).format(d);
+    const time=new Intl.DateTimeFormat("ar-SA",{hour:"2-digit",minute:"2-digit"}).format(d);
+    return `${date} — ${time}`;
+  }catch(_){return"—"}
+}
+function hijriDateControl(id,date){
+  return `<div class="reserve-hijri-date">
+    <button class="reserve-mini" type="button" data-hijri-step="-1" data-hijri-target="${esc(id)}">اليوم السابق</button>
+    <strong id="${esc(id)}Label">${esc(dayName(date))} — ${esc(fmtDate(date))}</strong>
+    <button class="reserve-mini" type="button" data-hijri-step="1" data-hijri-target="${esc(id)}">اليوم التالي</button>
+    <input id="${esc(id)}" type="hidden" value="${esc(date)}">
+  </div>`;
+}
+function bindHijriDateControl(id,onChange){
+  const input=byId(id); if(!input)return;
+  document.querySelectorAll(`[data-hijri-target="${id}"]`).forEach(b=>b.onclick=()=>{
+    const next=addDays(input.value||todayISO(),Number(b.dataset.hijriStep||0));
+    input.value=next;
+    const label=byId(`${id}Label`);
+    if(label)label.textContent=`${dayName(next)} — ${fmtDate(next)}`;
+    onChange?.(next);
+  });
 }
 
 function baseHeaders(token){
@@ -139,14 +174,119 @@ async function login(email,password){
 function token(){return state.admin?.access_token||loadSession()?.access_token||""}
 
 async function loadAll(){
-  const [teachers,schedules,absences,assignments,settings]=await Promise.all([
-    fetchKind(K.teacher),fetchKind(K.schedule),fetchKind(K.absence),fetchKind(K.assignment),fetchKind(K.settings)
+  const [teachers,schedules,absences,assignments,settings,adjustments]=await Promise.all([
+    fetchKind(K.teacher),fetchKind(K.schedule),fetchKind(K.absence),fetchKind(K.assignment),fetchKind(K.settings),fetchKind(K.adjustment)
   ]);
   state.teachers=teachers.filter(x=>x.active!==false);
   state.schedules=schedules;
   state.absences=absences;
   state.assignments=assignments;
+  state.adjustments=adjustments;
   state.settings=settings[0]||null;
+}
+function normName(s){return clean(s).replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")}
+function seedForName(name){const n=normName(name);return V6_SEED.find(x=>normName(x.name)===n)||null}
+function teacherFlags(t){
+  const n=clean(t.name);
+  return {
+    permanentExcluded:t.permanentExcluded===true||PERMANENT_EXCLUDED.has(n),
+    advanced:t.advancedRank===true||ADVANCED_RANK.has(n),
+    absolute:t.absoluteExcluded===true||ABSOLUTE_EXCLUDED.has(n)
+  };
+}
+function ceilingFor(t){return teacherFlags(t).advanced?22:20}
+function parseScheduleValue(v){
+  const s=clean(v),activity=s.includes("|نشاط");
+  return {className:clean(s.split("|")[0]),activity};
+}
+function dateRangeAssignments(start,end){
+  const cs=state.settings?.countStart||COUNT_START;
+  const effectiveStart=start<cs?cs:start;
+  return publishedAssignments().filter(a=>a.date>=effectiveStart&&a.date<=end);
+}
+function previousWeekRange(date){
+  const wr=weekRange(addDays(date,-7)); return wr;
+}
+function currentWeekAbsenceLoad(teacherId,date){
+  const wr=weekRange(date);
+  let missed=0;
+  state.absences.forEach(a=>{
+    if(String(a.teacherId)!==String(teacherId))return;
+    if(inRange(a.date,wr.start,wr.end))missed+=(a.periods||[]).length;
+    else if(a.date===addDays(wr.start,-3)&&dayKey(a.date)==="thu")missed+=(a.periods||[]).length;
+  });
+  return missed;
+}
+function previousWeekReserveCount(teacherId,date){
+  const wr=previousWeekRange(date);
+  return publishedAssignments().filter(a=>String(a.assignedTeacherId)===String(teacherId)&&inRange(a.date,wr.start,wr.end)).length;
+}
+function dailyOriginalCount(teacherId,date){
+  const s=scheduleOf(teacherId),dk=dayKey(date);
+  return (s?.timetable?.[dk]||[]).filter(x=>clean(x)).length;
+}
+function teacherHasClass(teacherId,className){
+  const target=clean(className); if(!target)return false;
+  const s=scheduleOf(teacherId); if(!s)return false;
+  return DAYS.some(d=>(s.timetable?.[d[0]]||[]).some(v=>parseScheduleValue(v).className===target));
+}
+function dailyDemand(date){
+  return absencesOn(date).reduce((n,a)=>n+(a.periods||[]).length,0);
+}
+function sameClassReserveToday(teacherId,date,className,exceptId=""){
+  const target=clean(className);
+  return assignmentsOn(date).some(a=>String(a.id)!==String(exceptId)&&String(a.assignedTeacherId)===String(teacherId)&&clean(a.className)===target);
+}
+function adjacentOriginalCount(teacherId,date,period){
+  let n=0;
+  for(const p of [Number(period)-1,Number(period)+1]){
+    if(p<1||p>7)continue;
+    if(regularCell(teacherId,date,p))n++;
+  }
+  return n;
+}
+function breastfeedingBlocked(t,date,period){
+  if(clean(t.name)!=="ريم الحربي")return false;
+  const dk=dayKey(date);
+  return ((dk==="sun"||dk==="mon")&&Number(period)===7)||(["tue","wed","thu"].includes(dk)&&Number(period)===6);
+}
+function makeupPending(t,date){
+  const missed=currentWeekAbsenceLoad(t.id,date);
+  if(!missed)return false;
+  const c=assignmentCounts(date).get(String(t.id))||{week:0};
+  const effective=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
+  return effective<Number(t.workload||0);
+}
+async function ensureSeedV6(){
+  await ensureAdmin();
+  if(state.settings?.sourceVersion===V6_SOURCE)return false;
+  for(const s of V6_SEED){
+    let t=state.teachers.find(x=>normName(x.name)===normName(s.name));
+    const flags={
+      permanentExcluded:PERMANENT_EXCLUDED.has(s.name),
+      advancedRank:ADVANCED_RANK.has(s.name),
+      absoluteExcluded:ABSOLUTE_EXCLUDED.has(s.name),
+      sourceVersion:V6_SOURCE
+    };
+    const workload=s.name==="نورة الهودان"?24:Number(s.workload||0);
+    if(t){
+      await patchKind(K.teacher,t.id,{...plainData(t),name:s.name,workload,...flags,active:true},token());
+    }else{
+      t=await insertKind(K.teacher,{name:s.name,subject:"",workload,excluded:false,active:true,...flags,createdAt:new Date().toISOString()},token());
+    }
+    const tid=String(t.id||"");
+    if(!tid){throw new Error(`تعذر إنشاء سجل المعلمة: ${s.name}`)}
+    const teacherId=String(t.id);
+    const sch=state.schedules.find(x=>String(x.teacherId)===teacherId);
+    const scheduleData={teacherId,teacherName:s.name,timetable:s.timetable,sourceVersion:V6_SOURCE,updatedAt:new Date().toISOString()};
+    if(sch)await patchKind(K.schedule,sch.id,scheduleData,token());
+    else await insertKind(K.schedule,scheduleData,token());
+  }
+  const settingsData={...(state.settings?plainData(state.settings):{}),sourceVersion:V6_SOURCE,countStart:state.settings?.countStart||COUNT_START,termStart:state.settings?.termStart||COUNT_START,emergencyDailyDemand:Number(state.settings?.emergencyDailyDemand||EMERGENCY_DAILY_DEMAND),updatedAt:new Date().toISOString()};
+  if(state.settings)await patchKind(K.settings,state.settings.id,settingsData,token());
+  else await insertKind(K.settings,settingsData,token());
+  await loadAll();
+  return true;
 }
 function scheduleOf(teacherId){
   return state.schedules.find(x=>String(x.teacherId)===String(teacherId))||null;
@@ -159,24 +299,53 @@ function publishedAssignments(){
   return state.assignments.filter(x=>x.published===true&&x.status!=="ملغي");
 }
 function assignmentCounts(referenceDate){
-  const wr=weekRange(referenceDate),start=termStart();
-  const pub=publishedAssignments();
+  const wr=weekRange(referenceDate),start=termStart()||COUNT_START,countStart=state.settings?.countStart||COUNT_START;
+  const pub=publishedAssignments().filter(a=>!countStart||a.date>=countStart);
   const map=new Map();
-  state.teachers.forEach(t=>map.set(String(t.id),{daily:0,week:0,term:0,days:{sun:0,mon:0,tue:0,wed:0,thu:0}}));
+  state.teachers.forEach(t=>map.set(String(t.id),{
+    daily:0,week:0,term:0,
+    days:{sun:0,mon:0,tue:0,wed:0,thu:0},
+    dayState:{sun:"",mon:"",tue:"",wed:"",thu:""},
+    maxDaily:0
+  }));
+  const dailyBuckets=new Map();
   pub.forEach(a=>{
     const s=map.get(String(a.assignedTeacherId)); if(!s)return;
     if(!start||a.date>=start)s.term++;
     if(inRange(a.date,wr.start,wr.end)){
-      s.week++; if(s.days[a.dayKey]!=null)s.days[a.dayKey]++;
+      s.week++;
+      if(s.days[a.dayKey]!=null){
+        s.days[a.dayKey]++;
+        const prior=s.dayState[a.dayKey];
+        const current=a.ackAt?"ack":"approved";
+        s.dayState[a.dayKey]=(prior==="approved"||current==="approved")?"approved":"ack";
+      }
+      const key=`${a.assignedTeacherId}|${a.date}`;
+      dailyBuckets.set(key,(dailyBuckets.get(key)||0)+1);
     }
     if(a.date===referenceDate)s.daily++;
+  });
+  dailyBuckets.forEach((n,key)=>{
+    const id=String(key).split("|")[0],s=map.get(id);
+    if(s)s.maxDaily=Math.max(s.maxDaily,n);
+  });
+  state.adjustments.forEach(a=>{
+    const s=map.get(String(a.teacherId)); if(!s)return;
+    const delta=Number(a.delta||0); if(!delta)return;
+    if(!start||clean(a.date||a.weekStart)>=start)s.term=Math.max(0,Number(s.term||0)+delta);
+    if(clean(a.weekStart)===wr.start){
+      s.week=Math.max(0,Number(s.week||0)+delta);
+      if(a.date===referenceDate)s.daily=Math.max(0,Number(s.daily||0)+delta);
+      const dk=dayKey(a.date||"");
+      if(dk&&s.days[dk]!=null)s.days[dk]=Math.max(0,Number(s.days[dk]||0)+delta);
+    }
   });
   return map;
 }
 function publicWeeklyRows(referenceDate){
   const counts=assignmentCounts(referenceDate);
   return state.teachers.slice().sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"))
-    .map(t=>({teacher:t,count:counts.get(String(t.id))||{week:0,term:0,days:{}}}));
+    .map(t=>({teacher:t,count:counts.get(String(t.id))||{week:0,term:0,days:{},dayState:{},maxDaily:0}}));
 }
 
 function absencesOn(date){return state.absences.filter(x=>x.date===date)}
@@ -198,29 +367,72 @@ function consecutivePenalty(teacherId,date,period){
   return n;
 }
 
-function candidateRanking(date,period,absentTeacherId,exceptAssignmentId=""){
-  const counts=assignmentCounts(date),w=weights();
-  const candidates=[];
+function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts={}){
+  const counts=assignmentCounts(date);
+  const targetClass=clean(opts.className||"");
+  const emergency=dailyDemand(date)>Number(state.settings?.emergencyDailyDemand||EMERGENCY_DAILY_DEMAND);
+  const usedPrimary=opts.usedPrimary||new Set(),usedAlt1=opts.usedAlt1||new Set();
+  const all=[];
   state.teachers.forEach(t=>{
     if(String(t.id)===String(absentTeacherId))return;
     if(t.active===false||t.excluded===true)return;
+    const flags=teacherFlags(t);
+    if(flags.permanentExcluded||flags.absolute)return;
     if(isAbsent(t.id,date))return;
+    if(breastfeedingBlocked(t,date,period))return;
     if(regularCell(t.id,date,period))return;
     if(occupiedByReserve(t.id,date,period,exceptAssignmentId))return;
+
     const c=counts.get(String(t.id))||{daily:0,week:0,term:0};
-    const consecutive=consecutivePenalty(t.id,date,period);
-    const score=
-      c.week*w.week+
-      c.term*w.term+
-      c.daily*w.daily+
-      Number(t.workload||0)*w.workload+
-      consecutive*w.consecutive;
-    candidates.push({
+    const missed=currentWeekAbsenceLoad(t.id,date);
+    const effectiveLoad=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
+    const pending=makeupPending(t,date);
+    const ceiling=ceilingFor(t);
+    if(!emergency&&!pending&&effectiveLoad>=ceiling)return;
+
+    const ownClass=targetClass?teacherHasClass(t.id,targetClass):false;
+    const fatimaSecond=clean(t.name)==="فاطمة حسن"&&/^ثاني/.test(targetClass);
+    const dailyOriginal=dailyOriginalCount(t.id,date);
+    const adjacentOriginal=adjacentOriginalCount(t.id,date,period);
+    const prevWeek=previousWeekReserveCount(t.id,date);
+    const sameClassRepeat=targetClass?sameClassReserveToday(t.id,date,targetClass,exceptAssignmentId):false;
+    const diversityUsed=usedPrimary.has(String(t.id))||usedAlt1.has(String(t.id));
+
+    all.push({
       teacherId:String(t.id),name:t.name||"",workload:Number(t.workload||0),
-      week:c.week,term:c.term,daily:c.daily,consecutive,score:Number(score.toFixed(2))
+      week:Number(c.week||0),term:Number(c.term||0),daily:Number(c.daily||0),
+      effectiveLoad,missed,makeupPending:pending,ceiling,ownClass,fatimaSecond,
+      dailyOriginal,adjacentOriginal,prevWeek,sameClassRepeat,diversityUsed,
+      emergency
     });
   });
-  return candidates.sort((a,b)=>a.score-b.score||a.week-b.week||a.term-b.term||a.workload-b.workload||a.name.localeCompare(b.name,"ar")).slice(0,3);
+
+  let pool=all.filter(x=>!x.sameClassRepeat);
+  if(!pool.length&&emergency)pool=all.slice();
+
+  if(!emergency){
+    const fresh=pool.filter(x=>x.prevWeek===0);
+    if(fresh.length>=3)pool=fresh;
+  }
+
+  if(!opts.ignoreDiversity){
+    const fresh=pool.filter(x=>!x.diversityUsed);
+    if(fresh.length>=Math.min(3,Number(opts.limit||3)))pool=fresh;
+  }
+
+  pool.sort((a,b)=>
+    a.effectiveLoad-b.effectiveLoad||
+    Number(b.makeupPending)-Number(a.makeupPending)||
+    a.week-b.week||
+    Number(b.ownClass)-Number(a.ownClass)||
+    Number(b.fatimaSecond)-Number(a.fatimaSecond)||
+    a.dailyOriginal-b.dailyOriginal||
+    a.adjacentOriginal-b.adjacentOriginal||
+    a.term-b.term||
+    a.prevWeek-b.prevWeek||
+    a.name.localeCompare(b.name,"ar")
+  );
+  return pool.slice(0,Number(opts.limit||3)).map((x,i)=>({...x,score:i+1}));
 }
 
 function injectStyle(){
@@ -258,6 +470,27 @@ function injectStyle(){
   .reserve-activation-box{margin-top:6px;padding-top:12px;border-top:1px solid #d9e8e4;display:grid;gap:8px}
   .reserve-activation-box label{display:grid;gap:6px;font-weight:800;color:#0b3047}
   .reserve-activation-box input{border:1px solid #cfdadd;border-radius:10px;padding:10px 11px;font:inherit;background:#fff}
+  .reserve-count-approved{background:#fff0d8!important;color:#9a4d00;font-weight:900}
+  .reserve-count-ack{background:#e5f6ec!important;color:#176b3a;font-weight:900}
+  .reserve-excellence{display:grid;gap:10px}
+  .reserve-rank-badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;background:#eef5f4;font-size:12px;font-weight:900}
+  .reserve-rank-badge.star{background:#fff4d7;color:#8a5a00}
+  .reserve-source-note{font-size:12px;color:#60757c}
+  .reserve-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  .reserve-work-card{border:1px solid #d9e3e5;background:#fff;border-radius:14px;padding:14px;text-align:right;cursor:pointer;display:grid;gap:5px;min-height:105px}
+  .reserve-work-card strong{color:#0b3047;font-size:15px}
+  .reserve-work-card small{color:#64777f;line-height:1.6}
+  .reserve-work-card.active{border-color:#0f5f59;box-shadow:0 0 0 2px rgba(15,95,89,.08);background:#f8fcfb}
+  .reserve-hijri-date{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;border:1px solid #e0e7e9;border-radius:12px;padding:9px;background:#fafcfc}
+  .reserve-hijri-date strong{min-width:190px;text-align:center;color:#0b3047}
+  .reserve-multi-select{min-height:150px;width:100%;border:1px solid #cfdadd;border-radius:10px;padding:8px;font:inherit;background:#fff}
+  .reserve-warning-box{border:1px solid #f0c987;background:#fff7e9;color:#704500;border-radius:12px;padding:11px;display:grid;gap:5px}
+  .reserve-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+  .reserve-kpi>div{border:1px solid #e0e7e9;border-radius:12px;padding:11px;background:#fff;display:grid;gap:3px}
+  .reserve-kpi b{font-size:18px;color:#0b3047}
+  .reserve-admin-only{border-right:4px solid #0f5f59;padding-right:10px}
+  .reserve-edit-number{width:84px}
+  @media(max-width:980px){.reserve-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reserve-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:760px){
     .reserve-grid{grid-template-columns:1fr}
     .schedule-day{grid-template-columns:80px repeat(7,95px)}
@@ -290,7 +523,7 @@ function publicHTML(){
       <strong>تأكيد الاطلاع على التكليف</strong>
       <div>${esc(ack.assignedTeacherName)} — الحصة ${esc(ack.period)} — ${esc(ack.className||"")}</div>
       <div>${esc(dayName(ack.date))} ${esc(fmtDate(ack.date))}</div>
-      ${ack.ackAt?`<span class="reserve-status">تم الاطلاع ${esc(new Date(ack.ackAt).toLocaleString("ar-SA"))}</span>`:
+      ${ack.ackAt?`<span class="reserve-status">تم الاطلاع ${esc(fmtDateTimeHijri(ack.ackAt))}</span>`:
       `<button class="btn btn-primary" id="reserveAckBtn">اطلعت</button>`}
       <div id="reserveAckMsg"></div>
       ${ack.ackAt?`<div class="reserve-activation-box">
@@ -298,7 +531,7 @@ function publicHTML(){
         ${ack.activationTitle?`
           <span class="reserve-status">تم التفعيل</span>
           <div><b>عنوان التفعيل:</b> ${esc(ack.activationTitle)}</div>
-          ${ack.activationAt?`<small>وقت التسجيل: ${esc(new Date(ack.activationAt).toLocaleString("ar-SA"))}</small>`:""}
+          ${ack.activationAt?`<small>وقت التسجيل: ${esc(fmtDateTimeHijri(ack.activationAt))}</small>`:""}
         `:`
           <label>عنوان التفعيل
             <input id="reserveActivationTitle" maxlength="160" placeholder="مثال: مراجعة مهارات الوحدة الثالثة">
@@ -311,10 +544,12 @@ function publicHTML(){
 
     <section class="surface panel">
       <div class="panel-head"><h3>جدول الاحتياط اليومي</h3><span>${esc(dayName(date))} — ${esc(fmtDate(date))}</span></div>
-      <div class="reserve-no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        <input id="reservePublicDate" type="date" value="${esc(date)}">
+      <div class="reserve-no-print" style="display:grid;gap:8px;margin-bottom:12px">
+        ${hijriDateControl("reservePublicDate",date)}
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-ghost" type="button" id="reservePrint">طباعة الجدول</button>
         <button class="btn btn-ghost" type="button" id="reserveAdminOpen">دخول الإدارة</button>
+        </div>
       </div>
       <div class="reserve-table-wrap">
         <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th><th>التفعيل</th></tr></thead>
@@ -334,7 +569,8 @@ function publicHTML(){
         <button class="reserve-tab" type="button" data-week-shift="-7">الأسبوع السابق</button>
       </div>
       <div id="reserveWeeklyHolder">${weeklyTableHTML(rows,date)}</div>
-      <p class="reserve-public-note">الأرقام للعرض فقط وتتحدث تلقائيًا بعد اعتماد أو إلغاء أو استبدال تكليف الاحتياط.</p>
+      <div id="reserveExcellenceHolder" style="margin-top:14px">${excellenceTableHTML(date)}</div>
+      <p class="reserve-public-note">البرتقالي = معتمد من الإدارة، الأخضر = تم اطلاع المعلمة. الأرقام تتحدث تلقائيًا بعد أي تحديث معتمد.</p>
     </section>
 
     <section id="reserveAdminMount" class="reserve-no-print"></section>
@@ -345,9 +581,22 @@ function weeklyTableHTML(rows,referenceDate){
     <th>المعلمة</th>${DAYS.map(d=>`<th>${d[1]}</th>`).join("")}<th>مجموع الأسبوع</th><th>التراكمي للفصل</th>
   </tr></thead><tbody>${rows.length?rows.map(r=>`<tr>
     <td><strong>${esc(r.teacher.name)}</strong></td>
-    ${DAYS.map(d=>`<td>${Number(r.count.days?.[d[0]]||0)}</td>`).join("")}
+    ${DAYS.map(d=>{
+      const n=Number(r.count.days?.[d[0]]||0),st=r.count.dayState?.[d[0]]||"";
+      const cls=n?(st==="ack"?"reserve-count-ack":"reserve-count-approved"):"";
+      return `<td class="${cls}">${n}</td>`;
+    }).join("")}
     <td><strong>${Number(r.count.week||0)}</strong></td><td><strong>${Number(r.count.term||0)}</strong></td>
   </tr>`).join(""):`<tr><td colspan="8">لا توجد بيانات معلمات بعد</td></tr>`}</tbody></table></div>`;
+}
+function excellenceRows(referenceDate){return excellenceMetrics(referenceDate)}
+function excellenceTableHTML(referenceDate){
+  const rows=excellenceMetrics(referenceDate);
+  return `<div class="reserve-excellence">
+    <div class="panel-head"><h3>المتميزات في تسديد الاحتياط</h3><span>أسبوعي وتراكمي</span></div>
+    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المركز</th><th>المعلمة</th><th>المسند أسبوعيًا</th><th>المحتسب في التميز</th><th>التراكمي</th></tr></thead>
+    <tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td><td>${r.weekCount}</td><td><strong>${r.qualifiedWeek}</strong></td><td>${r.cumulativeQualified}</td></tr>`).join(""):'<tr><td colspan="5">لا توجد بيانات تميز محتسبة لهذا الأسبوع</td></tr>'}</tbody></table></div>
+  </div>`;
 }
 
 function loginHTML(){
@@ -364,7 +613,7 @@ function adminHTML(){
   return `<section class="surface panel reserve-admin-block">
     <div class="panel-head"><h3>إدارة الاحتياط اليومي</h3><span>${esc(state.admin?.user?.email||"حساب إداري")}</span></div>
     <div class="reserve-tabs">
-      <button class="reserve-tab active" data-admin-tab="day">جدول اليوم</button>
+      <button class="reserve-tab active" data-admin-tab="workspace">إنشاء ومتابعة الاحتياط</button>
       <button class="reserve-tab" data-admin-tab="teachers">المعلمات والجداول</button>
       <button class="reserve-tab" data-admin-tab="settings">الإعدادات</button>
       <button class="reserve-tab" id="reserveLogout">خروج</button>
@@ -377,15 +626,16 @@ function dayAdminHTML(){
   const date=state.currentDate,abs=absencesOn(date),assign=assignmentsOn(date);
   return `<div class="reserve-grid">
     <section class="surface form-card">
-      <div class="form-section-title">تسجيل غياب</div>
-      <div class="form-grid">
-        <label>التاريخ<input id="reserveAdminDate" type="date" value="${esc(date)}"></label>
+      <div class="form-section-title">الإنشاء الآلي</div>
+      ${hijriDateControl("reserveAdminDate",date)}
+      <div class="form-grid" style="margin-top:12px">
         <label>المعلمة الغائبة<select id="reserveAbsentTeacher"><option value="">اختاري المعلمة</option>${state.teachers.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("")}</select></label>
+        <label>سبب الاحتياط<select id="reserveAbsenceReason"><option>غياب</option><option>دورة</option><option>اجتماع</option><option>انتداب</option><option>تكليف خارجي</option><option>أخرى</option></select></label>
       </div>
       <div class="form-actions"><button class="btn btn-primary" id="reserveAddAbsence" type="button">تسجيل الغياب واستخراج الحصص</button></div>
       <div id="reserveDayMsg"></div>
       <div class="reserve-admin-list" style="margin-top:12px">${abs.length?abs.map(a=>`<div class="reserve-teacher-row">
-        <strong>${esc(a.teacherName)}</strong><span>${(a.periods||[]).map(p=>`ح${p.period}: ${esc(p.className)}`).join(" — ")||"لا توجد حصص مسجلة"}</span>
+        <strong>${esc(a.teacherName)}</strong><span>${esc(a.reason||"غياب")} — ${(a.periods||[]).map(p=>`ح${p.period}: ${esc(p.className)}${p.activity?" (نشاط)":""}`).join(" — ")||"لا توجد حصص مسجلة"}</span>
         <button class="reserve-mini danger reserve-delete-absence" data-id="${esc(a.id)}">حذف الغياب</button>
       </div>`).join(""):'<div class="empty-inline">لا يوجد غياب مسجل لهذا اليوم</div>'}</div>
       <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveGenerate" type="button">توليد أفضل 3 مرشحات</button></div>
@@ -398,16 +648,333 @@ function dayAdminHTML(){
     </section>
   </div>`;
 }
+function manualCandidateOptions(a){
+  const all=candidateRanking(a.date,a.period,a.absentTeacherId,a.id,{className:a.className,isActivity:a.activity===true,limit:100,ignoreDiversity:true});
+  const map=new Map(all.map(x=>[String(x.teacherId),x]));
+  if(a.assignedTeacherId&&!map.has(String(a.assignedTeacherId))){
+    const t=teacherOf(a.assignedTeacherId);
+    if(t)all.unshift({teacherId:String(t.id),name:t.name});
+  }
+  return all;
+}
 function adminAssignmentsHTML(items){
   if(!items.length)return '<div class="empty-inline">سجلي الغياب ثم اضغطي توليد أفضل 3 مرشحات</div>';
-  return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>الغائبة</th><th>أفضل 3 مرشحات</th><th>المكلفة</th><th>التفعيل</th><th>الإجراءات</th></tr></thead>
-  <tbody>${items.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>`<tr data-assignment="${esc(a.id)}">
-    <td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td><td>${esc(a.absentTeacherName)}</td>
-    <td>${(a.candidates||[]).map((c,i)=>`<div class="reserve-candidate"><strong>${i+1}. ${esc(c.name)}</strong><small>الأسبوع ${c.week} | التراكمي ${c.term} | النصاب ${c.workload}</small><span class="reserve-score">درجة الترشيح: ${c.score}</span></div>`).join("")||"لا توجد مرشحات"}</td>
-    <td><select class="reserve-assignee">${(a.candidates||[]).map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select></td>
-    <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status pending">بانتظار التفعيل</span>':'—')}</td>
-    <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">حفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack">نسخ رابط الاطلاع</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
-  </tr>`).join("")}</tbody></table></div>`;
+  return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>سبب الاحتياط</th><th>الغائبة</th><th>أفضل 3 مرشحات</th><th>المكلفة</th><th>التفعيل</th><th>الإجراءات</th></tr></thead>
+  <tbody>${items.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>{
+    const all=manualCandidateOptions(a);
+    return `<tr data-assignment="${esc(a.id)}">
+    <td>${esc(a.period)}</td><td>${esc(a.className||"—")}${a.activity?' <small>(نشاط)</small>':""}</td><td>${esc(a.reason||"غياب")}</td><td>${esc(a.absentTeacherName)}</td>
+    <td>${(a.candidates||[]).map((c,i)=>`<div class="reserve-candidate"><strong>${i+1}. ${esc(c.name)}</strong></div>`).join("")||"لا توجد مرشحات"}</td>
+    <td><select class="reserve-assignee">${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select></td>
+    <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
+    <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack">نسخ رابط الاطلاع</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
+  </tr>`}).join("")}</tbody></table></div>`;
+}
+
+
+function workspaceHTML(){
+  return `<div>
+    <div class="reserve-card-grid">
+      <button class="reserve-work-card ${state.workspaceCard==="manual"?"active":""}" data-reserve-card="manual" type="button">
+        <strong>الإنشاء اليدوي</strong><small>إدخال جميع الغائبات أولًا ثم اختيار معلمات التسديد يدويًا من القوائم المتاحة.</small>
+      </button>
+      <button class="reserve-work-card ${state.workspaceCard==="auto"?"active":""}" data-reserve-card="auto" type="button">
+        <strong>الإنشاء الآلي</strong><small>توليد الاحتياط حسب محرك المفاضلة والاستثناءات ثم التعديل والاعتماد.</small>
+      </button>
+      <button class="reserve-work-card ${state.workspaceCard==="ranking"?"active":""}" data-reserve-card="ranking" type="button">
+        <strong>احتساب المفاضلة</strong><small>تفاصيل الأسبوع الحالي، العدالة، النصاب، العبء، والتصحيح الإداري.</small>
+      </button>
+      <button class="reserve-work-card ${state.workspaceCard==="excellence"?"active":""}" data-reserve-card="excellence" type="button">
+        <strong>التميز في شغل الاحتياط</strong><small>الحصص اليومية والأسبوعية والتراكمية وعناوين التفعيل والتصدير.</small>
+      </button>
+    </div>
+    <div id="reserveWorkspaceBody" style="margin-top:14px"></div>
+  </div>`;
+}
+function renderWorkspaceCard(kind){
+  state.workspaceCard=kind||"manual";
+  document.querySelectorAll("[data-reserve-card]").forEach(b=>b.classList.toggle("active",b.dataset.reserveCard===state.workspaceCard));
+  const body=byId("reserveWorkspaceBody"); if(!body)return;
+  if(state.workspaceCard==="auto"){body.innerHTML=dayAdminHTML();bindDayAdmin();return}
+  if(state.workspaceCard==="ranking"){body.innerHTML=rankingAdminHTML();bindRankingAdmin();return}
+  if(state.workspaceCard==="excellence"){body.innerHTML=excellenceAdminHTML();bindExcellenceAdmin();return}
+  body.innerHTML=manualAdminHTML();bindManualAdmin();
+}
+function bindWorkspace(){
+  document.querySelectorAll("[data-reserve-card]").forEach(b=>b.onclick=()=>renderWorkspaceCard(b.dataset.reserveCard));
+  renderWorkspaceCard(state.workspaceCard||"manual");
+}
+
+function manualPhysicalCandidates(date,period,absentIds=[]){
+  const absent=new Set(absentIds.map(String));
+  return state.teachers.filter(t=>{
+    if(absent.has(String(t.id))||isAbsent(t.id,date))return false;
+    if(t.active===false||t.excluded===true)return false;
+    const f=teacherFlags(t);
+    if(f.permanentExcluded||f.absolute)return false;
+    if(breastfeedingBlocked(t,date,period))return false;
+    if(regularCell(t.id,date,period))return false;
+    if(occupiedByReserve(t.id,date,period))return false;
+    return true;
+  }).sort((a,b)=>{
+    const ca=assignmentCounts(date).get(String(a.id))||{week:0,daily:0};
+    const cb=assignmentCounts(date).get(String(b.id))||{week:0,daily:0};
+    return Number(ca.week||0)-Number(cb.week||0)||Number(a.workload||0)-Number(b.workload||0)||clean(a.name).localeCompare(clean(b.name),"ar");
+  });
+}
+function manualAdminHTML(){
+  const date=state.currentDate;
+  const selected=(state.manualAbsentIds||[]).map(String);
+  return `<section class="surface form-card reserve-admin-only">
+    <div class="form-section-title">الإنشاء اليدوي</div>
+    <p class="reserve-public-note">اختاري جميع المعلمات الغائبات أولًا. بعد ذلك يظهر جدول جميع حصصهن، ويجب تسديد كل حصة قبل الحفظ.</p>
+    ${hijriDateControl("reserveManualDate",date)}
+    <div class="form-grid" style="margin-top:12px">
+      <label class="wide">جميع المعلمات الغائبات
+        <select id="reserveManualAbsent" class="reserve-multi-select" multiple>
+          ${state.teachers.map(t=>`<option value="${esc(t.id)}" ${selected.includes(String(t.id))?"selected":""}>${esc(t.name)}</option>`).join("")}
+        </select>
+      </label>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" id="reserveManualBuild" type="button">إظهار جدول التسديد الكامل</button></div>
+    <div id="reserveManualMsg"></div>
+    <div id="reserveManualRows" style="margin-top:12px"></div>
+  </section>`;
+}
+function manualRowsHTML(absentIds,date){
+  const rows=[];
+  absentIds.forEach(id=>{
+    const t=teacherOf(id),s=scheduleOf(id),cells=s?.timetable?.[dayKey(date)]||[];
+    cells.forEach((v,i)=>{
+      const p=parseScheduleValue(v);
+      if(!p.className)return;
+      const candidates=manualPhysicalCandidates(date,i+1,absentIds);
+      rows.push({absent:t,period:i+1,className:p.className,activity:p.activity,candidates});
+    });
+  });
+  state.manualRows=rows;
+  if(!rows.length)return '<div class="empty-inline">لا توجد حصص أصلية للغائبات في هذا اليوم.</div>';
+  return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الغائبة</th><th>الحصة</th><th>الفصل</th><th>معلمة التسديد</th></tr></thead><tbody>
+    ${rows.map((r,i)=>`<tr data-manual-row="${i}">
+      <td>${esc(r.absent?.name||"")}</td><td>${r.period}</td><td>${esc(r.className)}${r.activity?" <small>(نشاط)</small>":""}</td>
+      <td><select class="reserve-manual-assignee"><option value="">اختاري معلمة التسديد</option>${r.candidates.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("")}</select></td>
+    </tr>`).join("")}
+  </tbody></table></div>
+  <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveManualSave" type="button">حفظ واعتماد الجدول اليدوي</button></div>`;
+}
+function manualConflictMessages(date,selections,absentIds){
+  const warnings=[],slotUse=new Map();
+  selections.forEach(x=>{
+    const t=teacherOf(x.teacherId); if(!t)return;
+    const slot=`${x.teacherId}|${x.period}`;
+    slotUse.set(slot,(slotUse.get(slot)||0)+1);
+    if(isAbsent(t.id,date)||absentIds.map(String).includes(String(t.id)))warnings.push(`${t.name}: مسجلة ضمن الغائبات.`);
+    if(regularCell(t.id,date,x.period))warnings.push(`${t.name}: لديها حصة أصلية في الحصة ${x.period}.`);
+    if(occupiedByReserve(t.id,date,x.period))warnings.push(`${t.name}: لديها احتياط آخر في الحصة ${x.period}.`);
+    if(breastfeedingBlocked(t,date,x.period))warnings.push(`${t.name}: الحصة ${x.period} ضمن استثناء ثابت.`);
+    if(sameClassReserveToday(t.id,date,x.className))warnings.push(`${t.name}: سبق إسنادها لنفس الفصل اليوم.`);
+    const c=assignmentCounts(date).get(String(t.id))||{week:0,daily:0};
+    const missed=currentWeekAbsenceLoad(t.id,date),pending=makeupPending(t,date),effective=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
+    if(!pending&&effective>=ceilingFor(t))warnings.push(`${t.name}: بلغت الحد الأسبوعي المفضل (${ceilingFor(t)}).`);
+    if(adjacentOriginalCount(t.id,date,x.period)>0)warnings.push(`${t.name}: الاحتياط متصل بحصة أصلية مباشرة.`);
+    if(previousWeekReserveCount(t.id,date)>0)warnings.push(`${t.name}: لديها احتياط في الأسبوع السابق؛ يفضّل تدوير الإسناد عند توفر بديل.`);
+  });
+  slotUse.forEach((n,key)=>{
+    if(n>1){
+      const [id,p]=key.split("|"),t=teacherOf(id);
+      warnings.push(`${t?.name||"معلمة"}: تم اختيارها لأكثر من فصل في الحصة ${p}.`);
+    }
+  });
+  return [...new Set(warnings)];
+}
+async function saveManualAssignments(){
+  const msg=byId("reserveManualMsg"),date=byId("reserveManualDate")?.value||state.currentDate;
+  const absentIds=(state.manualAbsentIds||[]).map(String),rows=state.manualRows||[];
+  if(!absentIds.length||!rows.length){msg.textContent="اختاري جميع الغائبات ثم أظهري جدول التسديد.";return}
+  const selections=[];
+  let missing=false;
+  document.querySelectorAll("[data-manual-row]").forEach(tr=>{
+    const i=Number(tr.dataset.manualRow),r=rows[i],teacherId=tr.querySelector(".reserve-manual-assignee")?.value||"";
+    if(!teacherId)missing=true;
+    selections.push({...r,teacherId});
+  });
+  if(missing){msg.textContent="يجب تسديد جميع حصص الغائبات قبل الحفظ.";return}
+  const warnings=manualConflictMessages(date,selections,absentIds);
+  if(warnings.length){
+    const ok=confirm(`تنبيه إداري — تم العثور على تعارضات برمجية:\\n\\n${warnings.join("\\n")}\\n\\nهل تريدين تجاوز التحذيرات والحفظ؟`);
+    if(!ok){msg.innerHTML=`<div class="reserve-warning-box">${warnings.map(x=>`<div>• ${esc(x)}</div>`).join("")}</div>`;return}
+  }
+  msg.textContent="جارٍ حفظ واعتماد الجدول اليدوي...";
+  try{
+    await ensureAdmin();
+    for(const id of absentIds){
+      const t=teacherOf(id),s=scheduleOf(id),cells=s?.timetable?.[dayKey(date)]||[];
+      const periods=cells.map((v,i)=>{const p=parseScheduleValue(v);return {period:i+1,className:p.className,activity:p.activity}}).filter(x=>x.className);
+      let abs=absencesOn(date).find(a=>String(a.teacherId)===String(id));
+      if(!abs)await insertKind(K.absence,{date,dayKey:dayKey(date),teacherId:String(id),teacherName:t?.name||"",reason:"غياب",periods,source:"manual",createdAt:new Date().toISOString()},token());
+    }
+    await loadAll();
+    for(const x of selections){
+      const t=teacherOf(x.teacherId);
+      const existing=assignmentsOn(date).find(a=>String(a.absentTeacherId)===String(x.absent.id)&&Number(a.period)===Number(x.period));
+      const data={
+        date,dayKey:dayKey(date),period:Number(x.period),className:x.className,activity:x.activity===true,reason:"غياب",
+        absentTeacherId:String(x.absent.id),absentTeacherName:x.absent.name,
+        candidates:[],assignedTeacherId:String(t.id),assignedTeacherName:t.name,
+        published:true,status:"معتمد",manual:true,manualOverride:warnings.length>0,
+        ackToken:existing?.ackToken||uid(),ackAt:existing?.assignedTeacherId===String(t.id)?(existing.ackAt||""):"",
+        activationTitle:existing?.assignedTeacherId===String(t.id)?(existing.activationTitle||""):"",
+        activationAt:existing?.assignedTeacherId===String(t.id)?(existing.activationAt||""):"",
+        updatedAt:new Date().toISOString()
+      };
+      if(existing)await patchKind(K.assignment,existing.id,data,token(),"معتمد");
+      else await insertKind(K.assignment,data,token(),"معتمد");
+    }
+    await loadAll();
+    state.currentDate=date;
+    msg.textContent="تم حفظ واعتماد الجدول اليدوي بنجاح.";
+    renderWorkspaceCard("manual");
+  }catch(err){console.error(err);msg.textContent="تعذر حفظ الجدول اليدوي."}
+}
+function bindManualAdmin(){
+  bindHijriDateControl("reserveManualDate",next=>{state.currentDate=next;state.manualRows=[];byId("reserveManualRows").innerHTML="";});
+  byId("reserveManualBuild")?.addEventListener("click",()=>{
+    const sel=byId("reserveManualAbsent");
+    const ids=[...(sel?.selectedOptions||[])].map(o=>String(o.value));
+    const msg=byId("reserveManualMsg");
+    if(!ids.length){msg.textContent="اختاري جميع أسماء المعلمات الغائبات أولًا.";return}
+    state.manualAbsentIds=ids;
+    const date=byId("reserveManualDate")?.value||state.currentDate;
+    byId("reserveManualRows").innerHTML=manualRowsHTML(ids,date);
+    msg.textContent=`تم إدخال ${ids.length} غائبات. اختاري معلمة تسديد لكل حصة.`;
+    byId("reserveManualSave")?.addEventListener("click",saveManualAssignments);
+  });
+}
+
+function rankingOverviewRows(referenceDate){
+  const counts=assignmentCounts(referenceDate),wrPrev=previousWeekRange(referenceDate);
+  const rows=state.teachers.map(t=>{
+    const c=counts.get(String(t.id))||{daily:0,week:0,term:0};
+    const flags=teacherFlags(t),missed=currentWeekAbsenceLoad(t.id,referenceDate);
+    const effective=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
+    return {
+      teacher:t,workload:Number(t.workload||0),dailyOriginal:dailyOriginalCount(t.id,referenceDate),
+      daily:Number(c.daily||0),week:Number(c.week||0),prevWeek:previousWeekReserveCount(t.id,referenceDate),
+      term:Number(c.term||0),missed,effective,flags,pending:makeupPending(t,referenceDate)
+    };
+  });
+  rows.sort((a,b)=>{
+    const ax=a.flags.permanentExcluded||a.flags.absolute?1:0,bx=b.flags.permanentExcluded||b.flags.absolute?1:0;
+    return ax-bx||a.effective-b.effective||a.week-b.week||a.prevWeek-b.prevWeek||a.dailyOriginal-b.dailyOriginal||clean(a.teacher.name).localeCompare(clean(b.teacher.name),"ar");
+  });
+  return rows.map((r,i)=>({...r,rank:i+1}));
+}
+function rankingAdminHTML(){
+  const wr=weekRange(state.currentDate),rows=rankingOverviewRows(state.currentDate);
+  return `<section class="surface panel reserve-admin-only">
+    <div class="panel-head"><h3>احتساب المفاضلة — الأسبوع الحالي</h3><span>${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))}</span></div>
+    <div class="form-actions"><button class="btn btn-primary" id="reserveRankingExport" type="button">تصدير الأسبوع</button></div>
+    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr>
+      <th>الترتيب</th><th>المعلمة</th><th>النصاب</th><th>الأصلي اليوم</th><th>احتياط اليوم</th><th>احتياط الأسبوع</th><th>الأسبوع السابق</th><th>التراكمي</th><th>نقص غياب</th><th>الحالة</th><th>تصحيح</th>
+    </tr></thead><tbody>${rows.map(r=>`<tr>
+      <td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td><td>${r.workload}</td><td>${r.dailyOriginal}</td><td>${r.daily}</td><td><strong>${r.week}</strong></td><td>${r.prevWeek}</td><td>${r.term}</td><td>${r.missed}</td>
+      <td>${r.flags.absolute?"مستثناة":r.flags.permanentExcluded?"تكليف إضافي":r.pending?"تعويض غياب":r.flags.advanced?"رتبة متقدم":"متاحة"}</td>
+      <td><button class="reserve-mini reserve-adjust-week" data-teacher="${esc(r.teacher.id)}" type="button">تعديل يدوي</button></td>
+    </tr>`).join("")}</tbody></table></div>
+    <p class="reserve-public-note">التصحيح اليدوي إداري ويُسجّل كسجل مستقل حتى تبقى البيانات الأصلية محفوظة.</p>
+  </section>`;
+}
+function bindRankingAdmin(){
+  byId("reserveRankingExport")?.addEventListener("click",()=>exportExcel("week"));
+  document.querySelectorAll(".reserve-adjust-week").forEach(b=>b.onclick=async()=>{
+    const t=teacherOf(b.dataset.teacher); if(!t)return;
+    const deltaRaw=prompt(`تصحيح احتياط الأسبوع للمعلمة ${t.name}.\\nاكتبي رقمًا موجبًا للإضافة أو سالبًا للخصم:`,`0`);
+    if(deltaRaw===null)return;
+    const delta=Number(deltaRaw); if(!Number.isFinite(delta)||delta===0)return;
+    const note=prompt("سبب التصحيح الإداري:","تصحيح يدوي")||"تصحيح يدوي";
+    await insertKind(K.adjustment,{teacherId:String(t.id),teacherName:t.name,date:state.currentDate,weekStart:weekRange(state.currentDate).start,delta,note,createdAt:new Date().toISOString()},token(),"معتمد");
+    await loadAll();renderWorkspaceCard("ranking");
+  });
+}
+
+function excellenceMetrics(referenceDate){
+  const wr=weekRange(referenceDate),start=termStart()||COUNT_START;
+  const items=publishedAssignments().filter(a=>a.date>=start&&a.date<=wr.end);
+  const byTeacher=new Map();
+  const ensure=id=>{
+    if(!byTeacher.has(id))byTeacher.set(id,{teacher:teacherOf(id),weekAssignments:[],allAssignments:[],daily:{},titles:[]});
+    return byTeacher.get(id);
+  };
+  items.forEach(a=>{
+    const id=String(a.assignedTeacherId),x=ensure(id); if(!x.teacher)return;
+    x.allAssignments.push(a);
+    if(inRange(a.date,wr.start,wr.end)){
+      x.weekAssignments.push(a);
+      x.daily[a.date]=(x.daily[a.date]||[]).concat(a);
+      if(a.activationTitle)x.titles.push(`${dayName(a.date)}: ${a.activationTitle}`);
+    }
+  });
+  const rows=[];
+  byTeacher.forEach(x=>{
+    let qualifiedWeek=0,maxDaily=0;
+    Object.values(x.daily).forEach(arr=>{
+      maxDaily=Math.max(maxDaily,arr.length);
+      if(arr.length>=2)qualifiedWeek+=arr.length;
+      else if(arr.length===1&&arr[0].activationTitle)qualifiedWeek+=1;
+    });
+    let cumulativeQualified=0;
+    const allByDate={};
+    x.allAssignments.forEach(a=>allByDate[a.date]=(allByDate[a.date]||[]).concat(a));
+    Object.values(allByDate).forEach(arr=>{
+      if(arr.length>=2)cumulativeQualified+=arr.length;
+      else if(arr.length===1&&arr[0].activationTitle)cumulativeQualified+=1;
+    });
+    const tier=maxDaily>=3?3:maxDaily>=2?2:(qualifiedWeek>0?1:0);
+    if(tier>0)rows.push({...x,qualifiedWeek,cumulativeQualified,maxDaily,tier,weekCount:x.weekAssignments.length});
+  });
+  rows.sort((a,b)=>b.tier-a.tier||b.qualifiedWeek-a.qualifiedWeek||b.weekCount-a.weekCount||clean(a.teacher.name).localeCompare(clean(b.teacher.name),"ar"));
+  let lastKey="",rank=0;
+  return rows.map(r=>{
+    const key=`${r.tier}|${r.qualifiedWeek}|${r.weekCount}`;
+    if(key!==lastKey)rank++;
+    lastKey=key;
+    return {...r,rank};
+  });
+}
+function excellenceAdminHTML(){
+  const rows=excellenceMetrics(state.currentDate),wr=weekRange(state.currentDate);
+  return `<section class="surface panel reserve-admin-only">
+    <div class="panel-head"><h3>التميز في شغل حصص الاحتياط</h3><span>${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))}</span></div>
+    <div class="form-actions">
+      <button class="btn btn-primary reserve-excellence-export" data-scope="week" type="button">تصدير الأسبوع</button>
+      <button class="btn btn-ghost reserve-excellence-export" data-scope="cumulative" type="button">تصدير التراكمي</button>
+    </div>
+    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr>
+      <th>المركز</th><th>المعلمة</th><th>تفصيل يومي</th><th>المسند أسبوعيًا</th><th>المحتسب في التميز</th><th>التراكمي</th><th>عناوين التفعيل</th>
+    </tr></thead><tbody>${rows.length?rows.map(r=>`<tr>
+      <td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td>
+      <td>${Object.entries(r.daily).sort().map(([d,a])=>`${dayName(d)}: ${a.length}`).join(" — ")||"—"}</td>
+      <td>${r.weekCount}</td><td><strong>${r.qualifiedWeek}</strong>${r.maxDaily>=3?' <span class="reserve-rank-badge star">3 في يوم واحد</span>':r.maxDaily>=2?' <span class="reserve-rank-badge">2 في يوم واحد</span>':""}</td>
+      <td>${r.cumulativeQualified}</td><td>${r.titles.length?r.titles.map(t=>`<div>${esc(t)}</div>`).join(""):"—"}</td>
+    </tr>`).join(""):'<tr><td colspan="7">لا توجد بيانات تميز محتسبة لهذا الأسبوع</td></tr>'}</tbody></table></div>
+    <p class="reserve-public-note">الحصتان أو الثلاث فأكثر في اليوم تدخل في التميز مباشرة. الحصة الواحدة لا تدخل إلا بعد تسجيل عنوان التفعيل.</p>
+  </section>`;
+}
+function exportExcellence(scope){
+  const refs=scope==="week"?[state.currentDate]:[];
+  let rows=[];
+  if(scope==="week"){
+    rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.maxDaily,r.titles.join(" | ")]);
+  }else{
+    const allDates=[...new Set(publishedAssignments().map(a=>a.date))].sort();
+    const latest=allDates[allDates.length-1]||state.currentDate;
+    rows=excellenceMetrics(latest).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.maxDaily,r.titles.join(" | ")]);
+  }
+  const headers=["المركز","المعلمة","المسند أسبوعيًا","المحتسب في التميز","التراكمي","أعلى عدد يومي","عناوين التفعيل"];
+  downloadXls(`تميز_الاحتياط_${scope}`,headers,rows,"التميز");
+}
+function bindExcellenceAdmin(){
+  document.querySelectorAll(".reserve-excellence-export").forEach(b=>b.onclick=()=>exportExcellence(b.dataset.scope));
 }
 
 function teachersAdminHTML(){
@@ -424,7 +991,7 @@ function teachersAdminHTML(){
     <section class="surface panel">
       <div class="panel-head"><h3>المعلمات</h3><span>${state.teachers.length}</span></div>
       <div class="reserve-admin-list">${state.teachers.map(t=>`<div class="reserve-teacher-row" data-teacher="${esc(t.id)}">
-        <strong>${esc(t.name)}</strong><span>${esc(t.subject||"")} — النصاب: ${Number(t.workload||0)} ${t.excluded?'<span class="reserve-status pending">مستبعدة مؤقتًا</span>':""}</span>
+        <strong>${esc(t.name)}</strong><span>النصاب: ${Number(t.workload||0)} ${teacherFlags(t).advanced?'<span class="reserve-rank-badge">رتبة متقدم — حد 22</span>':""} ${teacherFlags(t).permanentExcluded?'<span class="reserve-status pending">مستثناة: تكليف إضافي</span>':""} ${teacherFlags(t).absolute?'<span class="reserve-status pending">مستثناة من الاحتياط</span>':""} ${t.excluded?'<span class="reserve-status pending">مستبعدة مؤقتًا</span>':""}</span>
         <div class="reserve-actions"><button class="reserve-mini reserve-edit-teacher">تعديل البيانات</button><button class="reserve-mini reserve-edit-schedule">الجدول المدرسي</button><button class="reserve-mini danger reserve-delete-teacher">حذف</button></div>
       </div>`).join("")||'<div class="empty-inline">لا توجد معلمات مضافة بعد</div>'}</div>
     </section>
@@ -435,24 +1002,81 @@ function scheduleEditorHTML(t){
   const s=scheduleOf(t.id),tt=s?.timetable||{};
   return `<div class="panel-head"><h3>الجدول المدرسي — ${esc(t.name)}</h3><button class="reserve-mini" id="reserveCloseTeacherEditor">إغلاق</button></div>
     <p class="reserve-public-note">اكتبي اسم الفصل/الحصة في الخانة المشغولة، واتركي الخانة فارغة إذا كانت المعلمة متاحة للاحتياط.</p>
-    <div class="schedule-matrix">${DAYS.map(d=>`<div class="schedule-day"><strong>${d[1]}</strong>${PERIODS.map(p=>`<input data-day="${d[0]}" data-period="${p}" placeholder="ح${p}" value="${esc(tt?.[d[0]]?.[p-1]||"")}">`).join("")}</div>`).join("")}</div>
+    <div class="schedule-matrix">${DAYS.map(d=>{const ps=(d[0]==="sun"||d[0]==="mon")?PERIODS:PERIODS.slice(0,6);return `<div class="schedule-day"><strong>${d[1]}</strong>${ps.map(p=>`<input data-day="${d[0]}" data-period="${p}" placeholder="ح${p}" value="${esc(tt?.[d[0]]?.[p-1]||"")}">`).join("")}</div>`}).join("")}</div>
     <div class="form-actions"><button class="btn btn-primary" id="reserveSaveSchedule" data-teacher="${esc(t.id)}">حفظ الجدول</button></div>`;
 }
 function settingsHTML(){
-  const w=weights();
   return `<section class="surface form-card">
-    <div class="form-section-title">إعدادات معادلة الترشيح</div>
-    <p class="reserve-public-note">الأقل درجة يحصل على أولوية أعلى. المعادلة لا تستبدل شروط الأهلية: يجب أن تكون المعلمة فارغة وغير غائبة وغير مكلفة في نفس الحصة.</p>
+    <div class="form-section-title">إعدادات وسياسة الاحتياط</div>
+    <p class="reserve-public-note">المفاضلة مبرمجة على العدالة وتخفيف العبء، مع أولوية النصاب الأخف، ثم الاحتياط الأسبوعي الأقل، ثم تفضيل فصول المعلمة، ثم عدد حصص اليوم، مع مرونة عند الحاجة.</p>
     <div class="form-grid">
-      <label>وزن احتياط الأسبوع<input id="rwWeek" type="number" step="0.1" value="${w.week}"></label>
-      <label>وزن التراكمي للفصل<input id="rwTerm" type="number" step="0.1" value="${w.term}"></label>
-      <label>وزن احتياط اليوم<input id="rwDaily" type="number" step="0.1" value="${w.daily}"></label>
-      <label>وزن النصاب<input id="rwWorkload" type="number" step="0.01" value="${w.workload}"></label>
-      <label>عقوبة الحصص المتجاورة<input id="rwConsecutive" type="number" step="0.1" value="${w.consecutive}"></label>
-      <label>بداية الفصل للتراكمي<input id="rwTermStart" type="date" value="${esc(state.settings?.termStart||"")}"></label>
+      <label>بداية الفصل للتراكمي<strong>${esc(fmtDate(state.settings?.termStart||COUNT_START))}</strong><input id="rwTermStart" type="hidden" value="${esc(state.settings?.termStart||COUNT_START)}"></label>
+      <label>بداية احتساب النظام<strong>${esc(fmtDate(state.settings?.countStart||COUNT_START))}</strong><input id="rwCountStart" type="hidden" value="${esc(state.settings?.countStart||COUNT_START)}"></label>
+      <label>حد تفعيل وضع الضرورة اليومي<input id="rwEmergency" type="number" min="1" value="${Number(state.settings?.emergencyDailyDemand||EMERGENCY_DAILY_DEMAND)}"></label>
     </div>
+    <div class="reserve-source-note">مصدر الجدول: الإصدار السادس — 27/04/1448هـ | المعلمات والجداول تُهيأ سحابيًا عند أول دخول إداري بعد التحديث.</div>
     <div class="form-actions"><button class="btn btn-primary" id="reserveSaveSettings">حفظ الإعدادات</button></div><div id="reserveSettingsMsg"></div>
   </section>`;
+}
+function assignmentStatusLabel(a){
+  if(a.activationTitle)return "تم التفعيل";
+  if(a.ackAt)return "تم الاطلاع";
+  if(a.published)return "معتمد";
+  return a.status||"مسودة";
+}
+function adminStatsHTML(){
+  const wr=weekRange(state.currentDate);
+  return `<div class="reserve-grid">
+    <section class="surface panel" style="grid-column:1/-1">
+      ${excellenceTableHTML(state.currentDate)}
+    </section>
+    <section class="surface panel" style="grid-column:1/-1">
+      <div class="panel-head"><h3>تصدير سجلات الاحتياط</h3><span>Excel</span></div>
+      <p class="reserve-public-note">يتم التصدير من السجلات المعتمدة فقط، ويمكن استخراج أسبوعي أو شهري أو فصلي.</p>
+      <div class="form-actions">
+        <button class="btn btn-primary reserve-export-xls" data-range="week" type="button">Excel أسبوعي</button>
+        <button class="btn btn-ghost reserve-export-xls" data-range="month" type="button">Excel شهري</button>
+        <button class="btn btn-ghost reserve-export-xls" data-range="term" type="button">Excel فصلي</button>
+      </div>
+      <div class="reserve-source-note">الأسبوع الحالي: ${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))} | مصدر الجدول: الإصدار السادس 27/04/1448هـ</div>
+    </section>
+  </div>`;
+}
+function exportRange(range){
+  const d=parseDate(state.currentDate);
+  if(range==="week")return weekRange(state.currentDate);
+  if(range==="month"){
+    const y=d.getFullYear(),m=d.getMonth();
+    const start=new Date(y,m,1,12),end=new Date(y,m+1,0,12);
+    const iso=x=>{const off=x.getTimezoneOffset()*60000;return new Date(x.getTime()-off).toISOString().slice(0,10)};
+    return {start:iso(start),end:iso(end)};
+  }
+  return {start:termStart()||COUNT_START,end:state.currentDate};
+}
+function xlsEsc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function downloadXls(fileBase,headers,rows,sheetName="البيانات",extraSheet=""){
+  const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
+  <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="${xlsEsc(sheetName)}"><Table>${[headers,...rows].map(r=>`<Row>${r.map(v=>`<Cell><Data ss:Type="String">${xlsEsc(v)}</Data></Cell>`).join("")}</Row>`).join("")}</Table></Worksheet>
+  ${extraSheet}
+  </Workbook>`;
+  const blob=new Blob([xml],{type:"application/vnd.ms-excel;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`${fileBase}.xls`;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+function exportExcel(range){
+  const rr=exportRange(range);
+  const items=dateRangeAssignments(rr.start,rr.end).slice().sort((a,b)=>a.date.localeCompare(b.date)||Number(a.period)-Number(b.period));
+  const headers=["التاريخ الهجري","اليوم","الحصة","الفصل","سبب الاحتياط","المعلمة الغائبة","معلمة الاحتياط","الحالة","عنوان التفعيل"];
+  const rows=items.map(a=>[fmtDate(a.date),dayName(a.date),a.period,a.className||"",a.reason||"غياب",a.absentTeacherName||"",a.assignedTeacherName||"",assignmentStatusLabel(a),a.activationTitle||""]);
+  const adjs=state.adjustments.filter(a=>clean(a.weekStart)>=rr.start&&clean(a.weekStart)<=rr.end);
+  const extra=adjs.length?`<Worksheet ss:Name="التصحيحات"><Table>${[["المعلمة","التاريخ الهجري","التصحيح","السبب"],...adjs.map(a=>[a.teacherName||"",fmtDate(a.date),a.delta,a.note||""])].map(r=>`<Row>${r.map(v=>`<Cell><Data ss:Type="String">${xlsEsc(v)}</Data></Cell>`).join("")}</Row>`).join("")}</Table></Worksheet>`:"";
+  const stamp=fmtDate(rr.start).replace(/[\s\/]+/g,"_");
+  downloadXls(`احتياط_${range}_${stamp}`,headers,rows,"الاحتياط",extra);
+}
+function bindStatsAdmin(){
+  document.querySelectorAll(".reserve-export-xls").forEach(b=>b.onclick=()=>exportExcel(b.dataset.range));
 }
 
 async function refreshAndRenderPublic(){
@@ -464,16 +1088,21 @@ function mountAdminShell(){
   if(state.admin)bindAdminShell(); else bindLogin();
 }
 function bindPublic(){
-  byId("reservePublicDate")?.addEventListener("change",async e=>{state.currentDate=e.target.value||todayISO();renderPage()});
+  bindHijriDateControl("reservePublicDate",async next=>{state.currentDate=next;renderPage()});
   byId("reservePrint")?.addEventListener("click",()=>window.print());
   byId("reserveAdminOpen")?.addEventListener("click",async()=>{
     const s=await validateSession().catch(()=>null);
-    if(s)state.admin=s; mountAdminShell(); byId("reserveAdminMount")?.scrollIntoView({behavior:"smooth"});
+    if(s){
+      state.admin=s;
+      try{await ensureSeedV6()}catch(err){console.error("تعذر تهيئة بيانات الإصدار السادس",err)}
+    }
+    mountAdminShell(); byId("reserveAdminMount")?.scrollIntoView({behavior:"smooth"});
   });
   document.querySelectorAll("[data-week-shift]").forEach(b=>b.onclick=()=>{
     document.querySelectorAll("[data-week-shift]").forEach(x=>x.classList.toggle("active",x===b));
     const ref=addDays(state.currentDate,Number(b.dataset.weekShift||0));
     byId("reserveWeeklyHolder").innerHTML=weeklyTableHTML(publicWeeklyRows(ref),ref);
+    if(byId("reserveExcellenceHolder"))byId("reserveExcellenceHolder").innerHTML=excellenceTableHTML(ref);
   });
   const ack=new URLSearchParams(location.search).get("reserve_ack")||"";
   byId("reserveAckBtn")?.addEventListener("click",async()=>{
@@ -511,8 +1140,10 @@ function bindLogin(){
     e.preventDefault(); const msg=byId("reserveLoginMsg");
     try{
       await login(clean(byId("reserveAdminEmail").value),byId("reserveAdminPassword").value);
+      msg.textContent="جارٍ تهيئة بيانات الجدول الإصدار السادس...";
+      await ensureSeedV6();
       mountAdminShell();
-    }catch(err){msg.textContent=err.message||"تعذر تسجيل الدخول"}
+    }catch(err){console.error(err);msg.textContent=err.message||"تعذر تسجيل الدخول أو تهيئة البيانات"}
   });
 }
 function bindAdminShell(){
@@ -524,35 +1155,51 @@ function bindAdminShell(){
     try{sessionStorage.removeItem(SESSION_KEY)}catch(_){}
     state.admin=null; mountAdminShell();
   });
-  renderAdminTab("day");
+  renderAdminTab("workspace");
 }
 function renderAdminTab(tab){
   const body=byId("reserveAdminBody"); if(!body)return;
-  body.innerHTML=tab==="teachers"?teachersAdminHTML():tab==="settings"?settingsHTML():dayAdminHTML();
+  body.innerHTML=tab==="teachers"?teachersAdminHTML():tab==="settings"?settingsHTML():workspaceHTML();
   if(tab==="teachers")bindTeachersAdmin();
   else if(tab==="settings")bindSettingsAdmin();
-  else bindDayAdmin();
+  else bindWorkspace();
 }
 
 function plainData(x){
   const y={...x}; delete y.id;delete y.createdAt;delete y.updatedAt; return y;
 }
 async function ensureAdmin(){if(!token())throw new Error("يلزم تسجيل الدخول الإداري")}
+async function refreshDayCandidates(date){
+  const items=assignmentsOn(date).slice().sort((a,b)=>Number(a.period)-Number(b.period));
+  const usedPrimary=new Set(),usedAlt1=new Set();
+  for(const a of items){
+    const cand=candidateRanking(date,a.period,a.absentTeacherId,a.id,{
+      className:a.className,isActivity:a.activity===true,usedPrimary,usedAlt1,limit:3
+    });
+    if(cand[0]?.teacherId)usedPrimary.add(String(cand[0].teacherId));
+    if(cand[1]?.teacherId)usedAlt1.add(String(cand[1].teacherId));
+    await patchKind(K.assignment,a.id,{...plainData(a),candidates:cand},token(),a.published?"معتمد":"مسودة");
+  }
+  await loadAll();
+}
 
 function bindDayAdmin(){
-  byId("reserveAdminDate")?.addEventListener("change",async e=>{
-    state.currentDate=e.target.value||todayISO(); renderPage(); await validateSession(); mountAdminShell();
+  bindHijriDateControl("reserveAdminDate",async next=>{
+    state.currentDate=next;
+    await loadAll();
+    renderWorkspaceCard("auto");
   });
   byId("reserveAddAbsence")?.addEventListener("click",async()=>{
     const msg=byId("reserveDayMsg"),teacherId=byId("reserveAbsentTeacher").value,date=state.currentDate;
     const t=teacherOf(teacherId); if(!t){msg.textContent="اختاري المعلمة الغائبة";return}
     if(!dayKey(date)){msg.textContent="التاريخ المختار ليس من أيام الدوام الأحد–الخميس";return}
     const s=scheduleOf(teacherId),cells=s?.timetable?.[dayKey(date)]||[];
-    const periods=cells.map((v,i)=>({period:i+1,className:clean(v)})).filter(x=>x.className);
+    const periods=cells.map((v,i)=>{const x=parseScheduleValue(v);return {period:i+1,className:x.className,activity:x.activity}}).filter(x=>x.className);
+    const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
     try{
       await ensureAdmin();
-      if(absencesOn(date).some(x=>String(x.teacherId)===String(teacherId))){msg.textContent="الغياب مسجل مسبقًا لهذه المعلمة";return}
-      await insertKind(K.absence,{date,dayKey:dayKey(date),teacherId:String(teacherId),teacherName:t.name,periods,createdAt:new Date().toISOString()},token());
+      if(absencesOn(date).some(x=>String(x.teacherId)===String(teacherId))){msg.textContent="الغياب/التكليف مسجل مسبقًا لهذه المعلمة";return}
+      await insertKind(K.absence,{date,dayKey:dayKey(date),teacherId:String(teacherId),teacherName:t.name,reason,periods,createdAt:new Date().toISOString()},token());
       await loadAll(); renderAdminTab("day");
     }catch(err){console.error(err);msg.textContent="تعذر حفظ الغياب"}
   });
@@ -565,15 +1212,25 @@ function bindDayAdmin(){
     try{
       await ensureAdmin();
       const abs=absencesOn(state.currentDate);
-      if(!abs.length){msg.textContent="لا يوجد غياب مسجل لهذا اليوم";return}
+      if(!abs.length){msg.textContent="لا يوجد غياب أو تكليف مسجل لهذا اليوم";return}
       const existing=assignmentsOn(state.currentDate);
+      const usedPrimary=new Set(),usedAlt1=new Set();
+      existing.forEach(x=>{
+        if(x.candidates?.[0]?.teacherId)usedPrimary.add(String(x.candidates[0].teacherId));
+        if(x.candidates?.[1]?.teacherId)usedAlt1.add(String(x.candidates[1].teacherId));
+      });
       for(const a of abs){
         for(const p of (a.periods||[])){
           if(existing.some(x=>String(x.absentTeacherId)===String(a.teacherId)&&Number(x.period)===Number(p.period)))continue;
-          const cand=candidateRanking(state.currentDate,p.period,a.teacherId);
+          const cand=candidateRanking(state.currentDate,p.period,a.teacherId,"",{
+            className:p.className,isActivity:p.activity===true,usedPrimary,usedAlt1,limit:3
+          });
           const first=cand[0]||null;
+          if(cand[0]?.teacherId)usedPrimary.add(String(cand[0].teacherId));
+          if(cand[1]?.teacherId)usedAlt1.add(String(cand[1].teacherId));
           await insertKind(K.assignment,{
-            date:state.currentDate,dayKey:dayKey(state.currentDate),period:Number(p.period),className:p.className,
+            date:state.currentDate,dayKey:dayKey(state.currentDate),period:Number(p.period),className:p.className,activity:p.activity===true,
+            reason:a.reason||"غياب",
             absentTeacherId:String(a.teacherId),absentTeacherName:a.teacherName,
             candidates:cand,
             assignedTeacherId:first?.teacherId||"",assignedTeacherName:first?.name||"",
@@ -591,10 +1248,14 @@ function bindDayAdmin(){
     const tr=b.closest("[data-assignment]"),id=tr.dataset.assignment;
     const a=state.assignments.find(x=>String(x.id)===String(id)); if(!a)return;
     const teacherId=tr.querySelector(".reserve-assignee").value;
-    const c=(a.candidates||[]).find(x=>String(x.teacherId)===String(teacherId)); if(!c)return;
-    const data={...plainData(a),assignedTeacherId:String(c.teacherId),assignedTeacherName:c.name,ackAt:"",activationTitle:"",activationAt:""};
+    const t=teacherOf(teacherId); if(!t)return;
+    const changed=String(a.assignedTeacherId)!==String(teacherId);
+    const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name};
+    if(changed){data.ackAt="";data.activationTitle="";data.activationAt="";data.ackToken=uid()}
     await patchKind(K.assignment,id,data,token(),a.published?"معتمد":"مسودة");
-    await loadAll(); renderAdminTab("day");
+    await loadAll();
+    await refreshDayCandidates(state.currentDate);
+    renderAdminTab("day");
   });
   document.querySelectorAll(".reserve-delete-assignment").forEach(b=>b.onclick=async()=>{
     const tr=b.closest("[data-assignment]"); if(!confirm("حذف هذا التكليف؟"))return;
@@ -667,12 +1328,12 @@ function bindSettingsAdmin(){
   byId("reserveSaveSettings")?.addEventListener("click",async()=>{
     const msg=byId("reserveSettingsMsg");
     const data={
-      weights:{
-        week:Number(byId("rwWeek").value||0),term:Number(byId("rwTerm").value||0),
-        daily:Number(byId("rwDaily").value||0),workload:Number(byId("rwWorkload").value||0),
-        consecutive:Number(byId("rwConsecutive").value||0)
-      },
-      termStart:byId("rwTermStart").value||"",updatedAt:new Date().toISOString()
+      ...(state.settings?plainData(state.settings):{}),
+      sourceVersion:V6_SOURCE,
+      termStart:byId("rwTermStart").value||COUNT_START,
+      countStart:byId("rwCountStart").value||COUNT_START,
+      emergencyDailyDemand:Number(byId("rwEmergency").value||EMERGENCY_DAILY_DEMAND),
+      updatedAt:new Date().toISOString()
     };
     try{
       if(state.settings)await patchKind(K.settings,state.settings.id,data,token());
