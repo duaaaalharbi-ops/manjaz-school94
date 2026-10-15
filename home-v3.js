@@ -12,6 +12,7 @@ const cards=[
   {title:"الحوسبة السحابية | منجزات النشاط",view:"#cloud-activity",icon:"☁",viewOnly:true},
   {title:"الحوسبة السحابية | فريق التميز",view:"#cloud-excellence",icon:"☁",viewOnly:true},
   {title:"الحوسبة السحابية | ملفات الإنجاز",view:"#cloud-portfolios",icon:"☁",viewOnly:true},
+  {title:"الاحتياط اليومي",view:"#daily-reserve",icon:"▦",viewOnly:true},
   {title:"صلاحيات إدارية",view:"#admin-permissions",icon:"▥",viewOnly:true,singleLine:true}
 ];
 
@@ -128,7 +129,6 @@ function render(){
   if(isHome()) buildHome();
   else if((location.hash||"").slice(1)==="awards") setTimeout(enhanceAwardsSection,70);
 }
-/* المصدر الرسمي لرسم الرئيسية: يستخدمه app.js أيضًا بعد اكتمال المزامنة السحابية */
 window.renderManjazHome=buildHome;
 ensureCloudLinksScript();
 addEventListener("hashchange",()=>setTimeout(render,0));
@@ -138,3 +138,7 @@ addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once
 
 /* MANJAZ: isolated cloud-first partnership update loader */
 (()=>{if(document.querySelector('script[data-manjaz-partners-cloud="2.0"]'))return;const s=document.createElement("script");s.src="partners-cloud.js?v=2.0";s.dataset.manjazPartnersCloud="2.0";document.head.appendChild(s)})();
+
+
+/* MANJAZ: isolated daily reserve section loader */
+(()=>{if(document.querySelector('script[data-manjaz-daily-reserve="1.0"]'))return;const s=document.createElement("script");s.src="daily-reserve.js?v=1.0";s.dataset.manjazDailyReserve="1.0";document.head.appendChild(s)})();
