@@ -1370,10 +1370,13 @@ function publicationHTML(date){
     <p class="reserve-publication-school">الثانوية الرابعة والتسعون – مسارات</p>
     <table><thead><tr>
       <th>المعلمة الغائبة</th><th>الحصة</th><th>الفصل</th><th>المعلمة المسند لها الاحتياط</th><th>عنوان التفعيل</th><th>حالة الاطلاع</th><th>حالة التفعيل</th><th>التوقيع</th>
-    </tr></thead><tbody>${items.length?items.map(a=>{
+    </tr></thead><tbody>${items.length?items.map((a,i)=>{
       const title=clean(a.activationTitle||"");
       const acknowledged=Boolean(clean(a.ackAt||""));
-      return `<tr class="reserve-publication-period reserve-publication-period-${Number(a.period)}">
+      // فاصل أبيض بين مجموعات الحصص؛ لا يُنشأ قبل أول حصة في الجدول.
+      const newGroup=i>0&&Number(items[i-1].period)!==Number(a.period);
+      const groupGap=newGroup?'<tr class="reserve-publication-group-gap" aria-hidden="true"><td colspan="8"></td></tr>':"";
+      return `${groupGap}<tr class="reserve-publication-period reserve-publication-period-${Number(a.period)}">
       <td>${esc(a.absentTeacherName||"—")}</td><td>${esc(a.period)}</td>
       <td>${esc(a.className||"—")}</td><td>${esc(a.assignedTeacherName||"—")}</td>
       <td class="reserve-publication-title">${title?esc(title):"—"}</td>
@@ -1408,15 +1411,20 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet table{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center}
     #reservePublishSheet th,#reservePublishSheet td{border:1px solid #637982;padding:8px 5px;vertical-align:middle;overflow-wrap:anywhere}
     #reservePublishSheet th{background:#edf3f3!important;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    /* لكل حصة لون موحّد عبر كل صفوفها، في المعاينة وملف PDF والطباعة */
-    #reservePublishSheet tr.reserve-publication-period-1 > td{background-color:#DDF4F0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #reservePublishSheet tr.reserve-publication-period-2 > td{background-color:#E6F0FB!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #reservePublishSheet tr.reserve-publication-period-3 > td{background-color:#FFF2D8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #reservePublishSheet tr.reserve-publication-period-4 > td{background-color:#E8F4DA!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #reservePublishSheet tr.reserve-publication-period-5 > td{background-color:#FAE5ED!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #reservePublishSheet tr.reserve-publication-period-6 > td{background-color:#EFE7FA!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #reservePublishSheet tr.reserve-publication-period-7 > td{background-color:#F8E9D7!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #reservePublishSheet .reserve-publication-period > td{color:#172c34!important}
+    /* خلفية بيضاء لجميع صفوف جدول النشر، والتلوين في عمود الحصة فقط */
+    #reservePublishSheet tr.reserve-publication-period > td{background-color:#fff!important;color:#172c34!important}
+    #reservePublishSheet tr.reserve-publication-period > td:nth-child(2){font-weight:800;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    #reservePublishSheet tr.reserve-publication-period-1 > td:nth-child(2){background-color:#DDF4F0!important}
+    #reservePublishSheet tr.reserve-publication-period-2 > td:nth-child(2){background-color:#E6F0FB!important}
+    #reservePublishSheet tr.reserve-publication-period-3 > td:nth-child(2){background-color:#FFF2D8!important}
+    #reservePublishSheet tr.reserve-publication-period-4 > td:nth-child(2){background-color:#E8F4DA!important}
+    #reservePublishSheet tr.reserve-publication-period-5 > td:nth-child(2){background-color:#FAE5ED!important}
+    #reservePublishSheet tr.reserve-publication-period-6 > td:nth-child(2){background-color:#EFE7FA!important}
+    #reservePublishSheet tr.reserve-publication-period-7 > td:nth-child(2){background-color:#F8E9D7!important}
+    /* صف أبيض مستقل للفصل البصري بين مجموعة وأخرى، في المعاينة وPDF */
+    #reservePublishSheet tr.reserve-publication-group-gap{height:12px!important;break-after:avoid;page-break-after:avoid}
+    #reservePublishSheet tr.reserve-publication-group-gap > td{height:12px!important;min-height:12px!important;border:0!important;background:#fff!important;padding:0!important;line-height:0!important;font-size:0!important}
+    #reservePublishSheet tr.reserve-publication-period > td:first-child{border-right-color:#637982!important}
     #reservePublishSheet th:nth-child(1){width:17%}
     #reservePublishSheet th:nth-child(2){width:6%}
     #reservePublishSheet th:nth-child(3){width:9%}
@@ -1459,6 +1467,8 @@ function ensureReservePublicationStyles(){
       #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{min-width:0!important}
       #reservePublishSheet{font-size:11px!important;line-height:1.28!important}
       #reservePublishSheet th,#reservePublishSheet td{padding:2px 4px!important;line-height:1.28!important}
+      #reservePublishSheet tr.reserve-publication-group-gap{height:8px!important}
+      #reservePublishSheet tr.reserve-publication-group-gap > td{height:8px!important;min-height:8px!important;padding:0!important;border:0!important;line-height:0!important}
       #reservePublishSheet .reserve-publication-status{padding:2px 3px!important}
       #reservePublishSheet .reserve-publication-signature{height:17px!important}
       #reservePublishSheet h1{font-size:18px!important;margin:6px 0 0!important}
