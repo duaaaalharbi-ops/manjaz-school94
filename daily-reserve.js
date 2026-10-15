@@ -26,6 +26,7 @@ const DAYS=[
 const PERIODS=[1,2,3,4,5,6,7];
 const DEFAULT_WEIGHTS={week:30,term:10,daily:18,workload:0.35,consecutive:9};
 let state={teachers:[],schedules:[],absences:[],assignments:[],settings:null,admin:null,currentDate:todayISO()};
+let renderBusy=false;
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const clean=s=>String(s??"").replace(/\s+/g," ").trim();
@@ -254,6 +255,9 @@ function injectStyle(){
   .reserve-public-note{font-size:13px;color:#687a83}
   .reserve-highlight{background:#f8fbfb}
   .reserve-ack{border:1px solid #cfe2dd;background:#f8fcfb;border-radius:14px;padding:14px;display:grid;gap:8px}
+  .reserve-activation-box{margin-top:6px;padding-top:12px;border-top:1px solid #d9e8e4;display:grid;gap:8px}
+  .reserve-activation-box label{display:grid;gap:6px;font-weight:800;color:#0b3047}
+  .reserve-activation-box input{border:1px solid #cfdadd;border-radius:10px;padding:10px 11px;font:inherit;background:#fff}
   @media(max-width:760px){
     .reserve-grid{grid-template-columns:1fr}
     .schedule-day{grid-template-columns:80px repeat(7,95px)}
@@ -289,6 +293,20 @@ function publicHTML(){
       ${ack.ackAt?`<span class="reserve-status">تم الاطلاع ${esc(new Date(ack.ackAt).toLocaleString("ar-SA"))}</span>`:
       `<button class="btn btn-primary" id="reserveAckBtn">اطلعت</button>`}
       <div id="reserveAckMsg"></div>
+      ${ack.ackAt?`<div class="reserve-activation-box">
+        <strong>تفعيل حصة الاحتياط</strong>
+        ${ack.activationTitle?`
+          <span class="reserve-status">تم التفعيل</span>
+          <div><b>عنوان التفعيل:</b> ${esc(ack.activationTitle)}</div>
+          ${ack.activationAt?`<small>وقت التسجيل: ${esc(new Date(ack.activationAt).toLocaleString("ar-SA"))}</small>`:""}
+        `:`
+          <label>عنوان التفعيل
+            <input id="reserveActivationTitle" maxlength="160" placeholder="مثال: مراجعة مهارات الوحدة الثالثة">
+          </label>
+          <button class="btn btn-primary" id="reserveActivationSave" type="button">حفظ التفعيل</button>
+          <div id="reserveActivationMsg"></div>
+        `}
+      </div>`:""}
     </section>`:""}
 
     <section class="surface panel">
@@ -299,12 +317,13 @@ function publicHTML(){
         <button class="btn btn-ghost" type="button" id="reserveAdminOpen">دخول الإدارة</button>
       </div>
       <div class="reserve-table-wrap">
-        <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th></tr></thead>
+        <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th><th>التفعيل</th></tr></thead>
         <tbody>${daily.length?daily.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>`<tr>
           <td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td><td>${esc(a.absentTeacherName||"—")}</td>
           <td><strong>${esc(a.assignedTeacherName||"—")}</strong></td>
           <td>${a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':'<span class="reserve-status pending">بانتظار الاطلاع</span>'}</td>
-        </tr>`).join(""):`<tr><td colspan="5">لا يوجد جدول احتياط معتمد لهذا اليوم</td></tr>`}</tbody></table>
+          <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status pending">بانتظار التفعيل</span>':'—')}</td>
+        </tr>`).join(""):`<tr><td colspan="6">لا يوجد جدول احتياط معتمد لهذا اليوم</td></tr>`}</tbody></table>
       </div>
     </section>
 
@@ -381,11 +400,12 @@ function dayAdminHTML(){
 }
 function adminAssignmentsHTML(items){
   if(!items.length)return '<div class="empty-inline">سجلي الغياب ثم اضغطي توليد أفضل 3 مرشحات</div>';
-  return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>الغائبة</th><th>أفضل 3 مرشحات</th><th>المكلفة</th><th>الإجراءات</th></tr></thead>
+  return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>الغائبة</th><th>أفضل 3 مرشحات</th><th>المكلفة</th><th>التفعيل</th><th>الإجراءات</th></tr></thead>
   <tbody>${items.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>`<tr data-assignment="${esc(a.id)}">
     <td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td><td>${esc(a.absentTeacherName)}</td>
     <td>${(a.candidates||[]).map((c,i)=>`<div class="reserve-candidate"><strong>${i+1}. ${esc(c.name)}</strong><small>الأسبوع ${c.week} | التراكمي ${c.term} | النصاب ${c.workload}</small><span class="reserve-score">درجة الترشيح: ${c.score}</span></div>`).join("")||"لا توجد مرشحات"}</td>
     <td><select class="reserve-assignee">${(a.candidates||[]).map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select></td>
+    <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status pending">بانتظار التفعيل</span>':'—')}</td>
     <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">حفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack">نسخ رابط الاطلاع</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
   </tr>`).join("")}</tbody></table></div>`;
 }
@@ -468,6 +488,22 @@ function bindPublic(){
       await refreshAndRenderPublic();
     }catch(err){console.error(err);msg.textContent="تعذر تسجيل الاطلاع، أعيدي المحاولة"}
   });
+  byId("reserveActivationSave")?.addEventListener("click",async()=>{
+    const a=state.assignments.find(x=>x.ackToken===ack&&x.published===true&&x.ackAt);
+    const input=byId("reserveActivationTitle"),msg=byId("reserveActivationMsg");
+    if(!a||!input||!msg)return;
+    const title=clean(input.value);
+    if(title.length<3){msg.textContent="اكتبي عنوان التفعيل";input.focus();return}
+    const btn=byId("reserveActivationSave");btn.disabled=true;msg.textContent="جارٍ حفظ التفعيل...";
+    try{
+      const data={...plainData(a),activationTitle:title,activationAt:new Date().toISOString()};
+      await patchKind(K.assignment,a.id,data,"","معتمد");
+      await loadAll();
+      renderPage();
+    }catch(err){
+      console.error(err);msg.textContent="تعذر حفظ التفعيل، أعيدي المحاولة";btn.disabled=false;
+    }
+  });
 }
 function bindLogin(){
   byId("reserveCloseLogin")?.addEventListener("click",()=>{byId("reserveAdminMount").innerHTML=""});
@@ -542,6 +578,7 @@ function bindDayAdmin(){
             candidates:cand,
             assignedTeacherId:first?.teacherId||"",assignedTeacherName:first?.name||"",
             published:false,status:"مسودة",ackToken:uid(),ackAt:"",
+            activationTitle:"",activationAt:"",
             createdAt:new Date().toISOString()
           },token(),"مسودة");
           await loadAll();
@@ -555,7 +592,7 @@ function bindDayAdmin(){
     const a=state.assignments.find(x=>String(x.id)===String(id)); if(!a)return;
     const teacherId=tr.querySelector(".reserve-assignee").value;
     const c=(a.candidates||[]).find(x=>String(x.teacherId)===String(teacherId)); if(!c)return;
-    const data={...plainData(a),assignedTeacherId:String(c.teacherId),assignedTeacherName:c.name,ackAt:""};
+    const data={...plainData(a),assignedTeacherId:String(c.teacherId),assignedTeacherName:c.name,ackAt:"",activationTitle:"",activationAt:""};
     await patchKind(K.assignment,id,data,token(),a.published?"معتمد":"مسودة");
     await loadAll(); renderAdminTab("day");
   });
@@ -646,19 +683,27 @@ function bindSettingsAdmin(){
 }
 
 async function renderPage(){
-  if(!isRoute())return;
+  if(!isRoute()||renderBusy)return;
+  renderBusy=true;
   injectStyle();
-  const view=byId("view"); if(!view)return;
-  view.innerHTML=`<section class="surface panel"><div class="panel-head"><h3>جارٍ تحميل الاحتياط اليومي</h3></div></section>`;
-  try{await loadAll()}catch(err){
-    console.error(err);
-    view.innerHTML=`<section class="surface empty-state"><h3>تعذر تحميل بيانات الاحتياط حاليًا</h3><p>تحققي من الاتصال ثم أعيدي المحاولة.</p></section>`;
-    return;
+  const view=byId("view");
+  if(!view){renderBusy=false;return;}
+  if(!byId("dailyReserveRoot")&&!byId("dailyReserveLoading")){
+    view.innerHTML=`<section id="dailyReserveLoading" class="surface panel"><div class="panel-head"><h3>جارٍ تحميل الاحتياط اليومي</h3></div></section>`;
   }
-  view.innerHTML=publicHTML();
-  bindPublic();
-  const s=await validateSession().catch(()=>null);
-  if(s)state.admin=s;
+  try{
+    await loadAll();
+    if(!isRoute())return;
+    view.innerHTML=publicHTML();
+    bindPublic();
+    const s=await validateSession().catch(()=>null);
+    if(s)state.admin=s;
+  }catch(err){
+    console.error(err);
+    if(isRoute()) view.innerHTML=`<section class="surface empty-state"><h3>تعذر تحميل بيانات الاحتياط حاليًا</h3><p>تحققي من الاتصال ثم أعيدي المحاولة.</p></section>`;
+  }finally{
+    renderBusy=false;
+  }
 }
 
 addEventListener("hashchange",()=>setTimeout(renderPage,0));
@@ -670,9 +715,9 @@ const view=byId("view");
 if(view){
   let timer;
   new MutationObserver(()=>{
-    if(!isRoute())return;
-    if(byId("dailyReserveRoot"))return;
-    clearTimeout(timer);timer=setTimeout(renderPage,50);
+    if(!isRoute()||renderBusy)return;
+    if(byId("dailyReserveRoot")||byId("dailyReserveLoading"))return;
+    clearTimeout(timer);timer=setTimeout(renderPage,80);
   }).observe(view,{childList:true,subtree:true});
 }
 })();
