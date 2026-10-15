@@ -1,4 +1,4 @@
-/* MANJAZ DAILY RESERVE 1.9
+/* MANJAZ DAILY RESERVE 2.0
    Public read-only daily reserve + weekly cumulative view.
    Admin-only editing through Supabase Auth session.
    Cloud-first: all operational data lives in Supabase records.
@@ -29,7 +29,8 @@ const DEFAULT_WEIGHTS={week:30,term:10,daily:18,workload:0.35,consecutive:9};
 const V6_SOURCE="v6-1448-04-27";
 const COUNT_START="2026-10-18";
 const EMERGENCY_DAILY_DEMAND=20;
-const PERMANENT_EXCLUDED=new Set(["إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البالدي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
+const CONDITIONAL_EXCLUSION_MIN_DEMAND=13; // More than 12 absent periods on the same school day
+const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البالدي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
 const ADVANCED_RANK=new Set(["دعاء الحربي","سندس الغامدي","عايدة الصاعدي","ريم القحطاني","عوالي السبيعي","بدرية الحربي","حنان المجنوني"]);
 const ABSOLUTE_EXCLUDED=new Set(["نورة الهودان"]);
 // Additional personnel authorized for manual assignment, not in the official sixth-edition teacher timetable.
@@ -216,7 +217,7 @@ function seedForName(name){return V6_SEED.find(x=>x.name===editionSixName(name))
 function teacherFlags(t){
   const n=editionSixName(t.name)||clean(t.name);
   return {
-    permanentExcluded:n!=="أفراح الجدعاني"&&(t.permanentExcluded===true||nameSetContains(PERMANENT_EXCLUDED,n)),
+    permanentExcluded:t.permanentExcluded===true||nameSetContains(PERMANENT_EXCLUDED,n),
     advanced:t.advancedRank===true||nameSetContains(ADVANCED_RANK,n),
     absolute:t.absoluteExcluded===true||nameSetContains(ABSOLUTE_EXCLUDED,n)
   };
@@ -258,7 +259,20 @@ function teacherHasClass(teacherId,className){
   return DAYS.some(d=>(s.timetable?.[d[0]]||[]).some(v=>parseScheduleValue(v).className===target));
 }
 function dailyDemand(date){
-  return absencesOn(date).reduce((n,a)=>n+(a.periods||[]).length,0);
+  // Sum every required period once per absent teacher, even when a record was duplicated.
+  const byTeacher=new Map();
+  absencesOn(date).forEach(a=>{
+    const id=String(a.teacherId||"");
+    if(!id)return;
+    const periods=(a.periods||[]).filter(p=>p&&Number(p.period)>0).map(p=>Number(p.period));
+    const existing=byTeacher.get(id)||new Set();
+    periods.forEach(p=>existing.add(p));
+    byTeacher.set(id,existing);
+  });
+  return [...byTeacher.values()].reduce((n,periods)=>n+periods.size,0);
+}
+function conditionalReserveAllowed(date,plannedDemand=0){
+  return Math.max(dailyDemand(date),Number(plannedDemand)||0)>=CONDITIONAL_EXCLUSION_MIN_DEMAND;
 }
 function sameClassReserveToday(teacherId,date,className,exceptId=""){
   const target=clean(className);
@@ -397,7 +411,13 @@ function publicWeeklyRows(referenceDate){
   const usedStaff=MANUAL_SUPPORT_STAFF.filter(t=>{
     const c=counts.get(String(t.id));return c&&(Number(c.week||0)>0||Number(c.term||0)>0);
   });
-  return [...state.teachers.filter(reserveSummaryEligible),...usedStaff]
+  const eligible=state.teachers.filter(t=>{
+    if(reserveSummaryEligible(t))return true;
+    if(teacherFlags(t).absolute)return false;
+    const c=counts.get(String(t.id));
+    return !!c&&Number(c.week||0)>0;
+  });
+  return [...eligible,...usedStaff]
     .sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"))
     .map(t=>({teacher:t,count:counts.get(String(t.id))||{week:0,term:0,days:{},dayState:{},maxDaily:0}}));
 }
@@ -431,7 +451,8 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
     if(String(t.id)===String(absentTeacherId))return;
     if(t.active===false||t.excluded===true)return;
     const flags=teacherFlags(t);
-    if(flags.permanentExcluded||flags.absolute)return;
+    if(flags.absolute)return;
+    if(flags.permanentExcluded&&!conditionalReserveAllowed(date))return;
     if(isAbsent(t.id,date))return;
     if(breastfeedingBlocked(t,date,period))return;
     if(regularCell(t.id,date,period))return;
@@ -457,24 +478,33 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
       week:Number(c.week||0),term:Number(c.term||0),daily:Number(c.daily||0),
       effectiveLoad,missed,makeupPending:pending,ceiling,ownClass,fatimaSecond,
       dailyOriginal,adjacentOriginal,prevWeek,sameClassRepeat,diversityUsed,
-      emergency
+      permanentExcluded:flags.permanentExcluded,emergency
     });
   });
 
   let pool=all.filter(x=>!x.sameClassRepeat);
   if(!pool.length&&emergency)pool=all.slice();
 
+  // Keep every non-excluded option when there are enough of them;
+  // do not discard regular teachers merely because exception teachers
+  // have fewer recent substitutions.
+  const enough=Math.max(1,Number(opts.limit||3));
+  const standard=pool.filter(x=>!x.permanentExcluded);
+  if(standard.length>=enough)pool=standard;
+
   if(!emergency){
     const fresh=pool.filter(x=>x.prevWeek===0);
-    if(fresh.length>=3)pool=fresh;
+    if(fresh.length>=enough &&
+       (standard.length===0||fresh.filter(x=>!x.permanentExcluded).length>=Math.min(standard.length,enough)))pool=fresh;
   }
 
   if(!opts.ignoreDiversity){
     const fresh=pool.filter(x=>!x.diversityUsed);
-    if(fresh.length>=Math.min(3,Number(opts.limit||3)))pool=fresh;
+    if(fresh.length>=enough&&
+       (standard.length===0||fresh.filter(x=>!x.permanentExcluded).length>=Math.min(standard.length,enough)))pool=fresh;
   }
-
   pool.sort((a,b)=>
+    Number(a.permanentExcluded)-Number(b.permanentExcluded)||
     a.effectiveLoad-b.effectiveLoad||
     Number(b.makeupPending)-Number(a.makeupPending)||
     a.week-b.week||
@@ -746,6 +776,7 @@ function publicHTML(){
         ${hijriDateControl("reservePublicDate",date)}
         <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-ghost" type="button" id="reservePrint">طباعة الجدول</button>
+        <button class="btn btn-primary" type="button" id="reservePublish">جدول النشر</button>
         <button class="btn btn-ghost" type="button" id="reserveAdminOpen">دخول الإدارة</button>
         </div>
       </div>
@@ -902,14 +933,15 @@ function bindWorkspace(){
   renderWorkspaceCard(state.workspaceCard||"manual");
 }
 
-function manualPhysicalCandidates(date,period,absentIds=[],allNames=false,exceptAssignmentId=""){
+function manualPhysicalCandidates(date,period,absentIds=[],allNames=false,exceptAssignmentId="",plannedDemand=0){
   const absent=new Set(absentIds.map(String));
   if(allNames)return manualAssigneeDirectory();
   const teachers=state.teachers.filter(t=>{
     if(absent.has(String(t.id))||isAbsent(t.id,date))return false;
     if(t.active===false||t.excluded===true)return false;
     const f=teacherFlags(t);
-    if(f.permanentExcluded||f.absolute)return false;
+    if(f.absolute)return false;
+    if(f.permanentExcluded&&!conditionalReserveAllowed(date,plannedDemand))return false;
     if(breastfeedingBlocked(t,date,period))return false;
     if(regularCell(t.id,date,period))return false;
     if(occupiedByReserve(t.id,date,period,exceptAssignmentId))return false;
@@ -917,7 +949,8 @@ function manualPhysicalCandidates(date,period,absentIds=[],allNames=false,except
   }).sort((a,b)=>{
     const ca=assignmentCounts(date).get(String(a.id))||{week:0,daily:0};
     const cb=assignmentCounts(date).get(String(b.id))||{week:0,daily:0};
-    return Number(ca.week||0)-Number(cb.week||0)||Number(a.workload||0)-Number(b.workload||0)||clean(a.name).localeCompare(clean(b.name),"ar");
+    return Number(teacherFlags(a).permanentExcluded)-Number(teacherFlags(b).permanentExcluded)||
+      Number(ca.week||0)-Number(cb.week||0)||Number(a.workload||0)-Number(b.workload||0)||clean(a.name).localeCompare(clean(b.name),"ar");
   });
   // Additional staff have no timetable in edition six. Their availability must be confirmed by administration.
   return [...teachers,...MANUAL_SUPPORT_STAFF.filter(t=>!occupiedByReserve(t.id,date,period,exceptAssignmentId))];
@@ -947,13 +980,19 @@ function manualAdminHTML(){
 }
 function manualRowsHTML(absentIds,date){
   const rows=[];
+  const recordedIds=new Set(absencesOn(date).map(a=>String(a.teacherId)));
+  const plannedDemand=dailyDemand(date)+absentIds.reduce((n,id)=>{
+    if(recordedIds.has(String(id)))return n;
+    const cells=scheduleOf(id)?.timetable?.[dayKey(date)]||[];
+    return n+cells.filter(v=>parseScheduleValue(v).className).length;
+  },0);
   absentIds.forEach(id=>{
     const t=teacherOf(id),s=scheduleOf(id),cells=s?.timetable?.[dayKey(date)]||[];
     cells.forEach((v,i)=>{
       const p=parseScheduleValue(v);
       if(!p.className)return;
       const existing=existingSlotAssignment(date,t.id,i+1);
-      const candidates=manualPhysicalCandidates(date,i+1,absentIds,state.manualAllNames===true,existing?.id||"");
+      const candidates=manualPhysicalCandidates(date,i+1,absentIds,state.manualAllNames===true,existing?.id||"",plannedDemand);
       const currentId=String(existing?.assignedTeacherId||"");
       if(currentId&&!candidates.some(c=>String(c.id)===currentId)){
         const current=teacherOf(currentId);
@@ -970,7 +1009,7 @@ function manualRowsHTML(absentIds,date){
       <td><select class="reserve-manual-assignee"><option value="">اختاري معلمة التسديد</option>${r.candidates.map(t=>`<option value="${esc(t.id)}" ${String(t.id)===r.existingTeacherId?"selected":""}>${esc(t.name)}${t.supportStaff?" — التوجيه / المختبر":""}</option>`).join("")}</select></td>
     </tr>`).join("")}
   </tbody></table></div>
-  <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveManualSave" type="button">حفظ واعتماد الجدول اليدوي</button></div>`;
+  <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveManualSave" type="button">حفظ واعتماد وتصدير جدول اليوم</button></div>`;
 }
 function manualConflictMessages(date,selections,absentIds){
   const warnings=[],slotUse=new Map();
@@ -1016,10 +1055,8 @@ async function saveManualAssignments(){
   });
   if(missing){msg.textContent="يجب تسديد جميع حصص الغائبات قبل الحفظ.";return}
   const warnings=manualConflictMessages(date,selections,absentIds);
-  if(warnings.length){
-    const ok=confirm(`تنبيه إداري — تم العثور على تعارضات برمجية:\\n\\n${warnings.join("\\n")}\\n\\nهل تريدين تجاوز التحذيرات والحفظ؟`);
-    if(!ok){msg.innerHTML=`<div class="reserve-warning-box">${warnings.map(x=>`<div>• ${esc(x)}</div>`).join("")}</div>`;return}
-  }
+  // Administration explicitly allows all rule warnings to be overridden.
+  // Never block saving completed substitutions; keep an audit trail.
   msg.textContent="جارٍ حفظ واعتماد الجدول اليدوي...";
   try{
     await ensureAdmin();
@@ -1038,6 +1075,7 @@ async function saveManualAssignments(){
         absentTeacherId:String(x.absent.id),absentTeacherName:x.absent.name,
         candidates:[],assignedTeacherId:String(t.id),assignedTeacherName:t.name,
         published:true,status:"معتمد",manual:true,manualOverride:warnings.length>0,
+        manualOverrideWarnings:warnings.slice(0,70),
         ackToken:existing?.ackToken||uid(),ackAt:existing?.assignedTeacherId===String(t.id)?(existing.ackAt||""):"",
         activationTitle:existing?.assignedTeacherId===String(t.id)?(existing.activationTitle||""):"",
         activationAt:existing?.assignedTeacherId===String(t.id)?(existing.activationAt||""):"",
@@ -1048,8 +1086,11 @@ async function saveManualAssignments(){
     }
     await loadAll();
     state.currentDate=date;
-    msg.textContent="تم حفظ واعتماد الجدول اليدوي بنجاح.";
     renderWorkspaceCard("manual");
+    // Export one consolidated daily table (not one file per absent teacher).
+    exportDailyReserveExcel(date);
+    const done=byId("reserveManualMsg");
+    if(done)done.textContent=`تم حفظ واعتماد جميع الحصص وتصدير جدول اليوم.${warnings.length?` تم تجاوز ${warnings.length} تنبيهًا إداريًا مع توثيقها في السجلات.`:""}`;
   }catch(err){console.error(err);msg.textContent="تعذر حفظ الجدول اليدوي."}
 }
 function bindManualAdmin(){
@@ -1270,6 +1311,94 @@ function exportRange(range){
   }
   return {start:termStart()||COUNT_START,end:state.currentDate};
 }
+function dailyPublicationRows(date){
+  return publishedAssignments().filter(a=>a.date===date)
+    .sort((a,b)=>Number(a.period)-Number(b.period)||
+      clean(a.absentTeacherName||"").localeCompare(clean(b.absentTeacherName||""),"ar"));
+}
+function dailyPublicationStats(items){
+  const absent=new Set(items.map(a=>String(a.absentTeacherId||a.absentTeacherName||"")));
+  const assigned=new Map();
+  items.forEach(a=>{
+    const name=clean(a.assignedTeacherName)||"—";
+    assigned.set(name,(assigned.get(name)||0)+1);
+  });
+  const breakdown=[...assigned.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ar"));
+  return {periods:items.length,absentTeachers:absent.size,assignedTeachers:assigned.size,breakdown};
+}
+function exportDailyReserveExcel(date){
+  const rows=dailyPublicationRows(date),stats=dailyPublicationStats(rows);
+  const headers=["المعلمة الغائبة","الحصة","الفصل","معلمة الاحتياط","التوقيع"];
+  const content=rows.map(a=>[a.absentTeacherName||"",a.period,a.className||"",a.assignedTeacherName||"",""]);
+  content.push(["إحصائية اليوم","","","",""]);
+  content.push(["إجمالي حصص الاحتياط",stats.periods,"عدد المعلمات الغائبات",stats.absentTeachers,""]);
+  content.push(["عدد المكلفات بالاحتياط",stats.assignedTeachers,"","",""]);
+  stats.breakdown.forEach(([name,n])=>content.push([name,n,"حصة احتياط","",""]));
+  // Internal filename uses ISO only for safe filename uniqueness; all displayed dates are Hijri.
+  downloadXls(`جدول_الاحتياط_اليومي_${date}`,headers,content,`اليوم ${dayName(date)}`);
+}
+function publicationHTML(date){
+  const items=dailyPublicationRows(date),stats=dailyPublicationStats(items);
+  const summary=stats.breakdown.map(([name,n])=>`<span>${esc(name)}: <b>${n}</b></span>`).join("، ");
+  return `<div id="reservePublishSheet" dir="rtl" lang="ar">
+    <div class="reserve-publication-date"><b>اليوم:</b> ${esc(dayName(date))} <span><b>التاريخ:</b> ${esc(fmtDate(date))}</span></div>
+    <h1>جدول النشر — الاحتياط اليومي</h1>
+    <p class="reserve-publication-school">الثانوية الرابعة والتسعون – مسارات</p>
+    <table><thead><tr>
+      <th>المعلمة الغائبة</th><th>الحصة</th><th>الفصل</th><th>المعلمة المسند لها الاحتياط</th><th>التوقيع</th>
+    </tr></thead><tbody>${items.length?items.map(a=>`<tr>
+      <td>${esc(a.absentTeacherName||"—")}</td><td>${esc(a.period)}</td>
+      <td>${esc(a.className||"—")}</td><td>${esc(a.assignedTeacherName||"—")}</td>
+      <td class="reserve-publication-signature"></td>
+    </tr>`).join(""):`<tr><td colspan="5">لا توجد حصص احتياط معتمدة لهذا اليوم</td></tr>`}</tbody></table>
+    <section class="reserve-publication-summary">
+      <h2>إحصائية نهاية الجدول</h2>
+      <div class="reserve-publication-totals"><span>إجمالي حصص الاحتياط: <b>${stats.periods}</b></span>
+      <span>عدد المعلمات الغائبات: <b>${stats.absentTeachers}</b></span>
+      <span>عدد المكلفات بالاحتياط: <b>${stats.assignedTeachers}</b></span></div>
+      ${stats.breakdown.length?`<p><b>توزيع حصص الاحتياط على المكلفات:</b> ${summary}</p>`:""}
+    </section>
+    <div class="reserve-publication-footer">الثانوية الرابعة والتسعون – مسارات | الاحتياط اليومي</div>
+  </div>`;
+}
+function printReservePublication(date){
+  const old=document.getElementById("reservePublishSheet");
+  if(old)old.remove();
+  let style=document.getElementById("reservePublishPrintStyle");
+  if(!style){
+    style=document.createElement("style");style.id="reservePublishPrintStyle";
+    style.textContent=`
+      #reservePublishSheet{display:none}
+      @media print {
+        @page{size:A4 portrait;margin:12mm}
+        body > :not(#reservePublishSheet):not(#reservePublishPrintStyle){display:none!important}
+        html,body{background:white!important;color:#172c34!important;margin:0!important;padding:0!important;width:100%!important}
+        body #reservePublishSheet{display:block!important;direction:rtl;font-family:Tahoma,Arial,sans-serif;font-size:11px;line-height:1.6}
+        #reservePublishSheet .reserve-publication-date{display:flex;justify-content:space-between;gap:16px;border-bottom:2px solid #0f5f59;padding-bottom:7px;font-size:13px}
+        #reservePublishSheet h1{text-align:center;margin:9px 0 0;font-size:19px;color:#123e50}
+        #reservePublishSheet .reserve-publication-school{text-align:center;margin:0 0 12px;color:#576c72;font-size:12px}
+        #reservePublishSheet table{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center}
+        #reservePublishSheet th,#reservePublishSheet td{border:1px solid #637982;padding:8px 5px;vertical-align:middle;word-break:break-word}
+        #reservePublishSheet th{background:#edf3f3!important;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        #reservePublishSheet th:nth-child(1){width:24%}
+        #reservePublishSheet th:nth-child(2){width:9%}
+        #reservePublishSheet th:nth-child(3){width:14%}
+        #reservePublishSheet th:nth-child(4){width:34%}
+        #reservePublishSheet th:nth-child(5){width:19%}
+        #reservePublishSheet tr{break-inside:avoid;page-break-inside:avoid}
+        #reservePublishSheet .reserve-publication-signature{height:20px}
+        #reservePublishSheet .reserve-publication-summary{border:1px solid #637982;margin-top:14px;padding:9px;break-inside:avoid;page-break-inside:avoid}
+        #reservePublishSheet h2{margin:0 0 8px;color:#123e50;font-size:14px}
+        #reservePublishSheet .reserve-publication-totals{display:flex;gap:12px;flex-wrap:wrap}
+        #reservePublishSheet .reserve-publication-summary p{margin:8px 0 0}
+        #reservePublishSheet .reserve-publication-footer{text-align:center;border-top:1px solid #9cb3b7;margin-top:14px;padding-top:6px;font-size:10px}
+      }`;
+    document.head.appendChild(style);
+  }
+  document.body.insertAdjacentHTML("beforeend",publicationHTML(date));
+  window.print();
+}
+
 function xlsEsc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 function downloadXls(fileBase,headers,rows,sheetName="البيانات",extraSheet=""){
   const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
@@ -1307,6 +1436,7 @@ function mountAdminShell(){
 function bindPublic(){
   bindHijriDateControl("reservePublicDate",async next=>{state.currentDate=next;renderPage()});
   byId("reservePrint")?.addEventListener("click",()=>window.print());
+  byId("reservePublish")?.addEventListener("click",()=>printReservePublication(state.currentDate));
   byId("reserveAdminOpen")?.addEventListener("click",async()=>{
     const s=await validateSession().catch(()=>null);
     if(s){
