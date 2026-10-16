@@ -42,6 +42,13 @@ const MANUAL_SUPPORT_STAFF=[
 const V6_SEED=[{"name":"أفراح الجدعاني","workload":9,"timetable":{"sun":["","","","","","أول6","ثالث3"],"mon":["أول6","","أول4","","","ثالث3",""],"tue":["","أول5","","","",""],"wed":["أول5","","","أول4","",""],"thu":["","ثالث3","","","",""]}},{"name":"أيمان الجدعاني","workload":20,"timetable":{"sun":["ثاني6","","","","ثاني3","ثاني1","ثاني2"],"mon":["ثاني2","","ثاني6","ثاني1","","","ثاني4"],"tue":["ثاني6","","","ثاني4","ثاني3","ثاني1"],"wed":["ثاني2","ثاني4","","","ثاني3","ثاني6"],"thu":["ثاني3","ثاني1","","ثاني2","ثاني4",""]}},{"name":"بدريه الحربي","workload":11,"timetable":{"sun":["","ثاني4","","","ثاني4|نشاط","","ثاني5"],"mon":["ثاني6","","","ثاني5","ثاني4|نشاط","",""],"tue":["","","","","","ثاني4"],"wed":["","","","ثاني6","ثاني4",""],"thu":["ثاني5","ثاني6","","","",""]}},{"name":"بدريه السلمي","workload":16,"timetable":{"sun":["","ثالث1|نشاط","ثالث2","ثالث3","","","ثالث1"],"mon":["","","ثالث3","","","ثالث1","ثالث2"],"tue":["","ثالث2","ثالث1","","","ثالث3"],"wed":["ثالث1","","","","ثالث3","ثالث2"],"thu":["","ثالث1","","ثالث2","ثالث3",""]}},{"name":"تهاني العتيبي","workload":22,"timetable":{"sun":["أول1","أول2","","ثالث2","ثالث3","ثالث1",""],"mon":["ثالث2","ثالث3","","أول2","ثالث1","أول1",""],"tue":["ثالث1","أول1","","أول2","ثالث3",""],"wed":["ثالث2","ثالث1","","أول1","أول2",""],"thu":["ثالث3","","","أول1","أول2","ثالث2"]}},{"name":"حصة المنتشري","workload":20,"timetable":{"sun":["أول6","ثاني2","ثاني1","ثاني3","","",""],"mon":["","ثاني3","ثاني1","أول6","","ثاني2",""],"tue":["أول6","","ثاني3","ثاني2","ثاني1",""],"wed":["ثاني3","أول6","","ثاني2","ثاني1",""],"thu":["ثاني2","ثاني3","ثاني1","أول6","",""]}},{"name":"حنان المجنوني","workload":13,"timetable":{"sun":["ثالث5","ثالث2","","","","ثالث3","ثالث4"],"mon":["","ثالث1","","","ثالث6","","ثالث3"],"tue":["","ثالث5","","","ثالث2|نشاط","ثالث6"],"wed":["","","ثالث2","","",""],"thu":["ثالث4","","","","ثالث1",""]}},{"name":"خزماء الجبيري","workload":18,"timetable":{"sun":["","أول4","أول6","أول3","أول1","",""],"mon":["أول5","أول2","","","","أول6","أول3"],"tue":["","","أول2","","أول4","أول1"],"wed":["","أول2","أول4","","أول5",""],"thu":["أول3","","أول6","أول5","أول1",""]}},{"name":"خلود الكثيري","workload":18,"timetable":{"sun":["أول5","","أول2","","أول6","أول1",""],"mon":["أول1","أول3","","أول5","","","أول4"],"tue":["","أول3","","أول6","",""],"wed":["","أول4","أول1","أول6","","أول2"],"thu":["","أول3","أول4","","أول5","أول2"]}},{"name":"دعاء الحربي","workload":20,"timetable":{"sun":["","أول6","","ثاني6","ثاني5","","أول5"],"mon":["","أول5","أول6","","ثاني5","","ثاني6"],"tue":["","أول6","أول5","ثاني5","","ثاني6"],"wed":["ثاني5","ثاني6","","أول5","أول6",""],"thu":["ثاني6","ثاني5","","","أول6","أول5"]}},{"name":"رحمة العيسي","workload":4,"timetable":{"sun":["","","","","","","أول4"],"mon":["أول4","","","","","",""],"tue":["أول4","","","","",""],"wed":["","","","","",""],"thu":["","","","","","أول4"]}},{"name":"ريم الحربي","workload":18,"timetable":{"sun":["ثالث4","","ثالث5","","ثالث1","ثالث6",""],"mon":["","","ثالث2","ثالث3","","ثالث4",""],"tue":["ثالث3","ثالث6","","ثالث5","ثالث1",""],"wed":["ثالث3","","ثالث4","","ثالث2",""],"thu":["ثالث1","","ثالث5","ثالث6","ثالث2",""]}},{"name":"ريم القحطاني","workload":16,"timetable":{"sun":["","ثاني3","","ثاني2|نشاط","ثاني1","",""],"mon":["ثاني1","","","ثاني2","ثاني3","",""],"tue":["ثاني2","","ثاني1","","ثاني2|نشاط","ثاني3"],"wed":["","ثاني3","","ثاني1","","ثاني2"],"thu":["","","ثاني2","ثاني1","ثاني3",""]}},{"name":"رية الحربي","workload":13,"timetable":{"sun":["ثالث3|نشاط","","","","ثالث2","","ثالث6"],"mon":["","","","ثالث4","","ثالث1","ثالث5"],"tue":["ثالث4","","","ثالث1","","ثالث2"],"wed":["","","","ثالث3","","ثالث5"],"thu":["","","ثالث6","","","ثالث3"]}},{"name":"سحر الشمراني","workload":17,"timetable":{"sun":["ثاني4","ثاني6","","ثاني5","","ثاني5|نشاط",""],"mon":["","ثاني5","","ثاني4","ثاني6","",""],"tue":["ثاني5","ثاني4","","ثاني6","",""],"wed":["","","ثاني6","","ثاني5","ثاني4"],"thu":["","ثاني4","ثاني6","","ثاني5","ثاني5|نشاط"]}},{"name":"سندس الغامدي","workload":20,"timetable":{"sun":["ثاني1","","","ثاني4","ثاني2","","ثاني3"],"mon":["","ثاني4","ثاني2","","","ثاني1","ثاني3"],"tue":["ثاني4","ثاني3","ثاني2","ثاني1","",""],"wed":["","ثاني2","ثاني3","ثاني4","","ثاني1"],"thu":["","ثاني2","ثاني3","ثاني4","","ثاني1"]}},{"name":"شوق المطيري","workload":8,"timetable":{"sun":["","","","","","أول2",""],"mon":["","","","","أول1","","أول2"],"tue":["","","","","أول1","أول2"],"wed":["أول1","","","","",""],"thu":["","أول2","أول1","","",""]}},{"name":"شيخة المالكي","workload":16,"timetable":{"sun":["ثالث2","ثالث3","","","ثالث6","",""],"mon":["","ثالث2","ثالث6","","ثالث3","ثالث6|نشاط",""],"tue":["","","ثالث3","ثالث2","ثالث6",""],"wed":["","ثالث6","","ثالث2","","ثالث3"],"thu":["","ثالث2","","ثالث3","","ثالث6"]}},{"name":"عايدة الصاعدي","workload":18,"timetable":{"sun":["","","ثالث1","ثالث6","ثالث4","","ثالث2"],"mon":["ثالث3","ثالث5","","ثالث2","ثالث4","","ثالث1"],"tue":["","","","ثالث3","","ثالث5"],"wed":["","ثالث3","ثالث1","ثالث4","ثالث6",""],"thu":["","","ثالث2","","ثالث6","ثالث5"]}},{"name":"عبير المولد","workload":9,"timetable":{"sun":["","","ثالث4","","ثالث5","",""],"mon":["","","","ثالث5","","","ثالث6"],"tue":["","","","ثالث6","","ثالث4"],"wed":["","","","","","ثالث6"],"thu":["","ثالث5","","","","ثالث4"]}},{"name":"علوه الحربي","workload":11,"timetable":{"sun":["","","ثاني2","","","ثاني3","ثاني1|نشاط"],"mon":["ثاني3","","","","ثاني1","","ثاني2"],"tue":["ثاني1|نشاط","","","","",""],"wed":["","ثاني1","","","","ثاني3"],"thu":["","","","","ثاني1","ثاني2"]}},{"name":"علية القاسمي","workload":4,"timetable":{"sun":["","","أول3","","","",""],"mon":["","","","","","أول3",""],"tue":["أول3","","","","",""],"wed":["","","","أول3","",""],"thu":["","","","","",""]}},{"name":"عواطف الحربي","workload":12,"timetable":{"sun":["ثاني3","","ثاني4","","ثاني6","",""],"mon":["","","ثاني3","ثاني6","","ثاني4",""],"tue":["","","ثاني6","ثاني3","",""],"wed":["","","ثاني4","","",""],"thu":["","","ثاني4","ثاني6","","ثاني3"]}},{"name":"عوالي السبيعي","workload":20,"timetable":{"sun":["","أول1","أول5","أول4","","أول3",""],"mon":["أول3","أول4","","أول1","أول2","",""],"tue":["أول2","أول4","","أول3","أول5",""],"wed":["أول2","","أول5","","أول1","أول3"],"thu":["أول5","","أول2","","أول4","أول1"]}},{"name":"غاليه المزمومي","workload":15,"timetable":{"sun":["","ثالث6","","","","ثالث4","ثالث5"],"mon":["","","ثالث5","ثالث6","","",""],"tue":["ثالث5","ثالث4","ثالث6","","",""],"wed":["ثالث4","","","ثالث6","ثالث5","ثالث4|نشاط"],"thu":["ثالث6","ثالث4","","ثالث5","",""]}},{"name":"فاطمة الزهراني","workload":13,"timetable":{"sun":["","","ثاني5","","","ثاني6","ثاني6|نشاط"],"mon":["","أول6","","","","ثاني6","ثاني5"],"tue":["","","أول6","","ثاني6","ثاني5"],"wed":["ثاني6","","أول6","","",""],"thu":["","","ثاني5","","","ثاني6|نشاط"]}},{"name":"فاطمة العماري","workload":16,"timetable":{"sun":["ثالث1","ثالث4","","ثالث5","","",""],"mon":["ثالث5","","ثالث4","ثالث1","","",""],"tue":["","ثالث1","ثالث5","ثالث4","",""],"wed":["ثالث5","ثالث4","ثالث5|نشاط","","ثالث1",""],"thu":["ثالث5","","ثالث1","ثالث4","",""]}},{"name":"فاطمة الغامدي","workload":18,"timetable":{"sun":["","ثاني1","ثاني3","","","","ثاني4"],"mon":["","ثاني2","ثاني4","ثاني3|نشاط","","ثاني3","ثاني1"],"tue":["ثاني3|نشاط","ثاني2","","","ثاني4",""],"wed":["","","ثاني1","ثاني3","ثاني2",""],"thu":["ثاني1","","","ثاني3","ثاني2","ثاني4"]}},{"name":"فاطمة حسن","workload":9,"timetable":{"sun":["","أول3","","","","","أول2"],"mon":["","","أول2","","","","أول1"],"tue":["","","أول1","","","أول3"],"wed":["","أول1","","","أول3",""],"thu":["","","","","","أول2"]}},{"name":"لمياء البالدي","workload":22,"timetable":{"sun":["أول4","","ثالث6","ثالث4","أول3","ثالث5",""],"mon":["ثالث4","ثالث6","","أول4","أول3","ثالث5",""],"tue":["ثالث6","","أول3","أول4","ثالث4",""],"wed":["أول3","","ثالث6","ثالث5","أول4",""],"thu":["أول4","","ثالث4","أول3","ثالث5",""]}},{"name":"ليلى مجرشي","workload":20,"timetable":{"sun":["","","أول4","أول1","أول2","","أول3"],"mon":["","أول1","أول3","","أول4","أول2",""],"tue":["","أول2","أول4","أول1","أول3",""],"wed":["أول4","","أول3","أول2","","أول1"],"thu":["أول1","أول4","","أول2","","أول3"]}},{"name":"منال الجابري","workload":14,"timetable":{"sun":["أول2","أول5","","","","","أول1"],"mon":["أول2","","أول1","أول3","","أول5",""],"tue":["أول1","","","","","أول4"],"wed":["","أول3","أول2","","","أول4"],"thu":["","أول5","","","أول3",""]}},{"name":"نجوى الغامدي","workload":12,"timetable":{"sun":["ثاني5","","","ثاني1","","ثاني2",""],"mon":["","ثاني1","","","ثاني2","",""],"tue":["","ثاني1","ثاني5","","","ثاني2"],"wed":["ثاني1","","ثاني2","","","ثاني5"],"thu":["","","","","ثاني5",""]}},{"name":"نورة الهودان","workload":23,"timetable":{"sun":["ثالث6","ثالث5","ثالث3","ثالث1","","",""],"mon":["ثالث6","ثالث4","ثالث1","","ثالث5","ثالث2",""],"tue":["ثالث2","ثالث3","ثالث4","","ثالث5",""],"wed":["ثالث6","ثالث5","ثالث3","ثالث1","ثالث4",""],"thu":["ثالث2","ثالث6","ثالث3","ثالث1","ثالث4",""]}},{"name":"نورة العنزي","workload":12,"timetable":{"sun":["أول3","","أول1","أول2","","",""],"mon":["","","","","ثالث2","",""],"tue":["","","ثالث2","","أول2","ثالث1"],"wed":["","ثالث2","","","","ثالث1"],"thu":["","أول1","أول3","","","ثالث1"]}},{"name":"هاجر السلمي","workload":9,"timetable":{"sun":["","","","أول5","","أول4",""],"mon":["","","","","","أول4","أول5"],"tue":["أول5","","","","","أول6"],"wed":["أول6","","","","",""],"thu":["أول6","","","أول4","",""]}},{"name":"وحش القحطاني","workload":20,"timetable":{"sun":["","ثاني5","ثاني6","","أول5","ثاني4",""],"mon":["ثاني4","ثاني6","ثاني5","","أول5","",""],"tue":["","ثاني6","ثاني4","أول5","ثاني5",""],"wed":["ثاني4","أول5","","ثاني5","ثاني6",""],"thu":["ثاني4","","أول5","ثاني5","ثاني6",""]}},{"name":"وضحه المحمادي","workload":7,"timetable":{"sun":["","","","أول6","","","أول6"],"mon":["","","أول5","","","",""],"tue":["","","","","أول6","أول5"],"wed":["","","","","","أول5"],"thu":["","أول6","","","",""]}},{"name":"دخنه الشهري","workload":8,"timetable":{"sun":["","","","","","",""],"mon":["ثاني5","","","","أول6","ثاني5","أول6"],"tue":["","","","","",""],"wed":["","ثاني5","ثاني5","أول6","","أول6"],"thu":["","","","","",""]}}];
 let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],settings:null,admin:null,currentDate:todayISO(),workspaceCard:"manual",autoAllNames:true,autoAbsentIds:[],publicOpenCards:[]};
 let renderBusy=false;
+// Contacts are fetched exclusively after an authenticated administrative login;
+// phone numbers are never embedded in public JavaScript or public records.
+state.reserveContactBook=new Map();
+state.reserveNotificationStates=new Map();
+state.reserveNotifyQueueActive=false;
+state.reserveNotifyQueueIndex=0;
+
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const clean=s=>String(s??"").replace(/\s+/g," ").trim();
@@ -234,6 +241,301 @@ async function login(email,password){
   const s=await r.json(); saveSession(s); state.admin={...s,user:s.user}; return state.admin;
 }
 function token(){return state.admin?.access_token||loadSession()?.access_token||""}
+
+const RESERVE_CONTACTS_ENDPOINT=`${SUPABASE_URL}/rest/v1/reserve_teacher_contacts`;
+const RESERVE_NOTICE_ENDPOINT=`${SUPABASE_URL}/rest/v1/reserve_teacher_notification_state`;
+function reserveNormalizePhone(value){
+  let digits=String(value||"").replace(/[^0-9]/g,"");
+  if(/^05[0-9]{8}$/.test(digits))digits=`966${digits.slice(1)}`;
+  if(/^5[0-9]{8}$/.test(digits))digits=`966${digits}`;
+  if(!/^9665[0-9]{8}$/.test(digits))throw new Error("أدخلي رقم جوال سعوديًا صحيحًا يبدأ بـ 05 أو 9665.");
+  return digits;
+}
+async function reservePrivateQuery(url,opts={}){
+  if(!token())throw new Error("يلزم الدخول الإداري لعرض بيانات التواصل.");
+  const res=await fetch(url,{...opts,cache:"no-store",headers:{...baseHeaders(token()),...(opts.headers||{})}});
+  if(!res.ok)throw new Error(`تعذر الوصول إلى بيانات التواصل المحمية (${res.status})`);
+  return await res.json();
+}
+async function reserveLoadContacts(){
+  const rows=await reservePrivateQuery(`${RESERVE_CONTACTS_ENDPOINT}?select=teacher_name,full_name,phone&order=teacher_name.asc`);
+  state.reserveContactBook=new Map(rows.map(r=>[r.teacher_name,r]));
+}
+async function reserveLoadNotificationStates(date){
+  const p=new URLSearchParams({select:"day_date,teacher_name,prepared_at,marked_sent_at",day_date:`eq.${date}`});
+  const rows=await reservePrivateQuery(`${RESERVE_NOTICE_ENDPOINT}?${p}`);
+  state.reserveNotificationStates=new Map(rows.map(r=>[r.teacher_name,r]));
+}
+async function reserveStoreContacts(rows){
+  const names=new Set(manualAssigneeDirectory().map(t=>t.name));
+  const values=rows.map(row=>({
+    teacher_name:row.teacher_name,full_name:row.full_name||row.teacher_name,
+    phone:reserveNormalizePhone(row.phone)
+  }));
+  if(!values.length||values.some(r=>!names.has(r.teacher_name)))throw new Error("اسم المعلمة غير موجود بجدول الكادر المعتمد.");
+  await reservePrivateQuery(`${RESERVE_CONTACTS_ENDPOINT}?on_conflict=teacher_name`,{
+    method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},
+    body:JSON.stringify(values)
+  });
+  await reserveLoadContacts();
+}
+async function reserveStoreNotificationSent(date,name){
+  const rows=await reservePrivateQuery(`${RESERVE_NOTICE_ENDPOINT}?on_conflict=day_date,teacher_name`,{
+    method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},
+    body:JSON.stringify([{day_date:date,teacher_name:name,prepared_at:new Date().toISOString(),marked_sent_at:new Date().toISOString()}])
+  });
+  if(!rows.length)throw new Error("لم يتأكد حفظ حالة الإرسال.");
+  state.reserveNotificationStates.set(name,rows[0]);
+}
+function reserveResolveContactName(fullName){
+  const normalized=normName(fullName),parts=normalized.split(" ").filter(Boolean);
+  if(parts.length<2)return "";
+  const prefix=parts[0],family=parts[parts.length-1];
+  const matched=manualAssigneeDirectory().filter(t=>{
+    const p=normName(t.name).split(" ");
+    return p[0]===prefix&&(p[p.length-1]===family||p[p.length-1]===`ال${family}`||`ال${p[p.length-1]}`===family);
+  });
+  // Known alternative spelling of the surname in the approved timetable.
+  if(!matched.length&&prefix==="لمياء"&&family==="البلادي")return "لمياء البالدي";
+  return matched.length===1?matched[0].name:"";
+}
+function reservePublishedTeacherGroups(date){
+  const byName=new Map();
+  dailyPublicationRows(date).filter(a=>a.published===true&&a.ackToken&&a.assignedTeacherId).forEach(a=>{
+    const key=String(a.assignedTeacherId);
+    if(!byName.has(key))byName.set(key,{id:key,name:a.assignedTeacherName||teacherOf(key)?.name||"",date,assignments:[]});
+    byName.get(key).assignments.push(a);
+  });
+  return [...byName.values()].map(g=>({...g,assignments:g.assignments.sort((a,b)=>Number(a.period)-Number(b.period))}))
+    .sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"));
+}
+function reserveTeacherBundleUrl(group){
+  if(!group?.assignments?.length)return "";
+  const tokens=[...new Set(group.assignments.map(a=>a.ackToken).filter(Boolean))];
+  const u=new URL(location.pathname,location.origin);
+  u.searchParams.set("reserve_ack",tokens.join(","));
+  u.searchParams.set("reserve_date",group.date);
+  u.hash="daily-reserve";
+  return u.toString();
+}
+function reserveTeacherOfficialMessage(group){
+  const lines=group.assignments.map(a=>`الحصة ${a.period} — ${a.className||"غير محدد"}`);
+  return `السلام عليكم ورحمة الله وبركاته،\n\nالمعلمة الفاضلة/ ${group.name}\n\nتُفيدكم إدارة الثانوية الرابعة والتسعون – مسارات باعتماد تكليفاتكم بحصص الاحتياط ليوم ${dayName(group.date)} الموافق ${fmtDate(group.date)}.\n\n${lines.join("\n")}\n\nيرجى الاطلاع على جميع الحصص المسندة إليكم، وتأكيد الاطلاع وتسجيل عنوان موضوع تفعيل كل حصة في الخانات المخصصة، علمًا بأن تأكيد الاطلاع وتفعيل موضوع الحصة من معايير المفاضلة في تسديد حصص الاحتياط.\n\nرابط الاطلاع وتفعيل الحصص:\n${reserveTeacherBundleUrl(group)}\n\nشاكرين لكم تعاونكم والتزامكم.\n\nإدارة الثانوية الرابعة والتسعون – مسارات`;
+}
+async function reserveCopyText(text){
+  try{await navigator.clipboard.writeText(text);return true;}
+  catch(_){prompt("انسخي النص:",text);return false;}
+}
+function reserveOpenWhatsapp(group){
+  const phone=state.reserveContactBook.get(group.name)?.phone;
+  if(!phone){alert("لا يوجد رقم جوال مسجل لهذه المعلمة. أضيفيه في إدارة أرقام الجوالات.");return false;}
+  const normalized=reserveNormalizePhone(phone);
+  const url=`https://api.whatsapp.com/send?phone=${normalized}&text=${encodeURIComponent(reserveTeacherOfficialMessage(group))}`;
+  const opened=window.open(url,"_blank","noopener,noreferrer");
+  if(!opened){
+    // Do not navigate away and lose the queue; provide a fallback link instead.
+    const next=byId("reserveNotifyMsg");
+    if(next)next.innerHTML=`منع المتصفح فتح واتساب. <a href="${esc(url)}" target="_blank" rel="noopener noreferrer">اضغطي هنا لفتح المحادثة</a>.`;
+  }
+  return true; // Prepared/opened only: never interpreted as WhatsApp delivery confirmation.
+}
+function reserveBundleFromQuery(){
+  const raw=new URLSearchParams(location.search).get("reserve_ack")||"";
+  const tokens=raw.split(",").map(x=>x.trim()).filter(Boolean);
+  if(tokens.length<2||tokens.length>30||new Set(tokens).size!==tokens.length)return [];
+  const records=tokens.map(t=>publishedAssignments().find(a=>a.ackToken===t&&a.assignedTeacherId));
+  if(records.some(x=>!x))return [];
+  const first=records[0];
+  if(records.some(x=>String(x.assignedTeacherId)!==String(first.assignedTeacherId)||x.date!==first.date))return [];
+  return records.sort((a,b)=>Number(a.period)-Number(b.period));
+}
+function reserveBundleHTML(assignments){
+  if(!assignments.length)return "";
+  const first=assignments[0];
+  return `<section class="reserve-ack reserve-no-print" id="reserveTeacherBundle" aria-label="تكليفات معلمة الاحتياط">
+    <h3>نموذج حصص الاحتياط للمعلمة: ${esc(first.assignedTeacherName)}</h3>
+    <p>${esc(dayName(first.date))} — ${esc(fmtDate(first.date))} | ${assignments.length} حصص | يؤكد الاطلاع والتفعيل لكل حصة على حدة</p>
+    ${assignments.map(a=>`<article class="reserve-bundle-course" data-reserve-bundle-course="${esc(a.ackToken)}">
+      <strong>الحصة ${esc(a.period)} — ${esc(a.className||"—")}</strong>
+      <div>حالة الاطلاع: ${a.ackAt?`<span class="reserve-status">تم الاطلاع ${esc(fmtDateTimeHijri(a.ackAt))}</span>`:'<span class="reserve-status pending">لم يتم الاطلاع</span>'}</div>
+      <div class="reserve-actions"><button type="button" class="reserve-mini" data-reserve-bundle-action="ack" ${a.ackAt?'disabled':''}>${a.ackAt?'تم تأكيد الاطلاع':'تأكيد الاطلاع لهذه الحصة'}</button></div>
+      <label>عنوان موضوع تفعيل هذه الحصة
+      <input data-reserve-bundle-topic type="text" maxlength="160" value="${esc(a.activationTitle||"")}" placeholder="عنوان الموضوع المنفذ" ${a.ackAt?'':'disabled'}></label>
+      <div class="reserve-actions"><button type="button" class="reserve-mini" data-reserve-bundle-action="title" ${a.ackAt?'':'disabled'}>${a.activationTitle?'تحديث موضوع الحصة':'حفظ موضوع الحصة'}</button></div>
+      <div class="reserve-bundle-feedback" role="status" aria-live="polite"></div>
+    </article>`).join("")}
+  </section>`;
+}
+function bindReserveBundleActions(){
+  byId("dailyReserveRoot")?.addEventListener("click",async event=>{
+    const button=event.target.closest("#reserveTeacherBundle [data-reserve-bundle-action]");
+    if(!button)return;
+    const card=button.closest("[data-reserve-bundle-course]");
+    const ackToken=card?.dataset.reserveBundleCourse,action=button.dataset.reserveBundleAction;
+    const msg=card?.querySelector(".reserve-bundle-feedback");
+    if(!ackToken||!msg)return;
+    const title=clean(card.querySelector("[data-reserve-bundle-topic]")?.value||"");
+    if(action==="title"&&(title.length<3||title.length>160)){msg.textContent="اكتبي عنوانًا من 3 إلى 160 حرفًا.";return;}
+    button.disabled=true;msg.textContent="جارٍ الحفظ...";
+    try{
+      await reserveTeacherCloudAction(ackToken,action,action==="title"?title:null);
+      await loadAll();
+      const now=reserveBundleFromQuery();
+      const old=byId("reserveTeacherBundle");
+      if(old&&now.length)old.outerHTML=reserveBundleHTML(now);
+      refreshReserveStatisticsViews();
+    }catch(error){console.error(error);msg.textContent="تعذر الحفظ. حاولي مرة أخرى.";button.disabled=false;}
+  });
+}
+function reserveNotificationPanelHTML(){
+  return `<section class="reserve-share-box reserve-admin-only" aria-label="إشعارات المعلمات" id="reserveNotifyPanel">
+    <div class="panel-head"><h3>إشعارات المعلمات عبر واتساب</h3><span id="reserveNotifyCounter"></span></div>
+    <p class="reserve-public-note">رسالة رسمية واحدة ورابط واحد لكل معلمة، مهما تعددت حصصها في اليوم. يتم الإرسال يدويًا بعد فتح واتساب؛ لا تعني فتح المحادثة تسليم الرسالة.</p>
+    <div class="reserve-actions">
+      <button class="reserve-mini" id="reserveNotifyAll" type="button">إرسال إشعارات الجميع (بالتتابع)</button>
+      <button class="reserve-mini" id="reserveNotifyRefresh" type="button">تحديث القائمة</button>
+    </div>
+    <div id="reserveNotifyMsg" aria-live="polite"></div>
+    <div id="reserveNotifyContent">جارٍ تحميل أرقام المعلمات المحمية...</div>
+    <details class="reserve-phonebook-admin" id="reservePhonebookDetails"><summary>إدارة أرقام الجوالات (للإدارة فقط)</summary>
+      <p class="reserve-public-note">الأرقام تحفظ في قاعدة بيانات خاصة محمية، ولا تضاف إلى الملفات العامة. ارفعي CSV بالأعمدة name,phone لاستيرادها دفعة واحدة أو اختاري تعديل رقم بجانب اسم المعلمة.</p>
+      <input id="reservePhoneCsv" type="file" accept=".csv,text/csv" aria-label="استيراد أرقام المعلمات من CSV">
+      <div id="reservePhonebookStatus" role="status"></div>
+      <div id="reservePhonebookList"></div>
+    </details>
+  </section>`;
+}
+function reserveNotificationRowsHTML(groups){
+  if(!groups.length)return '<div class="empty-inline">لا توجد معلمات مكلفات بحصص احتياط معتمدة لهذا اليوم.</div>';
+  return `<div class="reserve-admin-list">${groups.map(g=>{
+    const phone=state.reserveContactBook.get(g.name)?.phone||"";
+    const record=state.reserveNotificationStates.get(g.name);
+    const marked=!!record?.marked_sent_at;
+    return `<div class="reserve-teacher-row" data-reserve-recipient="${esc(g.id)}">
+      <strong>${esc(g.name)}</strong><span>${g.assignments.length} ${g.assignments.length===1?'حصة':'حصص'} | ${marked?'أُرسلت وفق تأكيد الإدارة':'لم يؤكد الإرسال'} | ${phone?'الرقم مسجل':'رقم الجوال غير مسجل'}</span>
+      <div class="reserve-actions">
+        <button class="reserve-mini" data-notify-action="open">إرسال إشعار</button>
+        <button class="reserve-mini" data-notify-action="copy">نسخ رابط النموذج</button>
+        <button class="reserve-mini" data-notify-action="preview">فتح النموذج</button>
+        <button class="reserve-mini" data-notify-action="mark" ${marked?'disabled':''}>${marked?'تم تأكيد الإرسال':'تأكيد أنني أرسلت'}</button>
+        <button class="reserve-mini" data-notify-action="edit">تعديل الرقم</button>
+      </div>
+    </div>`;}).join("")}</div>`;
+}
+function reserveNotificationQueueHTML(groups){
+  if(!state.reserveNotifyQueueActive)return "";
+  const remaining=groups.filter(g=>!state.reserveNotificationStates.get(g.name)?.marked_sent_at);
+  if(!remaining.length)return '<p class="reserve-status">اكتمل تأكيد إرسال إشعارات جميع المكلفات لهذا اليوم.</p>';
+  const idx=Math.max(0,Math.min(state.reserveNotifyQueueIndex,remaining.length-1));
+  const g=remaining[idx];
+  return `<section class="reserve-admin-warnings reserve-notify-queue"><strong>إرسال إشعارات الجميع: ${idx+1} من ${remaining.length} متبقية</strong>
+    <p>${esc(g.name)} — ${g.assignments.length} ${g.assignments.length===1?'حصة':'حصص'}</p>
+    <div class="reserve-actions">
+      <button class="reserve-mini" type="button" data-notify-queue="send" data-recipient-id="${esc(g.id)}">فتح واتساب للمعلمة</button>
+      <button class="reserve-mini" type="button" data-notify-queue="mark" data-recipient-id="${esc(g.id)}">أرسلت الرسالة داخل واتساب</button>
+      <button class="reserve-mini" type="button" data-notify-queue="skip">تخطي إلى التالية</button>
+      <button class="reserve-mini" type="button" data-notify-queue="close">إغلاق قائمة الإرسال</button>
+    </div></section>`;
+}
+function reserveRenderNotificationPanel(){
+  const content=byId("reserveNotifyContent");if(!content)return;
+  const groups=reservePublishedTeacherGroups(state.currentDate);
+  const total=groups.length,marked=groups.filter(g=>state.reserveNotificationStates.get(g.name)?.marked_sent_at).length;
+  const counter=byId("reserveNotifyCounter");if(counter)counter.textContent=`${marked} / ${total} تأكيد إرسال`;
+  content.innerHTML=reserveNotificationQueueHTML(groups)+reserveNotificationRowsHTML(groups);
+  const phoneList=byId("reservePhonebookList");
+  if(phoneList)phoneList.innerHTML=`<p class="reserve-public-note">${state.reserveContactBook.size} رقمًا محفوظًا من ${manualAssigneeDirectory().length} اسمًا معتمدًا.</p>`;
+}
+async function reserveHydrateNotificationPanel(){
+  if(!byId("reserveNotifyPanel"))return;
+  try{
+    await Promise.all([reserveLoadContacts(),reserveLoadNotificationStates(state.currentDate)]);
+    reserveRenderNotificationPanel();
+  }catch(error){console.error(error);const el=byId("reserveNotifyContent");if(el)el.textContent="تعذر تحميل بيانات الجوالات المحمية. تأكدي من صلاحيات الدخول الإداري واتصال Supabase.";}
+}
+function reserveParsePhoneCsv(raw){
+  const lines=String(raw).replace(/^\uFEFF/,"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  if(lines.length<2)throw new Error("ملف CSV فارغ أو غير مكتمل.");
+  const headers=lines.shift().split(",").map(x=>x.replace(/^"|"$/g,"").trim().toLowerCase());
+  const nameIndex=headers.findIndex(x=>["name","الاسم","اسم المعلمة"].includes(x));
+  const phoneIndex=headers.findIndex(x=>["phone","الجوال","رقم الجوال"].includes(x));
+  if(nameIndex<0||phoneIndex<0)throw new Error("الملف يحتاج إلى عمودي name وphone.");
+  const rows=[],skipped=[];
+  for(const line of lines){
+    const values=line.split(",").map(x=>x.replace(/^"|"$/g,"").trim());
+    const full_name=values[nameIndex],teacher_name=reserveResolveContactName(full_name);
+    if(!teacher_name){skipped.push(full_name);continue;}
+    rows.push({teacher_name,full_name,phone:reserveNormalizePhone(values[phoneIndex])});
+  }
+  if(new Set(rows.map(r=>r.teacher_name)).size!==rows.length)throw new Error("تكررت بعض الأسماء في ملف الجوالات.");
+  return {rows,skipped};
+}
+function bindReserveNotificationPanel(){
+  const panel=byId("reserveNotifyPanel");if(!panel)return;
+  panel.addEventListener("click",async event=>{
+    const button=event.target.closest("[data-notify-action],[data-notify-queue],#reserveNotifyAll,#reserveNotifyRefresh");
+    if(!button)return;
+    const msg=byId("reserveNotifyMsg");
+    const groups=reservePublishedTeacherGroups(state.currentDate);
+    if(button.id==="reserveNotifyAll"){
+      state.reserveNotifyQueueActive=true;state.reserveNotifyQueueIndex=0;reserveRenderNotificationPanel();return;
+    }
+    if(button.id==="reserveNotifyRefresh"){
+      await reserveHydrateNotificationPanel();return;
+    }
+    const qa=button.dataset.notifyQueue;
+    if(qa==="close"){state.reserveNotifyQueueActive=false;reserveRenderNotificationPanel();return;}
+    if(qa==="skip"){
+      const available=groups.filter(g=>!state.reserveNotificationStates.get(g.name)?.marked_sent_at);
+      state.reserveNotifyQueueIndex=(state.reserveNotifyQueueIndex+1)%Math.max(1,available.length);
+      reserveRenderNotificationPanel();return;
+    }
+    const id=button.closest("[data-reserve-recipient]")?.dataset.reserveRecipient||button.dataset.recipientId;
+    const group=groups.find(g=>g.id===id);
+    if(!group)return;
+    const action=qa==="send"?"open":qa==="mark"?"mark":button.dataset.notifyAction;
+    if(action==="open"){
+      try{if(reserveOpenWhatsapp(group)&&msg)msg.textContent=`تم تجهيز رسالة ${group.name}. أكّدي الإرسال فقط بعد إرسالها فعليًا داخل واتساب.`;}
+      catch(error){if(msg)msg.textContent=error.message;}
+      return;
+    }
+    if(action==="copy"){await reserveCopyText(reserveTeacherBundleUrl(group));return;}
+    if(action==="preview"){
+      const opened=window.open(reserveTeacherBundleUrl(group),"_blank","noopener,noreferrer");
+      if(!opened&&msg)msg.textContent="اسمحي بفتح النوافذ لمعاينة النموذج.";
+      return;
+    }
+    if(action==="edit"){
+      const previous=state.reserveContactBook.get(group.name)?.phone||"";
+      const entered=prompt(`رقم جوال ${group.name}:`,previous);
+      if(entered===null)return;
+      try{await reserveStoreContacts([{teacher_name:group.name,phone:entered}]);reserveRenderNotificationPanel();if(msg)msg.textContent="تم حفظ رقم الجوال في قاعدة البيانات المحمية.";}
+      catch(error){if(msg)msg.textContent=error.message;}
+      return;
+    }
+    if(action==="mark"){
+      if(!confirm(`هل أرسلتِ الرسالة بالفعل من واتساب إلى ${group.name}؟`))return;
+      button.disabled=true;
+      try{await reserveStoreNotificationSent(state.currentDate,group.name);
+        state.reserveNotifyQueueIndex=0;
+        reserveRenderNotificationPanel();if(msg)msg.textContent=`سُجّل تأكيد الإدارة بإرسال إشعار ${group.name}، دون ادعاء وصوله.`;
+      }catch(error){button.disabled=false;if(msg)msg.textContent=error.message;}
+    }
+  });
+  byId("reservePhoneCsv")?.addEventListener("change",async event=>{
+    const file=event.target.files?.[0];if(!file)return;
+    const status=byId("reservePhonebookStatus");
+    try{
+      const result=reserveParsePhoneCsv(await file.text());
+      if(!result.rows.length)throw new Error("لم تُطابق أي أسماء مع قائمة المعلمات.");
+      if(!confirm(`استيراد ${result.rows.length} رقمًا إلى قاعدة بيانات المعلمات المحمية؟${result.skipped.length?` أسماء غير مطابقة: ${result.skipped.length}`:""}`))return;
+      await reserveStoreContacts(result.rows);reserveRenderNotificationPanel();
+      status.textContent=`تم حفظ ${result.rows.length} رقمًا بنجاح في قاعدة البيانات. ${result.skipped.length?`تعذر مطابقة ${result.skipped.length} أسماء.`:""}`;
+    }catch(error){console.error(error);status.textContent=error.message||"تعذر استيراد الملف.";}
+    finally{event.target.value="";}
+  });
+  reserveHydrateNotificationPanel();
+}
 
 async function loadAll(){
   const [teachers,schedules,absences,assignments,settings,adjustments]=await Promise.all([
@@ -671,6 +973,18 @@ function injectStyle(){
   @media(max-width:760px){.reserve-public-card>summary{display:grid;grid-template-columns:1fr auto}.reserve-public-card>summary strong{font-size:15px}.reserve-public-card>summary span{grid-row:2}.reserve-public-card>summary::after{grid-column:2;grid-row:1/3}}
   @media print{.reserve-public-card-content{display:block!important}.reserve-public-card{break-inside:avoid}.reserve-public-card:not([open]) .reserve-public-card-content{display:block!important}}
   .reserve-excellence{display:grid;gap:10px}
+  .reserve-bundle-course{display:grid;gap:9px;margin:12px 0;padding:15px;background:#f6fbfa;border:1px solid #bcdad6;border-radius:12px}
+  .reserve-bundle-course>strong{color:#104e5b;font-size:15px}
+  .reserve-bundle-course label{display:grid;gap:7px;font-weight:800;color:#284954}
+  .reserve-bundle-course input{max-width:100%;box-sizing:border-box;padding:10px;border:1px solid #bed3d5;border-radius:8px;font:inherit}
+  .reserve-bundle-feedback{color:#185c60;font-weight:700;min-height:18px}
+  #reserveNotifyPanel{margin-top:14px}
+  .reserve-notify-queue{border:1px solid #9ecfc7;background:#f0f9f7;padding:12px;border-radius:10px;margin:12px 0}
+  .reserve-phonebook-admin{margin-top:18px;border-top:1px solid #dce6e5;padding-top:12px}
+  .reserve-phonebook-admin summary{cursor:pointer;font-weight:900;color:#0c5262;margin-bottom:10px}
+  #reserveNotifyPanel .reserve-teacher-row{display:grid;gap:7px}
+  #reserveNotifyPanel .reserve-teacher-row .reserve-actions{display:flex;gap:7px;flex-wrap:wrap}
+  #reserveNotifyPanel .reserve-mini{min-height:35px}
   /* Merit styling: highlight the full heading row on desktop, never a vertical rank column. */
   .reserve-excellence .reserve-table thead tr{background:linear-gradient(100deg,#0b4854 0%,#0d5e66 55%,#177e75 100%)}
   .reserve-excellence .reserve-table thead th{background:transparent;color:#fff;border-bottom:1px solid #70bbb3;border-inline-end:1px solid rgba(255,255,255,.16);padding-top:13px;padding-bottom:13px}
@@ -898,7 +1212,8 @@ function publicHTML(){
   const date=state.currentDate,wr=weekRange(date);
   const rows=publicWeeklyRows(date);
   const ackToken=new URLSearchParams(location.search).get("reserve_ack")||"";
-  const ack=ackToken?state.assignments.find(x=>x.ackToken===ackToken&&x.published===true):null;
+  const groupedAck=reserveBundleFromQuery();
+  const ack=!groupedAck.length&&ackToken?state.assignments.find(x=>x.ackToken===ackToken&&x.published===true):null;
   return `<div id="dailyReserveRoot">
     <section class="page-intro"><div>
       <span class="kicker">منجز</span>
@@ -906,6 +1221,7 @@ function publicHTML(){
       <p>جدول الاحتياط المعتمد والحسبة الأسبوعية التراكمية للمعلمات</p>
     </div></section>
 
+    ${groupedAck.length?reserveBundleHTML(groupedAck):""}
     ${ack?`<section class="reserve-ack reserve-no-print" aria-label="إجراءات معلمة الاحتياط">
       <strong>تكليف الاحتياط — اطلاع المعلمة وعنوان الموضوع</strong>
       <div>${esc(ack.assignedTeacherName)} — الحصة ${esc(ack.period)} — ${esc(ack.className||"")}</div>
@@ -943,7 +1259,7 @@ function publicHTML(){
       <details id="reservePublicCardDaily" class="reserve-public-card" data-reserve-public-card="daily" ${state.publicOpenCards?.includes("daily")?"open":""}>
         <summary><strong>جدول حصص الاحتياط اليومي</strong><span>عرض التكليفات والاطلاع والموضوع</span></summary>
         <div class="reserve-public-card-content">
-          <p class="reserve-public-note">تؤكد كل معلمة اطلاعها وتكتب موضوع الحصة من صفها مباشرة، دون رابط شخصي.</p>
+          <p class="reserve-public-note">يمكن تأكيد الاطلاع وتسجيل موضوع الحصة من الجدول، أو من رابط النموذج الشخصي الذي ترسله الإدارة.</p>
           <div class="reserve-table-wrap">
             <table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المعلمة الغائبة</th><th>معلمة الاحتياط</th><th>حالة الاطلاع</th><th>التفعيل</th></tr></thead>
             <tbody id="reservePublicDayBody">${publicDayRowsHTML(date)}</tbody></table>
@@ -1058,6 +1374,7 @@ function adminHTML(){
       </div>
       <div id="reserveShareMsg" role="status" aria-live="polite"></div>
     </section>
+    ${reserveNotificationPanelHTML()}
     <div id="reserveAdminBody" style="margin-top:14px"></div>
   </section>`;
 }
@@ -1118,7 +1435,7 @@ function adminAssignmentsHTML(items){
     <td>${a.candidates?.[0]?`<div class="reserve-candidate"><strong>${esc(a.candidates[0].name)}</strong></div>`:"لا توجد مرشحة مطابقة، اختاري من القائمة"}</td>
     <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select><small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small></td>
     <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
-    <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
+    <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط نموذج المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button><button class="reserve-mini reserve-send-ack" type="button">إرسال إشعار</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
   </tr>`}).join("")}</tbody></table></div>`;
 }
 
@@ -1194,16 +1511,17 @@ function currentReserveWarnings(date){
   return cached?.date===date?[...new Set([...savedReserveWarnings(date),...cached.warnings])]:savedReserveWarnings(date);
 }
 function manualTeacherLinksHTML(date){
-  const items=assignmentsOn(date).filter(a=>a.published===true&&a.ackToken&&a.assignedTeacherId)
-    .sort((a,b)=>Number(a.period)-Number(b.period)||clean(a.assignedTeacherName).localeCompare(clean(b.assignedTeacherName),"ar"));
-  if(!items.length)return '<div class="empty-inline">بعد اعتماد التكليفات، تظهر هنا روابط الاطلاع وعنوان الموضوع للمعلمات.</div>';
-  return `<p class="reserve-public-note">انسخي رابط كل معلمة وأرسليه إليها لتؤكد اطلاعها ثم تكتب موضوع الحصة. الروابط للإدارة فقط.</p>
-  <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>معلمة الاحتياط</th><th>الحصة</th><th>الفصل</th><th>حالة الاطلاع</th><th>عنوان الموضوع</th><th>إجراءات</th></tr></thead><tbody>
-  ${items.map(a=>`<tr data-manual-action="${esc(a.id)}"><td>${esc(a.assignedTeacherName)}</td><td>${esc(a.period)}</td><td>${esc(a.className||"—")}</td>
-  <td>${a.ackAt?"تم الاطلاع":"لم يتم الاطلاع"}</td><td>${a.activationTitle?esc(a.activationTitle):"لم يتم التفعيل"}</td>
-  <td><div class="reserve-actions"><button type="button" class="reserve-mini reserve-manual-copy-action">نسخ رابط المعلمة</button>
-  <button type="button" class="reserve-mini reserve-manual-open-action">فتح نموذج المعلمة</button></div></td></tr>`).join("")}
-  </tbody></table></div>`;
+  const groups=reservePublishedTeacherGroups(date);
+  if(!groups.length)return '<div class="empty-inline">بعد اعتماد التكليفات، تظهر هنا روابط المعلمات الموحدة.</div>';
+  return `<p class="reserve-public-note">لكل معلمة رسالة واحدة ورابط موحد لجميع حصصها في هذا اليوم، مع إجراء مستقل لكل حصة.</p>
+    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>معلمة الاحتياط</th><th>عدد الحصص</th><th>الاطلاع</th><th>التفعيل</th><th>الإجراءات</th></tr></thead><tbody>
+    ${groups.map(g=>`<tr data-manual-teacher="${esc(g.id)}"><td>${esc(g.name)}</td><td>${g.assignments.length}</td>
+    <td>${g.assignments.filter(a=>a.ackAt).length} / ${g.assignments.length}</td>
+    <td>${g.assignments.filter(a=>a.activationTitle).length} / ${g.assignments.length}</td>
+    <td><div class="reserve-actions"><button type="button" class="reserve-mini reserve-manual-copy-action">نسخ رابط نموذج المعلمة</button>
+    <button type="button" class="reserve-mini reserve-manual-open-action">فتح نموذج المعلمة</button>
+    <button type="button" class="reserve-mini reserve-manual-send-action">إرسال إشعار</button></div></td></tr>`).join("")}
+    </tbody></table></div>`;
 }
 function manualAdminHTML(){
   const date=state.currentDate;
@@ -1351,17 +1669,18 @@ async function saveManualAssignments(){
 function bindManualAdmin(){
   bindHijriDateControl("reserveManualDate",next=>syncReserveSectionDate(next));
   byId("reserveManualTeacherLinks")?.addEventListener("click",async event=>{
-    const b=event.target.closest(".reserve-manual-copy-action,.reserve-manual-open-action");
+    const b=event.target.closest(".reserve-manual-copy-action,.reserve-manual-open-action,.reserve-manual-send-action");
     if(!b)return;
-    const tr=b.closest("[data-manual-action]");
-    const a=state.assignments.find(x=>String(x.id)===String(tr?.dataset.manualAction));
-    if(!a?.published||!a.ackToken)return;
-    const url=`${location.origin}${location.pathname}?reserve_ack=${encodeURIComponent(a.ackToken)}#daily-reserve`;
+    const tr=b.closest("[data-manual-teacher]");
+    const group=reservePublishedTeacherGroups(state.currentDate).find(g=>g.id===tr?.dataset.manualTeacher);
+    if(!group)return;
+    const url=reserveTeacherBundleUrl(group);
+    if(b.classList.contains("reserve-manual-send-action")){reserveOpenWhatsapp(group);return;}
     if(b.classList.contains("reserve-manual-open-action")){
-      const win=window.open(url,"_blank");if(win)win.opener=null;else window.location.assign(url);
-      return;
+      const win=window.open(url,"_blank","noopener,noreferrer");
+      if(!win)alert("اسمحي بفتح النوافذ لمعاينة النموذج.");return;
     }
-    try{await navigator.clipboard.writeText(url);b.textContent="تم النسخ"}catch(_){prompt("انسخي رابط المعلمة:",url)}
+    await reserveCopyText(url);
   });
   byId("reserveManualBuild")?.addEventListener("click",()=>{
     const sel=byId("reserveManualAbsent");
@@ -1862,7 +2181,7 @@ async function refreshAndRenderPublic(){
 function mountAdminShell(){
   const mount=byId("reserveAdminMount"); if(!mount)return;
   mount.innerHTML=state.admin?adminHTML():loginHTML();
-  if(state.admin){bindAdminShell();bindReserveSharing()} else bindLogin();
+  if(state.admin){bindAdminShell();bindReserveSharing();bindReserveNotificationPanel()} else bindLogin();
 }
 function bindPublicDailyActions(){
   const findInlineAssignment=el=>{
@@ -1995,8 +2314,8 @@ function bindPublic(){
     // Period controls modify the shared date, never an independent hidden card date.
     return syncReserveSectionDate(shift===-7?addDays(anchor,-7):anchor,true);
   });
-  // The daily timetable itself contains the actions; no personal links are required.
-  // Each operation is restricted to the acknowledgement token of its own published row.
+  // Each course in a grouped teacher link keeps its own acknowledgement token.
+  bindReserveBundleActions();
   bindPublicDailyActions();
   const ack=new URLSearchParams(location.search).get("reserve_ack")||"";
   byId("reserveAckBtn")?.addEventListener("click",async()=>{
@@ -2047,7 +2366,7 @@ function bindAdminShell(){
   });
   byId("reserveLogout")?.addEventListener("click",()=>{
     try{sessionStorage.removeItem(SESSION_KEY)}catch(_){}
-    state.admin=null; mountAdminShell();
+    state.admin=null;state.reserveContactBook.clear();state.reserveNotificationStates.clear();mountAdminShell();
   });
   renderAdminTab("workspace");
 }
@@ -2196,21 +2515,20 @@ function bindDayAdmin(){
     await deleteKind(K.assignment,tr.dataset.assignment,token()); await loadAll();
     refreshReserveStatisticsViews();renderWorkspaceCard("auto");
   });
-  // The teacher link is generated only for the assigned teacher; status badges in the public table are read-only.
-  const teacherActionUrl=a=>`${location.origin}${location.pathname}?reserve_ack=${encodeURIComponent(a.ackToken)}#daily-reserve`;
+  // Links are grouped by teacher and date, even if that teacher has multiple periods.
+  const groupedForRow=button=>{
+    const tr=button.closest("[data-assignment]");
+    const a=state.assignments.find(x=>String(x.id)===String(tr?.dataset.assignment));
+    return a?.published?reservePublishedTeacherGroups(a.date).find(g=>g.id===String(a.assignedTeacherId)):null;
+  };
   document.querySelectorAll(".reserve-copy-ack").forEach(b=>b.onclick=async()=>{
-    const tr=b.closest("[data-assignment]"),a=state.assignments.find(x=>String(x.id)===String(tr?.dataset.assignment));
-    if(!a?.ackToken)return;
-    const url=teacherActionUrl(a);
-    try{await navigator.clipboard.writeText(url);b.textContent="تم النسخ"}catch(_){prompt("انسخي رابط المعلمة:",url)}
+    const group=groupedForRow(b);if(group)await reserveCopyText(reserveTeacherBundleUrl(group));
   });
   document.querySelectorAll(".reserve-open-ack").forEach(b=>b.onclick=()=>{
-    const tr=b.closest("[data-assignment]"),a=state.assignments.find(x=>String(x.id)===String(tr?.dataset.assignment));
-    if(!a?.ackToken)return;
-    const url=teacherActionUrl(a);
-    const opened=window.open(url,"_blank");
-    if(opened)opened.opener=null;
-    else window.location.assign(url);
+    const group=groupedForRow(b);if(group)window.open(reserveTeacherBundleUrl(group),"_blank","noopener,noreferrer");
+  });
+  document.querySelectorAll(".reserve-send-ack").forEach(b=>b.onclick=()=>{
+    const group=groupedForRow(b);if(group)reserveOpenWhatsapp(group);
   });
   byId("reserveDeleteAutoTable")?.addEventListener("click",async()=>{
     const date=state.currentDate;
