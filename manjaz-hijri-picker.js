@@ -9,6 +9,7 @@
     '#partnerForm input[name="startDate"]',
     '#partnerForm input[name="endDate"]',
     '#adminCertificateForm input[name="date"]',
+    '#mj14CertificateRequestForm input[name="date"]',
     '#reservePublicDate','#reserveAdminDate','#reserveManualDate'
   ].join(',');
   const monthNames=['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
@@ -161,6 +162,7 @@
     const button=document.createElement('button');
     button.type='button';button.className='manjaz-hijri-trigger';
     button.setAttribute('aria-haspopup','dialog');
+    button.disabled=input.disabled;
     if(required)button.setAttribute('aria-required','true');
     const reserveLabel=input.closest('.reserve-date-picker-label');
     if(reserveLabel)reserveLabel.after(button);else input.after(button);
@@ -178,6 +180,7 @@
       .manjaz-hijri-trigger{width:100%;min-width:135px;min-height:41px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;direction:rtl;text-align:right;border:1px solid #c7d7d9;border-radius:9px;padding:9px 12px;background:#fff;color:#123943;cursor:pointer;font:inherit;font-size:14px;line-height:1.5}
       .manjaz-hijri-trigger::after{content:'▦';font-size:19px;color:#0f5f59;flex:none}
       .manjaz-hijri-trigger.is-empty{color:#647580}
+      .manjaz-hijri-trigger:disabled{background:#f2f6f6;color:#4b626b;cursor:default}
       .manjaz-hijri-trigger:focus-visible,.manjaz-hijri-day:focus-visible{outline:3px solid #62a9a3;outline-offset:2px}
       .manjaz-hijri-trigger[aria-invalid="true"]{border:2px solid #af3535}
       .manjaz-hijri-error{font-size:12px;color:#af3535;display:block}

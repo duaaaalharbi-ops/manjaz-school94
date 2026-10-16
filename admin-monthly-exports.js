@@ -1,12 +1,13 @@
-/* MANJAZ TASK 13 — Independent administration Excel exports.
- * No write requests, candidate-engine changes, or certificate-issuance changes.
- * OOXML .xlsx is generated locally, with no third-party script dependency.
+/* MANJAZ TASK 14 — Admin-only Excel exports + public private certificate requests.
+ * Standalone request storage, authorized edits, and unchanged reserve/certificate engines.
  */
 (()=>{"use strict";
-const VERSION="13.0";
+const VERSION="14.0";
 const SUPABASE_URL="https://idkjuqfxcweqekdkcktk.supabase.co";
 const SUPABASE_KEY="sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
 const SESSION_KEY="manjaz_admin_auth_session_v1";
+const OWN_KEY="manjaz_certificate_own_requests_v14";
+const REQUESTS_TABLE="manjaz_certificate_requests";
 const ROUTES=new Set(["admin","admin-permissions"]);
 const CERT_TYPES=[
   ["execution_teacher","شهادات التنفيذ - فئة معلمات"],
@@ -157,15 +158,127 @@ function style(){
  .mj13-card select{width:100%;max-width:100%;padding:11px;border-radius:8px;border:1px solid #bfd5d8;background:white;color:#0b3047;font:inherit}
  .mj13-card button{width:100%;min-height:44px;white-space:normal}.mj13-card button:disabled{opacity:.6;cursor:wait}
  .mj13-status{font-size:12px;min-height:18px;color:#0a6567;line-height:1.5;white-space:normal}
- `;document.head.append(s);
+ 
+ .mj13-admin-link{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:9px;border:1px solid #b9cfd2;background:#f7faf9;color:#0b4d56;text-decoration:none;font-size:13px;font-weight:800;box-sizing:border-box}
+ .mj14-types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0;direction:rtl}
+ .mj14-type{border:1px solid #ccdfe0;background:#fff;border-radius:11px;min-height:76px;padding:11px 9px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;font-weight:bold;color:#173b4a;cursor:pointer}
+ .mj14-type[aria-pressed="true"]{background:#eef6f4;border:2px solid #0f5f59;color:#0b5554}
+ .mj14-request-form{display:grid;gap:10px;margin-top:10px;border-top:1px solid #e6eded;padding-top:14px}
+ .mj14-request-form input,.mj14-request-form textarea{width:100%;box-sizing:border-box;border:1px solid #bfd5d8;background:#fff;color:#183742;font:inherit;padding:10px;border-radius:8px;min-height:42px}
+ .mj14-request-form textarea{min-height:87px;resize:vertical}
+ .mj14-request-form :is(input,textarea):disabled{background:#f3f6f6;opacity:1;color:#4b6169}
+ .mj14-form-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .mj14-form-actions button{display:flex;justify-content:center;align-items:center;gap:7px}
+ .mj14-my-items{margin-top:8px;display:grid;gap:5px}
+ .mj14-my-items button{background:#f7fafa;border:1px solid #e1eaea;color:#255961;text-align:right;border-radius:6px;padding:8px;font:inherit;font-size:12px;cursor:pointer;width:100%}
+ .mj14-note{font-size:12px!important;color:#5e727c!important;line-height:1.7!important}
+ .mj14-add{background:#fff!important;border:1px solid #0f5f59!important;color:#0f5f59!important}
+ @media(max-width:520px){.mj14-types{grid-template-columns:1fr 1fr}.mj14-type{font-size:12px;min-height:72px}}
+`;document.head.append(s);
+}
+const mj14Own=()=>{try{const v=JSON.parse(localStorage.getItem(OWN_KEY)||"[]");return Array.isArray(v)?v.filter(r=>CERT_TYPES.some(([k])=>k===r.category)&&r.id&&r.editToken):[]}catch(_){return []}};
+let mj14Category="",mj14EditingId="";
+function mj14Store(record){
+  const items=mj14Own().filter(x=>x.id!==record.id);
+  items.unshift(record);
+  try{localStorage.setItem(OWN_KEY,JSON.stringify(items.slice(0,70)))}catch(_){throw Error("تعذر حفظ رمز التعديل على الجهاز. تأكدي من توفر مساحة التخزين قبل متابعة الطلب.")}
+}
+function mj14Token(){
+  if(!window.crypto?.getRandomValues)throw Error("المتصفح لا يدعم حفظ الطلب بأمان.");
+  const b=new Uint8Array(32);crypto.getRandomValues(b);
+  return [...b].map(n=>n.toString(16).padStart(2,"0")).join("");
+}
+function mj14Saved(){return mj14Own().find(x=>x.category===mj14Category&&x.id===mj14EditingId)||null;}
+function mj14DateLabel(iso){return readableHijri(iso);}
+function mj14FormMarkup(record=null,editing=false){
+ const x=record?.fields||{},readonly=!!record&&!editing;
+ const val=k=>html(x[k]||"");const lock=readonly?"disabled":"";
+ return `<form class="mj14-request-form" id="mj14CertificateRequestForm">
+  <p class="mj14-note">${record?editing?"يمكنك تعديل الطلب الذي حفظته على هذا الجهاز، ثم الضغط على حفظ التعديل.":"هذا طلب محفوظ. اضغطي «تعديل» لتغيير بياناته.":"أدخلي بيانات الشهادة ثم احفظي الطلب. لا يلزم تسجيل الدخول."}</p>
+  <label>الاسم كما سيظهر في الشهادة *<input name="name" maxlength="160" minlength="2" required ${lock} value="${val('name')}"></label>
+  <label>العنوان كما سيظهر في الشهادة *<input name="title" maxlength="220" minlength="2" required ${lock} value="${val('title')}"></label>
+  <label>الوصف المختصر كما سيظهر في الشهادة *<textarea name="description" maxlength="1200" minlength="2" required ${lock}>${val('description')}</textarea></label>
+  <label>التاريخ الهجري كما سيظهر في الشهادة *<input name="date" type="date" required ${lock} value="${val('date')}"></label>
+  <label>المدة كما ستظهر في الشهادة (إن وجدت)<input name="duration" maxlength="150" ${lock} value="${val('duration')}"></label>
+  <div class="mj14-form-actions">
+    <button class="btn btn-primary" type="submit" ${readonly?'disabled':''}>▣ ${editing?'حفظ التعديل':'حفظ الطلب'}</button>
+    <button type="button" class="btn btn-ghost" data-mj14-edit="1" ${!record||editing?'disabled':''}>✎ تعديل</button>
+  </div>
+  <button type="button" class="mj14-add btn btn-ghost" data-mj14-new="1">+ طلب جديد في هذا القسم</button>
+  <div class="mj13-status" id="mj14FormStatus" role="status" aria-live="polite"></div>
+ </form>`;
+}
+function mj14CategoryMarkup(){
+ const selections=mj14Own().filter(x=>x.category===mj14Category);
+ const rec=mj14Saved();
+ return `<div><h4 style="margin:8px 0;color:#0b3047">${html(CERT_TYPES.find(([k])=>k===mj14Category)?.[1]||"")}</h4>
+   ${mj14FormMarkup(rec,false)}
+   ${selections.length?`<div class="mj14-my-items"><strong style="font-size:12px;color:#355d66">طلباتي المحفوظة على هذا الجهاز</strong>
+    ${selections.map((x,i)=>`<button type="button" data-mj14-load="${html(x.id)}">✎ ${html(x.fields?.name||"طلب")}: ${html(x.fields?.title||"")} ${i===0?'(الأحدث)':''}</button>`).join("")}</div>`:""}
+ </div>`;
+}
+function mj14SelectCategory(key){
+ if(!CERT_TYPES.some(([id])=>id===key))return;
+ mj14Category=key;
+ mj14EditingId="";
+ document.querySelectorAll('#mj14CertificateSections [data-mj14-category]').forEach(b=>b.setAttribute("aria-pressed",b.dataset.mj14Category===key?"true":"false"));
+ const host=document.getElementById("mj14CertificateRequestWorkspace");if(host)host.innerHTML=mj14CategoryMarkup();
+ window.ManjazHijriPicker?.refresh?.();
 }
 function cardMarkup(){
-  const current=currentHijri();
-  const year=current?.year||1448;
-  return `<section id="mj13ExportCards" class="mj13-cards" aria-label="تصديرات الإدارة - التحديث الثالث عشر" data-mj13-version="${VERSION}">
-  <article class="mj13-card"><h3>الاحتياط اليومي</h3><p>استخراج ملف Excel بالتكليفات المحفوظة لكل شهر هجري، بما فيها حالة الاعتماد والتحذيرات.</p><label>الشهر الهجري<select id="mj13ReserveMonth" aria-label="اختيار شهر الاحتياط">${Array.from({length:12},(_,i)=>`${year}-${String(i+1).padStart(2,"0")}`).reverse().map(key=>`<option value="${key}" ${key===monthKey(current)?"selected":""}>${monthLabel(key)}</option>`).join("")}</select></label><button type="button" class="btn btn-primary" id="mj13ReserveDownload">استخراج Excel للشهر</button><div class="mj13-status" id="mj13ReserveStatus" role="status" aria-live="polite"></div></article>
-  <article class="mj13-card"><h3>طلبات الشهادات</h3><p>ملف Excel لكل فئة، بأعمدة بيانات الشهادة الخمسة كما ستظهر عند الإصدار.</p><label>فئة الشهادات<select id="mj13CertType" aria-label="اختيار فئة طلبات الشهادات">${CERT_TYPES.map(([k,v])=>`<option value="${k}">${html(v)}</option>`).join("")}</select></label><button type="button" class="btn btn-primary" id="mj13CertificateDownload">استخراج Excel للفئة</button><div class="mj13-status" id="mj13CertStatus" role="status" aria-live="polite"></div></article>
-  </section>`;
+  const current=currentHijri();const year=current?.year||1448;
+  return `<section id="mj13ExportCards" class="mj13-cards" aria-label="تصديرات الإدارة وطلبات الشهادات - التحديث الرابع عشر" data-mj13-version="${VERSION}">
+  <article class="mj13-card"><h3>الاحتياط اليومي</h3><p>استخراج Excel بالتكليفات لكل شهر هجري، بما فيها حالة الاعتماد والتحذيرات.</p>
+   <label>الشهر الهجري<select id="mj13ReserveMonth" aria-label="اختيار شهر الاحتياط">${Array.from({length:12},(_,i)=>`${year}-${String(i+1).padStart(2,"0")}`).reverse().map(key=>`<option value="${key}" ${key===monthKey(current)?"selected":""}>${monthLabel(key)}</option>`).join("")}</select></label>
+   <a class="mj13-admin-link" href="#admin-permissions" aria-label="الدخول إلى الصلاحيات الإدارية لتصدير الاحتياط">&#128274; الصلاحيات الإدارية</a>
+   <button type="button" class="btn btn-primary" id="mj13ReserveDownload">استخراج Excel للشهر</button>
+   <div class="mj13-status" id="mj13ReserveStatus" role="status" aria-live="polite"></div>
+  </article>
+  <article class="mj13-card"><h3>طلبات الشهادات</h3><p>تقديم الطلبات وتعديلها متاح للجميع؛ استخراج الطلبات Excel متاح للحساب الإداري فقط.</p>
+   <div id="mj14CertificateSections" class="mj14-types" role="group" aria-label="أقسام طلبات الشهادات">
+     ${CERT_TYPES.map(([k,v])=>`<button type="button" class="mj14-type" data-mj14-category="${k}" aria-pressed="false">${html(v)}</button>`).join("")}
+   </div>
+   <div id="mj14CertificateRequestWorkspace"><p class="mj14-note">اختاري أحد الأقسام الأربعة لفتح حقول تعبئة الطلب.</p></div>
+   <div style="border-top:1px solid #e4ebed;margin-top:9px;padding-top:12px;display:grid;gap:10px">
+    <label>فئة الشهادات للتصدير الإداري<select id="mj13CertType" aria-label="اختيار فئة طلبات الشهادات">${CERT_TYPES.map(([k,v])=>`<option value="${k}">${html(v)}</option>`).join("")}</select></label>
+    <a class="mj13-admin-link" href="#admin-permissions" aria-label="الدخول إلى الصلاحيات الإدارية لتصدير الطلبات">&#128274; الصلاحيات الإدارية</a>
+    <button type="button" class="btn btn-primary" id="mj13CertificateDownload">استخراج Excel للفئة</button>
+   </div>
+   <div class="mj13-status" id="mj13CertStatus" role="status" aria-live="polite"></div>
+  </article></section>`;
+}
+async function mj14Submit(form){
+ const message=form.querySelector('#mj14FormStatus'),button=form.querySelector('[type=submit]');
+ if(!form.reportValidity())return;
+ const values=Object.fromEntries([...new FormData(form).entries()].map(([k,v])=>[k,String(v).trim()]));
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(values.date||"")){message.textContent="اختاري التاريخ الهجري من التقويم.";return;}
+ if(!values.name||!values.title||!values.description){message.textContent="يجب تعبئة الحقول الإلزامية.";return;}
+ const rec=mj14Saved(),token=rec?.editToken||mj14Token();
+ const data={p_category:mj14Category,p_name:values.name,p_title:values.title,p_description:values.description,
+   p_date_iso:values.date,p_date_display:mj14DateLabel(values.date),p_duration:values.duration||"",
+   p_edit_token:token,p_request_id:rec?.id||null};
+ button.disabled=true;message.textContent=rec?"جارٍ حفظ التعديل...":"جارٍ تسجيل الطلب...";
+ try{
+   const response=await fetch(`${SUPABASE_URL}/rest/v1/rpc/manjaz_certificate_request_save`,{
+     method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json"},body:JSON.stringify(data)});
+   if(!response.ok){const e=await response.text().catch(()=>"");throw new Error(`تعذر حفظ الطلب (${response.status}). ${response.status===404?'يرجى التحقق من تهيئة خدمة الطلبات.':''}`)}
+   const result=await response.json();const row=Array.isArray(result)?result[0]:result;
+   if(!row?.request_id)throw new Error("تعذر التحقق من نجاح الحفظ في قاعدة البيانات.");
+   const updated={id:String(row.request_id),category:mj14Category,editToken:token,fields:values,updatedAt:String(row.saved_at||new Date().toISOString())};
+   mj14Store(updated);mj14EditingId=updated.id;
+   document.getElementById('mj14CertificateRequestWorkspace').innerHTML=mj14CategoryMarkup();
+   document.getElementById('mj14FormStatus').textContent=rec?"تم حفظ التعديل بنجاح.":"تم إرسال الطلب وحفظه. يمكنك تعديله من هذا الجهاز.";
+ }catch(err){message.textContent=err.message||"تعذر حفظ الطلب؛ لم يتم تأكيد العملية.";console.error('MJ14 public certificate request',err)}
+ finally{if(button.isConnected)button.disabled=false;}
+}
+function mj14Bind(root){
+ root.addEventListener('click',event=>{
+  const cat=event.target.closest('[data-mj14-category]');if(cat){mj14SelectCategory(cat.dataset.mj14Category);return;}
+  const own=event.target.closest('[data-mj14-load]');if(own){mj14EditingId=own.dataset.mj14Load;const host=document.getElementById('mj14CertificateRequestWorkspace');if(host)host.innerHTML=mj14CategoryMarkup();window.ManjazHijriPicker?.refresh?.();return;}
+  const edit=event.target.closest('[data-mj14-edit]');if(edit){const r=mj14Saved();if(r){document.getElementById('mj14CertificateRequestForm').outerHTML=mj14FormMarkup(r,true);window.ManjazHijriPicker?.refresh?.();}return;}
+  const fresh=event.target.closest('[data-mj14-new]');if(fresh){mj14EditingId='';const host=document.getElementById('mj14CertificateRequestWorkspace');if(host)host.innerHTML=mj14CategoryMarkup();window.ManjazHijriPicker?.refresh?.();return;}
+ });
+ root.addEventListener('submit',event=>{if(event.target.id!=='mj14CertificateRequestForm')return;event.preventDefault();mj14Submit(event.target);});
 }
 async function exportReserve(){
   const button=document.getElementById("mj13ReserveDownload"),msg=document.getElementById("mj13ReserveStatus"),select=document.getElementById("mj13ReserveMonth");
@@ -194,23 +307,41 @@ function populateReserveMonths(extras){
   sel.innerHTML=[...keys].sort((a,b)=>b.localeCompare(a)).map(k=>`<option value="${html(k)}">${html(monthLabel(k))}</option>`).join("");
   if(keys.has(selected))sel.value=selected;
 }
+async function adminCertificateRows(token){
+ const all=[];
+ for(let offset=0;offset<100000;offset+=500){
+   const query=new URLSearchParams({select:"id,category,name,title,short_description,display_date,duration,status,created_at,updated_at",order:"created_at.asc",limit:"500",offset:String(offset)});
+   const r=await fetch(`${SUPABASE_URL}/rest/v1/${REQUESTS_TABLE}?${query}`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${token}`},cache:"no-store"});
+   if(!r.ok)throw Error(`تعذر استخراج طلبات الشهادات (${r.status}). تأكدي من صلاحية الحساب الإداري.`);
+   const batch=await r.json();if(!Array.isArray(batch))throw Error("استجابة السجلات غير صحيحة.");
+   all.push(...batch);if(batch.length<500)break;
+ }
+ return all;
+}
 async function exportCertificates(){
-  const button=document.getElementById("mj13CertificateDownload"),msg=document.getElementById("mj13CertStatus"),sel=document.getElementById("mj13CertType");
-  if(!button||!sel)return;
-  const cat=sel.value,name=CERT_TYPES.find(([id])=>id===cat)?.[1]||"شهادات";
-  button.disabled=true;msg.textContent="جارٍ مراجعة الطلبات المسجلة...";
-  try{
-    const token=await adminToken();
-    const records=await cloudRows(["certificate_request","admin_certificate_request","certificate_request_execution","certificate_request_thanks","certificate_request_parent"],token);
-    const rows=records.filter(r=>r.status!=="ملغي"&&certificateCategory(r)===cat).map(certificateRow);
-    download(makeXlsx(CERT_HEADERS,rows,"طلبات الشهادات"),`منجز_طلبات_${name}.xlsx`);
-    msg.textContent=rows.length?`تم استخراج ${rows.length} طلبًا من الفئة المختارة.`:"لا توجد طلبات مسجلة لهذه الفئة؛ تم تنزيل نموذج Excel فارغ قابل للتعبئة.";
-  }catch(err){msg.textContent=err.message||"تعذر التصدير، ولم يُنشأ ملف ناقص.";console.error("MJ13 export cert",err)}
-  finally{button.disabled=false;}
+ const button=document.getElementById("mj13CertificateDownload"),msg=document.getElementById("mj13CertStatus"),sel=document.getElementById("mj13CertType");
+ if(!button||!sel)return;
+ const cat=sel.value,name=CERT_TYPES.find(([id])=>id===cat)?.[1]||"شهادات";
+ button.disabled=true;msg.textContent="جارٍ مراجعة طلبات الشهادات...";
+ try{
+  const token=await adminToken();
+  const [records,legacy]=await Promise.all([
+   adminCertificateRows(token),
+   cloudRows(["certificate_request","admin_certificate_request","certificate_request_execution","certificate_request_thanks","certificate_request_parent"],token)
+  ]);
+  const rows=[
+   ...records.filter(r=>r.category===cat&&r.status!=="ملغي").map(r=>[r.name||"",r.title||"",r.short_description||"",r.display_date||"",r.duration||""]),
+   ...legacy.filter(r=>r.status!=="ملغي"&&certificateCategory(r)===cat).map(certificateRow)
+  ];
+  download(makeXlsx(CERT_HEADERS,rows,"طلبات الشهادات"),`منجز_طلبات_${name}.xlsx`);
+  msg.textContent=rows.length?`تم استخراج ${rows.length} طلبًا من الفئة المختارة.`:"لا توجد طلبات مسجلة لهذه الفئة؛ تم تنزيل نموذج Excel فارغ قابل للتعبئة.";
+ }catch(err){msg.textContent=err.message||"تعذر التصدير، ولم يُنشأ ملف ناقص.";console.error("MJ14 admin cert export",err)}
+ finally{button.disabled=false;}
 }
 function bind(root){
   root.querySelector("#mj13ReserveDownload")?.addEventListener("click",exportReserve);
   root.querySelector("#mj13CertificateDownload")?.addEventListener("click",exportCertificates);
+  mj14Bind(root);
   // Populate historical Hijri months while preserving the existing selection.
   (async()=>{try{const token=await adminToken();const records=await cloudRows(["reserve_assignment"],token);if(root.isConnected)populateReserveMonths(new Set(records.map(r=>monthKey(hijriParts(r.data?.date))).filter(Boolean)));}catch(_){/* no admin session: current Hijri year remains selectable */}})();
 }
