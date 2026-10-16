@@ -1639,8 +1639,7 @@ async function reserveDeleteTableForDate(mode,date){
   if(obsoleteAbsences.some(a=>absencesOn(date).some(x=>String(x.id)===String(a.id))))
     throw new Error("تعذر التحقق من حذف الغياب المرتبط بالجدول");
   refreshReserveStatisticsViews();
-  // Refresh the grouped links and notifications only when present on this page.
-  reserveRenderNotificationPanel();
+  // Keep the WhatsApp notification list and its four queue buttons unchanged.
   if(byId("reservePublishOverlay"))openReservePublication(date);
   return {deleted:original.length+removedAbsences,empty:false};
 }
@@ -2035,13 +2034,17 @@ function ensureReservePublicationStyles(){
     #reservePublishOverlay .reserve-publish-content{max-width:1150px;margin:0 auto 20px;background:#fff;border-radius:12px;box-shadow:0 12px 50px rgba(0,0,0,.18);padding:14px;box-sizing:border-box}
     #reservePublishOverlay .reserve-publish-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
     #reservePublishOverlay .reserve-publish-status{color:#36515a;font-size:12px;flex:1;min-width:180px}
-    #reservePublishOverlay .reserve-publish-preview-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #reservePublishOverlay .reserve-publish-preview-scroll{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box}
+    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin-left:auto;margin-right:auto}
+    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet table{width:100%;max-width:100%;box-sizing:border-box}
+    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet th:last-child,
+    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet td:last-child{box-sizing:border-box}
     #reservePublishSheet{display:block!important;color:#172c34;background:white;direction:rtl;line-height:1.6;font:12px Tahoma,Arial,sans-serif}
     #reservePublishSheet .reserve-publication-date{display:flex;justify-content:space-between;gap:12px;border-bottom:2px solid #0f5f59;padding-bottom:7px;font-size:14px;flex-wrap:wrap}
     #reservePublishSheet h1{text-align:center;margin:9px 0 0;font-size:20px;color:#123e50}
     #reservePublishSheet .reserve-publication-school{text-align:center;margin:0 0 12px;color:#576c72;font-size:12px}
     #reservePublishSheet table{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center}
-    #reservePublishSheet th,#reservePublishSheet td{border:1px solid #637982;padding:8px 5px;vertical-align:middle;overflow-wrap:anywhere}
+    #reservePublishSheet th,#reservePublishSheet td{border:1px solid #637982;padding:8px 5px;vertical-align:middle;overflow-wrap:anywhere;box-sizing:border-box}
     #reservePublishSheet th{background:#edf3f3!important;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     /* خلفية بيضاء لجميع صفوف جدول النشر، والتلوين في عمود الحصة فقط */
     #reservePublishSheet tr.reserve-publication-period > td{background-color:#fff!important;color:#172c34!important}
@@ -2079,7 +2082,11 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet .reserve-publication-summary p{margin:8px 0 0}
     #reservePublishSheet .reserve-publication-footer{text-align:center;border-top:1px solid #9cb3b7;margin-top:14px;padding-top:6px;font-size:10px}
     @media(max-width:700px){
-      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{min-width:940px}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%;max-width:100%;min-width:0!important;font-size:9px!important}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet table{width:100%;table-layout:fixed;font-size:9px}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet th,
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet td{padding:3px 1px;overflow-wrap:anywhere;word-break:normal;font-size:8px;line-height:1.35}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet .reserve-publication-status{font-size:7px;padding:2px 0}
     }
     @media(max-width:480px){
       #reservePublishOverlay{padding:8px}
@@ -2096,8 +2103,9 @@ function ensureReservePublicationStyles(){
       #reservePublishOverlay .reserve-publish-content{max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;border:0!important}
       #reservePublishOverlay .reserve-publish-actions{display:none!important}
       #reservePublishOverlay .reserve-publish-preview-scroll{overflow:visible!important}
-      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{min-width:0!important}
-      #reservePublishSheet{font-size:11px!important;line-height:1.28!important}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+      #reservePublishSheet{font-size:10px!important;line-height:1.28!important;overflow:visible!important}
+      #reservePublishSheet table{width:100%!important;max-width:100%!important;table-layout:fixed!important}
       #reservePublishSheet th,#reservePublishSheet td{padding:2px 4px!important;line-height:1.28!important}
       #reservePublishSheet tr.reserve-publication-group-gap{height:8px!important}
       #reservePublishSheet tr.reserve-publication-group-gap > td{height:8px!important;min-height:8px!important;padding:0!important;border:0!important;line-height:0!important}
@@ -2155,18 +2163,20 @@ async function downloadReservePublicationPDF(date){
     // Export a portrait-only copy. The live preview remains unchanged.
     const page=sheet.cloneNode(true);
     page.id="reservePublishSheet";
-    page.style.cssText="width:735px;max-width:735px;min-width:0;font-size:10px;line-height:1.4";
+    // Portrait A4 offers 190mm after two 10mm margins; use only 184mm
+    // so the leftmost signature column remains wholly within the PDF crop.
+    page.style.cssText="width:184mm;max-width:184mm;min-width:0;box-sizing:border-box;margin:0;padding:0;overflow:visible;font-size:10px;line-height:1.4";
     const table=page.querySelector("table");
     if(table){table.style.cssText="width:100%;table-layout:fixed;font-size:9px";
       table.querySelectorAll("th,td").forEach(cell=>{cell.style.padding="4px 2px";cell.style.overflowWrap="anywhere";});
     }
     // Preserve publication styles on the detached PDF copy without changing the preview.
     const offscreen=document.createElement("div");
-    offscreen.style.cssText="position:fixed;left:-20000px;top:0;width:735px;pointer-events:none";
+    offscreen.style.cssText="position:fixed;left:-20000px;top:0;width:184mm;max-width:184mm;pointer-events:none";
     offscreen.appendChild(page);document.body.appendChild(offscreen);
     try{
     await engine().set({
-      margin:[10,9,10,9],filename:`جدول_النشر_${date}.pdf`,
+      margin:[10,10,10,10],filename:`جدول_النشر_${date}.pdf`,
       image:{type:"jpeg",quality:0.98},
       html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
       jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
