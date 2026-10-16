@@ -76,6 +76,44 @@ function weekRange(date){
   return {start,end:addDays(start,4)};
 }
 function inRange(date,start,end){return date>=start&&date<=end}
+// Use the same Saudi Umm al-Qura calendar as the date labels shown in the UI.
+const reserveHijriMonthFormatter=new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura",{
+  calendar:"islamic-umalqura",timeZone:"Asia/Riyadh",year:"numeric",month:"numeric"
+});
+function reserveHijriMonthKey(date){
+  const parts=reserveHijriMonthFormatter.formatToParts(parseDate(date));
+  const year=parts.find(p=>p.type==="year")?.value;
+  const month=parts.find(p=>p.type==="month")?.value;
+  if(!year||!month)throw new Error("تعذر تحديد الشهر الهجري");
+  return `${year}-${String(Number(month)).padStart(2,"0")}`;
+}
+const reserveHijriMonthRangeCache=new Map();
+function reserveHijriMonthRange(date){
+  if(reserveHijriMonthRangeCache.has(date))return reserveHijriMonthRangeCache.get(date);
+  const key=reserveHijriMonthKey(date);
+  let start=date,end=date;
+  // A Hijri month has 29 or 30 days; 32 bounds guard bad input.
+  for(let i=0;i<32;i++){
+    const prev=addDays(start,-1);
+    if(reserveHijriMonthKey(prev)!==key)break;
+    start=prev;
+  }
+  for(let i=0;i<32;i++){
+    const next=addDays(end,1);
+    if(reserveHijriMonthKey(next)!==key)break;
+    end=next;
+  }
+  const result={start,end,key};
+  if(reserveHijriMonthRangeCache.size>120)reserveHijriMonthRangeCache.clear();
+  reserveHijriMonthRangeCache.set(date,result);
+  return result;
+}
+function reserveHijriMonthTitle(date){
+  return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{
+    calendar:"islamic-umalqura",timeZone:"Asia/Riyadh",year:"numeric",month:"long"
+  }).format(parseDate(date));
+}
+
 function fmtDate(s){
   if(!s)return"—";
   try{return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{year:"numeric",month:"long",day:"numeric"}).format(parseDate(s))}
@@ -110,7 +148,7 @@ function bindHijriDateControl(id,onChange){
     onChange?.(next);
   };
   document.querySelectorAll(`[data-hijri-target="${id}"]`).forEach(b=>b.onclick=()=>{
-    selectDate(addDays(input.value||state.currentDate,Number(b.dataset.hijriStep||0)));
+    selectDate(addDays(state.currentDate,Number(b.dataset.hijriStep||0)));
   });
   input.addEventListener("change",()=>selectDate(input.value));
 }
@@ -396,28 +434,30 @@ function publicationAssignmentsUntil(endDate,startDate=""){
   return days.flatMap(date=>dailyPublicationRows(date));
 }
 function assignmentCounts(referenceDate){
-  const wr=weekRange(referenceDate),start=termStart()||COUNT_START,countStart=state.settings?.countStart||COUNT_START;
-  // Count approved substitutions for their actual date/week. Keep the official
-  // countStart/termStart limits for cumulative totals only.
+  const wr=weekRange(referenceDate),mr=reserveHijriMonthRange(referenceDate);
+  const start=termStart()||COUNT_START,countStart=state.settings?.countStart||COUNT_START;
+  // Cumulative counts are calculated through the selected date, never using
+  // published future days. Week starts Sunday; month uses Umm al-Qura dates.
   const pub=publicationAssignmentsUntil(referenceDate);
   const map=new Map();
   [...state.teachers,...MANUAL_SUPPORT_STAFF].forEach(t=>map.set(String(t.id),{
-    daily:0,week:0,term:0,
+    daily:0,week:0,month:0,term:0,
     days:{sun:0,mon:0,tue:0,wed:0,thu:0},
-    dayState:{sun:"",mon:"",tue:"",wed:"",thu:""},
-    maxDaily:0
+    dayState:{sun:"",mon:"",tue:"",wed:"",thu:""},maxDaily:0
   }));
   const dailyBuckets=new Map();
   pub.forEach(a=>{
-    const s=map.get(String(a.assignedTeacherId)); if(!s)return;
+    const s=map.get(String(a.assignedTeacherId));if(!s)return;
     if(a.date<=referenceDate&&(!start||a.date>=start)&&(!countStart||a.date>=countStart))s.term++;
+    if(inRange(a.date,mr.start,mr.end))s.month++;
     if(inRange(a.date,wr.start,wr.end)){
       s.week++;
-      if(s.days[a.dayKey]!=null){
-        s.days[a.dayKey]++;
-        const prior=s.dayState[a.dayKey];
+      const dk=dayKey(a.date);
+      if(s.days[dk]!=null){
+        s.days[dk]++;
+        const prior=s.dayState[dk];
         const current=a.ackAt?"ack":"approved";
-        s.dayState[a.dayKey]=(prior==="approved"||current==="approved")?"approved":"ack";
+        s.dayState[dk]=(prior==="approved"||current==="approved")?"approved":"ack";
       }
       const key=`${a.assignedTeacherId}|${a.date}`;
       dailyBuckets.set(key,(dailyBuckets.get(key)||0)+1);
@@ -428,16 +468,20 @@ function assignmentCounts(referenceDate){
     const id=String(key).split("|")[0],s=map.get(id);
     if(s)s.maxDaily=Math.max(s.maxDaily,n);
   });
+  // Administrative corrections use the same week and Hijri month on both cards.
   state.adjustments.forEach(a=>{
-    const s=map.get(String(a.teacherId)); if(!s)return;
-    const delta=Number(a.delta||0); if(!delta)return;
+    const s=map.get(String(a.teacherId));if(!s)return;
+    const delta=Number(a.delta||0);if(!delta)return;
     const adjustmentDate=clean(a.date||a.weekStart);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(adjustmentDate))return;
     if(adjustmentDate<=referenceDate&&(!start||adjustmentDate>=start)&&(!countStart||adjustmentDate>=countStart))
       s.term=Math.max(0,Number(s.term||0)+delta);
+    if(inRange(adjustmentDate,mr.start,mr.end))
+      s.month=Math.max(0,Number(s.month||0)+delta);
     if(clean(a.weekStart)===wr.start){
       s.week=Math.max(0,Number(s.week||0)+delta);
-      if(a.date===referenceDate)s.daily=Math.max(0,Number(s.daily||0)+delta);
-      const dk=dayKey(a.date||"");
+      if(adjustmentDate===referenceDate)s.daily=Math.max(0,Number(s.daily||0)+delta);
+      const dk=dayKey(adjustmentDate);
       if(dk&&s.days[dk]!=null)s.days[dk]=Math.max(0,Number(s.days[dk]||0)+delta);
     }
   });
@@ -464,7 +508,7 @@ function publicWeeklyRows(referenceDate){
     if(!key||names.has(key))return false;
     names.add(key);return true;
   }).sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"))
-    .map(t=>({teacher:t,count:counts.get(String(t.id))||{week:0,term:0,days:{},dayState:{},maxDaily:0}}));
+    .map(t=>({teacher:t,count:counts.get(String(t.id))||{daily:0,week:0,month:0,term:0,days:{},dayState:{},maxDaily:0}}));
 }
 function absencesOn(date){return state.absences.filter(x=>x.date===date)}
 function assignmentsOn(date){return state.assignments.filter(x=>x.date===date&&x.status!=="ملغي")}
@@ -908,9 +952,10 @@ function publicHTML(){
       </details>
 
       <details id="reservePublicCardStatistics" class="reserve-public-card" data-reserve-public-card="stats" ${state.publicOpenCards?.includes("stats")?"open":""}>
-        <summary><strong>إحصائيات حصص الاحتياط</strong><span>الحسبة الأسبوعية والتراكمية</span></summary>
+        <summary><strong>إحصائيات حصص الاحتياط</strong><span>يومي وأسبوعي وشهري هجري وتراكمي</span></summary>
         <div class="reserve-public-card-content">
-          <div class="panel-head"><h3>الحسبة الأسبوعية والتراكمية</h3><span>${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))}</span></div>
+          <div class="panel-head"><h3>الإحصائيات اليومية والأسبوعية والشهرية</h3><span>${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))}</span></div>
+          <p class="reserve-public-note" id="reserveStatPeriodLabel">الاحتساب حتى: ${esc(fmtDate(date))} | الأسبوع: ${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))} | الشهر الهجري: ${esc(reserveHijriMonthTitle(date))}</p>
           <div class="reserve-no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
             <button class="reserve-tab ${state.statsWeekShift===-7?"":"active"}" type="button" data-week-shift="0">الأسبوع الحالي</button>
             <button class="reserve-tab ${state.statsWeekShift===-7?"active":""}" type="button" data-week-shift="-7">الأسبوع السابق</button>
@@ -933,7 +978,7 @@ function publicHTML(){
 }
 function weeklyTableHTML(rows,referenceDate){
   return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr>
-    <th>المعلمة</th>${DAYS.map(d=>`<th>${d[1]}</th>`).join("")}<th>مجموع الأسبوع</th><th>التراكمي للفصل</th>
+    <th>المعلمة</th>${DAYS.map(d=>`<th>${d[1]}</th>`).join("")}<th>حصص اليوم</th><th>تراكمي الأسبوع</th><th>تراكمي الشهر الهجري</th><th>التراكمي للفصل</th>
   </tr></thead><tbody>${rows.length?rows.map(r=>`<tr>
     <td><strong>${esc(r.teacher.name)}</strong></td>
     ${DAYS.map(d=>{
@@ -941,16 +986,19 @@ function weeklyTableHTML(rows,referenceDate){
       const cls=n?(st==="ack"?"reserve-count-ack":"reserve-count-approved"):"";
       return `<td class="${cls}">${n}</td>`;
     }).join("")}
-    <td><strong>${Number(r.count.week||0)}</strong></td><td><strong>${Number(r.count.term||0)}</strong></td>
-  </tr>`).join(""):`<tr><td colspan="8">لا توجد بيانات معلمات بعد</td></tr>`}</tbody></table></div>`;
+    <td><strong>${Number(r.count.daily||0)}</strong></td>
+    <td><strong>${Number(r.count.week||0)}</strong></td>
+    <td><strong>${Number(r.count.month||0)}</strong></td>
+    <td><strong>${Number(r.count.term||0)}</strong></td>
+  </tr>`).join(""):`<tr><td colspan="10">لا توجد بيانات معلمات بعد</td></tr>`}</tbody></table></div>`;
 }
 function excellenceRows(referenceDate){return excellenceMetrics(referenceDate)}
 function excellenceTableHTML(referenceDate){
   const rows=excellenceMetrics(referenceDate);
   return `<div class="reserve-excellence">
-    <div class="panel-head"><h3>المتميزات في تسديد الاحتياط</h3><span>أسبوعي وتراكمي</span></div>
-    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المركز</th><th>المعلمة</th><th>حصص الأسبوع</th><th>تم الاطلاع</th><th>تم تفعيل الموضوع</th><th>التراكمي للفصل</th></tr></thead>
-    <tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td><td><strong>${r.weekCount}</strong></td><td>${r.weekAcknowledged}</td><td>${r.weekActivated}</td><td>${r.cumulativeQualified}</td></tr>`).join(""):'<tr><td colspan="6">لا توجد بيانات تميز لهذا الأسبوع</td></tr>'}</tbody></table></div>
+    <div class="panel-head"><h3>المتميزات في تسديد الاحتياط</h3><span>الأسبوع: ${esc(fmtDate(weekRange(referenceDate).start))} – ${esc(fmtDate(weekRange(referenceDate).end))} | الشهر الهجري: ${esc(reserveHijriMonthTitle(referenceDate))}</span></div>
+    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المركز</th><th>المعلمة</th><th>حصص الأسبوع</th><th>تراكمي الشهر الهجري</th><th>تم الاطلاع</th><th>تم تفعيل الموضوع</th><th>التراكمي للفصل</th></tr></thead>
+    <tbody>${rows.length?rows.map(r=>`<tr><td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td><td><strong>${r.weekCount}</strong></td><td>${r.monthCount}</td><td>${r.weekAcknowledged}</td><td>${r.weekActivated}</td><td>${r.cumulativeQualified}</td></tr>`).join(""):'<tr><td colspan="7">لا توجد بيانات تميز لهذا الأسبوع</td></tr>'}</tbody></table></div>
   </div>`;
 }
 
@@ -1392,6 +1440,7 @@ function excellenceMetrics(referenceDate){
   const countStart=state.settings?.countStart||COUNT_START;
   const weekItems=publicationAssignmentsUntil(referenceDate,wr.start);
   const termItems=publicationAssignmentsUntil(referenceDate,start>countStart?start:countStart);
+  const counts=assignmentCounts(referenceDate);
   const byTeacher=new Map();
   const ensure=id=>{
     const key=String(id);
@@ -1417,16 +1466,16 @@ function excellenceMetrics(referenceDate){
   });
   const rows=[];
   byTeacher.forEach(x=>{
-    const weekCount=x.weekAssignments.length;
-    if(!x.teacher||!weekCount)return;
+    const total=counts.get(String(x.teacher?.id))||{week:0,month:0,term:0};
+    const weekCount=Number(total.week||0);
+    if(!x.teacher||!x.weekAssignments.length)return;
     const maxDaily=Math.max(...Object.values(x.daily).map(arr=>arr.length));
     const tier=weekCount>=2?2:1;
-    // Keep old export fields; the weekly leaderboard is independent of term totals.
-    rows.push({...x,weekCount,qualifiedWeek:weekCount,
-      cumulativeQualified:x.allAssignments.length,maxDaily,tier});
+    // Rank priority unchanged: weekly count, both icons, topic, acknowledgement.
+    // Weekly, Hijri monthly and term values match the public statistical card.
+    rows.push({...x,weekCount,monthCount:Number(total.month||0),
+      qualifiedWeek:weekCount,cumulativeQualified:Number(total.term||0),maxDaily,tier});
   });
-  // More distinct published lessons have priority. At equal lesson count:
-  // both icons first, then activated topics, then acknowledgements.
   rows.sort((a,b)=>b.weekCount-a.weekCount||b.weekBoth-a.weekBoth||
     b.weekActivated-a.weekActivated||b.weekAcknowledged-a.weekAcknowledged||
     clean(a.teacher.name).localeCompare(clean(b.teacher.name),"ar"));
@@ -1438,6 +1487,7 @@ function excellenceMetrics(referenceDate){
     return {...r,rank};
   });
 }
+
 function excellenceAdminHTML(){
   const rows=excellenceMetrics(state.currentDate),wr=weekRange(state.currentDate);
   return `<section class="surface panel reserve-admin-only">
@@ -1447,13 +1497,13 @@ function excellenceAdminHTML(){
       <button class="btn btn-ghost reserve-excellence-export" data-scope="cumulative" type="button">تصدير التراكمي</button>
     </div>
     <div class="reserve-table-wrap reserve-excellence"><table class="reserve-table"><thead><tr>
-      <th>المركز</th><th>المعلمة</th><th>تفصيل يومي</th><th>حصص الأسبوع</th><th>تم الاطلاع</th><th>تم تفعيل الموضوع</th><th>الاثنتان معًا</th><th>التراكمي للفصل</th><th>عناوين التفعيل</th>
+      <th>المركز</th><th>المعلمة</th><th>تفصيل يومي</th><th>حصص الأسبوع</th><th>تراكمي الشهر الهجري</th><th>تم الاطلاع</th><th>تم تفعيل الموضوع</th><th>الاثنتان معًا</th><th>التراكمي للفصل</th><th>عناوين التفعيل</th>
     </tr></thead><tbody>${rows.length?rows.map(r=>`<tr>
       <td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td>
       <td>${Object.entries(r.daily).sort().map(([d,a])=>`${dayName(d)}: ${a.length}`).join(" — ")||"—"}</td>
-      <td><strong>${r.weekCount}</strong></td><td>${r.weekAcknowledged}</td><td>${r.weekActivated}</td><td>${r.weekBoth}</td>
+      <td><strong>${r.weekCount}</strong></td><td>${r.monthCount}</td><td>${r.weekAcknowledged}</td><td>${r.weekActivated}</td><td>${r.weekBoth}</td>
       <td>${r.cumulativeQualified}</td><td>${r.titles.length?r.titles.map(t=>`<div>${esc(t)}</div>`).join(""):"—"}</td>
-    </tr>`).join(""):'<tr><td colspan="9">لا توجد بيانات تميز لهذا الأسبوع</td></tr>'}</tbody></table></div>
+    </tr>`).join(""):'<tr><td colspan="10">لا توجد بيانات تميز لهذا الأسبوع</td></tr>'}</tbody></table></div>
     <p class="reserve-public-note">الترتيب من جدول النشر فقط: الأكثر حصصًا منذ الأحد يتقدم، وعند التعادل يُفضّل اكتمال الاطلاع والموضوع، ثم الموضوع، ثم الاطلاع؛ وعند تساوي الجميع يتشاركون المركز. تبدأ المراكز من جديد كل أحد.</p>
   </section>`;
 }
@@ -1461,12 +1511,12 @@ function exportExcellence(scope){
   const refs=scope==="week"?[state.currentDate]:[];
   let rows=[];
   if(scope==="week"){
-    rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
+    rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.monthCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
   }else{
     // Export exactly the selected date/week, not a different later date.
-    rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
+    rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.monthCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
   }
-  const headers=["المركز","المعلمة","حصص الأسبوع","المحتسب","التراكمي للفصل","الحصص المكتملة الأيقونتين","عناوين التفعيل"];
+  const headers=["المركز","المعلمة","حصص الأسبوع","تراكمي الشهر الهجري","المحتسب","التراكمي للفصل","الحصص المكتملة الأيقونتين","عناوين التفعيل"];
   return downloadReserveTablePDF(`تميز الاحتياط ${scope}`, ["يوم التقرير","التاريخ الهجري",...headers],
     rows.map(row=>[dayName(state.currentDate),fmtDate(state.currentDate),...row]),state.currentDate,
     `أسبوع التميز: ${fmtDate(weekRange(state.currentDate).start)} – ${fmtDate(weekRange(state.currentDate).end)}`);
@@ -1795,6 +1845,9 @@ function refreshReserveStatisticsViews(){
     bindPublicDailyActions();
   }
   const reference=state.currentDate;
+  const wr=weekRange(reference);
+  const periodLabel=byId("reserveStatPeriodLabel");
+  if(periodLabel)periodLabel.textContent=`الاحتساب حتى: ${fmtDate(reference)} | الأسبوع: ${fmtDate(wr.start)} – ${fmtDate(wr.end)} | الشهر الهجري: ${reserveHijriMonthTitle(reference)}`;
   const weekly=byId("reserveWeeklyHolder");
   if(weekly)weekly.innerHTML=weeklyTableHTML(publicWeeklyRows(reference),reference);
   const excellence=byId("reserveExcellenceHolder");
@@ -1884,6 +1937,7 @@ async function syncReserveSectionDate(next,keepWeekAnchor=false){
   // Save view configuration before rebuilding all cards from the one shared date.
   const hadAdmin=!!byId("reserveAdminMount")?.firstElementChild;
   const activeAdminTab=document.querySelector("[data-admin-tab].active")?.dataset.adminTab||"workspace";
+  const activeWorkspaceCard=state.workspaceCard;
   const hadPublishOverlay=!!byId("reservePublishOverlay");
   state.publicOpenCards=[...document.querySelectorAll(".reserve-public-card[open]")]
     .map(card=>card.dataset.reservePublicCard);
@@ -1895,6 +1949,7 @@ async function syncReserveSectionDate(next,keepWeekAnchor=false){
   try{
     await renderPage();
     if(hadAdmin&&byId("reserveAdminMount")){
+      state.workspaceCard=activeWorkspaceCard;
       mountAdminShell();
       if(state.admin&&activeAdminTab!=="workspace"){
         document.querySelectorAll("[data-admin-tab]").forEach(b=>
@@ -1932,9 +1987,11 @@ function bindPublic(){
   });
   document.querySelectorAll("[data-week-shift]").forEach(b=>b.onclick=()=>{
     const shift=Number(b.dataset.weekShift||0);
+    if(shift!==0&&shift!==-7)return;
     const anchor=state.statsWeekAnchor||state.currentDate;
     state.statsWeekAnchor=anchor;
     state.statsWeekShift=shift;
+    // Period controls modify the shared date, never an independent hidden card date.
     return syncReserveSectionDate(shift===-7?addDays(anchor,-7):anchor,true);
   });
   // The daily timetable itself contains the actions; no personal links are required.
