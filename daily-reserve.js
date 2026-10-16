@@ -765,7 +765,8 @@ function reserveAbsentDirectory(){
   }).sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"));
 }
 function existingSlotAssignment(date,absentId,period){
-  return assignmentsOn(date).find(a=>String(a.absentTeacherId)===String(absentId)&&Number(a.period)===Number(period));
+  return assignmentsOn(date).filter(a=>String(a.absentTeacherId)===String(absentId)&&Number(a.period)===Number(period))
+    .sort((a,b)=>String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||"")))[0]||null;
 }
 function weights(){return {...DEFAULT_WEIGHTS,...(state.settings?.weights||{})}}
 function termStart(){return state.settings?.termStart||""}
@@ -1513,7 +1514,7 @@ function adminAssignmentsHTML(items){
     return `<tr data-assignment="${esc(a.id)}">
     <td>${esc(a.period)}</td><td>${esc(a.className||"—")}${a.activity?' <small>(نشاط)</small>':""}</td><td>${esc(a.reason||"غياب")}</td><td>${esc(a.absentTeacherName)}</td>
     <td>${a.candidates?.[0]?`<div class="reserve-candidate"><strong>${esc(a.candidates[0].name)}</strong></div>`:"لا توجد مرشحة مطابقة، اختاري من القائمة"}</td>
-    <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select><small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small></td>
+    <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select><button type="button" class="reserve-mini reserve-auto-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button><small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small></td>
     <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
     <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط نموذج المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button><button class="reserve-mini reserve-send-ack" type="button">إرسال إشعار</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
   </tr>`}).join("")}</tbody></table></div>`;
@@ -1590,6 +1591,96 @@ function currentReserveWarnings(date){
   const cached=state.lastReserveWarnings;
   return cached?.date===date?[...new Set([...savedReserveWarnings(date),...cached.warnings])]:savedReserveWarnings(date);
 }
+// Flexible administrative reassignment does not invoke or modify candidateRanking.
+// Current nominations and source type remain immutable; only the chosen assignee changes.
+function reserveFlexibleAssigneeOptions(selectedId){
+  const all=manualAssigneeDirectory();
+  if(selectedId&&!all.some(t=>String(t.id)===String(selectedId))){
+    const previous=teacherOf(selectedId);
+    if(previous)all.unshift(previous);
+  }
+  return `<option value="">اختاري المعلمة المسددة</option>`+all.map(t=>
+    `<option value="${esc(t.id)}" ${String(t.id)===String(selectedId)?"selected":""}>${esc(t.name)}${t.supportStaff?" — التوجيه / المختبر":""}</option>`).join("");
+}
+function reserveUnlockAssigneeSelector(select){
+  if(!select)return;
+  const selected=select.value;
+  select.innerHTML=reserveFlexibleAssigneeOptions(selected);
+  select.value=selected;
+  select.disabled=false;
+  select.hidden=false;
+  select.focus();
+}
+function reserveSavedManualAssignmentsHTML(date){
+  const assignments=assignmentsOn(date).filter(a=>a.manual===true&&a.published===true&&a.assignedTeacherId);
+  if(!assignments.length)return '<div class="empty-inline">لا توجد تكليفات يدوية معتمدة لهذا اليوم.</div>';
+  return `<div class="reserve-admin-list">${assignments.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>
+    `<div class="reserve-teacher-row" data-reserve-flex-id="${esc(a.id)}">
+      <strong>${esc(a.assignedTeacherName||"—")}</strong>
+      <span>الحصة ${esc(a.period)} | ${esc(a.className||"—")} | بدلًا عن ${esc(a.absentTeacherName||"—")}</span>
+      <div class="reserve-actions">
+        <button class="reserve-mini reserve-flex-edit" type="button" aria-label="تعديل المعلمة المسددة">✎ تعديل</button>
+        <select class="reserve-flex-select" aria-label="اختيار المعلمة المسددة" hidden disabled>${reserveFlexibleAssigneeOptions(a.assignedTeacherId)}</select>
+        <button class="reserve-mini reserve-flex-save" type="button" hidden>حفظ التعديل</button>
+      </div>
+      <small class="reserve-flex-msg" role="status"></small>
+    </div>`).join("")}</div>`;
+}
+async function reserveCommitFlexibleAssignee(recordId,teacherId){
+  await ensureAdmin();
+  const a=state.assignments.find(x=>String(x.id)===String(recordId)&&x.status!=="ملغي");
+  const t=teacherOf(teacherId);
+  if(!a||!t||!a.date)throw new Error("تعذر العثور على التكليف أو المعلمة المسددة.");
+  const changed=String(a.assignedTeacherId)!==String(t.id);
+  const warnings=manualConflictMessages(a.date,[{
+    teacherId:String(t.id),period:Number(a.period),className:a.className,existingId:String(a.id)
+  }],[String(a.absentTeacherId),...absencesOn(a.date).map(x=>String(x.teacherId))]);
+  const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,
+    manualOverride:changed||a.manualOverride===true||warnings.length>0,
+    manualOverrideWarnings:warnings};
+  // Ensure the former teacher's link cannot continue to act for reassigned work.
+  if(changed){data.ackToken=uid();data.ackAt="";data.activationTitle="";data.activationAt="";}
+  const result=await patchKind(K.assignment,a.id,data,token(),a.published===true?"معتمد":"مسودة");
+  if(!result?.id||String(result.id)!==String(a.id))throw new Error("لم تؤكد قاعدة البيانات تحديث التكليف.");
+  await loadAll();
+  const persisted=state.assignments.find(x=>String(x.id)===String(a.id));
+  if(!persisted||String(persisted.assignedTeacherId)!==String(t.id)||
+     persisted.manual!==a.manual||persisted.published!==a.published||
+     (changed&&persisted.ackToken===a.ackToken))
+    throw new Error("لم يثبت حفظ تعديل المعلمة في قاعدة البيانات.");
+  state.lastReserveWarnings={date:a.date,source:a.manual===true?"manual":"auto",warnings};
+  return {date:a.date,warnings};
+}
+function bindReserveFlexibleAssignmentEditing(container){
+  const node=byId(container);
+  if(!node)return;
+  node.addEventListener("click",async event=>{
+    const button=event.target.closest("button.reserve-flex-edit,button.reserve-flex-save");
+    if(!button)return;
+    const row=button.closest("[data-reserve-flex-id]");
+    const select=row?.querySelector(".reserve-flex-select");
+    const message=row?.querySelector(".reserve-flex-msg");
+    if(!row||!select)return;
+    if(button.classList.contains("reserve-flex-edit")){
+      reserveUnlockAssigneeSelector(select);
+      const save=row.querySelector(".reserve-flex-save");if(save)save.hidden=false;
+      if(message)message.textContent="يمكن اعتماد تغيير المعلمة حتى مع وجود تحذيرات القيود.";
+      return;
+    }
+    if(!select.value){if(message)message.textContent="اختاري معلمة قبل الحفظ.";return;}
+    button.disabled=true;
+    if(message)message.textContent="جارٍ حفظ التعديل...";
+    try{
+      const res=await reserveCommitFlexibleAssignee(row.dataset.reserveFlexId,select.value);
+      renderWorkspaceCard("manual");
+      const status=byId("reserveManualMsg");if(status)status.textContent="تم الحفظ";
+      try{await reserveSyncAdminMutation(res.date);}catch(error){console.error("تعذر تحديث الإشعارات بعد الحفظ",error);
+        if(status)status.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات.";}
+    }catch(error){console.error("تعذر تعديل الإسناد اليدوي",error);
+      if(message)message.textContent=`تعذر حفظ التعديل: ${error.message||"خطأ غير معروف"}`;
+      button.disabled=false;}
+  });
+}
 function manualTeacherLinksHTML(date){
   const groups=reservePublishedTeacherGroups(date);
   if(!groups.length)return '<div class="empty-inline">بعد اعتماد التكليفات، تظهر هنا روابط المعلمات الموحدة.</div>';
@@ -1630,6 +1721,10 @@ function manualAdminHTML(){
     <div id="reserveManualMsg" role="status" aria-live="polite"></div>
     <section class="reserve-admin-warnings"><strong>مساحة تحذيرات الإسناد</strong><div id="reserveManualWarnings">${reserveWarningsMarkup(currentReserveWarnings(date))}</div></section>
     <div id="reserveManualRows" style="margin-top:12px"></div>
+    <section class="surface panel" style="margin-top:16px">
+      <div class="panel-head"><h3>بطاقات المعلمات المسددات – تعديل التكليفات اليدوية المحفوظة</h3></div>
+      <div id="reserveSavedManualAssignments">${reserveSavedManualAssignmentsHTML(date)}</div>
+    </section>
     <section class="surface panel" style="margin-top:16px"><div class="panel-head"><h3>روابط اطلاع المعلمات وموضوع الحصة</h3></div>
       <div id="reserveManualTeacherLinks">${manualTeacherLinksHTML(date)}</div>
     </section>
@@ -1663,7 +1758,8 @@ function manualRowsHTML(absentIds,date){
   return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الغائبة</th><th>الحصة</th><th>الفصل</th><th>معلمة التسديد</th></tr></thead><tbody>
     ${rows.map((r,i)=>`<tr data-manual-row="${i}">
       <td>${esc(r.absent?.name||"")}</td><td>${r.period}</td><td>${esc(r.className)}${r.activity?" <small>(نشاط)</small>":""}</td>
-      <td><select class="reserve-manual-assignee"><option value="">اختاري معلمة التسديد</option>${r.candidates.map(t=>`<option value="${esc(t.id)}" ${String(t.id)===r.existingTeacherId?"selected":""}>${esc(t.name)}${t.supportStaff?" — التوجيه / المختبر":""}</option>`).join("")}</select></td>
+      <td><div class="reserve-actions"><select class="reserve-manual-assignee"><option value="">اختاري معلمة التسديد</option>${r.candidates.map(t=>`<option value="${esc(t.id)}" ${String(t.id)===r.existingTeacherId?"selected":""}>${esc(t.name)}${t.supportStaff?" — التوجيه / المختبر":""}</option>`).join("")}</select>
+      <button type="button" class="reserve-mini reserve-manual-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button></div></td>
     </tr>`).join("")}
   </tbody></table></div>
   <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveManualSave" type="button">حفظ</button></div>`;
@@ -1750,30 +1846,34 @@ async function saveManualAssignments(){
       if(!abs)await insertKind(K.absence,{date,dayKey:dayKey(date),teacherId:String(id),teacherName:t?.name||"",reason:"غياب",periods,source:"manual",createdAt:new Date().toISOString()},token());
     }
     await loadAll();
+    const savedAssignments=[];
     for(const x of selections){
       const t=teacherOf(x.teacherId);
-      const existing=assignmentsOn(date).find(a=>String(a.absentTeacherId)===String(x.absent.id)&&Number(a.period)===Number(x.period));
+      const existing=existingSlotAssignment(date,x.absent.id,x.period);
       const data={
         date,dayKey:dayKey(date),period:Number(x.period),className:x.className,activity:x.activity===true,reason:"غياب",
         absentTeacherId:String(x.absent.id),absentTeacherName:x.absent.name,
         candidates:[],assignedTeacherId:String(t.id),assignedTeacherName:t.name,
-        published:true,status:"معتمد",manual:true,manualOverride:warnings.length>0,
+        published:true,status:"معتمد",manual:existing?existing.manual===true:true,
+        source:existing?.source||(existing?.manual===false?"auto":"manual"),
+        manualOverride:warnings.length>0||existing?.manualOverride===true,
         manualOverrideWarnings:warnings.slice(0,70),
-        ackToken:existing?.ackToken||uid(),ackAt:existing?.assignedTeacherId===String(t.id)?(existing.ackAt||""):"",
+        ackToken:(existing&&String(existing.assignedTeacherId)!==String(t.id))?uid():(existing?.ackToken||uid()),
+        ackAt:existing?.assignedTeacherId===String(t.id)?(existing.ackAt||""):"",
         activationTitle:existing?.assignedTeacherId===String(t.id)?(existing.activationTitle||""):"",
         activationAt:existing?.assignedTeacherId===String(t.id)?(existing.activationAt||""):"",
         updatedAt:new Date().toISOString()
       };
-      if(existing)await patchKind(K.assignment,existing.id,data,token(),"معتمد");
-      else await insertKind(K.assignment,data,token(),"معتمد");
+      const saved=existing?await patchKind(K.assignment,existing.id,data,token(),"معتمد"):
+        await insertKind(K.assignment,data,token(),"معتمد");
+      if(!saved?.id)throw new Error("قاعدة البيانات لم تؤكد حفظ إحدى الحصص.");
+      savedAssignments.push({id:String(saved.id),teacherId:String(t.id),manual:data.manual});
     }
     await loadAll();
-    const persisted=assignmentsOn(date);
-    if(selections.some(x=>!persisted.some(a=>
-      String(a.absentTeacherId)===String(x.absent.id)&&Number(a.period)===Number(x.period)&&
-      String(a.assignedTeacherId)===String(x.teacherId)&&a.manual===true&&a.published===true&&
-      (warnings.length===0||a.manualOverride===true))))
-      throw new Error("لم يكتمل حفظ جميع التكليفات اليدوية بما فيها القيود المتجاوزة");
+    if(savedAssignments.some(entry=>!state.assignments.some(a=>
+      String(a.id)===entry.id&&String(a.assignedTeacherId)===entry.teacherId&&
+      a.manual===entry.manual&&a.published===true)))
+      throw new Error("لم يكتمل التحقق من حفظ جميع التكليفات؛ بعض الحصص لم تُعتمد.");
     state.currentDate=date;
     state.lastReserveWarnings={date,source:"manual",warnings};
     renderWorkspaceCard("manual");
@@ -1786,10 +1886,15 @@ async function saveManualAssignments(){
     catch(syncError){console.error("تعذر تحديث العرض بعد حفظ الجدول اليدوي",syncError);
       if(done)done.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات. أعيدي فتح القسم.";}
   }catch(err){console.error(err);const current=byId("reserveManualMsg")||msg;
-    if(current)current.textContent="تعذر إكمال الحفظ أو التحقق منه. قد تكون بعض الحصص محفوظة؛ أعيدي المحاولة دون تكرار التكليفات.";}
+    if(current)current.textContent=`تعذر إكمال الحفظ أو التحقق منه: ${err.message||"خطأ غير معروف"}. قد تكون بعض الحصص محفوظة.`;}
 }
 function bindManualAdmin(){
   bindHijriDateControl("reserveManualDate",next=>syncReserveSectionDate(next));
+  bindReserveFlexibleAssignmentEditing("reserveSavedManualAssignments");
+  byId("reserveManualRows")?.addEventListener("click",event=>{
+    const button=event.target.closest(".reserve-manual-unlock");
+    if(button)reserveUnlockAssigneeSelector(button.closest("[data-manual-row]")?.querySelector(".reserve-manual-assignee"));
+  });
   byId("reserveDeleteManualTable")?.addEventListener("click",async()=>{
     const date=state.currentDate,msg=byId("reserveManualMsg"),button=byId("reserveDeleteManualTable");
     const count=assignmentsOn(date).filter(a=>a.manual===true).length;
@@ -2815,6 +2920,10 @@ async function refreshDayCandidates(date){
 
 function bindDayAdmin(){
   bindHijriDateControl("reserveAdminDate",next=>syncReserveSectionDate(next));
+  byId("reserveAssignmentsAdmin")?.addEventListener("click",event=>{
+    const button=event.target.closest(".reserve-auto-unlock");
+    if(button)reserveUnlockAssigneeSelector(button.closest("[data-assignment]")?.querySelector(".reserve-assignee"));
+  });
   byId("reserveAutoAllNames")?.addEventListener("change",event=>{
     state.autoAllNames=event.target.checked;
     state.autoAbsentIds=[...(byId("reserveAbsentTeacher")?.selectedOptions||[])].map(o=>String(o.value));
@@ -2910,25 +3019,23 @@ function bindDayAdmin(){
     finally{button.disabled=false}
   });
   document.querySelectorAll(".reserve-save-assignee").forEach(b=>b.onclick=async()=>{
-    const tr=b.closest("[data-assignment]"),id=tr.dataset.assignment;
-    const a=state.assignments.find(x=>String(x.id)===String(id)); if(!a)return;
-    const teacherId=tr.querySelector(".reserve-assignee").value;
-    const t=teacherOf(teacherId); if(!t)return;
-    const changed=String(a.assignedTeacherId)!==String(teacherId);
-    const warnings=changed?manualConflictMessages(a.date,[{
-      teacherId:String(t.id),period:Number(a.period),className:a.className,
-      existingId:String(a.id)
-    }],[...new Set(absencesOn(a.date).map(x=>String(x.teacherId)))])
-      :(Array.isArray(a.manualOverrideWarnings)?a.manualOverrideWarnings:[]);
-    const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,
-      manualOverride:changed||a.manualOverride===true,manualOverrideWarnings:warnings};
-    state.lastReserveWarnings={date:a.date,source:"auto",warnings};
-    if(changed){data.ackAt="";data.activationTitle="";data.activationAt="";data.ackToken=uid()}
-    await patchKind(K.assignment,id,data,token(),a.published?"معتمد":"مسودة");
-    await loadAll();
-    await refreshDayCandidates(state.currentDate);
-    renderWorkspaceCard("auto");
-    await reserveSyncAdminMutation(state.currentDate);
+    const tr=b.closest("[data-assignment]");
+    const target=tr?.querySelector(".reserve-assignee")?.value||"";
+    const msg=byId("reserveDayMsg");
+    if(!target){if(msg)msg.textContent="اختاري المعلمة المسددة قبل الحفظ.";return;}
+    b.disabled=true;
+    if(msg)msg.textContent="جارٍ حفظ التعديل...";
+    try{
+      const result=await reserveCommitFlexibleAssignee(tr.dataset.assignment,target);
+      renderWorkspaceCard("auto");
+      const done=byId("reserveDayMsg");if(done)done.textContent="تم الحفظ";
+      try{await reserveSyncAdminMutation(result.date);}
+      catch(error){console.error(error);if(done)done.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات.";}
+    }catch(error){console.error("تعذر تعديل التكليف الآلي",error);
+      const current=byId("reserveDayMsg")||msg;
+      if(current)current.textContent=`تعذر حفظ التعديل: ${error.message||"خطأ غير معروف"}`;
+      b.disabled=false;
+    }
   });
   document.querySelectorAll(".reserve-delete-assignment").forEach(b=>b.onclick=async()=>{
     const tr=b.closest("[data-assignment]"); if(!confirm("حذف هذا التكليف؟"))return;
@@ -3005,7 +3112,11 @@ function bindDayAdmin(){
           published:true,status:"معتمد"};
         if(changed){data.ackAt="";data.activationTitle="";data.activationAt="";data.ackToken=uid()}
         const auditChanged=overridden!==a.manualOverride||JSON.stringify(finalWarnings)!==JSON.stringify(previousWarnings);
-        if(changed||a.published!==true||auditChanged){await patchKind(K.assignment,a.id,data,token(),"معتمد");saved++}
+        if(changed||a.published!==true||auditChanged){
+          const written=await patchKind(K.assignment,a.id,data,token(),"معتمد");
+          if(!written?.id||String(written.id)!==String(a.id))throw new Error("قاعدة البيانات لم تؤكد حفظ إحدى حصص الإنشاء الآلي.");
+          saved++;
+        }
       }
       await loadAll();
       const persisted=assignmentsOn(date);
@@ -3024,7 +3135,7 @@ function bindDayAdmin(){
       catch(syncError){console.error("تعذر تحديث العرض بعد حفظ الجدول الآلي",syncError);
         const current=byId("reserveDayMsg");if(current)current.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات. أعيدي فتح القسم.";}
     }catch(err){console.error(err);const current=byId("reserveDayMsg")||msg;
-      if(current)current.textContent="تعذر اكتمال الاعتماد أو التحقق منه. قد تكون بعض الحصص محفوظة؛ أعيدي المحاولة دون تكرار التكليفات.";}
+      if(current)current.textContent=`تعذر اكتمال الاعتماد أو التحقق منه: ${err.message||"خطأ غير معروف"}. قد تكون بعض الحصص محفوظة.`;}
     finally{button.disabled=false}
   });
 }
