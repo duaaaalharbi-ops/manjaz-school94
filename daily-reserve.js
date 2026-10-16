@@ -627,11 +627,15 @@ function injectStyle(){
   @media(max-width:760px){.reserve-public-card>summary{display:grid;grid-template-columns:1fr auto}.reserve-public-card>summary strong{font-size:15px}.reserve-public-card>summary span{grid-row:2}.reserve-public-card>summary::after{grid-column:2;grid-row:1/3}}
   @media print{.reserve-public-card-content{display:block!important}.reserve-public-card{break-inside:avoid}.reserve-public-card:not([open]) .reserve-public-card-content{display:block!important}}
   .reserve-excellence{display:grid;gap:10px}
-  /* Official merit position: gold borders only, no colorful row background. */
-  .reserve-excellence .reserve-table th:first-child,
-  .reserve-excellence .reserve-table td:first-child{border:2px solid #caa44d!important;background:#fffdfa;color:#74520b;font-weight:900}
-  .reserve-excellence .reserve-table tbody tr{border-bottom:1px solid #caa44d}
-  .reserve-excellence .reserve-table td:first-child strong{display:inline-flex;justify-content:center;align-items:center;min-width:27px;min-height:27px;border-radius:6px;color:#74520b}
+  /* Merit styling: highlight the full heading row on desktop, never a vertical rank column. */
+  .reserve-excellence .reserve-table thead tr{background:linear-gradient(100deg,#0b4854 0%,#0d5e66 55%,#177e75 100%)}
+  .reserve-excellence .reserve-table thead th{background:transparent;color:#fff;border-bottom:1px solid #70bbb3;border-inline-end:1px solid rgba(255,255,255,.16);padding-top:13px;padding-bottom:13px}
+  .reserve-excellence .reserve-table thead th:last-child{border-inline-end:0}
+  /* On phones 'المركز' is a horizontal labelled row inside each teacher's card. */
+  @media(max-width:760px){
+    #dailyReserveRoot .reserve-excellence .reserve-table tbody td:first-child{background:linear-gradient(105deg,#e4f4f2,#eff9f7);color:#0c5360;border:1px solid #b8d9d5;border-radius:9px;padding:11px 12px;margin-bottom:5px}
+    #dailyReserveRoot .reserve-excellence .reserve-table tbody td:first-child::before{color:#0d6270}
+  }
   .reserve-pdf-sheet{direction:rtl;font-family:Tahoma,Arial,sans-serif;background:#fff;color:#173745;padding:20px;box-sizing:border-box}
   .reserve-pdf-sheet h2{font-size:20px;margin:0 0 5px;color:#0b3047}
   .reserve-pdf-sheet .reserve-pdf-meta{margin-bottom:15px;color:#516b73;font-size:12px}
