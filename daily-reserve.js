@@ -95,20 +95,25 @@ function hijriDateControl(id,date){
     <button class="reserve-mini" type="button" data-hijri-step="-1" data-hijri-target="${esc(id)}">اليوم السابق</button>
     <strong id="${esc(id)}Label">${esc(dayName(date))} — ${esc(fmtDate(date))}</strong>
     <button class="reserve-mini" type="button" data-hijri-step="1" data-hijri-target="${esc(id)}">اليوم التالي</button>
-    <input id="${esc(id)}" type="hidden" value="${esc(date)}">
+    <label class="reserve-date-picker-label">اختيار التاريخ
+      <input id="${esc(id)}" type="date" class="reserve-date-picker" value="${esc(date)}" aria-label="اختيار تاريخ الاحتياط">
+    </label>
   </div>`;
 }
 function bindHijriDateControl(id,onChange){
-  const input=byId(id); if(!input)return;
-  document.querySelectorAll(`[data-hijri-target="${id}"]`).forEach(b=>b.onclick=()=>{
-    const next=addDays(input.value||todayISO(),Number(b.dataset.hijriStep||0));
+  const input=byId(id);if(!input)return;
+  const selectDate=(next)=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(next))return;
     input.value=next;
     const label=byId(`${id}Label`);
     if(label)label.textContent=`${dayName(next)} — ${fmtDate(next)}`;
     onChange?.(next);
+  };
+  document.querySelectorAll(`[data-hijri-target="${id}"]`).forEach(b=>b.onclick=()=>{
+    selectDate(addDays(input.value||state.currentDate,Number(b.dataset.hijriStep||0)));
   });
+  input.addEventListener("change",()=>selectDate(input.value));
 }
-
 function baseHeaders(token){
   return {
     "apikey":SUPABASE_KEY,
@@ -357,7 +362,22 @@ function teacherOf(id){
     MANUAL_SUPPORT_STAFF.find(x=>String(x.id)===String(id))||null;
 }
 function manualAssigneeDirectory(){
-  return [...state.teachers,...MANUAL_SUPPORT_STAFF].sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"));
+  // Only used for selecting the assignee; absent-teacher selection stays tied
+  // to the approved teacher timetable; existing assignment exceptions are unchanged.
+  const seen=new Set();
+  return [...state.teachers,...MANUAL_SUPPORT_STAFF].filter(t=>{
+    const key=normName(t.name);
+    if(!key||t.active===false||seen.has(key))return false;
+    seen.add(key);return true;
+  }).sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"));
+}
+function reserveAbsentDirectory(){
+  const seen=new Set();
+  return state.teachers.filter(t=>{
+    const key=normName(t.name);
+    if(!key||t.active===false||seen.has(key))return false;
+    seen.add(key);return true;
+  }).sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"));
 }
 function existingSlotAssignment(date,absentId,period){
   return assignmentsOn(date).find(a=>String(a.absentTeacherId)===String(absentId)&&Number(a.period)===Number(period));
@@ -430,20 +450,22 @@ function reserveSummaryEligible(t){
   return t.active!==false&&t.excluded!==true&&!flags.permanentExcluded&&!flags.absolute;
 }
 function publicWeeklyRows(referenceDate){
+  // Statistics card alone includes every teacher from the approved timetable,
+  // plus the three authorized support staff even if their counts are zero.
+  // This does not alter candidate ranking or weekly excellence eligibility.
   const counts=assignmentCounts(referenceDate);
-  const usedStaff=MANUAL_SUPPORT_STAFF.filter(t=>{
-    const c=counts.get(String(t.id));return c&&(Number(c.week||0)>0||Number(c.term||0)>0);
+  const current=new Map(state.teachers.map(t=>[normName(t.name),t]));
+  const official=V6_SEED.map(t=>current.get(normName(t.name))||{
+    id:`reserve_statistics_only_${normName(t.name)}`,name:t.name,workload:t.workload,statisticsOnly:true
   });
-  const eligible=state.teachers.filter(t=>{
-    if(reserveSummaryEligible(t))return true;
-    const c=counts.get(String(t.id));
-    return !!c&&(Number(c.week||0)>0||Number(c.term||0)>0);
-  });
-  return [...eligible,...usedStaff]
-    .sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"))
+  const names=new Set();
+  return [...official,...MANUAL_SUPPORT_STAFF].filter(t=>{
+    const key=normName(t.name);
+    if(!key||names.has(key))return false;
+    names.add(key);return true;
+  }).sort((a,b)=>clean(a.name).localeCompare(clean(b.name),"ar"))
     .map(t=>({teacher:t,count:counts.get(String(t.id))||{week:0,term:0,days:{},dayState:{},maxDaily:0}}));
 }
-
 function absencesOn(date){return state.absences.filter(x=>x.date===date)}
 function assignmentsOn(date){return state.assignments.filter(x=>x.date===date&&x.status!=="ملغي")}
 function isAbsent(teacherId,date){return absencesOn(date).some(x=>String(x.teacherId)===String(teacherId))}
@@ -632,6 +654,8 @@ function injectStyle(){
   .reserve-work-card.active{border-color:#0f5f59;box-shadow:0 0 0 2px rgba(15,95,89,.08);background:#f8fcfb}
   .reserve-hijri-date{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;border:1px solid #e0e7e9;border-radius:12px;padding:9px;background:#fafcfc}
   .reserve-hijri-date strong{min-width:190px;text-align:center;color:#0b3047}
+  .reserve-date-picker-label{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#516b73}
+  .reserve-date-picker{width:135px;max-width:100%;border:1px solid #d0dcdf;border-radius:8px;padding:6px;background:#fff;color:#123943;font:inherit}
   .reserve-multi-select{min-height:150px;width:100%;border:1px solid #cfdadd;border-radius:10px;padding:8px;font:inherit;background:#fff}
   .reserve-warning-box{border:1px solid #f0c987;background:#fff7e9;color:#704500;border-radius:12px;padding:11px;display:grid;gap:5px}
   .reserve-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
@@ -884,8 +908,8 @@ function publicHTML(){
         <div class="reserve-public-card-content">
           <div class="panel-head"><h3>الحسبة الأسبوعية والتراكمية</h3><span>${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))}</span></div>
           <div class="reserve-no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
-            <button class="reserve-tab active" type="button" data-week-shift="0">الأسبوع الحالي</button>
-            <button class="reserve-tab" type="button" data-week-shift="-7">الأسبوع السابق</button>
+            <button class="reserve-tab ${state.statsWeekShift===-7?"":"active"}" type="button" data-week-shift="0">الأسبوع الحالي</button>
+            <button class="reserve-tab ${state.statsWeekShift===-7?"active":""}" type="button" data-week-shift="-7">الأسبوع السابق</button>
           </div>
           <div id="reserveWeeklyHolder">${weeklyTableHTML(rows,date)}</div>
           <p class="reserve-public-note">الأرقام من الحصص المعتمدة في جدول النشر، دون تكرار الحصص.</p>
@@ -994,7 +1018,7 @@ function dayAdminHTML(){
       ${hijriDateControl("reserveAdminDate",date)}
       <div class="form-grid" style="margin-top:12px">
         <label class="wide">جميع المعلمات الغائبات (اختيار متعدد)
-          <select id="reserveAbsentTeacher" class="reserve-multi-select" multiple>${state.teachers.map(t=>`<option value="${esc(t.id)}" ${autoSelected.has(String(t.id))?"selected":""}>${esc(t.name)}</option>`).join("")}</select>
+          <select id="reserveAbsentTeacher" class="reserve-multi-select" multiple>${reserveAbsentDirectory().map(t=>`<option value="${esc(t.id)}" ${autoSelected.has(String(t.id))?"selected":""}>${esc(t.name)}</option>`).join("")}</select>
         </label>
         <label>سبب الاحتياط<select id="reserveAbsenceReason"><option>غياب</option><option>دورة</option><option>اجتماع</option><option>انتداب</option><option>تكليف خارجي</option><option>أخرى</option></select></label>
       </div>
@@ -1139,7 +1163,7 @@ function manualAdminHTML(){
     <div class="form-grid" style="margin-top:12px">
       <label class="wide">جميع المعلمات الغائبات
         <select id="reserveManualAbsent" class="reserve-multi-select" multiple>
-          ${state.teachers.map(t=>`<option value="${esc(t.id)}" ${selected.includes(String(t.id))?"selected":""}>${esc(t.name)}</option>`).join("")}
+          ${reserveAbsentDirectory().map(t=>`<option value="${esc(t.id)}" ${selected.includes(String(t.id))?"selected":""}>${esc(t.name)}</option>`).join("")}
         </select>
       </label>
     </div>
@@ -1272,10 +1296,7 @@ async function saveManualAssignments(){
   }catch(err){console.error(err);msg.textContent="تعذر حفظ الجدول اليدوي."}
 }
 function bindManualAdmin(){
-  bindHijriDateControl("reserveManualDate",next=>{
-    state.currentDate=next;state.manualRows=[];byId("reserveManualRows").innerHTML="";
-    if(byId("reserveManualTeacherLinks"))byId("reserveManualTeacherLinks").innerHTML=manualTeacherLinksHTML(next);
-  });
+  bindHijriDateControl("reserveManualDate",next=>syncReserveSectionDate(next));
   byId("reserveManualTeacherLinks")?.addEventListener("click",async event=>{
     const b=event.target.closest(".reserve-manual-copy-action,.reserve-manual-open-action");
     if(!b)return;
@@ -1769,8 +1790,7 @@ function refreshReserveStatisticsViews(){
     decorateReservePortraitTables(byId("dailyReserveRoot"));
     bindPublicDailyActions();
   }
-  const shift=Number(document.querySelector("[data-week-shift].active")?.dataset.weekShift||0);
-  const reference=addDays(state.currentDate,shift);
+  const reference=state.currentDate;
   const weekly=byId("reserveWeeklyHolder");
   if(weekly)weekly.innerHTML=weeklyTableHTML(publicWeeklyRows(reference),reference);
   const excellence=byId("reserveExcellenceHolder");
@@ -1851,12 +1871,46 @@ function bindPublicDailyActions(){
   }));
 }
 
+let reserveDateSyncBusy=false;
+let reservePendingDateChange=null;
+async function syncReserveSectionDate(next,keepWeekAnchor=false){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(next))return;
+  if(reserveDateSyncBusy){reservePendingDateChange={date:next,keepWeekAnchor};return;}
+  if(!keepWeekAnchor){state.statsWeekAnchor=next;state.statsWeekShift=0;}
+  // Save view configuration before rebuilding all cards from the one shared date.
+  const hadAdmin=!!byId("reserveAdminMount")?.firstElementChild;
+  const activeAdminTab=document.querySelector("[data-admin-tab].active")?.dataset.adminTab||"workspace";
+  const hadPublishOverlay=!!byId("reservePublishOverlay");
+  state.publicOpenCards=[...document.querySelectorAll(".reserve-public-card[open]")]
+    .map(card=>card.dataset.reservePublicCard);
+  state.currentDate=next;
+  state.manualRows=[];
+  state.manualAbsentIds=[];
+  state.autoAbsentIds=[];
+  reserveDateSyncBusy=true;
+  try{
+    await renderPage();
+    if(hadAdmin&&byId("reserveAdminMount")){
+      mountAdminShell();
+      if(state.admin&&activeAdminTab!=="workspace"){
+        document.querySelectorAll("[data-admin-tab]").forEach(b=>
+          b.classList.toggle("active",b.dataset.adminTab===activeAdminTab));
+        renderAdminTab(activeAdminTab);
+      }
+    }
+    if(hadPublishOverlay)openReservePublication(next);
+  }catch(err){console.error("تعذر مزامنة تاريخ الاحتياط",err);}
+  finally{
+    reserveDateSyncBusy=false;
+    if(reservePendingDateChange){
+      const pending=reservePendingDateChange;
+      reservePendingDateChange=null;
+      if(pending.date!==state.currentDate)syncReserveSectionDate(pending.date,pending.keepWeekAnchor);
+    }
+  }
+}
 function bindPublic(){
-  bindHijriDateControl("reservePublicDate",async next=>{
-    state.publicOpenCards=[...document.querySelectorAll(".reserve-public-card[open]")]
-      .map(card=>card.dataset.reservePublicCard);
-    state.currentDate=next;await renderPage();
-  });
+  bindHijriDateControl("reservePublicDate",next=>syncReserveSectionDate(next));
   document.querySelectorAll(".reserve-public-card").forEach(card=>card.addEventListener("toggle",()=>{
     const opened=new Set(state.publicOpenCards||[]),id=card.dataset.reservePublicCard;
     if(card.open)opened.add(id);else opened.delete(id);
@@ -1873,10 +1927,11 @@ function bindPublic(){
     mountAdminShell(); byId("reserveAdminMount")?.scrollIntoView({behavior:"smooth"});
   });
   document.querySelectorAll("[data-week-shift]").forEach(b=>b.onclick=()=>{
-    document.querySelectorAll("[data-week-shift]").forEach(x=>x.classList.toggle("active",x===b));
-    const ref=addDays(state.currentDate,Number(b.dataset.weekShift||0));
-    byId("reserveWeeklyHolder").innerHTML=weeklyTableHTML(publicWeeklyRows(ref),ref);
-    // The independent excellence card always follows its own selected day/week.
+    const shift=Number(b.dataset.weekShift||0);
+    const anchor=state.statsWeekAnchor||state.currentDate;
+    state.statsWeekAnchor=anchor;
+    state.statsWeekShift=shift;
+    return syncReserveSectionDate(shift===-7?addDays(anchor,-7):anchor,true);
   });
   // The daily timetable itself contains the actions; no personal links are required.
   // Each operation is restricted to the acknowledgement token of its own published row.
@@ -1961,11 +2016,7 @@ async function refreshDayCandidates(date){
 }
 
 function bindDayAdmin(){
-  bindHijriDateControl("reserveAdminDate",async next=>{
-    state.currentDate=next;
-    await loadAll();
-    renderWorkspaceCard("auto");
-  });
+  bindHijriDateControl("reserveAdminDate",next=>syncReserveSectionDate(next));
   byId("reserveAutoAllNames")?.addEventListener("change",event=>{
     state.autoAllNames=event.target.checked;
     state.autoAbsentIds=[...(byId("reserveAbsentTeacher")?.selectedOptions||[])].map(o=>String(o.value));
