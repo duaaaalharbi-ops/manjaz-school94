@@ -264,7 +264,7 @@ async function reserveLoadContacts(){
 async function reserveLoadNotificationStates(date){
   const p=new URLSearchParams({select:"day_date,teacher_name,prepared_at,marked_sent_at",day_date:`eq.${date}`});
   const rows=await reservePrivateQuery(`${RESERVE_NOTICE_ENDPOINT}?${p}`);
-  state.reserveNotificationStates=new Map(rows.map(r=>[r.teacher_name,r]));
+  return new Map(rows.map(r=>[r.teacher_name,r]));
 }
 async function reserveStoreContacts(rows){
   const names=new Set(manualAssigneeDirectory().map(t=>t.name));
@@ -447,11 +447,20 @@ function reserveRenderNotificationPanel(){
   if(phoneList)phoneList.innerHTML=`<p class="reserve-public-note">${state.reserveContactBook.size} رقمًا محفوظًا من ${manualAssigneeDirectory().length} اسمًا معتمدًا.</p>`;
 }
 async function reserveHydrateNotificationPanel(){
-  if(!byId("reserveNotifyPanel"))return;
+  const panel=byId("reserveNotifyPanel");if(!panel)return;
+  const date=state.currentDate,sequence=state.reserveNoticeHydrateSeq=(state.reserveNoticeHydrateSeq||0)+1;
+  const stillCurrent=()=>state.admin&&state.currentDate===date&&byId("reserveNotifyPanel")===panel&&sequence===state.reserveNoticeHydrateSeq;
   try{
-    await Promise.all([reserveLoadContacts(),reserveLoadNotificationStates(state.currentDate)]);
+    const [,statuses]=await Promise.all([reserveLoadContacts(),reserveLoadNotificationStates(date)]);
+    if(!stillCurrent())return;
+    state.reserveNotificationStates=statuses;
     reserveRenderNotificationPanel();
-  }catch(error){console.error(error);const el=byId("reserveNotifyContent");if(el)el.textContent="تعذر تحميل بيانات الجوالات المحمية. تأكدي من صلاحيات الدخول الإداري واتصال Supabase.";}
+  }catch(error){
+    if(!stillCurrent())return;
+    console.error(error);
+    const el=byId("reserveNotifyContent");
+    if(el)el.textContent="تعذر تحميل بيانات الجوالات المحمية. تأكدي من صلاحيات الدخول الإداري واتصال Supabase.";
+  }
 }
 function reserveParsePhoneCsv(raw){
   const lines=String(raw).replace(/^\uFEFF/,"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
@@ -1341,6 +1350,14 @@ function reserveShareMessage(date){
   return `السلام عليكم ورحمة الله وبركاته،\n\nالمعلمات الكريمات،\n\nتُفيدكم إدارة الثانوية الرابعة والتسعون – مسارات باعتماد جدول حصص الاحتياط ليوم ${dayName(date)} الموافق ${fmtDate(date)}.\n\nيرجى الاطلاع على التكليفات المسندة، وتأكيد الاطلاع وتسجيل عنوان موضوع تفعيل الحصة في الخانات المخصصة، علمًا بأن تأكيد الاطلاع وتفعيل موضوع الحصة من معايير المفاضلة في تسديد حصص الاحتياط.\n\nرابط جدول الاحتياط اليومي لتأكيد الاطلاع وتفعيل الحصص:\n${reserveDeepLink("daily",date)}\n\nرابط جدول النشر المعتمد:\n${reserveDeepLink("publish",date)}\n\nشاكرين لكم تعاونكم والتزامكم.\n\nإدارة الثانوية الرابعة والتسعون – مسارات`;
 }
 function bindReserveSharing(){
+  // The admin body is replaced on each login/date rebuild, avoiding duplicate listeners.
+  byId("reserveAdminBody")?.addEventListener("click",event=>{
+    const button=event.target.closest("button[data-reserve-share-proxy]");
+    if(!button)return;
+    const target=button.dataset.reserveShareProxy;
+    if(!["reserveCopyShare","reserveWhatsAppShare","reservePreviewDailyLink","reservePreviewPublishLink"].includes(target))return;
+    byId(target)?.click();
+  });
   byId("reserveCopyShare")?.addEventListener("click",async()=>{
     const msg=reserveShareMessage(state.currentDate);
     try{await navigator.clipboard.writeText(msg);byId("reserveShareMsg").textContent="تم نسخ الرسالة الرسمية مع الرابطين."}
@@ -1379,12 +1396,28 @@ function adminHTML(){
   </section>`;
 }
 
+// Task 8: same four existing sharing actions, visible in both editing modes.
+// Delegate to the ORIGINAL admin controls so the message, dates and WhatsApp
+// behavior have one implementation and do not diverge.
+function reserveWorkspaceSharingHTML(){
+  const actions=[
+    ["reserveCopyShare","نسخ الرسالة الرسمية والرابطين"],
+    ["reserveWhatsAppShare","مشاركة عبر واتساب"],
+    ["reservePreviewDailyLink","اختبار رابط الجدول اليومي"],
+    ["reservePreviewPublishLink","اختبار رابط جدول النشر"]
+  ];
+  return `<section class="reserve-share-box reserve-workspace-sharing reserve-admin-only" aria-label="أدوات مشاركة روابط الاحتياط">
+    <strong>مشاركة روابط الاحتياط</strong>
+    <div class="reserve-actions">${actions.map(([target,label])=>`<button class="reserve-mini" type="button" data-reserve-share-proxy="${target}">${label}</button>`).join("")}</div>
+  </section>`;
+}
 function dayAdminHTML(){
   const date=state.currentDate,abs=absencesOn(date),assign=assignmentsOn(date);
   const autoSelected=new Set((state.autoAbsentIds?.length?state.autoAbsentIds:abs.map(a=>a.teacherId)).map(String));
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
+      ${reserveWorkspaceSharingHTML()}
       ${hijriDateControl("reserveAdminDate",date)}
       <div class="form-grid" style="margin-top:12px">
         <label class="wide">جميع المعلمات الغائبات (اختيار متعدد)
@@ -1528,6 +1561,7 @@ function manualAdminHTML(){
   const selected=(state.manualAbsentIds||[]).map(String);
   return `<section class="surface form-card reserve-admin-only">
     <div class="form-section-title">الإنشاء اليدوي</div>
+    ${reserveWorkspaceSharingHTML()}
     <p class="reserve-source-note">المرجع الوحيد: جدول الحصص — الإصدار السادس، 27/04/1448هـ (39 معلمة)</p>
     <p class="reserve-public-note">اختاري جميع المعلمات الغائبات أولًا. بعد ذلك يظهر جدول جميع حصصهن، ويجب تسديد كل حصة قبل الحفظ.</p>
     ${hijriDateControl("reserveManualDate",date)}
@@ -1638,9 +1672,7 @@ async function reserveDeleteTableForDate(mode,date){
   await loadAll();
   if(obsoleteAbsences.some(a=>absencesOn(date).some(x=>String(x.id)===String(a.id))))
     throw new Error("تعذر التحقق من حذف الغياب المرتبط بالجدول");
-  refreshReserveStatisticsViews();
-  // Keep the WhatsApp notification list and its four queue buttons unchanged.
-  if(byId("reservePublishOverlay"))openReservePublication(date);
+  await reserveSyncAdminMutation(date);
   return {deleted:original.length+removedAbsences,empty:false};
 }
 async function saveManualAssignments(){
@@ -1692,8 +1724,8 @@ async function saveManualAssignments(){
       String(a.assignedTeacherId)===String(x.teacherId)&&a.manual===true&&a.published===true)))
       throw new Error("لم يكتمل حفظ جميع التكليفات اليدوية");
     state.currentDate=date;
-    refreshReserveStatisticsViews();
     renderWorkspaceCard("manual");
+    await reserveSyncAdminMutation(date);
     const done=byId("reserveManualMsg");
     if(done)done.textContent="تم الحفظ";
     state.lastReserveWarnings={date,source:"manual",warnings};
@@ -2035,7 +2067,7 @@ function ensureReservePublicationStyles(){
     #reservePublishOverlay .reserve-publish-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
     #reservePublishOverlay .reserve-publish-status{color:#36515a;font-size:12px;flex:1;min-width:180px}
     #reservePublishOverlay .reserve-publish-preview-scroll{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box}
-    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin-left:auto;margin-right:auto}
+    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%;max-width:100%;min-width:950px;box-sizing:border-box;margin-left:auto;margin-right:auto}
     #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet table{width:100%;max-width:100%;box-sizing:border-box}
     #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet th:last-child,
     #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet td:last-child{box-sizing:border-box}
@@ -2082,7 +2114,7 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet .reserve-publication-summary p{margin:8px 0 0}
     #reservePublishSheet .reserve-publication-footer{text-align:center;border-top:1px solid #9cb3b7;margin-top:14px;padding-top:6px;font-size:10px}
     @media(max-width:700px){
-      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%;max-width:100%;min-width:0!important;font-size:9px!important}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:950px;max-width:none;min-width:950px!important;font-size:11px!important}
       #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet table{width:100%;table-layout:fixed;font-size:9px}
       #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet th,
       #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet td{padding:3px 1px;overflow-wrap:anywhere;word-break:normal;font-size:8px;line-height:1.35}
@@ -2096,7 +2128,7 @@ function ensureReservePublicationStyles(){
       #reservePublishSheet h1{font-size:17px}
     }
     @media print{
-      @page{size:A4 portrait;margin:10mm}
+      @page{size:A4 landscape;margin:10mm}
       body > :not(#reservePublishOverlay):not(#reservePublishPrintStyle){display:none!important}
       html,body{background:#fff!important;color:#172c34!important;margin:0!important;padding:0!important;width:100%!important}
       #reservePublishOverlay{position:static!important;inset:auto!important;padding:0!important;background:#fff!important;overflow:visible!important}
@@ -2160,26 +2192,26 @@ async function downloadReservePublicationPDF(date){
   msg.textContent="جارٍ إعداد ملف PDF لجدول النشر...";
   try{
     const engine=await loadReservePdfEngine();
-    // Export a portrait-only copy. The live preview remains unchanged.
+    // Keep the publication PDF landscape, matching its preview.
     const page=sheet.cloneNode(true);
     page.id="reservePublishSheet";
-    // Portrait A4 offers 190mm after two 10mm margins; use only 184mm
-    // so the leftmost signature column remains wholly within the PDF crop.
-    page.style.cssText="width:184mm;max-width:184mm;min-width:0;box-sizing:border-box;margin:0;padding:0;overflow:visible;font-size:10px;line-height:1.4";
+    // Landscape A4 has 277mm usable width with two 10mm margins.
+    // Use 268mm to retain a safety margin around the signature column.
+    page.style.cssText="width:268mm;max-width:268mm;min-width:0;box-sizing:border-box;margin:0;padding:0;overflow:visible;font-size:11px;line-height:1.4";
     const table=page.querySelector("table");
-    if(table){table.style.cssText="width:100%;table-layout:fixed;font-size:9px";
+    if(table){table.style.cssText="width:100%;table-layout:fixed;font-size:10px";
       table.querySelectorAll("th,td").forEach(cell=>{cell.style.padding="4px 2px";cell.style.overflowWrap="anywhere";});
     }
     // Preserve publication styles on the detached PDF copy without changing the preview.
     const offscreen=document.createElement("div");
-    offscreen.style.cssText="position:fixed;left:-20000px;top:0;width:184mm;max-width:184mm;pointer-events:none";
+    offscreen.style.cssText="position:fixed;left:-20000px;top:0;width:268mm;max-width:268mm;pointer-events:none";
     offscreen.appendChild(page);document.body.appendChild(offscreen);
     try{
     await engine().set({
       margin:[10,10,10,10],filename:`جدول_النشر_${date}.pdf`,
       image:{type:"jpeg",quality:0.98},
       html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
-      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
       pagebreak:{mode:["css","legacy"]}
     }).from(page).save();
     }finally{offscreen.remove()}
@@ -2249,6 +2281,13 @@ function refreshReserveStatisticsViews(){
   if(excellence)excellence.innerHTML=excellenceTableHTML(reference);
 }
 
+// Refresh the linked reserve admin views after a persisted save or delete.
+// Never rebuild or replace the original WhatsApp queue controls.
+async function reserveSyncAdminMutation(date=state.currentDate){
+  refreshReserveStatisticsViews();
+  if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel();
+  if(byId("reservePublishOverlay"))openReservePublication(date);
+}
 async function refreshAndRenderPublic(){
   await loadAll();
   refreshReserveStatisticsViews();
@@ -2353,6 +2392,8 @@ async function syncReserveSectionDate(next,keepWeekAnchor=false){
       }
     }
     if(hadPublishOverlay)openReservePublication(next);
+    // Public statistics/excellence and the rebuilt admin workspace now share next.
+    refreshReserveStatisticsViews();
   }catch(err){console.error("تعذر مزامنة تاريخ الاحتياط",err);}
   finally{
     reserveDateSyncBusy=false;
@@ -2513,12 +2554,14 @@ function bindDayAdmin(){
       await ensureAdmin();
       const n=await registerSelectedAbsences(date,ids,reason);
       await loadAll();renderWorkspaceCard("auto");
+      await reserveSyncAdminMutation(date);
       byId("reserveDayMsg").textContent=`تم تسجيل الغائبات (${n} جديدات). اضغطي «توليد آلي» لإنشاء التكليفات.`;
     }catch(err){console.error(err);msg.textContent="تعذر استكمال تسجيل الغياب. الأسماء المحفوظة لن تتكرر عند إعادة المحاولة."}
   });
   document.querySelectorAll(".reserve-delete-absence").forEach(b=>b.onclick=async()=>{
     if(!confirm("حذف تسجيل الغياب؟"))return;
     await deleteKind(K.absence,b.dataset.id,token());await loadAll();renderWorkspaceCard("auto");
+    await reserveSyncAdminMutation(state.currentDate);
   });
   byId("reserveGenerate")?.addEventListener("click",async()=>{
     const msg=byId("reserveDayMsg"),button=byId("reserveGenerate"),date=state.currentDate;
@@ -2556,7 +2599,8 @@ function bindDayAdmin(){
           known.add(key);generated++;
         }
       }
-      await loadAll();refreshReserveStatisticsViews();renderWorkspaceCard("auto");
+      await loadAll();renderWorkspaceCard("auto");
+      await reserveSyncAdminMutation(date);
       const after=byId("reserveDayMsg");
       after.textContent=generated
         ?`تم توليد ${generated} تكليفًا بمرشحة واحدة لكل حصة.${unfilled?` توجد ${unfilled} حصص تحتاج اختيار معلمة من القائمة.`:""} اختاري التعديل عند الحاجة، ثم «حفظ واعتماد».`
@@ -2582,13 +2626,14 @@ function bindDayAdmin(){
     await patchKind(K.assignment,id,data,token(),a.published?"معتمد":"مسودة");
     await loadAll();
     await refreshDayCandidates(state.currentDate);
-    refreshReserveStatisticsViews();
     renderWorkspaceCard("auto");
+    await reserveSyncAdminMutation(state.currentDate);
   });
   document.querySelectorAll(".reserve-delete-assignment").forEach(b=>b.onclick=async()=>{
     const tr=b.closest("[data-assignment]"); if(!confirm("حذف هذا التكليف؟"))return;
     await deleteKind(K.assignment,tr.dataset.assignment,token()); await loadAll();
-    refreshReserveStatisticsViews();renderWorkspaceCard("auto");
+    renderWorkspaceCard("auto");
+    await reserveSyncAdminMutation(state.currentDate);
   });
   // Links are grouped by teacher and date, even if that teacher has multiple periods.
   const groupedForRow=button=>{
@@ -2656,7 +2701,8 @@ function bindDayAdmin(){
            String(a.assignedTeacherId)===selected.teacherId&&a.manual!==true&&a.published===true);
       }))
         throw new Error("لم يكتمل اعتماد جميع التكليفات الآلية");
-      refreshReserveStatisticsViews();renderWorkspaceCard("auto");
+      renderWorkspaceCard("auto");
+      await reserveSyncAdminMutation(date);
       byId("reserveDayMsg").textContent="تم الحفظ";
     }catch(err){console.error(err);msg.textContent="تعذر اكتمال الاعتماد. أعيدي المحاولة؛ لن تتكرر التكليفات المحفوظة."}
     finally{button.disabled=false}
