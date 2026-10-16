@@ -13,9 +13,11 @@ const CERT_TYPES=[
   ["execution_teacher","شهادات التنفيذ - فئة معلمات"],
   ["thanks_student","شهادات الشكر - فئة طالبات"],
   ["thanks_teacher","شهادات الشكر - فئة معلمات"],
-  ["parents","شهادات أولياء الأمور"]
+  ["parents","شهادات أولياء الأمور"],
+  ["execution_staff","شهادات الهيكل الإداري – تنفيذ"],
+  ["thanks_staff","شهادات الهيكل الإداري – شكر"]
 ];
-const CERT_HEADERS=["الاسم كما سيظهر في الشهادة","العنوان كما سيظهر في الشهادة","وصف مختصر كما سيظهر في الشهادة","التاريخ كما سيظهر في الشهادة","المدة إن وجدت كما ستظهر في الشهادة"];
+const CERT_HEADERS=["الاسم كما سيظهر في الشهادة","العنوان كما سيظهر في الشهادة","وصف مختصر كما سيظهر في الشهادة","التاريخ كما سيظهر في الشهادة","المدة إن وجدت كما ستظهر في الشهادة","البريد الإلكتروني","الحالة","معاينة","إصدار"];
 const RESERVE_HEADERS=["التاريخ الهجري","اليوم","الحصة","الفصل","المعلمة الغائبة","المعلمة المسددة","سبب الاحتياط","نوع الإسناد","حالة التكليف","تأكيد الاطلاع","تفعيل الموضوع","عنوان التفعيل","تجاوز القيود","القيود المتجاوزة","معرّف السجل"];
 const HIJRI_MONTHS=["محرم","صفر","ربيع الأول","ربيع الآخر","جمادى الأولى","جمادى الآخرة","رجب","شعبان","رمضان","شوال","ذو القعدة","ذو الحجة"];
 const HIJRI_FORMATTER=new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura",{calendar:"islamic-umalqura",timeZone:"Asia/Riyadh",year:"numeric",month:"numeric",day:"numeric"});
@@ -46,7 +48,7 @@ function certificateCategory(record){
   const val=String(x.requestType||x.certificateCategory||x.category||x.certificateType||x.type||"").toLowerCase();
   const person=String(x.audience||x.recipientType||x.recipientCategory||x.role||x.targetGroup||"").toLowerCase();
   const kind=String(record.kind||"").toLowerCase();
-  if(["execution_teacher","thanks_student","thanks_teacher","parents"].includes(val))return val;
+  if(["execution_teacher","thanks_student","thanks_teacher","parents","execution_staff","thanks_staff"].includes(val))return val;
   if(/ولي|أولياء|parent|guardian/.test(`${val} ${person} ${kind}`))return "parents";
   if(/تنفيذ|execution/.test(`${val} ${kind}`))return "execution_teacher";
   if(/شكر|thanks|thank/.test(`${val} ${kind}`)){
@@ -115,19 +117,28 @@ function packZip(entries){
 function column(n){let s="";for(let k=n+1;k>0;k=Math.floor((k-1)/26))s=String.fromCharCode(65+(k-1)%26)+s;return s;}
 function makeXlsx(headers,rows,sheetName){
   const all=[headers,...(rows.length?rows:[Array(headers.length).fill("")])];
-  const widths=headers.map((h,i)=>Math.min(47,Math.max(17,h.length*1.22,rows.reduce((m,r)=>Math.max(m,String(r[i]??"").length*.8),0))));
+  const withLinks=headers.length>2&&headers.at(-2)==="معاينة"&&headers.at(-1)==="إصدار";
+  const widths=headers.map((h,i)=>withLinks&&i>=headers.length-2?18:Math.min(47,Math.max(17,h.length*1.22,rows.reduce((m,r)=>Math.max(m,String(r[i]??"").length*.8),0))));
+  const links=[];
   const cells=all.map((row,ri)=>`<row r="${ri+1}" ht="${ri===0?33:25}" customHeight="1">${headers.map((h,ci)=>{
-    const v=String(row[ci]??"");return `<c r="${column(ci)}${ri+1}" t="inlineStr" s="${ri===0?1:0}"><is><t xml:space="preserve">${xml(v)}</t></is></c>`;
+    let v=String(row[ci]??"");
+    const isLink=withLinks&&ri>0&&ci>=headers.length-2&&/^https:\/\//.test(v);
+    if(isLink){
+      links.push({ref:`${column(ci)}${ri+1}`,url:v,rid:`rId${links.length+1}`});
+      v=ci===headers.length-2?"معاينة":"إصدار";
+    }
+    return `<c r="${column(ci)}${ri+1}" t="inlineStr" s="${ri===0?1:isLink?2:0}"><is><t xml:space="preserve">${xml(v)}</t></is></c>`;
   }).join("")}</row>`).join("");
   const range=`A1:${column(headers.length-1)}${all.length}`;
-  const worksheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="${range}"/><sheetViews><sheetView workbookViewId="0" rightToLeft="1"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${cells}</sheetData><autoFilter ref="${range}"/></worksheet>`;
-  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Arial"/><family val="2"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0B5767"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf></cellXfs></styleSheet>`;
+  const worksheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="${range}"/><sheetViews><sheetView workbookViewId="0" rightToLeft="1"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${cells}</sheetData>${links.length?`<hyperlinks>${links.map(l=>`<hyperlink ref="${l.ref}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="${l.rid}" tooltip="رابط إداري يتطلب تسجيل الدخول"/>`).join("")}</hyperlinks>`:""}<autoFilter ref="${range}"/></worksheet>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Arial"/><family val="2"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Arial"/></font><font><u/><sz val="11"/><color rgb="FF0563C1"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0B5767"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center"/></xf></cellXfs></styleSheet>`;
   return packZip([
     ["[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
     ["_rels/.rels",`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
     ["xl/workbook.xml",`<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="${xml(sheetName.slice(0,31))}" sheetId="1" r:id="rId1"/></sheets></workbook>`],
     ["xl/_rels/workbook.xml.rels",`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
-    ["xl/styles.xml",styles],["xl/worksheets/sheet1.xml",worksheet]
+    ["xl/styles.xml",styles],["xl/worksheets/sheet1.xml",worksheet],
+    ... (links.length?[["xl/worksheets/_rels/sheet1.xml.rels",`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${links.map(l=>`<Relationship Id="${l.rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${xml(l.url)}" TargetMode="External"/>`).join("")}</Relationships>`]]:[])
   ]);
 }
 function download(blob,filename){
@@ -235,10 +246,8 @@ function cardMarkup(){
    <div class="mj13-status" id="mj13ReserveStatus" role="status" aria-live="polite"></div>
   </article>
   <article class="mj13-card"><h3>طلبات الشهادات</h3><p>تقديم الطلبات وتعديلها متاح للجميع؛ استخراج الطلبات Excel متاح للحساب الإداري فقط.</p>
-   <div id="mj14CertificateSections" class="mj14-types" role="group" aria-label="أقسام طلبات الشهادات">
-     ${CERT_TYPES.map(([k,v])=>`<button type="button" class="mj14-type" data-mj14-category="${k}" aria-pressed="false">${html(v)}</button>`).join("")}
-   </div>
-   <div id="mj14CertificateRequestWorkspace"><p class="mj14-note">اختاري أحد الأقسام الأربعة لفتح حقول تعبئة الطلب.</p></div>
+   <p class="mj14-note">تُقدَّم الطلبات وتُراجع معاينة الشهادة كاملةً من القسم الثاني «طلبات إصدار الشهادات الجديدة» في صفحة الإدارة.</p>
+   <a class="mj13-admin-link" href="#admin">الانتقال إلى طلبات إصدار الشهادات الجديدة</a>
    <div style="border-top:1px solid #e4ebed;margin-top:9px;padding-top:12px;display:grid;gap:10px">
     <label>فئة الشهادات للتصدير الإداري<select id="mj13CertType" aria-label="اختيار فئة طلبات الشهادات">${CERT_TYPES.map(([k,v])=>`<option value="${k}">${html(v)}</option>`).join("")}</select></label>
     <a class="mj13-admin-link" href="#admin-permissions" aria-label="الدخول إلى الصلاحيات الإدارية لتصدير الطلبات">&#128274; الصلاحيات الإدارية</a>
@@ -310,7 +319,7 @@ function populateReserveMonths(extras){
 async function adminCertificateRows(token){
  const all=[];
  for(let offset=0;offset<100000;offset+=500){
-   const query=new URLSearchParams({select:"id,category,name,title,short_description,display_date,duration,status,created_at,updated_at",order:"created_at.asc",limit:"500",offset:String(offset)});
+   const query=new URLSearchParams({select:"id,category,name,title,short_description,display_date,duration,recipient_email,status,created_at,updated_at",order:"created_at.asc",limit:"500",offset:String(offset)});
    const r=await fetch(`${SUPABASE_URL}/rest/v1/${REQUESTS_TABLE}?${query}`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${token}`},cache:"no-store"});
    if(!r.ok)throw Error(`تعذر استخراج طلبات الشهادات (${r.status}). تأكدي من صلاحية الحساب الإداري.`);
    const batch=await r.json();if(!Array.isArray(batch))throw Error("استجابة السجلات غير صحيحة.");
@@ -330,8 +339,11 @@ async function exportCertificates(){
    cloudRows(["certificate_request","admin_certificate_request","certificate_request_execution","certificate_request_thanks","certificate_request_parent"],token)
   ]);
   const rows=[
-   ...records.filter(r=>r.category===cat&&r.status!=="ملغي").map(r=>[r.name||"",r.title||"",r.short_description||"",r.display_date||"",r.duration||""]),
-   ...legacy.filter(r=>r.status!=="ملغي"&&certificateCategory(r)===cat).map(certificateRow)
+   ...records.filter(r=>r.category===cat&&r.status!=="ملغي").map(r=>{
+     const base=`https://duaaaalharbi-ops.github.io/manjaz-school94/?cert_request_id=${encodeURIComponent(r.id)}&cert_action=`;
+     return [r.name||"",r.title||"",r.short_description||"",r.display_date||"",r.duration||"",r.recipient_email||"",r.status||"مستلم",base+"preview#admin",base+"issue#admin"];
+   }),
+   ...legacy.filter(r=>r.status!=="ملغي"&&certificateCategory(r)===cat).map(r=>[...certificateRow(r),"","من السجلات السابقة","",""])
   ];
   download(makeXlsx(CERT_HEADERS,rows,"طلبات الشهادات"),`منجز_طلبات_${name}.xlsx`);
   msg.textContent=rows.length?`تم استخراج ${rows.length} طلبًا من الفئة المختارة.`:"لا توجد طلبات مسجلة لهذه الفئة؛ تم تنزيل نموذج Excel فارغ قابل للتعبئة.";
