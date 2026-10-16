@@ -422,20 +422,52 @@ function reserveNotificationRowsHTML(groups){
       </div>
     </div>`;}).join("")}</div>`;
 }
-function reserveNotificationQueueHTML(groups){
-  if(!state.reserveNotifyQueueActive)return "";
+// Task 9: a single source of truth for the ORIGINAL four WhatsApp queue actions.
+const RESERVE_NOTIFICATION_QUEUE_ACTIONS=[
+  ["send","فتح واتساب للمعلمة"],
+  ["mark","أرسلت الرسالة داخل واتساب"],
+  ["skip","تخطي إلى التالية"],
+  ["close","إغلاق قائمة الإرسال"]
+];
+function reserveQueueButtonsHTML(group,active,proxy=false){
+  return `<div class="reserve-actions">${RESERVE_NOTIFICATION_QUEUE_ACTIONS.map(([action,label])=>{
+    const disabled=!active||(action!=="close"&&!group);
+    const extra=group&&(action==="send"||action==="mark")?` data-recipient-id="${esc(group.id)}"`:"";
+    const attribute=proxy?"data-reserve-notify-proxy":"data-notify-queue";
+    return `<button class="reserve-mini" type="button" ${attribute}="${action}"${extra}${disabled?' disabled':''}>${label}</button>`;
+  }).join("")}</div>`;
+}
+function reserveQueueCurrentGroup(groups){
   const remaining=groups.filter(g=>!state.reserveNotificationStates.get(g.name)?.marked_sent_at);
-  if(!remaining.length)return '<p class="reserve-status">اكتمل تأكيد إرسال إشعارات جميع المكلفات لهذا اليوم.</p>';
   const idx=Math.max(0,Math.min(state.reserveNotifyQueueIndex,remaining.length-1));
-  const g=remaining[idx];
-  return `<section class="reserve-admin-warnings reserve-notify-queue"><strong>إرسال إشعارات الجميع: ${idx+1} من ${remaining.length} متبقية</strong>
-    <p>${esc(g.name)} — ${g.assignments.length} ${g.assignments.length===1?'حصة':'حصص'}</p>
+  return {remaining,index:idx,group:remaining[idx]||null};
+}
+function reserveNotificationQueueHTML(groups){
+  const active=state.reserveNotifyQueueActive===true;
+  const {remaining,index,group}=reserveQueueCurrentGroup(groups);
+  const detail=!active?'ابدئي من «إرسال إشعارات الجميع (بالتتابع)» لتفعيل الأدوات الأربع.'
+    :!group?'اكتمل تأكيد إرسال إشعارات جميع المكلفات لهذا اليوم.'
+    :`إرسال إشعارات الجميع: ${index+1} من ${remaining.length} متبقية — ${esc(group.name)} (${group.assignments.length} حصص)`;
+  return `<section class="reserve-admin-warnings reserve-notify-queue" aria-label="الأدوات الأربع لإرسال الإشعارات"><strong>${detail}</strong>
+    ${reserveQueueButtonsHTML(group,active)}</section>`;
+}
+// Display the same four operations within BOTH creation cards; invoke the
+// central notification queue rather than duplicating WhatsApp sending logic.
+function reserveWorkspaceNotificationHTML(){
+  const groups=reservePublishedTeacherGroups(state.currentDate);
+  const active=state.reserveNotifyQueueActive===true;
+  const {group,remaining,index}=reserveQueueCurrentGroup(groups);
+  const detail=active?(group?`${index+1} من ${remaining.length} — ${esc(group.name)}`:"لا توجد إشعارات متبقية")
+    :"ابدئي الإرسال الجماعي لتمكين الأدوات الأربع";
+  return `<section class="reserve-share-box reserve-admin-only reserve-workspace-notification" aria-label="إشعارات المعلمات بالتتابع">
+    <strong>إشعارات المعلمات بالتتابع – الأدوات الأربع</strong>
     <div class="reserve-actions">
-      <button class="reserve-mini" type="button" data-notify-queue="send" data-recipient-id="${esc(g.id)}">فتح واتساب للمعلمة</button>
-      <button class="reserve-mini" type="button" data-notify-queue="mark" data-recipient-id="${esc(g.id)}">أرسلت الرسالة داخل واتساب</button>
-      <button class="reserve-mini" type="button" data-notify-queue="skip">تخطي إلى التالية</button>
-      <button class="reserve-mini" type="button" data-notify-queue="close">إغلاق قائمة الإرسال</button>
-    </div></section>`;
+      <button type="button" class="reserve-mini" data-reserve-notify-proxy="start">إرسال إشعارات الجميع (بالتتابع)</button>
+      <button type="button" class="reserve-mini" data-reserve-notify-proxy="refresh">تحديث القائمة</button>
+    </div>
+    <p class="reserve-public-note">${detail}</p>
+    ${reserveQueueButtonsHTML(group,active,true)}
+  </section>`;
 }
 function reserveRenderNotificationPanel(){
   const content=byId("reserveNotifyContent");if(!content)return;
@@ -443,6 +475,8 @@ function reserveRenderNotificationPanel(){
   const total=groups.length,marked=groups.filter(g=>state.reserveNotificationStates.get(g.name)?.marked_sent_at).length;
   const counter=byId("reserveNotifyCounter");if(counter)counter.textContent=`${marked} / ${total} تأكيد إرسال`;
   content.innerHTML=reserveNotificationQueueHTML(groups)+reserveNotificationRowsHTML(groups);
+  const workspaceNotice=byId("reserveWorkspaceNotify");
+  if(workspaceNotice)workspaceNotice.innerHTML=reserveWorkspaceNotificationHTML();
   const phoneList=byId("reservePhonebookList");
   if(phoneList)phoneList.innerHTML=`<p class="reserve-public-note">${state.reserveContactBook.size} رقمًا محفوظًا من ${manualAssigneeDirectory().length} اسمًا معتمدًا.</p>`;
 }
@@ -1352,8 +1386,18 @@ function reserveShareMessage(date){
 function bindReserveSharing(){
   // The admin body is replaced on each login/date rebuild, avoiding duplicate listeners.
   byId("reserveAdminBody")?.addEventListener("click",event=>{
-    const button=event.target.closest("button[data-reserve-share-proxy]");
-    if(!button)return;
+    const button=event.target.closest("button[data-reserve-share-proxy],button[data-reserve-notify-proxy]");
+    if(!button||button.disabled)return;
+    if(button.dataset.reserveNotifyProxy){
+      const operation=button.dataset.reserveNotifyProxy;
+      if(operation==="start"){byId("reserveNotifyAll")?.click();return;}
+      if(operation==="refresh"){byId("reserveNotifyRefresh")?.click();return;}
+      if(!RESERVE_NOTIFICATION_QUEUE_ACTIONS.some(x=>x[0]===operation))return;
+      // Delegate to the original handler; no duplicate recipient selection or
+      // delivery-confirmation logic is introduced.
+      byId("reserveNotifyContent")?.querySelector(`.reserve-notify-queue button[data-notify-queue="${operation}"]`)?.click();
+      return;
+    }
     const target=button.dataset.reserveShareProxy;
     if(!["reserveCopyShare","reserveWhatsAppShare","reservePreviewDailyLink","reservePreviewPublishLink"].includes(target))return;
     byId(target)?.click();
@@ -1418,6 +1462,7 @@ function dayAdminHTML(){
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
       ${reserveWorkspaceSharingHTML()}
+      <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
       ${hijriDateControl("reserveAdminDate",date)}
       <div class="form-grid" style="margin-top:12px">
         <label class="wide">جميع المعلمات الغائبات (اختيار متعدد)
@@ -1562,6 +1607,7 @@ function manualAdminHTML(){
   return `<section class="surface form-card reserve-admin-only">
     <div class="form-section-title">الإنشاء اليدوي</div>
     ${reserveWorkspaceSharingHTML()}
+    <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
     <p class="reserve-source-note">المرجع الوحيد: جدول الحصص — الإصدار السادس، 27/04/1448هـ (39 معلمة)</p>
     <p class="reserve-public-note">اختاري جميع المعلمات الغائبات أولًا. بعد ذلك يظهر جدول جميع حصصهن، ويجب تسديد كل حصة قبل الحفظ.</p>
     ${hijriDateControl("reserveManualDate",date)}
@@ -1686,7 +1732,9 @@ async function saveManualAssignments(){
     if(!teacherId)missing=true;
     selections.push({...r,teacherId,existingId:r.existingId||""});
   });
-  if(missing){msg.textContent="يجب تسديد جميع حصص الغائبات قبل الحفظ.";return}
+  if(missing||selections.length!==rows.length||selections.some(x=>!teacherOf(x.teacherId))){
+    msg.textContent="يجب اختيار معلمة معتمدة لكل حصة قبل الحفظ.";return;
+  }
   const warnings=manualConflictMessages(date,selections,absentIds);
   // Administration explicitly allows all rule warnings to be overridden.
   // Never block saving completed substitutions; keep an audit trail.
@@ -1721,16 +1769,22 @@ async function saveManualAssignments(){
     const persisted=assignmentsOn(date);
     if(selections.some(x=>!persisted.some(a=>
       String(a.absentTeacherId)===String(x.absent.id)&&Number(a.period)===Number(x.period)&&
-      String(a.assignedTeacherId)===String(x.teacherId)&&a.manual===true&&a.published===true)))
-      throw new Error("لم يكتمل حفظ جميع التكليفات اليدوية");
+      String(a.assignedTeacherId)===String(x.teacherId)&&a.manual===true&&a.published===true&&
+      (warnings.length===0||a.manualOverride===true))))
+      throw new Error("لم يكتمل حفظ جميع التكليفات اليدوية بما فيها القيود المتجاوزة");
     state.currentDate=date;
+    state.lastReserveWarnings={date,source:"manual",warnings};
     renderWorkspaceCard("manual");
-    await reserveSyncAdminMutation(date);
     const done=byId("reserveManualMsg");
     if(done)done.textContent="تم الحفظ";
-    state.lastReserveWarnings={date,source:"manual",warnings};
     showReserveWorkspaceWarnings("reserveManualWarnings",warnings);
-  }catch(err){console.error(err);msg.textContent="تعذر حفظ الجدول اليدوي."}
+    // A notification refresh must never turn a verified successful save into
+    // a false 'save failed' message; report synchronization failures distinctly.
+    try{await reserveSyncAdminMutation(date)}
+    catch(syncError){console.error("تعذر تحديث العرض بعد حفظ الجدول اليدوي",syncError);
+      if(done)done.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات. أعيدي فتح القسم.";}
+  }catch(err){console.error(err);const current=byId("reserveManualMsg")||msg;
+    if(current)current.textContent="تعذر إكمال الحفظ أو التحقق منه. قد تكون بعض الحصص محفوظة؛ أعيدي المحاولة دون تكرار التكليفات.";}
 }
 function bindManualAdmin(){
   bindHijriDateControl("reserveManualDate",next=>syncReserveSectionDate(next));
@@ -2284,9 +2338,10 @@ function refreshReserveStatisticsViews(){
 // Refresh the linked reserve admin views after a persisted save or delete.
 // Never rebuild or replace the original WhatsApp queue controls.
 async function reserveSyncAdminMutation(date=state.currentDate){
+  if(date!==state.currentDate)return; // Do not repopulate another day's cards after a date change.
   refreshReserveStatisticsViews();
   if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel();
-  if(byId("reservePublishOverlay"))openReservePublication(date);
+  if(date===state.currentDate&&byId("reservePublishOverlay"))openReservePublication(date);
 }
 async function refreshAndRenderPublic(){
   await loadAll();
@@ -2677,34 +2732,53 @@ function bindDayAdmin(){
     try{
       await ensureAdmin();
       let saved=0;
+      const selectedAssignments=items.map(a=>({
+        teacherId:entries.find(x=>x.id===String(a.id))?.teacherId||"",
+        period:Number(a.period),className:a.className,existingId:String(a.id)
+      }));
+      // Conflict warnings are non-blocking administrative overrides.
+      const allWarnings=manualConflictMessages(date,selectedAssignments,
+        [...new Set(absencesOn(date).map(x=>String(x.teacherId)))]);
       for(const a of items){
         const teacherId=entries.find(x=>x.id===String(a.id))?.teacherId;
         const t=teacherOf(teacherId);
         if(!t)throw new Error("Missing selected teacher");
         const changed=String(a.assignedTeacherId)!==teacherId;
+        const previousWarnings=Array.isArray(a.manualOverrideWarnings)?a.manualOverrideWarnings:[];
         const warnings=changed?manualConflictMessages(date,[{
           teacherId,period:Number(a.period),className:a.className,existingId:String(a.id)
         }],[...new Set(absencesOn(date).map(x=>String(x.teacherId)))])
-          :(a.manualOverrideWarnings||[]);
+          :previousWarnings;
+        // A saved teacher can still have non-blocking constraints; keep their
+        // audit evidence even when the selection is unchanged.
+        const finalWarnings=warnings.length?warnings:allWarnings.filter(w=>w.startsWith(`${t.name}:`));
+        const overridden=changed||a.manualOverride===true||finalWarnings.length>0;
         const data={...plainData(a),assignedTeacherId:teacherId,assignedTeacherName:t.name,
           manual:false,source:"auto",candidates:(a.candidates||[]).slice(0,1),
-          manualOverride:changed||a.manualOverride===true,manualOverrideWarnings:warnings,
+          manualOverride:overridden,manualOverrideWarnings:finalWarnings,
           published:true,status:"معتمد"};
         if(changed){data.ackAt="";data.activationTitle="";data.activationAt="";data.ackToken=uid()}
-        if(changed||a.published!==true){await patchKind(K.assignment,a.id,data,token(),"معتمد");saved++}
+        const auditChanged=overridden!==a.manualOverride||JSON.stringify(finalWarnings)!==JSON.stringify(previousWarnings);
+        if(changed||a.published!==true||auditChanged){await patchKind(K.assignment,a.id,data,token(),"معتمد");saved++}
       }
       await loadAll();
       const persisted=assignmentsOn(date);
       if(items.some(item=>{
          const selected=entries.find(x=>x.id===String(item.id));
          return !selected||!persisted.some(a=>String(a.id)===String(item.id)&&
-           String(a.assignedTeacherId)===selected.teacherId&&a.manual!==true&&a.published===true);
+           String(a.assignedTeacherId)===selected.teacherId&&a.manual!==true&&a.published===true&&
+           (a.manualOverride!==true||Array.isArray(a.manualOverrideWarnings)));
       }))
         throw new Error("لم يكتمل اعتماد جميع التكليفات الآلية");
+      state.lastReserveWarnings={date,source:"auto",warnings:allWarnings};
       renderWorkspaceCard("auto");
-      await reserveSyncAdminMutation(date);
       byId("reserveDayMsg").textContent="تم الحفظ";
-    }catch(err){console.error(err);msg.textContent="تعذر اكتمال الاعتماد. أعيدي المحاولة؛ لن تتكرر التكليفات المحفوظة."}
+      showReserveWorkspaceWarnings("reserveAutoWarnings",allWarnings);
+      try{await reserveSyncAdminMutation(date)}
+      catch(syncError){console.error("تعذر تحديث العرض بعد حفظ الجدول الآلي",syncError);
+        const current=byId("reserveDayMsg");if(current)current.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات. أعيدي فتح القسم.";}
+    }catch(err){console.error(err);const current=byId("reserveDayMsg")||msg;
+      if(current)current.textContent="تعذر اكتمال الاعتماد أو التحقق منه. قد تكون بعض الحصص محفوظة؛ أعيدي المحاولة دون تكرار التكليفات.";}
     finally{button.disabled=false}
   });
 }
