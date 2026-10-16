@@ -1021,7 +1021,8 @@ function reserveDeepLink(type,date){
   return url.toString();
 }
 function reserveShareMessage(date){
-  return `السلام عليكم ورحمة الله وبركاته،\n\nالمعلمات الكريمات،\nتُفيدكم إدارة الثانوية الرابعة والتسعين – مسارات باعتماد جدول حصص الاحتياط ليوم ${dayName(date)} الموافق ${fmtDate(date)}.\nيرجى الاطلاع على التكليفات المسندة، وتأكيد الاطلاع وتسجيل عنوان موضوع الحصة من خانتيهما في الجدول.\n\nرابط جدول الاحتياط اليومي:\n${reserveDeepLink("daily",date)}\n\nرابط جدول النشر المعتمد:\n${reserveDeepLink("publish",date)}\n\nشاكرين لكم تعاونكم والتزامكم.\nإدارة الثانوية الرابعة والتسعين – مسارات`;
+  // One official message for both Copy and WhatsApp actions; links follow the selected date.
+  return `السلام عليكم ورحمة الله وبركاته،\n\nالمعلمات الكريمات،\n\nتُفيدكم إدارة الثانوية الرابعة والتسعون – مسارات باعتماد جدول حصص الاحتياط ليوم ${dayName(date)} الموافق ${fmtDate(date)}.\n\nيرجى الاطلاع على التكليفات المسندة، وتأكيد الاطلاع وتسجيل عنوان موضوع تفعيل الحصة في الخانات المخصصة، علمًا بأن تأكيد الاطلاع وتفعيل موضوع الحصة من معايير المفاضلة في تسديد حصص الاحتياط.\n\nرابط جدول الاحتياط اليومي لتأكيد الاطلاع وتفعيل الحصص:\n${reserveDeepLink("daily",date)}\n\nرابط جدول النشر المعتمد:\n${reserveDeepLink("publish",date)}\n\nشاكرين لكم تعاونكم والتزامكم.\n\nإدارة الثانوية الرابعة والتسعون – مسارات`;
 }
 function bindReserveSharing(){
   byId("reserveCopyShare")?.addEventListener("click",async()=>{
