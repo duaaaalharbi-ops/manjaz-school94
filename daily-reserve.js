@@ -1396,7 +1396,7 @@ function dayAdminHTML(){
       <label class="reserve-admin-manual-toggle"><input type="checkbox" id="reserveAutoAllNames" ${state.autoAllNames!==false?"checked":""}>
         <span><strong>إتاحة جميع الكادر للتعديل:</strong> إظهار المعلمات جميعًا، بمن فيهن المستثنيات، إضافة إلى الموجهات الطلابيات ومحضرة المختبر. يظهر ترشيح ذكي واحد لكل حصة، ويمكن استبداله من القائمة المنسدلة. عند الإسناد المخالف تظهر التحذيرات.</span>
       </label>
-      <div id="reserveDayMsg"></div>
+      <div id="reserveDayMsg" role="status" aria-live="polite"></div>
       <div class="reserve-admin-list" style="margin-top:12px">${abs.length?abs.map(a=>`<div class="reserve-teacher-row">
         <strong>${esc(a.teacherName)}</strong><span>${esc(a.reason||"غياب")} — ${(a.periods||[]).map(p=>`ح${p.period}: ${esc(p.className)}${p.activity?" (نشاط)":""}`).join(" — ")||"لا توجد حصص مسجلة"}</span>
         <button class="reserve-mini danger reserve-delete-absence" data-id="${esc(a.id)}">حذف الغياب</button>
@@ -1410,7 +1410,7 @@ function dayAdminHTML(){
       <div id="reserveAssignmentsAdmin">${adminAssignmentsHTML(assign)}</div>
       <div class="form-actions" style="margin-top:12px">
         <button class="btn btn-primary" id="reserveApproveAuto" type="button">حفظ واعتماد جدول اليوم</button>
-        <button class="reserve-mini danger" id="reserveDeleteAutoTable" type="button">حذف جدول الإنشاء الآلي لهذا اليوم</button>
+        <button class="reserve-mini danger" id="reserveDeleteAutoTable" type="button" aria-label="حذف جدول الإنشاء الآلي لهذا اليوم" title="حذف الجدول الآلي للتاريخ المختار">🗑 حذف الجدول</button>
       </div>
     </section>
   </div>`;
@@ -1541,8 +1541,11 @@ function manualAdminHTML(){
     <label class="reserve-admin-manual-toggle"><input id="reserveManualAllNames" type="checkbox" ${state.manualAllNames?"checked":""}>
       <span><strong>تحرير يدوي شامل:</strong> إظهار جميع المعلمات (حتى المستثنيات والغائبات) والموجهات الطلابيات ومحضرة المختبر في قوائم التسديد. سيظهر تحذير عند التعارض.</span>
     </label>
-    <div class="form-actions"><button class="btn btn-primary" id="reserveManualBuild" type="button">إظهار جدول التسديد الكامل</button></div>
-    <div id="reserveManualMsg"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="reserveManualBuild" type="button">إظهار جدول التسديد الكامل</button>
+      <button class="reserve-mini danger" id="reserveDeleteManualTable" type="button" aria-label="حذف جدول الإنشاء اليدوي لهذا اليوم" title="حذف الجدول اليدوي للتاريخ المختار">🗑 حذف الجدول</button>
+    </div>
+    <div id="reserveManualMsg" role="status" aria-live="polite"></div>
     <section class="reserve-admin-warnings"><strong>مساحة تحذيرات الإسناد</strong><div id="reserveManualWarnings">${reserveWarningsMarkup(currentReserveWarnings(date))}</div></section>
     <div id="reserveManualRows" style="margin-top:12px"></div>
     <section class="surface panel" style="margin-top:16px"><div class="panel-head"><h3>روابط اطلاع المعلمات وموضوع الحصة</h3></div>
@@ -1614,6 +1617,33 @@ function manualConflictMessages(date,selections,absentIds){
   });
   return [...new Set(warnings)];
 }
+// Task 6: scoped table deletion, with post-write verification before success feedback.
+// Shared absences belonging to the other creation mode are never deleted.
+async function reserveDeleteTableForDate(mode,date){
+  if(mode!=="auto"&&mode!=="manual")throw new Error("نوع الجدول غير صحيح");
+  await ensureAdmin();
+  const isTarget=a=>mode==="manual"?a.manual===true:a.manual!==true;
+  const original=assignmentsOn(date).filter(isTarget);
+  const absentCandidates=absencesOn(date).filter(a=>a.source===mode);
+  if(!original.length&&!absentCandidates.length)return {deleted:0,empty:true};
+  for(const record of original)await deleteKind(K.assignment,record.id,token());
+  await loadAll();
+  if(assignmentsOn(date).some(isTarget))throw new Error("لم يكتمل حذف التكليفات؛ أعيدي المحاولة");
+  let removedAbsences=0;
+  const obsoleteAbsences=absencesOn(date).filter(a=>a.source===mode&&
+    !assignmentsOn(date).some(x=>String(x.absentTeacherId)===String(a.teacherId)));
+  for(const absence of obsoleteAbsences){
+    await deleteKind(K.absence,absence.id,token());removedAbsences++;
+  }
+  await loadAll();
+  if(obsoleteAbsences.some(a=>absencesOn(date).some(x=>String(x.id)===String(a.id))))
+    throw new Error("تعذر التحقق من حذف الغياب المرتبط بالجدول");
+  refreshReserveStatisticsViews();
+  // Refresh the grouped links and notifications only when present on this page.
+  reserveRenderNotificationPanel();
+  if(byId("reservePublishOverlay"))openReservePublication(date);
+  return {deleted:original.length+removedAbsences,empty:false};
+}
 async function saveManualAssignments(){
   const msg=byId("reserveManualMsg"),date=byId("reserveManualDate")?.value||state.currentDate;
   const absentIds=(state.manualAbsentIds||[]).map(String),rows=state.manualRows||[];
@@ -1657,17 +1687,36 @@ async function saveManualAssignments(){
       else await insertKind(K.assignment,data,token(),"معتمد");
     }
     await loadAll();
+    const persisted=assignmentsOn(date);
+    if(selections.some(x=>!persisted.some(a=>
+      String(a.absentTeacherId)===String(x.absent.id)&&Number(a.period)===Number(x.period)&&
+      String(a.assignedTeacherId)===String(x.teacherId)&&a.manual===true&&a.published===true)))
+      throw new Error("لم يكتمل حفظ جميع التكليفات اليدوية");
     state.currentDate=date;
     refreshReserveStatisticsViews();
     renderWorkspaceCard("manual");
     const done=byId("reserveManualMsg");
-    if(done)done.textContent="تم حفظ واعتماد الحصص. النسخة النهائية متاحة من أيقونة «جدول النشر» بالأعلى.";
+    if(done)done.textContent="تم الحفظ";
     state.lastReserveWarnings={date,source:"manual",warnings};
     showReserveWorkspaceWarnings("reserveManualWarnings",warnings);
   }catch(err){console.error(err);msg.textContent="تعذر حفظ الجدول اليدوي."}
 }
 function bindManualAdmin(){
   bindHijriDateControl("reserveManualDate",next=>syncReserveSectionDate(next));
+  byId("reserveDeleteManualTable")?.addEventListener("click",async()=>{
+    const date=state.currentDate,msg=byId("reserveManualMsg"),button=byId("reserveDeleteManualTable");
+    const count=assignmentsOn(date).filter(a=>a.manual===true).length;
+    const absences=absencesOn(date).filter(a=>a.source==="manual").length;
+    if(!count&&!absences){msg.textContent="لا يوجد جدول يدوي لحذفه.";return;}
+    if(!confirm(`هل تريدين حذف جدول الإنشاء اليدوي ليوم ${dayName(date)} الموافق ${fmtDate(date)}؟\nسيُحذف ${count} تكليف يدوي مع سجلات الغياب اليدوية غير المستخدمة.\nستبقى التكليفات الآلية والجداول الأخرى محفوظة.`))return;
+    button.disabled=true;msg.textContent="جارٍ حذف الجدول اليدوي...";
+    try{
+      await reserveDeleteTableForDate("manual",date);
+      renderWorkspaceCard("manual");
+      const next=byId("reserveManualMsg");if(next)next.textContent="تم الحذف";
+    }catch(err){console.error(err);const next=byId("reserveManualMsg");if(next)next.textContent="تعذر إكمال الحذف أو التحقق منه. تحققي من البيانات وأعيدي المحاولة.";}
+    finally{const next=byId("reserveDeleteManualTable");if(next)next.disabled=false;}
+  });
   byId("reserveManualTeacherLinks")?.addEventListener("click",async event=>{
     const b=event.target.closest(".reserve-manual-copy-action,.reserve-manual-open-action,.reserve-manual-send-action");
     if(!b)return;
@@ -2040,7 +2089,7 @@ function ensureReservePublicationStyles(){
       #reservePublishSheet h1{font-size:17px}
     }
     @media print{
-      @page{size:A4 landscape;margin:10mm}
+      @page{size:A4 portrait;margin:10mm}
       body > :not(#reservePublishOverlay):not(#reservePublishPrintStyle){display:none!important}
       html,body{background:#fff!important;color:#172c34!important;margin:0!important;padding:0!important;width:100%!important}
       #reservePublishOverlay{position:static!important;inset:auto!important;padding:0!important;background:#fff!important;overflow:visible!important}
@@ -2103,13 +2152,27 @@ async function downloadReservePublicationPDF(date){
   msg.textContent="جارٍ إعداد ملف PDF لجدول النشر...";
   try{
     const engine=await loadReservePdfEngine();
+    // Export a portrait-only copy. The live preview remains unchanged.
+    const page=sheet.cloneNode(true);
+    page.id="reservePublishSheet";
+    page.style.cssText="width:735px;max-width:735px;min-width:0;font-size:10px;line-height:1.4";
+    const table=page.querySelector("table");
+    if(table){table.style.cssText="width:100%;table-layout:fixed;font-size:9px";
+      table.querySelectorAll("th,td").forEach(cell=>{cell.style.padding="4px 2px";cell.style.overflowWrap="anywhere";});
+    }
+    // Preserve publication styles on the detached PDF copy without changing the preview.
+    const offscreen=document.createElement("div");
+    offscreen.style.cssText="position:fixed;left:-20000px;top:0;width:735px;pointer-events:none";
+    offscreen.appendChild(page);document.body.appendChild(offscreen);
+    try{
     await engine().set({
       margin:[10,9,10,9],filename:`جدول_النشر_${date}.pdf`,
       image:{type:"jpeg",quality:0.98},
       html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
-      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
       pagebreak:{mode:["css","legacy"]}
-    }).from(sheet).save();
+    }).from(page).save();
+    }finally{offscreen.remove()}
     msg.textContent="تم إعداد ملف جدول النشر بصيغة PDF.";
   }catch(err){
     console.error("تعذر إنشاء PDF مباشر",err);
@@ -2128,15 +2191,17 @@ async function downloadReserveTablePDF(name,headers,rows,scopeDate=state.current
       <tbody>${rows.length?rows.map(row=>`<tr>${row.map(v=>`<td>${esc(v==null?"":v)}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${headers.length}">لا توجد بيانات لهذا النطاق</td></tr>`}</tbody></table>
     <div class="reserve-pdf-footer">الثانوية الرابعة والتسعون – مسارات | قسم الاحتياط اليومي | ${esc(dayName(today))} ${esc(fmtDate(today))}</div>`;
   const host=document.createElement("div");
-  host.style.cssText="position:fixed;left:-20000px;top:0;width:1050px;pointer-events:none;z-index:-1";
-  sheet.style.cssText="width:1050px;max-width:1050px;position:relative;left:0;top:0";
+  host.style.cssText="position:fixed;left:-20000px;top:0;width:735px;pointer-events:none;z-index:-1";
+  sheet.style.cssText="width:735px;max-width:735px;position:relative;left:0;top:0";
+  const table=sheet.querySelector("table");
+  if(table){table.style.tableLayout="fixed";table.style.fontSize=headers.length>9?"8px":"9px";}
   host.appendChild(sheet);document.body.appendChild(host);
   try{
     const engine=await loadReservePdfEngine();
     await engine().set({margin:[10,9,10,9],filename:`${name.replace(/\s+/g,"_")}_${today}.pdf`,
       image:{type:"jpeg",quality:0.98},
       html2canvas:{scale:1.6,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
-      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
       pagebreak:{mode:["css","legacy"]}
     }).from(sheet).save();
   }catch(err){
@@ -2531,22 +2596,18 @@ function bindDayAdmin(){
     const group=groupedForRow(b);if(group)reserveOpenWhatsapp(group);
   });
   byId("reserveDeleteAutoTable")?.addEventListener("click",async()=>{
-    const date=state.currentDate;
-    const autoAssignments=assignmentsOn(date).filter(a=>a.manual!==true);
-    const autoAbsences=absencesOn(date).filter(a=>a.source==="auto"&&
-      !assignmentsOn(date).some(x=>x.manual===true&&String(x.absentTeacherId)===String(a.teacherId)));
-    if(!autoAssignments.length&&!autoAbsences.length){
-      const msg=byId("reserveDayMsg");if(msg)msg.textContent="لا يوجد جدول إنشاء آلي لحذفه.";return;
-    }
-    if(!confirm(`حذف جدول الإنشاء الآلي لهذا اليوم؟\nسيُحذف ${autoAssignments.length} تكليفًا آليًا و${autoAbsences.length} تسجيل غياب آلي.\nالتكليفات اليدوية ستبقى محفوظة. لا يمكن التراجع إلا من نسخة احتياطية.`))return;
-    const msg=byId("reserveDayMsg");if(msg)msg.textContent="جارٍ حذف الجدول الآلي...";
+    const date=state.currentDate,msg=byId("reserveDayMsg"),button=byId("reserveDeleteAutoTable");
+    const count=assignmentsOn(date).filter(a=>a.manual!==true).length;
+    const absences=absencesOn(date).filter(a=>a.source==="auto").length;
+    if(!count&&!absences){msg.textContent="لا يوجد جدول آلي لحذفه.";return;}
+    if(!confirm(`هل تريدين حذف جدول الإنشاء الآلي ليوم ${dayName(date)} الموافق ${fmtDate(date)}؟\nسيُحذف ${count} تكليف آلي مع سجلات الغياب الآلية غير المستخدمة.\nستبقى التكليفات اليدوية والجداول الأخرى محفوظة.`))return;
+    button.disabled=true;msg.textContent="جارٍ حذف الجدول الآلي...";
     try{
-      await ensureAdmin();
-      for(const a of autoAssignments)await deleteKind(K.assignment,a.id,token());
-      for(const a of autoAbsences)await deleteKind(K.absence,a.id,token());
-      await loadAll();refreshReserveStatisticsViews();renderWorkspaceCard("auto");
-      const next=byId("reserveDayMsg");if(next)next.textContent="تم حذف جدول الإنشاء الآلي لهذا اليوم، مع الحفاظ على الجدول اليدوي.";
-    }catch(err){console.error(err);if(msg)msg.textContent="تعذر استكمال حذف الجدول. تحققي من الاتصال وأعيدي المحاولة."}
+      await reserveDeleteTableForDate("auto",date);
+      renderWorkspaceCard("auto");
+      const next=byId("reserveDayMsg");if(next)next.textContent="تم الحذف";
+    }catch(err){console.error(err);const next=byId("reserveDayMsg");if(next)next.textContent="تعذر إكمال الحذف أو التحقق منه. تحققي من البيانات وأعيدي المحاولة.";}
+    finally{const next=byId("reserveDeleteAutoTable");if(next)next.disabled=false;}
   });
   byId("reserveApproveAuto")?.addEventListener("click",async()=>{
     const msg=byId("reserveDayMsg"),button=byId("reserveApproveAuto"),date=state.currentDate;
@@ -2577,8 +2638,16 @@ function bindDayAdmin(){
         if(changed){data.ackAt="";data.activationTitle="";data.activationAt="";data.ackToken=uid()}
         if(changed||a.published!==true){await patchKind(K.assignment,a.id,data,token(),"معتمد");saved++}
       }
-      await loadAll();refreshReserveStatisticsViews();renderWorkspaceCard("auto");
-      byId("reserveDayMsg").textContent=`تم حفظ واعتماد ${saved} تكليفًا جديدًا أو معدلًا، وظهرت في جدول النشر والإحصائيات.`;
+      await loadAll();
+      const persisted=assignmentsOn(date);
+      if(items.some(item=>{
+         const selected=entries.find(x=>x.id===String(item.id));
+         return !selected||!persisted.some(a=>String(a.id)===String(item.id)&&
+           String(a.assignedTeacherId)===selected.teacherId&&a.manual!==true&&a.published===true);
+      }))
+        throw new Error("لم يكتمل اعتماد جميع التكليفات الآلية");
+      refreshReserveStatisticsViews();renderWorkspaceCard("auto");
+      byId("reserveDayMsg").textContent="تم الحفظ";
     }catch(err){console.error(err);msg.textContent="تعذر اكتمال الاعتماد. أعيدي المحاولة؛ لن تتكرر التكليفات المحفوظة."}
     finally{button.disabled=false}
   });
