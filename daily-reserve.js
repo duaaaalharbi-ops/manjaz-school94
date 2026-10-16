@@ -18,7 +18,8 @@ const K={
   absence:"reserve_absence",
   assignment:"reserve_assignment",
   settings:"reserve_settings",
-  adjustment:"reserve_adjustment"
+  adjustment:"reserve_adjustment",
+  monthlyCertificate:"reserve_monthly_certificate"
 };
 
 const DAYS=[
@@ -40,7 +41,7 @@ const MANUAL_SUPPORT_STAFF=[
   {id:"reserve_support_3",name:"نجلاء هوساوي",supportStaff:true,role:"التوجيه الطلابي / المختبر"}
 ];
 const V6_SEED=[{"name":"أفراح الجدعاني","workload":9,"timetable":{"sun":["","","","","","أول6","ثالث3"],"mon":["أول6","","أول4","","","ثالث3",""],"tue":["","أول5","","","",""],"wed":["أول5","","","أول4","",""],"thu":["","ثالث3","","","",""]}},{"name":"أيمان الجدعاني","workload":20,"timetable":{"sun":["ثاني6","","","","ثاني3","ثاني1","ثاني2"],"mon":["ثاني2","","ثاني6","ثاني1","","","ثاني4"],"tue":["ثاني6","","","ثاني4","ثاني3","ثاني1"],"wed":["ثاني2","ثاني4","","","ثاني3","ثاني6"],"thu":["ثاني3","ثاني1","","ثاني2","ثاني4",""]}},{"name":"بدريه الحربي","workload":11,"timetable":{"sun":["","ثاني4","","","ثاني4|نشاط","","ثاني5"],"mon":["ثاني6","","","ثاني5","ثاني4|نشاط","",""],"tue":["","","","","","ثاني4"],"wed":["","","","ثاني6","ثاني4",""],"thu":["ثاني5","ثاني6","","","",""]}},{"name":"بدريه السلمي","workload":16,"timetable":{"sun":["","ثالث1|نشاط","ثالث2","ثالث3","","","ثالث1"],"mon":["","","ثالث3","","","ثالث1","ثالث2"],"tue":["","ثالث2","ثالث1","","","ثالث3"],"wed":["ثالث1","","","","ثالث3","ثالث2"],"thu":["","ثالث1","","ثالث2","ثالث3",""]}},{"name":"تهاني العتيبي","workload":22,"timetable":{"sun":["أول1","أول2","","ثالث2","ثالث3","ثالث1",""],"mon":["ثالث2","ثالث3","","أول2","ثالث1","أول1",""],"tue":["ثالث1","أول1","","أول2","ثالث3",""],"wed":["ثالث2","ثالث1","","أول1","أول2",""],"thu":["ثالث3","","","أول1","أول2","ثالث2"]}},{"name":"حصة المنتشري","workload":20,"timetable":{"sun":["أول6","ثاني2","ثاني1","ثاني3","","",""],"mon":["","ثاني3","ثاني1","أول6","","ثاني2",""],"tue":["أول6","","ثاني3","ثاني2","ثاني1",""],"wed":["ثاني3","أول6","","ثاني2","ثاني1",""],"thu":["ثاني2","ثاني3","ثاني1","أول6","",""]}},{"name":"حنان المجنوني","workload":13,"timetable":{"sun":["ثالث5","ثالث2","","","","ثالث3","ثالث4"],"mon":["","ثالث1","","","ثالث6","","ثالث3"],"tue":["","ثالث5","","","ثالث2|نشاط","ثالث6"],"wed":["","","ثالث2","","",""],"thu":["ثالث4","","","","ثالث1",""]}},{"name":"خزماء الجبيري","workload":18,"timetable":{"sun":["","أول4","أول6","أول3","أول1","",""],"mon":["أول5","أول2","","","","أول6","أول3"],"tue":["","","أول2","","أول4","أول1"],"wed":["","أول2","أول4","","أول5",""],"thu":["أول3","","أول6","أول5","أول1",""]}},{"name":"خلود الكثيري","workload":18,"timetable":{"sun":["أول5","","أول2","","أول6","أول1",""],"mon":["أول1","أول3","","أول5","","","أول4"],"tue":["","أول3","","أول6","",""],"wed":["","أول4","أول1","أول6","","أول2"],"thu":["","أول3","أول4","","أول5","أول2"]}},{"name":"دعاء الحربي","workload":20,"timetable":{"sun":["","أول6","","ثاني6","ثاني5","","أول5"],"mon":["","أول5","أول6","","ثاني5","","ثاني6"],"tue":["","أول6","أول5","ثاني5","","ثاني6"],"wed":["ثاني5","ثاني6","","أول5","أول6",""],"thu":["ثاني6","ثاني5","","","أول6","أول5"]}},{"name":"رحمة العيسي","workload":4,"timetable":{"sun":["","","","","","","أول4"],"mon":["أول4","","","","","",""],"tue":["أول4","","","","",""],"wed":["","","","","",""],"thu":["","","","","","أول4"]}},{"name":"ريم الحربي","workload":18,"timetable":{"sun":["ثالث4","","ثالث5","","ثالث1","ثالث6",""],"mon":["","","ثالث2","ثالث3","","ثالث4",""],"tue":["ثالث3","ثالث6","","ثالث5","ثالث1",""],"wed":["ثالث3","","ثالث4","","ثالث2",""],"thu":["ثالث1","","ثالث5","ثالث6","ثالث2",""]}},{"name":"ريم القحطاني","workload":16,"timetable":{"sun":["","ثاني3","","ثاني2|نشاط","ثاني1","",""],"mon":["ثاني1","","","ثاني2","ثاني3","",""],"tue":["ثاني2","","ثاني1","","ثاني2|نشاط","ثاني3"],"wed":["","ثاني3","","ثاني1","","ثاني2"],"thu":["","","ثاني2","ثاني1","ثاني3",""]}},{"name":"رية الحربي","workload":13,"timetable":{"sun":["ثالث3|نشاط","","","","ثالث2","","ثالث6"],"mon":["","","","ثالث4","","ثالث1","ثالث5"],"tue":["ثالث4","","","ثالث1","","ثالث2"],"wed":["","","","ثالث3","","ثالث5"],"thu":["","","ثالث6","","","ثالث3"]}},{"name":"سحر الشمراني","workload":17,"timetable":{"sun":["ثاني4","ثاني6","","ثاني5","","ثاني5|نشاط",""],"mon":["","ثاني5","","ثاني4","ثاني6","",""],"tue":["ثاني5","ثاني4","","ثاني6","",""],"wed":["","","ثاني6","","ثاني5","ثاني4"],"thu":["","ثاني4","ثاني6","","ثاني5","ثاني5|نشاط"]}},{"name":"سندس الغامدي","workload":20,"timetable":{"sun":["ثاني1","","","ثاني4","ثاني2","","ثاني3"],"mon":["","ثاني4","ثاني2","","","ثاني1","ثاني3"],"tue":["ثاني4","ثاني3","ثاني2","ثاني1","",""],"wed":["","ثاني2","ثاني3","ثاني4","","ثاني1"],"thu":["","ثاني2","ثاني3","ثاني4","","ثاني1"]}},{"name":"شوق المطيري","workload":8,"timetable":{"sun":["","","","","","أول2",""],"mon":["","","","","أول1","","أول2"],"tue":["","","","","أول1","أول2"],"wed":["أول1","","","","",""],"thu":["","أول2","أول1","","",""]}},{"name":"شيخة المالكي","workload":16,"timetable":{"sun":["ثالث2","ثالث3","","","ثالث6","",""],"mon":["","ثالث2","ثالث6","","ثالث3","ثالث6|نشاط",""],"tue":["","","ثالث3","ثالث2","ثالث6",""],"wed":["","ثالث6","","ثالث2","","ثالث3"],"thu":["","ثالث2","","ثالث3","","ثالث6"]}},{"name":"عايدة الصاعدي","workload":18,"timetable":{"sun":["","","ثالث1","ثالث6","ثالث4","","ثالث2"],"mon":["ثالث3","ثالث5","","ثالث2","ثالث4","","ثالث1"],"tue":["","","","ثالث3","","ثالث5"],"wed":["","ثالث3","ثالث1","ثالث4","ثالث6",""],"thu":["","","ثالث2","","ثالث6","ثالث5"]}},{"name":"عبير المولد","workload":9,"timetable":{"sun":["","","ثالث4","","ثالث5","",""],"mon":["","","","ثالث5","","","ثالث6"],"tue":["","","","ثالث6","","ثالث4"],"wed":["","","","","","ثالث6"],"thu":["","ثالث5","","","","ثالث4"]}},{"name":"علوه الحربي","workload":11,"timetable":{"sun":["","","ثاني2","","","ثاني3","ثاني1|نشاط"],"mon":["ثاني3","","","","ثاني1","","ثاني2"],"tue":["ثاني1|نشاط","","","","",""],"wed":["","ثاني1","","","","ثاني3"],"thu":["","","","","ثاني1","ثاني2"]}},{"name":"علية القاسمي","workload":4,"timetable":{"sun":["","","أول3","","","",""],"mon":["","","","","","أول3",""],"tue":["أول3","","","","",""],"wed":["","","","أول3","",""],"thu":["","","","","",""]}},{"name":"عواطف الحربي","workload":12,"timetable":{"sun":["ثاني3","","ثاني4","","ثاني6","",""],"mon":["","","ثاني3","ثاني6","","ثاني4",""],"tue":["","","ثاني6","ثاني3","",""],"wed":["","","ثاني4","","",""],"thu":["","","ثاني4","ثاني6","","ثاني3"]}},{"name":"عوالي السبيعي","workload":20,"timetable":{"sun":["","أول1","أول5","أول4","","أول3",""],"mon":["أول3","أول4","","أول1","أول2","",""],"tue":["أول2","أول4","","أول3","أول5",""],"wed":["أول2","","أول5","","أول1","أول3"],"thu":["أول5","","أول2","","أول4","أول1"]}},{"name":"غاليه المزمومي","workload":15,"timetable":{"sun":["","ثالث6","","","","ثالث4","ثالث5"],"mon":["","","ثالث5","ثالث6","","",""],"tue":["ثالث5","ثالث4","ثالث6","","",""],"wed":["ثالث4","","","ثالث6","ثالث5","ثالث4|نشاط"],"thu":["ثالث6","ثالث4","","ثالث5","",""]}},{"name":"فاطمة الزهراني","workload":13,"timetable":{"sun":["","","ثاني5","","","ثاني6","ثاني6|نشاط"],"mon":["","أول6","","","","ثاني6","ثاني5"],"tue":["","","أول6","","ثاني6","ثاني5"],"wed":["ثاني6","","أول6","","",""],"thu":["","","ثاني5","","","ثاني6|نشاط"]}},{"name":"فاطمة العماري","workload":16,"timetable":{"sun":["ثالث1","ثالث4","","ثالث5","","",""],"mon":["ثالث5","","ثالث4","ثالث1","","",""],"tue":["","ثالث1","ثالث5","ثالث4","",""],"wed":["ثالث5","ثالث4","ثالث5|نشاط","","ثالث1",""],"thu":["ثالث5","","ثالث1","ثالث4","",""]}},{"name":"فاطمة الغامدي","workload":18,"timetable":{"sun":["","ثاني1","ثاني3","","","","ثاني4"],"mon":["","ثاني2","ثاني4","ثاني3|نشاط","","ثاني3","ثاني1"],"tue":["ثاني3|نشاط","ثاني2","","","ثاني4",""],"wed":["","","ثاني1","ثاني3","ثاني2",""],"thu":["ثاني1","","","ثاني3","ثاني2","ثاني4"]}},{"name":"فاطمة حسن","workload":9,"timetable":{"sun":["","أول3","","","","","أول2"],"mon":["","","أول2","","","","أول1"],"tue":["","","أول1","","","أول3"],"wed":["","أول1","","","أول3",""],"thu":["","","","","","أول2"]}},{"name":"لمياء البالدي","workload":22,"timetable":{"sun":["أول4","","ثالث6","ثالث4","أول3","ثالث5",""],"mon":["ثالث4","ثالث6","","أول4","أول3","ثالث5",""],"tue":["ثالث6","","أول3","أول4","ثالث4",""],"wed":["أول3","","ثالث6","ثالث5","أول4",""],"thu":["أول4","","ثالث4","أول3","ثالث5",""]}},{"name":"ليلى مجرشي","workload":20,"timetable":{"sun":["","","أول4","أول1","أول2","","أول3"],"mon":["","أول1","أول3","","أول4","أول2",""],"tue":["","أول2","أول4","أول1","أول3",""],"wed":["أول4","","أول3","أول2","","أول1"],"thu":["أول1","أول4","","أول2","","أول3"]}},{"name":"منال الجابري","workload":14,"timetable":{"sun":["أول2","أول5","","","","","أول1"],"mon":["أول2","","أول1","أول3","","أول5",""],"tue":["أول1","","","","","أول4"],"wed":["","أول3","أول2","","","أول4"],"thu":["","أول5","","","أول3",""]}},{"name":"نجوى الغامدي","workload":12,"timetable":{"sun":["ثاني5","","","ثاني1","","ثاني2",""],"mon":["","ثاني1","","","ثاني2","",""],"tue":["","ثاني1","ثاني5","","","ثاني2"],"wed":["ثاني1","","ثاني2","","","ثاني5"],"thu":["","","","","ثاني5",""]}},{"name":"نورة الهودان","workload":23,"timetable":{"sun":["ثالث6","ثالث5","ثالث3","ثالث1","","",""],"mon":["ثالث6","ثالث4","ثالث1","","ثالث5","ثالث2",""],"tue":["ثالث2","ثالث3","ثالث4","","ثالث5",""],"wed":["ثالث6","ثالث5","ثالث3","ثالث1","ثالث4",""],"thu":["ثالث2","ثالث6","ثالث3","ثالث1","ثالث4",""]}},{"name":"نورة العنزي","workload":12,"timetable":{"sun":["أول3","","أول1","أول2","","",""],"mon":["","","","","ثالث2","",""],"tue":["","","ثالث2","","أول2","ثالث1"],"wed":["","ثالث2","","","","ثالث1"],"thu":["","أول1","أول3","","","ثالث1"]}},{"name":"هاجر السلمي","workload":9,"timetable":{"sun":["","","","أول5","","أول4",""],"mon":["","","","","","أول4","أول5"],"tue":["أول5","","","","","أول6"],"wed":["أول6","","","","",""],"thu":["أول6","","","أول4","",""]}},{"name":"وحش القحطاني","workload":20,"timetable":{"sun":["","ثاني5","ثاني6","","أول5","ثاني4",""],"mon":["ثاني4","ثاني6","ثاني5","","أول5","",""],"tue":["","ثاني6","ثاني4","أول5","ثاني5",""],"wed":["ثاني4","أول5","","ثاني5","ثاني6",""],"thu":["ثاني4","","أول5","ثاني5","ثاني6",""]}},{"name":"وضحه المحمادي","workload":7,"timetable":{"sun":["","","","أول6","","","أول6"],"mon":["","","أول5","","","",""],"tue":["","","","","أول6","أول5"],"wed":["","","","","","أول5"],"thu":["","أول6","","","",""]}},{"name":"دخنه الشهري","workload":8,"timetable":{"sun":["","","","","","",""],"mon":["ثاني5","","","","أول6","ثاني5","أول6"],"tue":["","","","","",""],"wed":["","ثاني5","ثاني5","أول6","","أول6"],"thu":["","","","","",""]}}];
-let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],settings:null,admin:null,currentDate:todayISO(),workspaceCard:"manual",autoAllNames:true,autoAbsentIds:[],publicOpenCards:[]};
+let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],monthlyCertificates:[],monthlyCertificateKey:"",settings:null,admin:null,currentDate:todayISO(),workspaceCard:"manual",autoAllNames:true,autoAbsentIds:[],publicOpenCards:[]};
 let renderBusy=false;
 // Contacts are fetched exclusively after an authenticated administrative login;
 // phone numbers are never embedded in public JavaScript or public records.
@@ -581,8 +582,8 @@ function bindReserveNotificationPanel(){
 }
 
 async function loadAll(){
-  const [teachers,schedules,absences,assignments,settings,adjustments]=await Promise.all([
-    fetchKind(K.teacher),fetchKind(K.schedule),fetchKind(K.absence),fetchKind(K.assignment),fetchKind(K.settings),fetchKind(K.adjustment)
+  const [teachers,schedules,absences,assignments,settings,adjustments,monthlyCertificates]=await Promise.all([
+    fetchKind(K.teacher),fetchKind(K.schedule),fetchKind(K.absence),fetchKind(K.assignment),fetchKind(K.settings),fetchKind(K.adjustment),fetchKind(K.monthlyCertificate)
   ]);
   // Edition Six is the only authorized teacher source. Preserve the oldest ID
   // for each name, so existing schedules / assignment references are not changed.
@@ -602,6 +603,7 @@ async function loadAll(){
   state.absences=absences;
   state.assignments=assignments;
   state.adjustments=adjustments;
+  state.monthlyCertificates=monthlyCertificates;
   state.settings=settings.find(s=>s.sourceVersion===V6_SOURCE)||settings[0]||null;
 }
 function normName(s){return clean(s).replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")}
@@ -1942,6 +1944,247 @@ function excellenceMetrics(referenceDate){
   });
 }
 
+
+// Monthly certificates reproduce the site's approved workshop-certificate layout.
+// Ranking uses precisely the excellence-board priority, accumulated over the
+// complete Umm al-Qura month: assigned count, both confirmations, topic, receipt.
+function reserveSaudiDate(){
+  const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Riyadh",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+  const part=k=>parts.find(x=>x.type===k)?.value||"";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+function reserveMonthlyCertificateMonths(){
+  const dates=publishedAssignments().map(a=>a.date).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d));
+  const known=[...dates,...(state.monthlyCertificates||[]).map(a=>a.endDate).filter(Boolean)];
+  const lookup=new Map();
+  known.forEach(date=>{
+    const month=reserveHijriMonthRange(date);
+    // Do not issue a certificate while any part of the Hijri month remains.
+    if(month.end>=reserveSaudiDate())return;
+    lookup.set(month.key,{...month,title:reserveHijriMonthTitle(month.end)});
+  });
+  return [...lookup.values()].sort((a,b)=>b.start.localeCompare(a.start));
+}
+function reserveMonthlyCertificateSnapshot(key){
+  return (state.monthlyCertificates||[]).filter(c=>c.monthKey===key)
+    .sort((a,b)=>String(b.updatedAt||b.issuedAt||"").localeCompare(String(a.updatedAt||a.issuedAt||"")))[0]||null;
+}
+function reserveMonthlyCertificateRanking(month){
+  const assignments=publicationAssignmentsUntil(month.end,month.start);
+  const counts=assignmentCounts(month.end);
+  const grouped=new Map();
+  assignments.forEach(a=>{
+    const id=String(a.assignedTeacherId||"");
+    if(!id)return;
+    if(!grouped.has(id))grouped.set(id,{teacherId:id,name:teacherOf(id)?.name||a.assignedTeacherName||"",assignments:0,acknowledged:0,activated:0,both:0});
+    const item=grouped.get(id);item.assignments++;
+    const ack=!!clean(a.ackAt),topic=!!clean(a.activationTitle);
+    if(ack)item.acknowledged++;
+    if(topic)item.activated++;
+    if(ack&&topic)item.both++;
+  });
+  const ranked=[...grouped.values()].filter(r=>r.name&&r.assignments>0).map(r=>({
+    ...r,monthCount:Number(counts.get(r.teacherId)?.month??r.assignments)
+  }));
+  ranked.sort((a,b)=>b.monthCount-a.monthCount||b.both-a.both||b.activated-a.activated||b.acknowledged-a.acknowledged||clean(a.name).localeCompare(clean(b.name),"ar"));
+  let rank=0,previous="";
+  return ranked.map(r=>{
+    const signature=[r.monthCount,r.both,r.activated,r.acknowledged].join("|");
+    if(signature!==previous)rank++;
+    previous=signature;
+    return {...r,rank};
+  });
+}
+function reserveMonthlyCertificatePanelHTML(){
+  const months=reserveMonthlyCertificateMonths();
+  if(!months.length)return `<section class="surface panel reserve-admin-only" id="reserveMonthlyCertificates"><div class="panel-head"><h3>شهادات التميز الشهري</h3></div><p class="reserve-public-note">تُتاح شهادات المعلمات المكلفات بعد اكتمال الشهر الهجري، ولا تُصدر خلال الشهر الجاري.</p></section>`;
+  const selected=months.find(m=>m.key===state.monthlyCertificateKey)||months[0];
+  state.monthlyCertificateKey=selected.key;
+  const snapshot=reserveMonthlyCertificateSnapshot(selected.key);
+  const rows=snapshot?.rows||reserveMonthlyCertificateRanking(selected);
+  const approved=!!snapshot;
+  return `<section class="surface panel reserve-admin-only" id="reserveMonthlyCertificates">
+    <div class="panel-head"><h3>إصدار شهادات التميز الشهري</h3><span>وفق المفاضلة التراكمية للشهر الهجري</span></div>
+    <p class="reserve-public-note">القالب الرسمي نفسه المستخدم في شهادات منجز، مع حفظ المراكز المعتمدة. تشمل الشهادات جميع المعلمات اللاتي لديهن تكليفات منشورة خلال الشهر، مهما كان ترتيبهن.</p>
+    <div class="form-grid"><label>الشهر الهجري المكتمل<select id="reserveMonthlyCertSelect">${months.map(m=>`<option value="${esc(m.key)}" ${m.key===selected.key?'selected':''}>${esc(m.title)}</option>`).join("")}</select></label>
+    <div class="reserve-source-note">الفترة: ${esc(fmtDate(selected.start))} – ${esc(fmtDate(selected.end))}<br>${approved?`نتائج معتمدة بتاريخ ${esc(fmtDateTimeHijri(snapshot.issuedAt))}`:"نتائج قيد المعاينة – لم يتم اعتمادها بعد"}</div></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="button" id="reserveMonthlyCertApprove" ${!rows.length?'disabled':''}>${approved?'إعادة اعتماد نتائج الشهر':'اعتماد نتائج الشهر وإتاحة الشهادات'}</button>
+      <button class="btn btn-ghost" type="button" id="reserveMonthlyCertAll" ${!approved||!rows.length?'disabled':''}>تنزيل شهادات جميع المستحقات PDF</button>
+    </div>
+    <div class="reserve-public-note" id="reserveMonthlyCertStatus" role="status">${approved?`عدد المستحقات: ${rows.length} معلمة | حُفظت المراكز لإعادة الإصدار.`:`عدد المستحقات: ${rows.length} معلمة | اعتمدي النتيجة لإصدار الشهادات.`}</div>
+    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المركز</th><th>المعلمة</th><th>حصص الشهر</th><th>تأكيد وتفعيل</th><th>الشهادة</th></tr></thead><tbody>
+      ${rows.length?rows.map(r=>`<tr><td><strong>${esc(r.rank)}</strong></td><td>${esc(r.name)}</td><td>${esc(r.monthCount)}</td><td>${esc(r.both)}</td><td><button type="button" class="reserve-mini reserve-monthly-cert-preview" data-teacher="${esc(r.teacherId)}" ${!approved?'disabled':''}>معاينة وإصدار</button></td></tr>`).join(""):'<tr><td colspan="5">لا توجد تكليفات منشورة مستحقة خلال الشهر.</td></tr>'}
+    </tbody></table></div>
+    <div id="reserveMonthlyCertPreview" class="reserve-monthly-preview" style="display:none">
+      <div class="form-actions"><button type="button" class="btn btn-primary" id="reserveMonthlyCertDownload">تنزيل شهادة المعلمة PDF</button><button type="button" class="btn btn-ghost" id="reserveMonthlyCertClose">إغلاق المعاينة</button></div>
+      <div class="certificate-stage" style="overflow:auto"><div id="reserveMonthlyCertPaper" class="certificate-paper cert-final"></div></div>
+    </div>
+  </section>`;
+}
+function reserveMonthlyCertificatePaperHTML(row,month,issuedAt){
+  // This is the exact approved certificate composition/classes/background used
+  // by certificates.js; only subject, recipient, month and rank are dynamic.
+  const dateLabel=fmtDateTimeHijri(issuedAt);
+  return `<header class="cert-final-header">
+      <div class="cert-final-org"><strong>وزارة التعليم</strong><span>إدارة تعليم جدة</span><span>الثانوية الرابعة والتسعون - مسارات</span></div>
+      <div class="cert-final-ministry"><img src="ministry-logo.png" alt="شعار وزارة التعليم"></div>
+      <div class="cert-final-manjaz"><img src="manjaz-logo.png" alt="شعار منجز"></div>
+    </header>
+    <main class="cert-final-main">
+      <div class="cert-final-title">شهادة التميز الشهري</div>
+      <div class="cert-final-workshop">في تسديد حصص الاحتياط</div>
+      <div class="cert-final-testimony">تتقدم إدارة الثانوية الرابعة والتسعون - مسارات بالشكر والتقدير للمعلمة</div>
+      <div class="cert-final-name">${esc(row.name)}</div>
+      <div class="cert-final-attendance">تقديرًا لجهودها في تنفيذ حصص الاحتياط خلال شهر ${esc(month.title)}، وتحقيقها <strong>المركز ${esc(row.rank)}</strong> في المفاضلة الشهرية التراكمية وفق المعايير المعتمدة.</div>
+      <div class="cert-final-wish">مع خالص التقدير، ومتمنين لها دوام التميز والعطاء</div>
+      <div class="cert-final-wish" style="font-size:13px;margin-top:4px">تاريخ إصدار الشهادة: ${esc(dateLabel)}</div>
+    </main>
+    <footer class="cert-final-footer">
+      <div class="cert-final-principal"><strong>مديرة المدرسة</strong><span>زينب ناصر علي حكمي</span></div>
+      <div class="cert-final-stamp"><img src="official-school-stamp.png" alt="الختم الرسمي للمدرسة"></div>
+    </footer>`;
+}
+function reserveMonthlyCertificateRender(row,month,issuedAt){
+  const paper=byId("reserveMonthlyCertPaper");if(!paper)return;
+  paper.className="certificate-paper cert-final";
+  paper.style.backgroundImage='url("manjaz-certificate-background.png")';
+  paper.innerHTML=reserveMonthlyCertificatePaperHTML(row,month,issuedAt);
+}
+let reserveMonthlyCertLibraryPromise=null;
+async function reserveMonthlyCertWaitStyles(){
+  reserveMonthlyCertStyle();
+  const link=document.querySelector('link[data-reserve-monthly-cert-css]');
+  if(!link)return;
+  // If the CSS already loaded, the approved certificate geometry is ready.
+  if([...document.styleSheets].some(sheet=>sheet.href&&sheet.href.includes("certificates.css")))return;
+  await new Promise((resolve,reject)=>{
+    link.addEventListener("load",resolve,{once:true});
+    link.addEventListener("error",()=>reject(new Error("تعذر تحميل قالب شهادات منجز")),{once:true});
+  });
+}
+async function reserveMonthlyCertLibraries(){
+  if(!reserveMonthlyCertLibraryPromise){
+    const script=(url,check)=>new Promise((resolve,reject)=>{
+      if(check())return resolve();
+      const node=document.createElement("script");node.src=url;node.onload=()=>check()?resolve():reject(new Error("فشل تحميل مكتبة الشهادات"));
+      node.onerror=()=>reject(new Error("تعذر تحميل مكتبة الشهادات، تحققي من الاتصال"));document.head.appendChild(node);
+    });
+    reserveMonthlyCertLibraryPromise=(async()=>{
+      if(!window.html2canvas)await script("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",()=>!!window.html2canvas);
+      if(!window.jspdf?.jsPDF)await script("https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",()=>!!window.jspdf?.jsPDF);
+    })().catch(e=>{reserveMonthlyCertLibraryPromise=null;throw e});
+  }
+  return reserveMonthlyCertLibraryPromise;
+}
+function reserveMonthlyCertStyle(){
+  if(document.querySelector('link[data-reserve-monthly-cert-css]'))return;
+  const css=document.createElement("link");css.rel="stylesheet";css.href="certificates.css?v=13.7";
+  css.setAttribute("data-reserve-monthly-cert-css","1");document.head.appendChild(css);
+}
+async function reserveMonthlyCertCapture(row,month,issuedAt){
+  await Promise.all([reserveMonthlyCertLibraries(),reserveMonthlyCertWaitStyles()]);
+  // Capture the same HTML/CSS and logo assets as the existing Manjaz certificates.
+  const host=document.createElement("div");
+  host.style.cssText="position:fixed;left:-12000px;top:0;width:1123px;height:794px;pointer-events:none;z-index:-1";
+  const paper=document.createElement("div");paper.className="certificate-paper cert-final";
+  paper.style.cssText="width:1123px;height:794px;transform:none!important;margin:0!important;box-shadow:none!important;background-image:url('manjaz-certificate-background.png')";
+  paper.innerHTML=reserveMonthlyCertificatePaperHTML(row,month,issuedAt);
+  host.appendChild(paper);document.body.appendChild(host);
+  try{
+    if(document.fonts?.ready)await document.fonts.ready;
+    const sources=[...paper.querySelectorAll("img")].map(el=>el.getAttribute("src"));
+    sources.push("manjaz-certificate-background.png");
+    await Promise.all(sources.map(src=>new Promise((resolve,reject)=>{
+      const img=new Image();img.onload=()=>resolve();img.onerror=()=>reject(new Error(`لم يتم تحميل أصل الشهادة: ${src}`));img.src=src;
+      if(img.complete&&img.naturalWidth)resolve();
+    })));
+    return await window.html2canvas(paper,{scale:2.5,useCORS:true,allowTaint:false,backgroundColor:"#ffffff",logging:false});
+  }finally{host.remove()}
+}
+async function reserveMonthlyCertPDF(rows,month,issuedAt,onProgress){
+  if(!rows.length)throw new Error("لا توجد شهادات للإصدار");
+  await reserveMonthlyCertLibraries();
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+  for(let i=0;i<rows.length;i++){
+    if(onProgress)onProgress(i+1,rows.length);
+    if(i)pdf.addPage("a4","landscape");
+    const canvas=await reserveMonthlyCertCapture(rows[i],month,issuedAt);
+    const ratio=Math.min(297/canvas.width,210/canvas.height);
+    const w=canvas.width*ratio,h=canvas.height*ratio;
+    pdf.addImage(canvas.toDataURL("image/jpeg",0.93),"JPEG",(297-w)/2,(210-h)/2,w,h,undefined,"FAST");
+    // Release one large canvas before processing the next teacher.
+    canvas.width=1;canvas.height=1;
+  }
+  const label=month.title.replace(/[\\/:*?"<>|]/g,"-");
+  pdf.save(`شهادات_تميز_الاحتياط_${label}_${rows.length}.pdf`);
+}
+function bindReserveMonthlyCertificates(){
+  reserveMonthlyCertStyle();
+  const select=byId("reserveMonthlyCertSelect");if(!select)return;
+  select.onchange=()=>{state.monthlyCertificateKey=select.value;renderWorkspaceCard("excellence")};
+  const current=()=>reserveMonthlyCertificateMonths().find(m=>m.key===state.monthlyCertificateKey);
+  const say=message=>{const el=byId("reserveMonthlyCertStatus");if(el)el.textContent=message};
+  const approvedMonth=()=>{
+    const month=current(),snap=month&&reserveMonthlyCertificateSnapshot(month.key);
+    return snap?{month,snap}:null;
+  };
+  byId("reserveMonthlyCertApprove")?.addEventListener("click",async event=>{
+    const month=current();if(!month||month.end>=reserveSaudiDate())return say("لا يمكن اعتماد الشهر قبل اكتماله.");
+    const rows=reserveMonthlyCertificateRanking(month);
+    if(!rows.length)return say("لا توجد معلمات لديهن تكليفات منشورة خلال هذا الشهر.");
+    const existing=reserveMonthlyCertificateSnapshot(month.key);
+    const question=existing?`إعادة اعتماد شهر ${month.title} ستحدّث مراكز ${rows.length} معلمة في الشهادات المؤرشفة. هل توافقين؟`:
+      `اعتماد مفاضلة شهر ${month.title} وإصدار شهادات لجميع ${rows.length} معلمة مكلفة؟`;
+    if(!confirm(question))return;
+    if(existing&&!confirm("تأكيد نهائي: ستُستبدل نتائج الشهر المحفوظة بالمفاضلة الحالية. هل تريدين المتابعة؟"))return;
+    event.currentTarget.disabled=true;say("جارٍ اعتماد نتائج الشهر...");
+    const data={monthKey:month.key,startDate:month.start,endDate:month.end,monthLabel:month.title,
+      issuedAt:new Date().toISOString(),updatedAt:new Date().toISOString(),
+      rows:rows.map(({teacherId,name,rank,assignments,monthCount,acknowledged,activated,both})=>({teacherId,name,rank,assignments,monthCount,acknowledged,activated,both})),
+      certificateTemplate:"manjaz-cert-final"};
+    try{
+      // Guard against stale screens or duplicate records caused by two devices.
+      const records=await fetchKind(K.monthlyCertificate);
+      const stored=records.find(r=>r.monthKey===month.key);
+      if(stored&&!existing)throw new Error("سبق اعتماد هذا الشهر من جهاز آخر. حدّثي الصفحة لمراجعة النتائج قبل تعديلها.");
+      if(stored){await patchKind(K.monthlyCertificate,stored.id,data,token());}
+      else await insertKind(K.monthlyCertificate,data,token());
+      await loadAll();renderWorkspaceCard("excellence");
+      const status=byId("reserveMonthlyCertStatus");if(status)status.textContent=`تم اعتماد ${rows.length} شهادة لشهر ${month.title}.`;
+    }catch(e){console.error(e);event.currentTarget.disabled=false;say(e.message||"تعذر اعتماد النتائج، ولم تصدر شهادات.")}
+  });
+  document.querySelectorAll(".reserve-monthly-cert-preview").forEach(button=>button.onclick=()=>{
+    const found=approvedMonth();if(!found)return say("يجب اعتماد نتائج الشهر أولًا.");
+    const row=found.snap.rows.find(r=>String(r.teacherId)===String(button.dataset.teacher));
+    if(!row)return say("تعذر العثور على المعلمة في سجل الشهر المعتمد.");
+    state.monthlyCertificatePreviewTeacherId=String(row.teacherId);
+    reserveMonthlyCertificateRender(row,found.month,found.snap.issuedAt);
+    byId("reserveMonthlyCertPreview").style.display="block";
+    say(`معاينة شهادة ${row.name} – المركز ${row.rank}.`);
+  });
+  byId("reserveMonthlyCertClose")?.addEventListener("click",()=>{
+    byId("reserveMonthlyCertPreview").style.display="none";
+    state.monthlyCertificatePreviewTeacherId="";
+  });
+  const run=async(button,rows,month,issuedAt)=>{
+    button.disabled=true;say(`جارٍ إنشاء ${rows.length} شهادة بصيغة PDF وفق قالب منجز...`);
+    try{await reserveMonthlyCertPDF(rows,month,issuedAt,(i,total)=>say(`جارٍ تجهيز الشهادة ${i} من ${total}...`));say(`تم تجهيز ${rows.length} شهادة بصيغة PDF.`)}
+    catch(e){console.error(e);say(e.message||"تعذر تنزيل الشهادات، تحققي من الاتصال ثم أعيدي المحاولة.")}
+    finally{button.disabled=false}
+  };
+  byId("reserveMonthlyCertDownload")?.addEventListener("click",event=>{
+    const found=approvedMonth();if(!found)return say("يجب اعتماد الشهر أولًا.");
+    const rows=found.snap.rows.filter(r=>String(r.teacherId)===state.monthlyCertificatePreviewTeacherId);
+    if(rows.length)run(event.currentTarget,rows,found.month,found.snap.issuedAt);
+  });
+  byId("reserveMonthlyCertAll")?.addEventListener("click",event=>{
+    const found=approvedMonth();if(!found)return say("يجب اعتماد الشهر أولًا.");
+    run(event.currentTarget,found.snap.rows,found.month,found.snap.issuedAt);
+  });
+}
+
 function excellenceAdminHTML(){
   const rows=excellenceMetrics(state.currentDate),wr=weekRange(state.currentDate);
   return `<section class="surface panel reserve-admin-only">
@@ -1949,6 +2192,7 @@ function excellenceAdminHTML(){
     <div class="form-actions">
       <button class="btn btn-primary reserve-excellence-export" data-scope="week" type="button">تصدير الأسبوع</button>
       <button class="btn btn-ghost reserve-excellence-export" data-scope="cumulative" type="button">تصدير التراكمي</button>
+      <button class="btn btn-primary" id="reserveMonthlyCertJump" type="button">إصدار شهادات التميز الشهري</button>
     </div>
     <div class="reserve-table-wrap reserve-excellence"><table class="reserve-table"><thead><tr>
       <th>المركز</th><th>المعلمة</th><th>تفصيل يومي</th><th>حصص الأسبوع</th><th>تراكمي الشهر الهجري</th><th>تم الاطلاع</th><th>تم تفعيل الموضوع</th><th>الاثنتان معًا</th><th>التراكمي للفصل</th><th>عناوين التفعيل</th>
@@ -1959,7 +2203,7 @@ function excellenceAdminHTML(){
       <td>${r.cumulativeQualified}</td><td>${r.titles.length?r.titles.map(t=>`<div>${esc(t)}</div>`).join(""):"—"}</td>
     </tr>`).join(""):'<tr><td colspan="10">لا توجد بيانات تميز لهذا الأسبوع</td></tr>'}</tbody></table></div>
     <p class="reserve-public-note">الترتيب من جدول النشر فقط: الأكثر حصصًا منذ الأحد يتقدم، وعند التعادل يُفضّل اكتمال الاطلاع والموضوع، ثم الموضوع، ثم الاطلاع؛ وعند تساوي الجميع يتشاركون المركز. تبدأ المراكز من جديد كل أحد.</p>
-  </section>`;
+  </section>${reserveMonthlyCertificatePanelHTML()}`;
 }
 function exportExcellence(scope){
   const refs=scope==="week"?[state.currentDate]:[];
@@ -1977,6 +2221,8 @@ function exportExcellence(scope){
 }
 function bindExcellenceAdmin(){
   document.querySelectorAll(".reserve-excellence-export").forEach(b=>b.onclick=()=>exportExcellence(b.dataset.scope));
+  bindReserveMonthlyCertificates();
+  byId("reserveMonthlyCertJump")?.addEventListener("click",()=>byId("reserveMonthlyCertificates")?.scrollIntoView({behavior:"smooth",block:"start"}));
 }
 
 function teachersAdminHTML(){
