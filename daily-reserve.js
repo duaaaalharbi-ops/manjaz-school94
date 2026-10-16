@@ -2,7 +2,7 @@
    Public read-only daily reserve + weekly cumulative view.
    Admin-only editing through Supabase Auth session.
    Cloud-first: all operational data lives in Supabase records.
-   Candidate engine returns top 3 eligible teachers per absent period.
+   Candidate engine shows a single smart nomination per period with editable staff selection.
 */
 (()=>{"use strict";
 
@@ -605,6 +605,23 @@ function injectStyle(){
   @media(max-width:760px){.reserve-public-card>summary{display:grid;grid-template-columns:1fr auto}.reserve-public-card>summary strong{font-size:15px}.reserve-public-card>summary span{grid-row:2}.reserve-public-card>summary::after{grid-column:2;grid-row:1/3}}
   @media print{.reserve-public-card-content{display:block!important}.reserve-public-card{break-inside:avoid}.reserve-public-card:not([open]) .reserve-public-card-content{display:block!important}}
   .reserve-excellence{display:grid;gap:10px}
+  /* Official merit position: gold borders only, no colorful row background. */
+  .reserve-excellence .reserve-table th:first-child,
+  .reserve-excellence .reserve-table td:first-child{border:2px solid #caa44d!important;background:#fffdfa;color:#74520b;font-weight:900}
+  .reserve-excellence .reserve-table tbody tr{border-bottom:1px solid #caa44d}
+  .reserve-excellence .reserve-table td:first-child strong{display:inline-flex;justify-content:center;align-items:center;min-width:27px;min-height:27px;border-radius:6px;color:#74520b}
+  .reserve-pdf-sheet{direction:rtl;font-family:Tahoma,Arial,sans-serif;background:#fff;color:#173745;padding:20px;box-sizing:border-box}
+  .reserve-pdf-sheet h2{font-size:20px;margin:0 0 5px;color:#0b3047}
+  .reserve-pdf-sheet .reserve-pdf-meta{margin-bottom:15px;color:#516b73;font-size:12px}
+  .reserve-pdf-sheet table{width:100%;border-collapse:collapse;font-size:11px;table-layout:auto}
+  .reserve-pdf-sheet thead{display:table-header-group}
+  .reserve-pdf-sheet tr{break-inside:avoid}
+  .reserve-pdf-sheet th,.reserve-pdf-sheet td{border:1px solid #c8d6d9;padding:7px 6px;text-align:center;overflow-wrap:anywhere}
+  .reserve-pdf-sheet th{background:#ecf5f3;color:#0b3047}
+  .reserve-pdf-sheet .reserve-pdf-footer{font-size:11px;margin-top:12px;border-top:1px solid #cbd9dc;padding-top:9px}
+  .reserve-share-box{margin:10px 0 14px;padding:12px;border:1px solid #c8dcd6;border-radius:12px;background:#f7fbfa}
+  .reserve-share-box .reserve-actions{margin-top:9px}
+  .reserve-share-box small{display:block;color:#60757c;margin-top:6px}
   .reserve-rank-badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;background:#eef5f4;font-size:12px;font-weight:900}
   .reserve-rank-badge.star{background:#fff4d7;color:#8a5a00}
   .reserve-source-note{font-size:12px;color:#60757c}
@@ -919,6 +936,31 @@ function loginHTML(){
     <div id="reserveLoginMsg"></div></form>
   </section>`;
 }
+// Two scoped reserve deep links. No login credentials or personal assignment tokens are shared.
+function reserveDeepLink(type,date){
+  const url=new URL(location.pathname,location.origin);
+  url.searchParams.set(type==="publish"?"reserve_publish":"reserve_view",type==="publish"?date:"daily");
+  if(type!=="publish")url.searchParams.set("reserve_date",date);
+  url.hash="daily-reserve";
+  return url.toString();
+}
+function reserveShareMessage(date){
+  return `السلام عليكم ورحمة الله وبركاته،\n\nالمعلمات الكريمات،\nتُفيدكم إدارة الثانوية الرابعة والتسعين – مسارات باعتماد جدول حصص الاحتياط ليوم ${dayName(date)} الموافق ${fmtDate(date)}.\nيرجى الاطلاع على التكليفات المسندة، وتأكيد الاطلاع وتسجيل عنوان موضوع الحصة من خانتيهما في الجدول.\n\nرابط جدول الاحتياط اليومي:\n${reserveDeepLink("daily",date)}\n\nرابط جدول النشر المعتمد:\n${reserveDeepLink("publish",date)}\n\nشاكرين لكم تعاونكم والتزامكم.\nإدارة الثانوية الرابعة والتسعين – مسارات`;
+}
+function bindReserveSharing(){
+  byId("reserveCopyShare")?.addEventListener("click",async()=>{
+    const msg=reserveShareMessage(state.currentDate);
+    try{await navigator.clipboard.writeText(msg);byId("reserveShareMsg").textContent="تم نسخ الرسالة الرسمية مع الرابطين."}
+    catch(_){prompt("انسخي رسالة الاحتياط:",msg)}
+  });
+  byId("reserveWhatsAppShare")?.addEventListener("click",()=>{
+    const url=`https://api.whatsapp.com/send?text=${encodeURIComponent(reserveShareMessage(state.currentDate))}`;
+    const tab=window.open(url,"_blank","noopener,noreferrer");
+    if(!tab)location.assign(url);
+  });
+  byId("reservePreviewDailyLink")?.addEventListener("click",()=>window.open(reserveDeepLink("daily",state.currentDate),"_blank","noopener,noreferrer"));
+  byId("reservePreviewPublishLink")?.addEventListener("click",()=>window.open(reserveDeepLink("publish",state.currentDate),"_blank","noopener,noreferrer"));
+}
 function adminHTML(){
   return `<section class="surface panel reserve-admin-block">
     <div class="panel-head"><h3>إدارة الاحتياط اليومي</h3><span>${esc(state.admin?.user?.email||"حساب إداري")}</span></div>
@@ -928,6 +970,17 @@ function adminHTML(){
       <button class="reserve-tab" data-admin-tab="settings">الإعدادات</button>
       <button class="reserve-tab" id="reserveLogout">خروج</button>
     </div>
+    <section class="reserve-share-box reserve-admin-only" aria-label="مشاركة رابط قسم الاحتياط">
+      <strong>مشاركة جدول الاحتياط اليومي وجدول النشر</strong>
+      <small>الروابط خاصة بقسم الاحتياط في «منجز» فقط. مشاركة واتساب تفتح رسالة جاهزة لا تُرسل تلقائيًا.</small>
+      <div class="reserve-actions">
+        <button class="reserve-mini" id="reserveCopyShare" type="button">نسخ الرسالة الرسمية والرابطين</button>
+        <button class="reserve-mini" id="reserveWhatsAppShare" type="button">مشاركة عبر واتساب</button>
+        <button class="reserve-mini" id="reservePreviewDailyLink" type="button">اختبار رابط الجدول اليومي</button>
+        <button class="reserve-mini" id="reservePreviewPublishLink" type="button">اختبار رابط جدول النشر</button>
+      </div>
+      <div id="reserveShareMsg" role="status" aria-live="polite"></div>
+    </section>
     <div id="reserveAdminBody" style="margin-top:14px"></div>
   </section>`;
 }
@@ -947,14 +1000,14 @@ function dayAdminHTML(){
       </div>
       <div class="form-actions"><button class="btn btn-primary" id="reserveAddAbsence" type="button">تسجيل جميع الغائبات واستخراج حصصهن</button></div>
       <label class="reserve-admin-manual-toggle"><input type="checkbox" id="reserveAutoAllNames" ${state.autoAllNames!==false?"checked":""}>
-        <span><strong>إتاحة جميع الكادر للتعديل:</strong> إظهار المعلمات جميعًا، بمن فيهن المستثنيات، إضافة إلى الموجهات الطلابيات ومحضرة المختبر. تبقى المرشحات الثلاث بالترتيب الذكي، ويظهر تحذير عند الإسناد المخالف.</span>
+        <span><strong>إتاحة جميع الكادر للتعديل:</strong> إظهار المعلمات جميعًا، بمن فيهن المستثنيات، إضافة إلى الموجهات الطلابيات ومحضرة المختبر. يظهر ترشيح ذكي واحد لكل حصة، ويمكن استبداله من القائمة المنسدلة. عند الإسناد المخالف تظهر التحذيرات.</span>
       </label>
       <div id="reserveDayMsg"></div>
       <div class="reserve-admin-list" style="margin-top:12px">${abs.length?abs.map(a=>`<div class="reserve-teacher-row">
         <strong>${esc(a.teacherName)}</strong><span>${esc(a.reason||"غياب")} — ${(a.periods||[]).map(p=>`ح${p.period}: ${esc(p.className)}${p.activity?" (نشاط)":""}`).join(" — ")||"لا توجد حصص مسجلة"}</span>
         <button class="reserve-mini danger reserve-delete-absence" data-id="${esc(a.id)}">حذف الغياب</button>
       </div>`).join(""):'<div class="empty-inline">لا يوجد غياب مسجل لهذا اليوم</div>'}</div>
-      <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveGenerate" type="button">توليد أفضل 3 مرشحات</button></div>
+      <div class="form-actions" style="margin-top:12px"><button class="btn btn-primary" id="reserveGenerate" type="button">توليد آلي للمعلمات المحددات</button></div>
     </section>
 
     <section class="surface panel">
@@ -971,7 +1024,7 @@ function dayAdminHTML(){
 function manualCandidateOptions(a){
   // The original full-directory override remains available behind an explicit checkbox.
   const all=(state.autoAllNames!==false?manualAssigneeDirectory():
-    (a.candidates||[]).map(c=>teacherOf(c.teacherId)).filter(Boolean))
+    (a.candidates||[]).slice(0,1).map(c=>teacherOf(c.teacherId)).filter(Boolean))
     .map(t=>({teacherId:String(t.id),name:t.name}));
   if(a.assignedTeacherId&&!all.some(t=>String(t.teacherId)===String(a.assignedTeacherId))){
     all.unshift({teacherId:String(a.assignedTeacherId),name:a.assignedTeacherName||"المكلفة سابقًا"});
@@ -979,13 +1032,13 @@ function manualCandidateOptions(a){
   return all;
 }
 function adminAssignmentsHTML(items){
-  if(!items.length)return '<div class="empty-inline">سجلي الغياب ثم اضغطي توليد أفضل 3 مرشحات</div>';
-  return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>سبب الاحتياط</th><th>الغائبة</th><th>أفضل 3 مرشحات</th><th>المكلفة</th><th>التفعيل</th><th>الإجراءات</th></tr></thead>
+  if(!items.length)return '<div class="empty-inline">اختاري الغائبات ثم اضغطي «توليد آلي» لإنشاء التكليفات دفعة واحدة.</div>';
+  return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>سبب الاحتياط</th><th>الغائبة</th><th>المرشحة الذكية</th><th>المكلفة (يمكن تغييرها)</th><th>التفعيل</th><th>الإجراءات</th></tr></thead>
   <tbody>${items.sort((a,b)=>Number(a.period)-Number(b.period)).map(a=>{
     const all=manualCandidateOptions(a);
     return `<tr data-assignment="${esc(a.id)}">
     <td>${esc(a.period)}</td><td>${esc(a.className||"—")}${a.activity?' <small>(نشاط)</small>':""}</td><td>${esc(a.reason||"غياب")}</td><td>${esc(a.absentTeacherName)}</td>
-    <td>${(a.candidates||[]).map((c,i)=>`<div class="reserve-candidate"><strong>${i+1}. ${esc(c.name)}</strong></div>`).join("")||"لا توجد مرشحات"}</td>
+    <td>${a.candidates?.[0]?`<div class="reserve-candidate"><strong>${esc(a.candidates[0].name)}</strong></div>`:"لا توجد مرشحة مطابقة، اختاري من القائمة"}</td>
     <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select><small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small></td>
     <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
     <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
@@ -1368,7 +1421,7 @@ function excellenceAdminHTML(){
       <button class="btn btn-primary reserve-excellence-export" data-scope="week" type="button">تصدير الأسبوع</button>
       <button class="btn btn-ghost reserve-excellence-export" data-scope="cumulative" type="button">تصدير التراكمي</button>
     </div>
-    <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr>
+    <div class="reserve-table-wrap reserve-excellence"><table class="reserve-table"><thead><tr>
       <th>المركز</th><th>المعلمة</th><th>تفصيل يومي</th><th>حصص الأسبوع</th><th>تم الاطلاع</th><th>تم تفعيل الموضوع</th><th>الاثنتان معًا</th><th>التراكمي للفصل</th><th>عناوين التفعيل</th>
     </tr></thead><tbody>${rows.length?rows.map(r=>`<tr>
       <td><strong>${r.rank}</strong></td><td>${esc(r.teacher.name)}</td>
@@ -1385,12 +1438,13 @@ function exportExcellence(scope){
   if(scope==="week"){
     rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
   }else{
-    const allDates=[...new Set(publishedAssignments().map(a=>a.date))].sort();
-    const latest=allDates[allDates.length-1]||state.currentDate;
-    rows=excellenceMetrics(latest).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
+    // Export exactly the selected date/week, not a different later date.
+    rows=excellenceMetrics(state.currentDate).map(r=>[r.rank,r.teacher.name,r.weekCount,r.qualifiedWeek,r.cumulativeQualified,r.weekBoth,r.titles.join(" | ")]);
   }
   const headers=["المركز","المعلمة","حصص الأسبوع","المحتسب","التراكمي للفصل","الحصص المكتملة الأيقونتين","عناوين التفعيل"];
-  downloadXls(`تميز_الاحتياط_${scope}`,headers,rows,"التميز");
+  return downloadReserveTablePDF(`تميز الاحتياط ${scope}`, ["يوم التقرير","التاريخ الهجري",...headers],
+    rows.map(row=>[dayName(state.currentDate),fmtDate(state.currentDate),...row]),state.currentDate,
+    `أسبوع التميز: ${fmtDate(weekRange(state.currentDate).start)} – ${fmtDate(weekRange(state.currentDate).end)}`);
 }
 function bindExcellenceAdmin(){
   document.querySelectorAll(".reserve-excellence-export").forEach(b=>b.onclick=()=>exportExcellence(b.dataset.scope));
@@ -1450,12 +1504,12 @@ function adminStatsHTML(){
       ${excellenceTableHTML(state.currentDate)}
     </section>
     <section class="surface panel" style="grid-column:1/-1">
-      <div class="panel-head"><h3>تصدير سجلات الاحتياط</h3><span>Excel</span></div>
+      <div class="panel-head"><h3>تصدير سجلات الاحتياط</h3><span>PDF</span></div>
       <p class="reserve-public-note">يتم التصدير من السجلات المعتمدة فقط، ويمكن استخراج أسبوعي أو شهري أو فصلي.</p>
       <div class="form-actions">
-        <button class="btn btn-primary reserve-export-xls" data-range="week" type="button">Excel أسبوعي</button>
-        <button class="btn btn-ghost reserve-export-xls" data-range="month" type="button">Excel شهري</button>
-        <button class="btn btn-ghost reserve-export-xls" data-range="term" type="button">Excel فصلي</button>
+        <button class="btn btn-primary reserve-export-xls" data-range="week" type="button">PDF أسبوعي</button>
+        <button class="btn btn-ghost reserve-export-xls" data-range="month" type="button">PDF شهري</button>
+        <button class="btn btn-ghost reserve-export-xls" data-range="term" type="button">PDF فصلي</button>
       </div>
       <div class="reserve-source-note">الأسبوع الحالي: ${esc(fmtDate(wr.start))} – ${esc(fmtDate(wr.end))} | مصدر الجدول: الإصدار السادس 27/04/1448هـ</div>
     </section>
@@ -1667,27 +1721,40 @@ async function downloadReservePublicationPDF(date){
     msg.textContent="تعذر التنزيل المباشر. استخدمي «طباعة» ثم «حفظ كملف PDF» من الجهاز.";
   }finally{btn.disabled=false}
 }
-function xlsEsc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
-function downloadXls(fileBase,headers,rows,sheetName="البيانات",extraSheet=""){
-  const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
-  <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="${xlsEsc(sheetName)}"><Table>${[headers,...rows].map(r=>`<Row>${r.map(v=>`<Cell><Data ss:Type="String">${xlsEsc(v)}</Data></Cell>`).join("")}</Row>`).join("")}</Table></Worksheet>
-  ${extraSheet}
-  </Workbook>`;
-  const blob=new Blob([xml],{type:"application/vnd.ms-excel;charset=utf-8"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-  a.download=`${fileBase}.xls`;document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+// All reserve exports use PDF, with an explicit day and Hijri date.
+async function downloadReserveTablePDF(name,headers,rows,scopeDate=state.currentDate,notes=""){
+  const sheet=document.createElement("div");
+  sheet.className="reserve-pdf-sheet";
+  sheet.setAttribute("dir","rtl");
+  const today=state.currentDate;
+  sheet.innerHTML=`<h2>${esc(name)}</h2>
+    <div class="reserve-pdf-meta">الثانوية الرابعة والتسعون – مسارات | يوم التقرير: ${esc(dayName(today))} | تاريخ التقرير: ${esc(fmtDate(today))}<br>اليوم المرجعي: ${esc(dayName(scopeDate))} | التاريخ المرجعي: ${esc(fmtDate(scopeDate))}${notes?`<br>${esc(notes)}`:""}</div>
+    <table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead>
+      <tbody>${rows.length?rows.map(row=>`<tr>${row.map(v=>`<td>${esc(v==null?"":v)}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${headers.length}">لا توجد بيانات لهذا النطاق</td></tr>`}</tbody></table>
+    <div class="reserve-pdf-footer">الثانوية الرابعة والتسعون – مسارات | قسم الاحتياط اليومي | ${esc(dayName(today))} ${esc(fmtDate(today))}</div>`;
+  const host=document.createElement("div");
+  host.style.cssText="position:fixed;left:-20000px;top:0;width:1050px;pointer-events:none;z-index:-1";
+  sheet.style.cssText="width:1050px;max-width:1050px;position:relative;left:0;top:0";
+  host.appendChild(sheet);document.body.appendChild(host);
+  try{
+    const engine=await loadReservePdfEngine();
+    await engine().set({margin:[10,9,10,9],filename:`${name.replace(/\s+/g,"_")}_${today}.pdf`,
+      image:{type:"jpeg",quality:0.98},
+      html2canvas:{scale:1.6,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
+      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
+      pagebreak:{mode:["css","legacy"]}
+    }).from(sheet).save();
+  }catch(err){
+    console.error("PDF export failed",err);
+    alert("تعذر إنشاء ملف PDF الآن. تحققي من الاتصال وأعيدي المحاولة.");
+  }finally{host.remove()}
 }
 function exportExcel(range){
   const rr=exportRange(range);
   const items=dateRangeAssignments(rr.start,rr.end).slice().sort((a,b)=>a.date.localeCompare(b.date)||Number(a.period)-Number(b.period));
   const headers=["التاريخ الهجري","اليوم","الحصة","الفصل","سبب الاحتياط","المعلمة الغائبة","معلمة الاحتياط","الحالة","عنوان التفعيل"];
   const rows=items.map(a=>[fmtDate(a.date),dayName(a.date),a.period,a.className||"",a.reason||"غياب",a.absentTeacherName||"",a.assignedTeacherName||"",assignmentStatusLabel(a),a.activationTitle||""]);
-  const adjs=state.adjustments.filter(a=>clean(a.weekStart)>=rr.start&&clean(a.weekStart)<=rr.end);
-  const extra=adjs.length?`<Worksheet ss:Name="التصحيحات"><Table>${[["المعلمة","التاريخ الهجري","التصحيح","السبب"],...adjs.map(a=>[a.teacherName||"",fmtDate(a.date),a.delta,a.note||""])].map(r=>`<Row>${r.map(v=>`<Cell><Data ss:Type="String">${xlsEsc(v)}</Data></Cell>`).join("")}</Row>`).join("")}</Table></Worksheet>`:"";
-  const stamp=fmtDate(rr.start).replace(/[\s\/]+/g,"_");
-  downloadXls(`احتياط_${range}_${stamp}`,headers,rows,"الاحتياط",extra);
+  return downloadReserveTablePDF(`سجلات الاحتياط ${range}`,headers,rows,rr.start,`الفترة: ${fmtDate(rr.start)} – ${fmtDate(rr.end)} | اليوم: ${dayName(rr.start)}`);
 }
 function bindStatsAdmin(){
   document.querySelectorAll(".reserve-export-xls").forEach(b=>b.onclick=()=>exportExcel(b.dataset.range));
@@ -1717,7 +1784,7 @@ async function refreshAndRenderPublic(){
 function mountAdminShell(){
   const mount=byId("reserveAdminMount"); if(!mount)return;
   mount.innerHTML=state.admin?adminHTML():loginHTML();
-  if(state.admin)bindAdminShell(); else bindLogin();
+  if(state.admin){bindAdminShell();bindReserveSharing()} else bindLogin();
 }
 function bindPublicDailyActions(){
   const findInlineAssignment=el=>{
@@ -1881,14 +1948,14 @@ function plainData(x){
 async function ensureAdmin(){if(!token())throw new Error("يلزم تسجيل الدخول الإداري")}
 async function refreshDayCandidates(date){
   const items=assignmentsOn(date).slice().sort((a,b)=>Number(a.period)-Number(b.period));
-  const usedPrimary=new Set(),usedAlt1=new Set();
+  const usedPrimary=new Set();
   for(const a of items){
+    if(a.manual===true)continue;
     const cand=candidateRanking(date,a.period,a.absentTeacherId,a.id,{
-      className:a.className,isActivity:a.activity===true,usedPrimary,usedAlt1,limit:3
+      className:a.className,isActivity:a.activity===true,usedPrimary,limit:1
     });
     if(cand[0]?.teacherId)usedPrimary.add(String(cand[0].teacherId));
-    if(cand[1]?.teacherId)usedAlt1.add(String(cand[1].teacherId));
-    await patchKind(K.assignment,a.id,{...plainData(a),candidates:cand},token(),a.published?"معتمد":"مسودة");
+    await patchKind(K.assignment,a.id,{...plainData(a),candidates:cand.slice(0,1)},token(),a.published?"معتمد":"مسودة");
   }
   await loadAll();
 }
@@ -1904,73 +1971,91 @@ function bindDayAdmin(){
     state.autoAbsentIds=[...(byId("reserveAbsentTeacher")?.selectedOptions||[])].map(o=>String(o.value));
     renderWorkspaceCard("auto");
   });
+  // Both actions consume the selected absent teachers directly. Register once,
+  // generate once, and leave manual assignments unmodified.
+  async function registerSelectedAbsences(date,ids,reason){
+    const existingIds=new Set(absencesOn(date).map(a=>String(a.teacherId)));
+    let created=0;
+    for(const teacherId of ids){
+      const t=teacherOf(teacherId);
+      if(!t||existingIds.has(String(teacherId)))continue;
+      const cells=scheduleOf(teacherId)?.timetable?.[dayKey(date)]||[];
+      const periods=cells.map((v,i)=>{
+        const x=parseScheduleValue(v);
+        return {period:i+1,className:x.className,activity:x.activity};
+      }).filter(x=>x.className);
+      const saved=await insertKind(K.absence,{
+        date,dayKey:dayKey(date),teacherId:String(teacherId),teacherName:t.name,
+        reason,periods,source:"auto",createdAt:new Date().toISOString()
+      },token());
+      state.absences.push(saved);
+      existingIds.add(String(teacherId));created++;
+    }
+    return created;
+  }
+  const chosenAbsentIds=()=>[...(byId("reserveAbsentTeacher")?.selectedOptions||[])]
+    .map(o=>String(o.value)).filter(Boolean);
   byId("reserveAddAbsence")?.addEventListener("click",async()=>{
-    const msg=byId("reserveDayMsg"),date=state.currentDate;
-    const ids=[...(byId("reserveAbsentTeacher")?.selectedOptions||[])].map(o=>String(o.value));
-    if(!ids.length){msg.textContent="اختاري أسماء جميع الغائبات أولًا";return}
-    if(!dayKey(date)){msg.textContent="التاريخ المختار ليس من أيام الدوام الأحد–الخميس";return}
+    const msg=byId("reserveDayMsg"),date=state.currentDate,ids=chosenAbsentIds();
+    if(!ids.length){msg.textContent="اختاري أسماء الغائبات أولًا.";return}
+    if(!dayKey(date)){msg.textContent="اختاري تاريخًا من الأحد إلى الخميس.";return}
     const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
     state.autoAbsentIds=ids;
-    msg.textContent="جارٍ تسجيل جميع الغائبات...";
+    msg.textContent="جارٍ حفظ أسماء الغائبات...";
     try{
       await ensureAdmin();
-      const already=new Set(absencesOn(date).map(x=>String(x.teacherId)));
-      let added=0;
-      for(const teacherId of ids){
-        const t=teacherOf(teacherId);if(!t||already.has(teacherId))continue;
-        const s=scheduleOf(teacherId),cells=s?.timetable?.[dayKey(date)]||[];
-        const periods=cells.map((v,i)=>{const x=parseScheduleValue(v);return {period:i+1,className:x.className,activity:x.activity}}).filter(x=>x.className);
-        await insertKind(K.absence,{
-          date,dayKey:dayKey(date),teacherId,teacherName:t.name,reason,periods,
-          source:"auto",createdAt:new Date().toISOString()
-        },token());
-        already.add(teacherId);added++;
-      }
+      const n=await registerSelectedAbsences(date,ids,reason);
       await loadAll();renderWorkspaceCard("auto");
-      const result=byId("reserveDayMsg");
-      if(result)result.textContent=`تم تسجيل ${added} غائبات جديدات. إجمالي المحددات ${ids.length}. اضغطي توليد المرشحات ثم حفظ واعتماد.`;
-    }catch(err){console.error(err);msg.textContent="تعذر استكمال تسجيل الغائبات. أعيدي المحاولة؛ المحفوظات السابقة لن تتكرر."}
+      byId("reserveDayMsg").textContent=`تم تسجيل الغائبات (${n} جديدات). اضغطي «توليد آلي» لإنشاء التكليفات.`;
+    }catch(err){console.error(err);msg.textContent="تعذر استكمال تسجيل الغياب. الأسماء المحفوظة لن تتكرر عند إعادة المحاولة."}
   });
   document.querySelectorAll(".reserve-delete-absence").forEach(b=>b.onclick=async()=>{
     if(!confirm("حذف تسجيل الغياب؟"))return;
-    await deleteKind(K.absence,b.dataset.id,token()); await loadAll(); renderWorkspaceCard("auto");
+    await deleteKind(K.absence,b.dataset.id,token());await loadAll();renderWorkspaceCard("auto");
   });
   byId("reserveGenerate")?.addEventListener("click",async()=>{
-    const msg=byId("reserveDayMsg");
+    const msg=byId("reserveDayMsg"),button=byId("reserveGenerate"),date=state.currentDate;
+    const ids=chosenAbsentIds();
+    if(!dayKey(date)){msg.textContent="اختاري تاريخًا من الأحد إلى الخميس.";return}
+    if(!ids.length&&!absencesOn(date).length){msg.textContent="اختاري أسماء الغائبات أولًا، ثم اضغطي التوليد.";return}
+    state.autoAbsentIds=ids;
+    button.disabled=true;
+    msg.textContent="جارٍ تسجيل الغائبات وتوليد حصة واحدة لكل تكليف...";
     try{
       await ensureAdmin();
-      const abs=absencesOn(state.currentDate);
-      if(!abs.length){msg.textContent="لا يوجد غياب أو تكليف مسجل لهذا اليوم";return}
-      const existing=assignmentsOn(state.currentDate);
-      const usedPrimary=new Set(),usedAlt1=new Set();
-      existing.forEach(x=>{
-        if(x.candidates?.[0]?.teacherId)usedPrimary.add(String(x.candidates[0].teacherId));
-        if(x.candidates?.[1]?.teacherId)usedAlt1.add(String(x.candidates[1].teacherId));
-      });
+      const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
+      if(ids.length)await registerSelectedAbsences(date,ids,reason);
+      const abs=absencesOn(date).filter(a=>!ids.length||ids.includes(String(a.teacherId)));
+      const known=new Set(assignmentsOn(date).map(a=>[String(a.absentTeacherId),Number(a.period),clean(a.className)].join("|")));
+      const usedPrimary=new Set(assignmentsOn(date).map(a=>String(a.assignedTeacherId||"")).filter(Boolean));
+      let generated=0,unfilled=0;
       for(const a of abs){
-        for(const p of (a.periods||[])){
-          if(existing.some(x=>String(x.absentTeacherId)===String(a.teacherId)&&Number(x.period)===Number(p.period)))continue;
-          const cand=candidateRanking(state.currentDate,p.period,a.teacherId,"",{
-            className:p.className,isActivity:p.activity===true,usedPrimary,usedAlt1,limit:3
-          });
-          const first=cand[0]||null;
-          if(cand[0]?.teacherId)usedPrimary.add(String(cand[0].teacherId));
-          if(cand[1]?.teacherId)usedAlt1.add(String(cand[1].teacherId));
-          await insertKind(K.assignment,{
-            date:state.currentDate,dayKey:dayKey(state.currentDate),period:Number(p.period),className:p.className,activity:p.activity===true,
-            reason:a.reason||"غياب",
-            absentTeacherId:String(a.teacherId),absentTeacherName:a.teacherName,
-            candidates:cand,
-            assignedTeacherId:first?.teacherId||"",assignedTeacherName:first?.name||"",
-            published:false,status:"مسودة",ackToken:uid(),ackAt:"",
-            activationTitle:"",activationAt:"",
-            createdAt:new Date().toISOString()
+        for(const period of (a.periods||[])){
+          const key=[String(a.teacherId),Number(period.period),clean(period.className)].join("|");
+          if(!period.className||known.has(key))continue;
+          const candidates=candidateRanking(date,period.period,a.teacherId,"",{
+            className:period.className,isActivity:period.activity===true,usedPrimary,limit:1
+          }).slice(0,1);
+          const pick=candidates[0]||null;
+          if(pick?.teacherId)usedPrimary.add(String(pick.teacherId));else unfilled++;
+          const record=await insertKind(K.assignment,{
+            date,dayKey:dayKey(date),period:Number(period.period),className:period.className,activity:period.activity===true,
+            reason:a.reason||"غياب",absentTeacherId:String(a.teacherId),absentTeacherName:a.teacherName,
+            candidates,assignedTeacherId:pick?.teacherId||"",assignedTeacherName:pick?.name||"",
+            manual:false,source:"auto",published:false,status:"مسودة",ackToken:uid(),ackAt:"",
+            activationTitle:"",activationAt:"",createdAt:new Date().toISOString()
           },token(),"مسودة");
-          await loadAll();
+          state.assignments.push(record);
+          known.add(key);generated++;
         }
       }
-      renderWorkspaceCard("auto");
-    }catch(err){console.error(err);msg.textContent="تعذر توليد الاحتياط"}
+      await loadAll();refreshReserveStatisticsViews();renderWorkspaceCard("auto");
+      const after=byId("reserveDayMsg");
+      after.textContent=generated
+        ?`تم توليد ${generated} تكليفًا بمرشحة واحدة لكل حصة.${unfilled?` توجد ${unfilled} حصص تحتاج اختيار معلمة من القائمة.`:""} اختاري التعديل عند الحاجة، ثم «حفظ واعتماد».`
+        :"لا توجد حصص جديدة للتوليد؛ التكليفات السابقة محفوظة ويمكن تعديلها واعتمادها من الجدول أدناه.";
+    }catch(err){console.error(err);msg.textContent="تعذر استكمال التوليد، والتكليفات المحفوظة لن تُنشأ مرة أخرى عند المحاولة."}
+    finally{button.disabled=false}
   });
   document.querySelectorAll(".reserve-save-assignee").forEach(b=>b.onclick=async()=>{
     const tr=b.closest("[data-assignment]"),id=tr.dataset.assignment;
@@ -2033,19 +2118,38 @@ function bindDayAdmin(){
     }catch(err){console.error(err);if(msg)msg.textContent="تعذر استكمال حذف الجدول. تحققي من الاتصال وأعيدي المحاولة."}
   });
   byId("reserveApproveAuto")?.addEventListener("click",async()=>{
-    const msg=byId("reserveDayMsg");
+    const msg=byId("reserveDayMsg"),button=byId("reserveApproveAuto"),date=state.currentDate;
+    const entries=[...document.querySelectorAll('#reserveAssignmentsAdmin tr[data-assignment]')]
+      .map(tr=>({id:String(tr.dataset.assignment),teacherId:String(tr.querySelector('.reserve-assignee')?.value||'')}));
+    const items=assignmentsOn(date).filter(a=>a.manual!==true);
+    if(!items.length){msg.textContent="لا توجد تكليفات آلية لهذا اليوم. اختاري الغائبات واضغطي «توليد آلي» أولًا.";return}
+    if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId&&teacherOf(x.teacherId)))){
+      msg.textContent="يجب اختيار معلمة لكل حصة من القوائم المنسدلة قبل الاعتماد.";return;
+    }
+    button.disabled=true;msg.textContent="جارٍ حفظ التوزيع واعتماد الجدول الآلي...";
     try{
-      const items=assignmentsOn(state.currentDate);
-      if(!items.length){msg.textContent="لا توجد تكليفات لاعتمادها";return}
-      const pending=items.filter(a=>a.manual!==true&&!a.assignedTeacherId);
-      if(pending.length){msg.textContent=`يوجد ${pending.length} حصص دون معلمة مسندة. أكملي توزيعها قبل الحفظ والاعتماد.`;return;}
+      await ensureAdmin();
+      let saved=0;
       for(const a of items){
-        if(a.manual===true||!a.assignedTeacherId||a.published===true)continue;
-        await patchKind(K.assignment,a.id,{...plainData(a),published:true,status:"معتمد"},token(),"معتمد");
+        const teacherId=entries.find(x=>x.id===String(a.id))?.teacherId;
+        const t=teacherOf(teacherId);
+        if(!t)throw new Error("Missing selected teacher");
+        const changed=String(a.assignedTeacherId)!==teacherId;
+        const warnings=changed?manualConflictMessages(date,[{
+          teacherId,period:Number(a.period),className:a.className,existingId:String(a.id)
+        }],[...new Set(absencesOn(date).map(x=>String(x.teacherId)))])
+          :(a.manualOverrideWarnings||[]);
+        const data={...plainData(a),assignedTeacherId:teacherId,assignedTeacherName:t.name,
+          manual:false,source:"auto",candidates:(a.candidates||[]).slice(0,1),
+          manualOverride:changed||a.manualOverride===true,manualOverrideWarnings:warnings,
+          published:true,status:"معتمد"};
+        if(changed){data.ackAt="";data.activationTitle="";data.activationAt="";data.ackToken=uid()}
+        if(changed||a.published!==true){await patchKind(K.assignment,a.id,data,token(),"معتمد");saved++}
       }
       await loadAll();refreshReserveStatisticsViews();renderWorkspaceCard("auto");
-      const result=byId("reserveDayMsg");if(result)result.textContent="تم حفظ واعتماد الجدول الآلي وظهر ضمن جدول النشر والإحصائيات ولوحة التميز.";
-    }catch(err){console.error(err);msg.textContent="تعذر اعتماد الجدول"}
+      byId("reserveDayMsg").textContent=`تم حفظ واعتماد ${saved} تكليفًا جديدًا أو معدلًا، وظهرت في جدول النشر والإحصائيات.`;
+    }catch(err){console.error(err);msg.textContent="تعذر اكتمال الاعتماد. أعيدي المحاولة؛ لن تتكرر التكليفات المحفوظة."}
+    finally{button.disabled=false}
   });
 }
 
@@ -2123,9 +2227,21 @@ async function renderPage(){
   try{
     await loadAll();
     if(!isRoute())return;
+    const shareQuery=new URLSearchParams(location.search);
+    const deepDate=shareQuery.get("reserve_publish")||shareQuery.get("reserve_date")||"";
+    if(/^\d{4}-\d{2}-\d{2}$/.test(deepDate)&&!state.deepLinkHandled){
+      state.currentDate=deepDate;
+      if(shareQuery.get("reserve_view")==="daily")state.publicOpenCards=["daily"];
+    }
     view.innerHTML=publicHTML();
     decorateReservePortraitTables(byId("dailyReserveRoot"));
     bindPublic();
+    if(!state.deepLinkHandled){
+      const shareParams=new URLSearchParams(location.search);
+      const publicationDate=shareParams.get("reserve_publish")||"";
+      if(/^\d{4}-\d{2}-\d{2}$/.test(publicationDate))openReservePublication(publicationDate);
+      state.deepLinkHandled=true;
+    }
     const s=await validateSession().catch(()=>null);
     if(s)state.admin=s;
   }catch(err){
