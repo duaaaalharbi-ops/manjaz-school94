@@ -1,0 +1,140 @@
+/* MANJAZ Task 17 | Universal single-field RTL rows / brand-equivalent controls.
+   Pure presentation. No forms, values, events, exports or stored records are recreated. */
+body.mj17-uniform {
+  --mj17-ink:#0b3047;
+  --mj17-petrol:#0b5960;
+  --mj17-teal:#0f5f59;
+  --mj17-line:#a4caca;
+  --mj17-focus:#1d9390;
+  --mj17-disabled:#edf5f5;
+  --mj17-control-height:46px;
+  --mj17-radius:10px;
+  --mj17-font:14px;
+  --mj17-label-size:13px;
+  --mj17-label-width: minmax(104px,30%);
+}
+
+/* ONE field per row in existing grid containers across the entire site, independent of route. */
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(
+  .form-grid,.mj15-form-grid,.mj14-form-grid,.cert-form,.cert-manage-form,
+  .manjaz-edit-grid,.mj17-form-grid,.filters
+){
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:11px!important;align-items:stretch!important;min-width:0!important;
+}
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(
+  .form-grid,.mj15-form-grid,.mj14-form-grid,.cert-form,.cert-manage-form,
+  .manjaz-edit-grid,.filters
+)>:is(label,.wide,.field,.form-field){
+  grid-column:1/-1!important;grid-row:auto!important;min-width:0!important;max-width:100%!important;
+}
+/* Additional form-level and filter widgets (existing class names remain unchanged). */
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(
+  .mj15-form,.mj14-request-form,.mj13-card,.cert-manage-form,.cert-form,
+  .reserve-activation-box,.reserve-bundle-course,.reserve-row-topic-editor
+) {min-width:0!important;max-width:100%;box-sizing:border-box}
+
+/* Text-node labels and labeled controls share one horizontal field row.
+   Exclusions protect checkboxes, radios, toggles and calendars. */
+body.mj17-uniform :is(#view,#dailyReserveRoot) label:has(> :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,textarea,.manjaz-hijri-trigger
+)):not(.reserve-date-picker-label):not(.mj17-exempt-field),
+body.mj17-uniform :is(#view,#dailyReserveRoot) label:has(> input[type="hidden"][data-manjaz-hijri-enhanced="1"]):not(.mj17-exempt-field){
+  display:grid!important;grid-template-columns:var(--mj17-label-width) minmax(0,1fr)!important;
+  grid-template-rows:auto!important;gap:9px 12px!important;align-items:center!important;
+  direction:rtl!important;text-align:right!important;
+  box-sizing:border-box!important;min-width:0!important;max-width:100%!important;width:100%!important;
+  font-size:var(--mj17-label-size)!important;line-height:1.5!important;
+  color:var(--mj17-ink)!important;
+}
+/* Controls only: Never modify non-form links, certificates, preview overlays or charts. */
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select, .manjaz-hijri-trigger
+):not(.mj17-exempt-control){
+  box-sizing:border-box!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  height:var(--mj17-control-height)!important;min-height:var(--mj17-control-height)!important;
+  border:1px solid var(--mj17-line)!important;border-radius:var(--mj17-radius)!important;
+  background:#fff!important;color:var(--mj17-ink)!important;
+  padding:9px 12px!important;
+  font:500 var(--mj17-font)/1.5 Tahoma,"Segoe UI",Arial,sans-serif!important;
+  text-align:right!important;direction:rtl!important;
+  box-shadow:0 1px 4px rgba(11,48,71,.04)!important;
+  color-scheme:light;
+}
+body.mj17-uniform :is(#view,#dailyReserveRoot) input[type="file"]:not(.mj17-exempt-control){
+  padding:4px 7px!important;line-height:1.6!important;font-size:12px!important;
+}
+body.mj17-uniform :is(#view,#dailyReserveRoot) input[type="file"]::file-selector-button{
+  border:1px solid var(--mj17-line);border-radius:7px;
+  background:#eaf5f3;color:var(--mj17-petrol);padding:5px 7px;
+  margin-inline-end:5px;cursor:pointer;font:700 12px Tahoma,Arial,sans-serif;
+}
+body.mj17-uniform :is(#view,#dailyReserveRoot) textarea:not(.mj17-exempt-control){
+  box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;
+  height:auto!important;min-height:94px!important;padding:10px 12px!important;resize:vertical!important;
+  border:1px solid var(--mj17-line)!important;border-radius:var(--mj17-radius)!important;
+  background:#fff!important;color:var(--mj17-ink)!important;
+  font:500 var(--mj17-font)/1.6 Tahoma,"Segoe UI",Arial,sans-serif!important;
+  text-align:right!important;direction:rtl!important;
+}
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(input,select,textarea,.manjaz-hijri-trigger):not(.mj17-exempt-control):focus-visible{
+  outline:2px solid var(--mj17-focus)!important;outline-offset:1px!important;
+  border-color:var(--mj17-teal)!important;
+}
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(input,select,textarea,.manjaz-hijri-trigger):not(.mj17-exempt-control):disabled{
+  background:var(--mj17-disabled)!important;color:#50676d!important;opacity:1!important;
+}
+body.mj17-uniform :is(#view,#dailyReserveRoot) select option{background:#fff;color:var(--mj17-ink)}
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(.form-grid,.mj15-form-grid,.mj14-form-grid,.cert-form,.cert-manage-form,.manjaz-edit-grid) :is(label,select,input,textarea,.manjaz-hijri-trigger){min-width:0;max-width:100%}
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(.surface,.panel,.mj15-panel,.mj13-card,.form-card) {min-width:0;max-width:100%;box-sizing:border-box}
+
+/* Existing Task16 admin inline CSS has two IDs. Increase specificity for the whole Task17 rule,
+   so its 46px one-row spec wins without editing the previous certificate workflow. */
+body.mj17-uniform #view.mj16-admin-only #mj15Dashboard :is(
+  .form-grid,.mj15-form-grid,.mj14-form-grid,.mj13-card .form-grid
+){grid-template-columns:minmax(0,1fr)!important}
+body.mj17-uniform #view.mj16-admin-only #mj15Dashboard :is(
+  .form-grid,.mj15-form-grid,.mj14-form-grid
+)>label{grid-column:1/-1!important}
+body.mj17-uniform #view.mj16-admin-only #mj15Dashboard label:has(> :is(input,select,textarea,.manjaz-hijri-trigger)){
+  grid-template-columns:var(--mj17-label-width) minmax(0,1fr)!important;
+}
+body.mj17-uniform #view.mj16-admin-only #mj15Dashboard :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,.manjaz-hijri-trigger){
+  height:var(--mj17-control-height)!important;min-height:var(--mj17-control-height)!important;
+  border-color:var(--mj17-line)!important;border-radius:var(--mj17-radius)!important;
+  color:var(--mj17-ink)!important;font-size:var(--mj17-font)!important;
+}
+/* Legacy reserve table dropdowns have their own module style: still use one brand size. */
+body.mj17-uniform #dailyReserveRoot .reserve-table tbody td select,
+body.mj17-uniform #dailyReserveRoot .reserve-teacher-row select{
+  height:var(--mj17-control-height)!important;min-height:var(--mj17-control-height)!important;
+  border:1px solid var(--mj17-line)!important;border-radius:var(--mj17-radius)!important;
+  color:var(--mj17-ink)!important;background:#fff!important;font-size:var(--mj17-font)!important;
+}
+/* Design button consistency only on form actions (not interactive day cells or route nav). */
+body.mj17-uniform :is(#view,#dailyReserveRoot) :is(.form-actions,.mj15-actions,.mj14-form-actions,.section-actions) :is(button,.btn){
+  min-height:var(--mj17-control-height)!important;border-radius:var(--mj17-radius)!important;
+  font:700 var(--mj17-font)/1.45 Tahoma,"Segoe UI",Arial,sans-serif!important;
+}
+/* Task17 beneficiary preview: modal has full-width landscape certificate, scale instead of crop. */
+body.mj17-uniform .mj16-certificate-dialog{width:min(98vw,1250px);max-width:98vw;box-sizing:border-box;max-height:96dvh;overflow:auto;padding:clamp(5px,1.4vw,16px)}
+body.mj17-uniform .mj16-certificate-dialog .mj15-preview{width:100%;box-sizing:border-box;max-width:100%;padding:clamp(2px,1vw,10px);overflow:hidden}
+body.mj17-uniform .mj16-certificate-dialog .mj15-paper-frame{width:100%;max-width:100%;overflow:hidden}
+body.mj17-uniform .mj16-certificate-dialog .mj16-dialog-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap}
+body.mj17-uniform .mj16-certificate-dialog .mj16-dialog-close{min-height:46px;border-radius:var(--mj17-radius);border-color:var(--mj17-line);color:var(--mj17-petrol)}
+body.mj17-uniform #view .mj16-preview-control{min-width:0;max-width:100%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+body.mj17-uniform #view .mj16-preview-control button{min-height:46px;border-radius:var(--mj17-radius);background:var(--mj17-petrol);border-color:var(--mj17-teal);color:white}
+@media(max-width:600px){
+ body.mj17-uniform{--mj17-label-width:minmax(90px,34%);--mj17-label-size:12px}
+ body.mj17-uniform :is(#view,#dailyReserveRoot) label:has(> :is(input,select,textarea,.manjaz-hijri-trigger)){
+  grid-template-columns:var(--mj17-label-width) minmax(0,1fr)!important;gap:8px!important;
+ }
+ body.mj17-uniform #view.mj16-admin-only #mj15Dashboard label:has(> :is(input,select,textarea,.manjaz-hijri-trigger)){
+  grid-template-columns:var(--mj17-label-width) minmax(0,1fr)!important;
+ }
+}
+/* Keep final PDF certificate unchanged: watermark belongs to preview markup only. */
+@media print { body.mj17-uniform #view .mj16-preview-control{display:none!important} }
