@@ -42,18 +42,38 @@
     }
   }
 
+  // The dedicated award-entry card replaces the previous admin-only hidden form.
+  // Reuse the original #awardForm and the cloud submit/edit/delete handlers.
   function adminAwardMode(view){
-    if(!view.querySelector('#awardList'))return;
-    const inAdmin=(()=>{try{return sessionStorage.getItem(AWARD_ENTRY_FLAG)==='1'}catch(_){return false}})();
-    view.classList.toggle('mj2-awards-edit',inAdmin);
-    if(inAdmin){
-      const form=view.querySelector('#awardForm');
-      if(form&&form.dataset.mj2Opened!=='1'){
-        form.dataset.mj2Opened='1';
-        const original=view.querySelector('#showAwardForm');
-        if(original)original.click();
-        else form.style.display='block';
-      }
+    const entry=view.querySelector('#mj20AwardEntry');
+    if(!entry)return; // guard older, incompatible templates
+    const form=entry.querySelector('#awardForm');
+    if(!form)return;
+    const fromAdmin=(()=>{try{return sessionStorage.getItem(AWARD_ENTRY_FLAG)==='1'}catch(_){return false}})();
+    if(fromAdmin){
+      entry.open=true;
+      try{sessionStorage.removeItem(AWARD_ENTRY_FLAG)}catch(_){}
+    }
+    form.style.display='block';
+    if(entry.dataset.mj20Bound!=='1'){
+      entry.dataset.mj20Bound='1';
+      entry.addEventListener('click',e=>{
+        // Keep the input form mounted during an active cloud save/upload.
+        if(e.target.closest('summary') && entry.open &&
+           (form.dataset.awardCloudBusy==='1' || form.dataset.busy==='1')){
+          e.preventDefault();
+        }
+      });
+    }
+    // Record action listeners are created by app.js. Do not recreate them.
+    // Management buttons are visible only for a verified admin login.
+    if(!view.classList.contains('mj20-award-auth-checked')){
+      view.classList.add('mj20-award-auth-checked');
+      verifiedAdminToken().then(()=>{
+        if(view.querySelector('#mj20AwardEntry'))view.classList.add('mj20-can-manage-awards');
+      }).catch(()=>{
+        view.classList.remove('mj20-can-manage-awards');
+      });
     }
   }
 
@@ -245,6 +265,7 @@
     view.classList.toggle('mj2-about',route==='about');
     if(route==='achievements'){addAchievementCard(view);removeAchievementFilters(view);}
     if(route==='awards')adminAwardMode(view);
+    else view.classList.remove('mj20-award-auth-checked','mj20-can-manage-awards');
     if(route==='admin')ensureApprovals(view);
   }
   function schedule(){
@@ -262,7 +283,7 @@
       if(e.target.closest('#achievementSuccessClose'))setTimeout(()=>{if(getRoute()==='achievements'&&typeof window.render==='function')window.render()},0);
       if(e.target.closest('#cancelAward,#awardCloudSuccessClose,#awardSuccessClose')){
         const active=getRoute()==='awards'&&document.getElementById('view')?.classList.contains('mj2-awards-edit');
-        if(active){try{sessionStorage.removeItem(AWARD_ENTRY_FLAG)}catch(_){};setTimeout(()=>{location.hash='#admin'},0)}
+        if(active && !document.getElementById('mj20AwardEntry')){try{sessionStorage.removeItem(AWARD_ENTRY_FLAG)}catch(_){};setTimeout(()=>{location.hash='#admin'},0)}
       }
     },true);
     mount();

@@ -145,3 +145,59 @@
   #view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-actions button,
   #view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-row-actions button{flex:1 1 120px}
 }
+
+/* v19.4: permanent removal of the search/filter CARD happens in index.html.
+   Keep only the invisible compatibility inputs for app.js event listeners. */
+#view .mj20-filter-compat[hidden]{display:none!important}
+
+/* Award entry — a single collapsible card, matching Manjaz's existing palette. */
+#view:has(#awardList) #mj20AwardEntry{
+  display:block!important;box-sizing:border-box;margin:0 0 16px;
+  width:100%;background:var(--white,#fff);border:1px solid var(--line,#d5e3e5);
+  border-radius:15px;box-shadow:0 5px 18px rgba(10,51,62,.055);overflow:hidden;
+}
+#view:has(#awardList) #mj20AwardEntry>summary{
+  cursor:pointer;display:flex;align-items:center;gap:12px;min-height:62px;
+  padding:14px 18px;color:var(--navy,#123b4c);font:800 16px/1.5 Tahoma,Arial,sans-serif;
+  list-style:none;text-align:right;direction:rtl;background:#f7fbfb;
+}
+#view:has(#awardList) #mj20AwardEntry>summary::-webkit-details-marker{display:none}
+#view:has(#awardList) #mj20AwardEntry>summary:before{
+  content:'+';width:29px;height:29px;display:grid;place-items:center;
+  background:var(--teal-soft,#e7f4f2);border-radius:8px;
+  color:var(--teal,#0f777a);font:900 22px/1 Tahoma,Arial,sans-serif
+}
+#view:has(#awardList) #mj20AwardEntry[open]>summary:before{content:'−'}
+#view:has(#awardList) #mj20AwardEntry>.mj20-award-entry-body{
+  border-top:1px solid var(--line,#d5e3e5);padding:16px;min-width:0;
+}
+#view:has(#awardList) #mj20AwardEntry #awardForm{
+  display:block!important;visibility:visible!important;position:static!important;
+  width:100%;margin:0;padding:0;border:0;box-shadow:none;
+}
+#view:has(#awardList) #mj20AwardEntry #awardForm .form-grid{
+  grid-template-columns:minmax(0,1fr)!important;gap:12px!important
+}
+#view:has(#awardList) #mj20AwardEntry #awardForm :is(input,select,textarea){
+  box-sizing:border-box;max-width:100%;min-width:0;border-radius:10px;
+  border:1px solid var(--line,#cddfe1);background:#fff;color:var(--ink,#173345);
+}
+#view:has(#awardList) #mj20AwardEntry #awardForm :is(input:not([type=file]),select){min-height:46px}
+#view:has(#awardList) #mj20AwardEntry #awardForm textarea{min-height:95px}
+#view:has(#awardList) #mj20AwardEntry #awardForm :is(button,.btn){min-height:44px}
+/* Existing viewing works for everyone; edit/delete require verified manager session. */
+#view:has(#awardList) .achievement-card .record-actions-grid{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+}
+#view:has(#awardList) .achievement-card .record-actions-grid .details-btn{display:block!important}
+#view:has(#awardList) .achievement-card .record-actions-grid :is(.record-edit-btn,.record-delete-btn){display:none!important}
+#view.mj20-can-manage-awards:has(#awardList) .achievement-card .record-actions-grid :is(.record-edit-btn,.record-delete-btn){
+  display:block!important;
+}
+#view:has(#awardList) .achievement-card .record-actions-grid button{
+  min-width:0;box-sizing:border-box;min-height:44px;white-space:normal;padding:9px 8px;
+}
+@media(max-width:640px){
+  #view:has(#awardList) #mj20AwardEntry>.mj20-award-entry-body{padding:10px}
+  #view:has(#awardList) .achievement-card .record-actions-grid{grid-template-columns:minmax(0,1fr)}
+}
