@@ -23,6 +23,39 @@ const hijri=iso=>{try{return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqur
 const ownCurrent=()=>state.requestId?own().find(r=>r.id===state.requestId):null;
 let state={category:TYPES[0][0],requestId:'',adminList:[],selected:'',loading:false,ready:false};
 function CSS(){if(document.getElementById('mj15Css'))return;const el=document.createElement('style');el.id='mj15Css';el.textContent=`
+ /* Task16: admin route shows only the five cards. Preserve all existing DOM data and listeners. */
+ #view.mj16-admin-only>:not(#mj15Dashboard){display:none!important}
+ #view.mj16-admin-only #mj15Dashboard{margin:0 0 24px;gap:12px}
+ #view.mj16-admin-only #mj15Dashboard .mj15-panel{width:100%;box-sizing:border-box}
+ #view.mj16-admin-only #mj15Dashboard select,
+ #view.mj16-admin-only #mj15Dashboard .manjaz-hijri-trigger{
+   height:46px!important;min-height:46px!important;width:100%!important;max-width:100%;min-width:0;
+   box-sizing:border-box;border:1px solid #9ac7c9;border-radius:10px;background:#fff;
+   color:#0b4955;box-shadow:0 1px 4px rgba(8,73,80,.06);padding:9px 12px;
+   font-family:inherit;font-size:14px;line-height:1.35;text-align:right;direction:rtl;
+ }
+ #view.mj16-admin-only #mj15Dashboard select:focus-visible,
+ #view.mj16-admin-only #mj15Dashboard .manjaz-hijri-trigger:focus-visible{
+  outline:2px solid #0f7776;outline-offset:2px;border-color:#0f7776
+ }
+ #view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid){
+   display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;align-items:end
+ }
+ #view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid)>label{min-width:0;max-width:100%;box-sizing:border-box}
+ #view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid)>label.wide{grid-column:auto}
+ #view.mj16-admin-only #mj15Dashboard .mj13-card{width:100%;max-width:100%;box-sizing:border-box}
+ #view.mj16-admin-only #mj15Dashboard .mj15-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #view.mj16-admin-only #mj15Dashboard .mj15-form-grid .wide{grid-column:1/-1}
+ .mj15-paper.certificate-paper .mj16-watermark-layer{
+   position:absolute!important;inset:0!important;z-index:999!important;display:flex!important;
+   align-items:center;justify-content:center;pointer-events:none!important;
+   color:rgba(8,83,91,.22)!important;font:900 170px/1 Tahoma,Arial,sans-serif!important;
+   letter-spacing:12px;transform:rotate(-24deg);transform-origin:50% 50%;
+   background:transparent!important;user-select:none;white-space:nowrap
+ }
+ .mj15-paper.certificate-paper .mj16-watermark-layer::after{content:'معاينة فقط';position:absolute;top:68%;font:900 37px/1.3 Tahoma,Arial,sans-serif;letter-spacing:1px}
+ .mj15-paper-frame .mj15-paper:not(.mj15-watermark) .mj16-watermark-layer{display:none!important}
+ @media(max-width:650px){#view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid){grid-template-columns:repeat(2,minmax(0,1fr))}}
  #mj15Dashboard{direction:rtl;display:grid;gap:12px;margin:17px 0 26px}
  .mj15-panel{background:#fff;border:1px solid #cfe0e3;border-radius:15px;box-shadow:0 4px 12px rgba(16,45,55,.04);overflow:hidden}
  .mj15-panel>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:18px;color:#133847;font-weight:800;font-size:17px;outline-offset:-3px}
@@ -57,7 +90,7 @@ function CSS(){if(document.getElementById('mj15Css'))return;const el=document.cr
  .mj15-paper .cert-final-attendance{font-size:var(--mj15-text-size,18px)}
  .mj15-paper .cert-final-workshop{font-size:var(--mj15-title-size,25px)}
  .mj15-paper .cert-final-name{font-size:var(--mj15-name-size,34px)}
- .mj15-watermark::after{content:'منجز';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:166px;font-weight:900;letter-spacing:.1em;color:rgba(12,77,85,.16);transform:rotate(-27deg);pointer-events:none;z-index:25}
+ .mj15-watermark::after{content:none; /* replaced by visible watermark layer */position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:166px;font-weight:900;letter-spacing:.1em;color:rgba(12,77,85,.16);transform:rotate(-27deg);pointer-events:none;z-index:25}
  .mj15-note{font-size:12px;color:#587079;line-height:1.8;margin:0}
  .mj15-hint{padding:10px 12px;background:#f2f8f8;border-radius:9px;color:#365960;font-size:13px}
  .mj15-loading{opacity:.7}
@@ -80,7 +113,7 @@ function certHTML(cat,d={},watermark=true){
  return `<div class="certificate-paper cert-final mj15-paper ${watermark?'mj15-watermark':''}" style="background-image:url('manjaz-certificate-background.png');${fitStyle}" aria-label="معاينة شهادة ${H(title)}">
  <header class="cert-final-header"><div class="cert-final-org"><strong>وزارة التعليم</strong><span>إدارة تعليم جدة</span><span>الثانوية الرابعة والتسعون - مسارات</span></div><div class="cert-final-ministry"><img src="ministry-logo.png" alt="شعار وزارة التعليم"></div><div class="cert-final-manjaz"><img src="manjaz-logo.png" alt="شعار منجز"></div></header>
  <main class="cert-final-main"><div class="cert-final-title">${title}</div><div class="cert-final-workshop">${activity}</div><div class="cert-final-testimony">${testimony}</div><div class="cert-final-name">${H(d.name||'اسم المستفيدة')}</div><div class="cert-final-attendance">${body}</div><div class="cert-final-wish">${exec?'متمنين لها دوام التوفيق ومزيدًا من التميز والعطاء':'سائلين الله لها دوام التوفيق ومزيدًا من التميز والعطاء'}</div></main>
- <footer class="cert-final-footer"><div class="cert-final-principal"><strong>مديرة المدرسة</strong><span>زينب ناصر علي حكمي</span></div><div class="cert-final-stamp"><img src="official-school-stamp.png" alt="الختم الرسمي للمدرسة"></div></footer></div>`;
+ <footer class="cert-final-footer"><div class="cert-final-principal"><strong>مديرة المدرسة</strong><span>زينب ناصر علي حكمي</span></div><div class="cert-final-stamp"><img src="official-school-stamp.png" alt="الختم الرسمي للمدرسة"></div></footer>${watermark?'<div class="mj16-watermark-layer" aria-hidden="true">منجز</div>':''}</div>`;
 }
 function formHTML(cat,values={},admin=false,readonly=false){const t=T(cat),exec=t[2]==='تنفيذ';const v=k=>H(values[k]||'');return `<form class="mj15-form" data-mj15-form="${admin?'admin':'public'}">
  <div class="mj15-form-grid"><label class="wide">${H(t[3])} *<input name="name" required minlength="2" maxlength="160" value="${v('name')}" ${readonly?'disabled':''}></label>
@@ -122,7 +155,7 @@ async function issue(id,host){const m=host.querySelector('[data-mj15-status]');c
  try{const body={request_id:id,pdf_base64:await base64(pdf.output('blob'))};const r=await fetch(`${BASE}/functions/v1/manjaz-send-certificate`,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+auth,'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.message||data.error||`خدمة البريد غير جاهزة (${r.status})`);m.textContent=data.already_sent?'تم إرسال هذه الشهادة سابقًا.':'تم إصدار الشهادة وإرسالها إلى البريد المسجل.';await refreshAdmin();}catch(err){m.textContent=`تم إصدار PDF وحفظه بنجاح. لم يُؤكَّد الإرسال بالبريد: ${err.message}. يمكن للإدارة إعادة المحاولة.`;try{await adminAction(id,'send_error',null,String(err.message).slice(0,150))}catch(_){}}
  }catch(e){m.textContent='تعذر إصدار الشهادة: '+e.message}finally{btn.disabled=false}}
 function display(){const root=document.getElementById('mj15Dashboard');if(!root)return;const zone=document.getElementById('mj15PublicArea');if(zone && !zone.hasChildNodes())zone.innerHTML=publicMarkup()}
-function mount(){if((location.hash||'').slice(1).split('&')[0]!=='admin')return;const view=document.getElementById('view'),list=document.getElementById('adminList');if(!view||!list)return;CSS();let dash=document.getElementById('mj15Dashboard');if(!dash){dash=document.createElement('div');dash.id='mj15Dashboard';dash.innerHTML=`
+function mount(){const view=document.getElementById('view');if((location.hash||'').slice(1).split('&')[0]!=='admin'){view?.classList.remove('mj16-admin-only');return}const list=document.getElementById('adminList');if(!view||!list)return;CSS();view.classList.add('mj16-admin-only');let dash=document.getElementById('mj15Dashboard');if(!dash){dash=document.createElement('div');dash.id='mj15Dashboard';dash.innerHTML=`
  <details class="mj15-panel"><summary><span class="mj15-number">١</span>طلبات اعتماد المنجزات</summary><div class="mj15-body" id="mj15Achievements"></div></details>
  <details class="mj15-panel" id="mj15Requests"><summary><span class="mj15-number">٢</span>طلبات إصدار الشهادات الجديدة</summary><div class="mj15-body" id="mj15PublicArea"></div></details>
  <details class="mj15-panel" id="mj15Issuance"><summary><span class="mj15-number">٣</span>إصدار الشهادات المعتمدة</summary><div class="mj15-body"><p class="mj15-note">متاح للإدارة فقط؛ الإصدار شهادة واحدة في كل مرة بعد الاعتماد.</p><div class="mj15-actions"><button type="button" data-mj15-refresh>عرض الشهادات المعتمدة</button></div><div class="mj15-status" id="mj15IssueMsg"></div><div id="mj15IssueList"></div><div id="mj15IssueDetail"></div></div></details>

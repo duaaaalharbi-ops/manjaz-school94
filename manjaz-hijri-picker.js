@@ -10,6 +10,9 @@
     '#partnerForm input[name="endDate"]',
     '#adminCertificateForm input[name="date"]',
     '#mj14CertificateRequestForm input[name="date"]',
+    '#mj15Dashboard input[type="date"]',
+    '#mj15Dashboard input[name="date"]',
+    '#adminPermissionsRoot input[type="date"]',
     '#reservePublicDate','#reserveAdminDate','#reserveManualDate'
   ].join(',');
   const monthNames=['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
@@ -157,6 +160,14 @@
     if(input.dataset.manjazHijriEnhanced==='1')return;
     input.dataset.manjazHijriEnhanced='1';
     const required=input.required;
+    // Only default blank NEW administrative date fields. Never overwrite existing dates.
+    const route=(location.hash||'').replace(/^#/,'').split('&')[0];
+    const adminScope=route==='admin'||route==='admin-permissions';
+    const isFormDate=input.name==='date'||input.hasAttribute('data-admin-date');
+    let initializedToday=false;
+    if(adminScope && isFormDate && !input.value && !input.disabled){
+      input.value=todayISO();initializedToday=true;
+    }
     input.dataset.manjazHijriRequired=required?'1':'0';
     input.type='hidden'; // No Gregorian native picker is ever displayed.
     const button=document.createElement('button');
@@ -171,6 +182,11 @@
     input.addEventListener('change',()=>updateButton(input));
     input.addEventListener('input',()=>updateButton(input));
     updateButton(input);
+    if(initializedToday){
+      // Sync live certificate preview to the newly populated date.
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      input.dispatchEvent(new Event('change',{bubbles:true}));
+    }
   }
   function scan(){document.querySelectorAll(allowed).forEach(enhance);}
   function injectStyle(){
