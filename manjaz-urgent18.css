@@ -1,0 +1,22 @@
+/* MANJAZ URGENT 18.1 – display-only pages + free text option. No changes to approval module. */
+:root{--mj18-height:46px}
+#view label.mj18-other-row[hidden],body.mj17-uniform #view label.mj18-other-row[hidden]{display:none!important}
+#view label.mj18-other-row{min-width:0}
+#view label.mj18-other-row input{width:100%;min-height:46px;box-sizing:border-box}
+#view .mj18-utility-card{margin:0 0 12px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 18px;box-shadow:var(--shadow)}
+#view .mj18-utility-card>summary{cursor:pointer;color:var(--navy);font-weight:800;padding:10px 2px;list-style:none}
+#view .mj18-utility-card>summary::before{content:'+';display:inline-block;width:24px;font-weight:900;color:var(--teal)}
+#view .mj18-utility-card[open]>summary::before{content:'−'}
+#view .mj18-utility-card .filters{box-shadow:none}
+#view:has(#achievementList) .page-intro,#view:has(#awardList) .page-intro{display:none!important}
+#view:has(#achievementList) #emptyState,#view:has(#awardList) #awardEmpty{display:none!important}
+#view:has(#awardList) :is(.mj18-award-admin-controls,#awardForm,.mj18-legacy-counters){display:none!important}
+#view:has(#awardList) .record-actions-grid{display:none!important}
+#view:has(#awardList) :is(.record-edit-btn,.record-delete-btn){display:none!important}
+#view:has(#achievementList) .achievement-card[hidden],#view:has(#awardList) .achievement-card[hidden]{display:none!important}
+#view .mj18-utility-card .stat-grid{margin-bottom:12px}
+#view .mj18-utility-card .filters{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:12px;padding:10px}
+#view .mj18-utility-card :is(input,select){min-height:var(--mj18-height)!important;height:var(--mj18-height)!important;width:100%;box-sizing:border-box;background:var(--white);color:var(--ink);border:1px solid var(--line);border-radius:10px}
+@media(max-width:650px){#view .mj18-utility-card{padding:10px}#view .mj18-utility-card .stat-grid{grid-template-columns:1fr!important}}
+
+body.mj17-uniform #view.mj16-admin-only #mj15Dashboard .mj15-form label.mj18-other-row[hidden],#view.mj16-admin-only #mj15Dashboard .mj15-form label.mj18-other-row[hidden]{display:none!important}

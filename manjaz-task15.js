@@ -214,7 +214,13 @@ function CSS(){if(document.getElementById('mj15Css'))return;const el=document.cr
   .mj16-certificate-dialog .mj15-preview{padding:4px}
  }
  `;document.head.appendChild(el)}
-function certData(form){const f=new FormData(form);return Object.fromEntries([...f.entries()].map(([k,v])=>[k,String(v).trim()]));}
+function certData(form){
+ const f=new FormData(form);
+ const d=Object.fromEntries([...f.entries()].map(([k,v])=>[k,String(v).trim()]));
+ if(d.executionType==='أخرى')d.executionType=d.executionTypeOther||'';
+ delete d.executionTypeOther;
+ return d;
+}
 function certHTML(cat,d={},watermark=true){
  const t=T(cat),exec=t[2]==='تنفيذ',type=d.executionType||'برنامج',date=d.date?hijri(d.date):'التاريخ الهجري';
  const who=cat==='thanks_student'?'الطالبة':cat==='parents'?'ولي الأمر':cat.endsWith('_staff')?'الموظفة الإدارية':'المعلمة';
@@ -232,7 +238,7 @@ function certHTML(cat,d={},watermark=true){
 function formHTML(cat,values={},admin=false,readonly=false){const t=T(cat),exec=t[2]==='تنفيذ';const v=k=>H(values[k]||'');return `<form class="mj15-form" data-mj15-form="${admin?'admin':'public'}">
  <div class="mj15-form-grid"><label class="wide">${H(t[3])} *<input name="name" required minlength="2" maxlength="160" value="${v('name')}" ${readonly?'disabled':''}></label>
  <label class="wide">${H(t[4])} *<input name="title" required minlength="2" maxlength="220" value="${v('title')}" ${readonly?'disabled':''}></label>
- ${exec?`<label class="wide">نوع التنفيذ <select name="executionType" ${readonly?'disabled':''}>${['ورشة تدريبية','درس تطبيقي','برنامج','مبادرة','دورة','لقاء','فعالية','أخرى'].map(x=>`<option ${values.executionType===x?'selected':''}>${x}</option>`).join('')}</select></label>`:''}
+ ${exec?(()=>{const choices=['ورشة تدريبية','درس تطبيقي','برنامج','مبادرة','دورة','لقاء','فعالية'];const custom=!!values.executionType&&!choices.includes(values.executionType);return `<label class="wide">نوع التنفيذ *<select name="executionType" required ${readonly?'disabled':''}>${choices.map(x=>`<option value="${x}" ${values.executionType===x?'selected':''}>${x}</option>`).join('')}<option value="أخرى" ${custom?'selected':''}>أخرى – تحديد المسمى</option></select></label><label class="wide mj18-other-row" ${custom?'':'hidden'}>يرجى تحديد المسمى *<input name="executionTypeOther" value="${custom&&values.executionType!=='أخرى'?H(values.executionType):''}" maxlength="120" ${custom?'required':''} ${readonly?'disabled':''}></label>`})():''}
  <label class="wide">${H(t[5])} *<textarea name="description" minlength="2" maxlength="1200" required ${readonly?'disabled':''}>${v('description')}</textarea></label>
  <label>التاريخ الهجري *<input name="date" type="date" value="${v('date')}" required ${readonly?'disabled':''}></label>
  <label>المدة (إن وجدت)<input name="duration" maxlength="150" value="${v('duration')}" ${readonly?'disabled':''}></label>
@@ -323,8 +329,15 @@ document.addEventListener('click',async e=>{const previewBtn=e.target.closest('[
  const approve=e.target.closest('[data-mj15-approve]');if(approve){const host=approve.closest('[data-mode="approve"]');if(!host)return;approve.disabled=true;const msg=host.querySelector('[data-mj15-status]');try{await adminAction(host.dataset.id,'approve');msg.textContent='تم اعتماد الطلب؛ أصبح متاحًا في القسم الثالث للإصدار.';host.innerHTML='<p class="mj15-hint">تم الاعتماد. انتقلي إلى القسم الثالث للإصدار.</p>'}catch(err){msg.textContent=err.message}finally{if(approve.isConnected)approve.disabled=false}return}
  const issueBtn=e.target.closest('[data-mj15-issue]');if(issueBtn){const host=issueBtn.closest('[data-mode="issue"]');if(host)issue(issueBtn.dataset.mj15Issue,host);return}
 });
+function syncOtherField(select){
+ const form=select.closest('form[data-mj15-form]');if(!form)return;
+ const row=form.querySelector('.mj18-other-row'),input=row?.querySelector('input[name="executionTypeOther"]');
+ if(!row||!input)return;
+ const custom=select.value==='أخرى';row.hidden=!custom;input.required=custom;
+ if(!custom)input.value='';
+}
 document.addEventListener('input',e=>{const form=e.target.closest('form[data-mj15-form]');if(form)uiField(e.target)});
-document.addEventListener('change',e=>{const form=e.target.closest('form[data-mj15-form]');if(form)uiField(e.target)});
+document.addEventListener('change',e=>{const sel=e.target.closest('select[name="executionType"]');if(sel)syncOtherField(sel);const form=e.target.closest('form[data-mj15-form]');if(form)uiField(e.target)});
 document.addEventListener('submit',async e=>{const form=e.target.closest('[data-mj15-form]');if(!form)return;e.preventDefault();if(form.dataset.mj15Form==='public')return submitPublic(form);const host=form.closest('[data-mode="approve"]');if(!host||!form.reportValidity())return;const b=form.querySelector('button[type="submit"]'),msg=form.querySelector('[data-mj15-status]');b.disabled=true;try{await adminAction(host.dataset.id,'edit',certData(form));host.innerHTML='<p class="mj15-hint">تم حفظ التعديلات. أعيدي فتح الطلب ثم اعتمديه.</p>'}catch(err){msg.textContent=err.message}finally{b.disabled=false}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.ManjazTask15={certHTML,types:TYPES};

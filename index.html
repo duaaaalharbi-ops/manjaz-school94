@@ -9,8 +9,9 @@
   <link rel="stylesheet" href="styles.css?v=4.1">
   <link rel="stylesheet" href="home-header-v36.css?v=12.3">
   <link rel="stylesheet" href="certificates.css?v=13.7" data-certificates-style="1">
-  <meta name="manjaz-release" content="17.1">
+  <meta name="manjaz-release" content="18.1-quick">
   <link rel="stylesheet" href="manjaz-task17.css?v=17.1-corrected">
+<link rel="stylesheet" href="manjaz-urgent18.css?v=18.1-quick">
 </head>
 <body>
   <div class="shell">
@@ -181,14 +182,9 @@
   </template>
 
   <template id="achievementsTpl">
-    <section class="page-intro">
-      <div>
-        <span class="kicker">مكتبة الشواهد</span>
-        <h2>استعراض المنجزات</h2>
-        <p>المحتوى هنا يبدأ فارغًا ويتعبأ تلقائيًا بعد إضافة المنجزات</p>
-      </div>
-    </section>
 
+
+    <details class="mj18-utility-card"><summary>البحث والتصفية والإحصاءات</summary>
     <div class="stat-grid stat-grid-3">
       <article class="stat-card gold"><span>إجمالي المنجزات</span><b id="aTotal">0</b></article>
       <article class="stat-card"><span>معتمد</span><b id="aApproved">0</b></article>
@@ -216,6 +212,8 @@
       </select>
     </div>
 
+    </details>
+    <details class="mj18-utility-card"><summary>إضافة منجز</summary><a class="btn btn-primary" href="#add">فتح نموذج إضافة منجز</a></details>
     <div id="achievementList" class="achievement-list"></div>
 
     <div id="emptyState" class="surface empty-state">
@@ -251,15 +249,9 @@
 
 
   <template id="awardsTpl">
-    <section class="page-intro">
-      <div>
-        <span class="kicker">التكريمات والحوافز</span>
-        <h2>إدارة التكريمات</h2>
-        <p>إضافة التكريمات والشهادات والحوافز واستعراضها بصورة تراكمية</p>
-      </div>
-    </section>
 
-    <div class="section-actions">
+
+    <div class="mj18-award-admin-controls" hidden>
       <button class="btn btn-primary" id="showAwardForm">إضافة تكريم</button>
     </div>
 
@@ -313,7 +305,7 @@
       <div id="awardMsg"></div>
     </form>
 
-    <div class="stat-grid stat-grid-3">
+    <div class="stat-grid stat-grid-3 mj18-legacy-counters" hidden>
       <article class="stat-card gold"><span>إجمالي التكريمات</span><b id="awTotal">0</b></article>
       <article class="stat-card"><span>معتمد</span><b id="awApproved">0</b></article>
       <article class="stat-card"><span>تحت المراجعة</span><b id="awReview">0</b></article>
@@ -499,10 +491,11 @@
 <script src="talent-links.js?v=1.0"></script>
 <script src="home-header-v36.js?v=4.3"></script>
 <script src="certificate-audit.js?v=1.6"></script>
-<script src="manjaz-task15.js?v=17.1-beneficiary-preview"></script>
+<script src="manjaz-task15.js?v=18.1-free-entry"></script>
 <script src="manjaz-task17.js?v=17.1-corrected"></script>
+<script src="manjaz-urgent18.js?v=18.1-quick"></script>
 
-<div id="manjazVersionBadge" aria-label="إصدار الموقع" style="position:fixed;left:10px;bottom:10px;z-index:99999;background:#0f5f59;color:#fff;padding:6px 10px;border-radius:9px;font:800 12px/1.2 Tahoma,Arial,sans-serif;box-shadow:0 3px 12px rgba(0,0,0,.16);opacity:.92;pointer-events:none;direction:rtl">الإصدار 17.1</div>
+<div id="manjazVersionBadge" aria-label="إصدار الموقع" style="position:fixed;left:10px;bottom:10px;z-index:99999;background:#0f5f59;color:#fff;padding:6px 10px;border-radius:9px;font:800 12px/1.2 Tahoma,Arial,sans-serif;box-shadow:0 3px 12px rgba(0,0,0,.16);opacity:.92;pointer-events:none;direction:rtl">الإصدار 18.1 – تحسينات الواجهات والشهادات</div>
 
 </body>
 </html>
