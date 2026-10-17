@@ -227,12 +227,70 @@ function layout(){const view=root();if(!view)return;view.innerHTML=`<div id="mjD
  document.getElementById('dutyReload').onclick=()=>refresh();
  document.getElementById('dutyPrint').onclick=()=>preview(true);
  document.getElementById('dutyPublishPreview').onclick=()=>preview(false);
- document.getElementById('dutyAdminOpen').onclick=()=>{if(!session()){log('للدخول الإداري سجلي الدخول أولًا من قسم الصلاحيات الإدارية.');location.hash='#admin-permissions';return}const p=document.getElementById('dutyAdmin');p.hidden=false;p.scrollIntoView({behavior:'smooth',block:'start'});loadAdmin()};
+ document.getElementById('dutyAdminOpen').onclick=()=>{
+  const panel=document.getElementById('dutyAdmin');if(!panel)return;
+  panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});
+  if(!session()){openDutyLogin();return}
+  revealDutyAdminControls(true);loadAdmin();
+ };
  document.getElementById('dutyCopyDay').onclick=()=>copy(urlFor('#daily-duty?date='+date));
  document.getElementById('dutyWhatsapp').onclick=()=>{const body=`السلام عليكم ورحمة الله وبركاته\nجدول المناوبة اليومية\n${dateLong(date)}\n${urlFor('#daily-duty?date='+date)}\nيرجى الاطلاع على تكليفات اليوم وتأكيد الاطلاع من الرابط الشخصي.`;const u='https://api.whatsapp.com/send?text='+encodeURIComponent(body);window.open(u,'_blank','noopener,noreferrer')||location.assign(u)};
  document.querySelectorAll('[data-dtab]').forEach(b=>b.onclick=()=>adminTab(b.dataset.dtab));
- if(session())document.getElementById('dutyAdmin').hidden=false;
+ if(session()){const p=document.getElementById('dutyAdmin');p.hidden=false;}
  refresh();
+}
+// Duty administration uses the SAME authenticated Supabase session as the reserve section.
+// Unauthenticated users sign in here; never redirect away from daily duty.
+function revealDutyAdminControls(show){
+ const p=document.getElementById('dutyAdmin');if(!p)return;
+ for(const selector of ['.duty-admin-nav','.reserve-share-box']){
+  const el=p.querySelector(selector);if(el)el.style.display=show?'':'none';
+ }
+}
+function openDutyLogin(){
+ const panel=document.getElementById('dutyAdmin');const holder=document.getElementById('dutyAdminWorkspace');
+ if(!panel||!holder)return;
+ panel.hidden=false;revealDutyAdminControls(false);
+ holder.innerHTML=`<section class="surface form-card duty-login-card"><div class="form-section-title">دخول إدارة المناوبة اليومية</div>
+ <p class="reserve-public-note">يتم تسجيل الدخول داخل المناوبة اليومية، ثم تظهر بطاقات الإنشاء اليدوي والآلي والمفاضلة.</p>
+ <form id="dutyInlineLoginForm"><div class="form-grid">
+ <label>البريد الإلكتروني الإداري<input name="email" type="email" required autocomplete="username" inputmode="email"></label>
+ <label>كلمة المرور<input name="password" type="password" required autocomplete="current-password"></label>
+ </div><div class="form-actions"><button class="btn btn-primary" type="submit" id="dutyLoginSubmit">دخول</button>
+ <button class="btn btn-ghost" type="button" id="dutyLoginCancel">إلغاء</button></div>
+ <p id="dutyLoginMessage" role="alert" aria-live="polite"></p></form></section>`;
+ const form=holder.querySelector('#dutyInlineLoginForm'),button=holder.querySelector('#dutyLoginSubmit'),message=holder.querySelector('#dutyLoginMessage');
+ holder.querySelector('#dutyLoginCancel').onclick=()=>{panel.hidden=true;holder.innerHTML='';revealDutyAdminControls(true)};
+ form.onsubmit=async event=>{
+  event.preventDefault();if(button.disabled)return;
+  const fd=new FormData(form),email=String(fd.get('email')||'').trim(),password=String(fd.get('password')||'');
+  button.disabled=true;button.textContent='جارٍ التحقق من الحساب...';message.textContent='';
+  try{
+   const reply=await fetch(BASE+'/auth/v1/token?grant_type=password',{
+    method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({email,password}),cache:'no-store'});
+   const auth=await reply.json().catch(()=>({}));
+   if(!reply.ok||!auth.access_token)throw Error('بيانات الدخول غير صحيحة أو تعذّر الاتصال بخدمة الدخول.');
+   const check=await fetch(BASE+'/auth/v1/user',{
+    headers:{apikey:KEY,Authorization:'Bearer '+auth.access_token},cache:'no-store'});
+   if(!check.ok)throw Error('تعذّر التحقق من هوية الحساب.');
+   const user=await check.json();
+   // Interface guard, plus existing database RLS / RPC admin authorization.
+   if(String(user.email||'').toLowerCase()!=='munjz.s94@hotmail.com')
+    throw Error('هذا الحساب غير مخوّل لإدارة المناوبة اليومية.');
+   sessionStorage.setItem(AUTH_KEY,JSON.stringify({
+    access_token:auth.access_token,refresh_token:auth.refresh_token||'',
+    expires_at:Math.floor(Date.now()/1000)+Math.max(1,Number(auth.expires_in||3600)),user
+   }));
+   revealDutyAdminControls(true);
+   await loadAdmin();
+   if(document.getElementById('dutyInlineLoginForm'))throw Error('لم يتم فتح بطاقات الإنشاء. أعيدي المحاولة.');
+   log('تم الدخول إلى إدارة المناوبة اليومية.');
+  }catch(error){
+   message.textContent=error?.message||'تعذّر تسجيل الدخول.';
+   button.disabled=false;button.textContent='دخول';
+  }
+ };
 }
 function dayTable(data){const p=document.getElementById('dutyPublicTable');if(!p)return;
  const rows=data?.rows||[];published=Boolean(data?.published);
@@ -250,7 +308,14 @@ function renderStats(data,prior=false){const root=document.getElementById('dutyS
  <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المنفذة</th><th>الفئة</th><th>اليوم</th><th>الأسبوع</th><th>الشهر الهجري</th><th>التراكمي</th><th>الصباح</th><th>الفسحة</th><th>النهاية</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.role==='administrative'?'إدارية':'معلمة'}</td><td>${Number(r.day_count||0)}</td><td>${Number(usePrior?r.previous_week_count:r.week_count)||0}</td><td>${Number(r.month_count||0)}</td><td>${Number(r.total_count||0)}</td><td>${Number(r.morning_count||0)}</td><td>${Number(r.break_count||0)}</td><td>${Number(r.end_count||0)}</td></tr>`).join(''):'<tr><td colspan="9">لا توجد إحصائيات منشورة</td></tr>'}</tbody></table></div>`;
  root.querySelectorAll('[data-dstats]').forEach(b=>b.onclick=()=>renderStats(data,b.dataset.dstats==='previous'));
 }
-function cardPicker(slot){return `<section class="duty-slot"><h3>${esc(slotName(slot))} <small>الحد الأقصى ٦</small></h3><div class="duty-slots-grid">${Array.from({length:6},(_,i)=>{const old=assignments.find(a=>a.slot===slot&&Number(a.position)===i+1);return `<label><span>${i+1}</span><select data-slot="${slot}" data-position="${i+1}" aria-label="${esc(slotName(slot))} - المنفذة ${i+1}"><option value="">خانة غير مستخدمة</option>${roster.filter(x=>x.active).map(x=>`<option value="${esc(x.id)}" ${old?.person_id===x.id?'selected':''}>${esc(x.full_name)} — ${x.role==='administrative'?'إدارية':'معلمة'}</option>`).join('')}</select></label>`}).join('')}</div></section>`}
+// Both groups share one native select. Optgroup titles are the divider labels on iOS and desktop.
+function dutyRosterOptions(selected){
+ return [['teacher','المعلمات'],['administrative','الإداريات']].map(([role,title])=>{
+  const people=roster.filter(p=>p.active&&p.role===role).sort((a,b)=>a.full_name.localeCompare(b.full_name,'ar'));
+  return `<optgroup label="${title} ─────────────">${people.map(p=>`<option value="${esc(p.id)}" ${selected===p.id?'selected':''}>${esc(p.full_name)}</option>`).join('')}</optgroup>`;
+ }).join('');
+}
+function cardPicker(slot){return `<section class="duty-slot"><h3>${esc(slotName(slot))} <small>الحد الأقصى ٦</small></h3><div class="duty-slots-grid">${Array.from({length:6},(_,i)=>{const old=assignments.find(a=>a.slot===slot&&Number(a.position)===i+1);return `<label><span>${i+1}</span><select data-slot="${slot}" data-position="${i+1}" aria-label="${esc(slotName(slot))} - المنفذة ${i+1}"><option value="">خانة غير مستخدمة</option>${dutyRosterOptions(old?.person_id)}</select></label>`}).join('')}</div></section>`}
 function workspace(){const p=document.getElementById('dutyAdminWorkspace');if(!p)return;
  p.innerHTML=`<div class="reserve-card-grid duty-work-tabs">${[['manual','الإنشاء اليدوي','اختيار المنفذات يدويًا من قوائم قابلة للتعديل'],['auto','الإنشاء الآلي','التوليد العادل مع تخصيص الفسحة للإداريات'],['ranking','احتساب المفاضلة','متابعة عدالة التوزيع دون لوحة تميز']].map(([k,title,desc])=>`<button type="button" class="reserve-work-card ${activeCard===k?'active':''}" data-dcard="${k}"><strong>${title}</strong><small>${desc}</small></button>`).join('')}</div><div id="dutyWorkspaceContent"></div>`;
  p.querySelectorAll('[data-dcard]').forEach(b=>b.onclick=()=>{activeCard=b.dataset.dcard;workspace()});
