@@ -1,0 +1,147 @@
+/* Manjaz Part 2 — scoped UI; never changes persistence, approval RPC or certificate artwork. */
+#view:has(#achievementList)> .mj18-utility-card:not(.mj2-add-card){display:none!important}
+#view .mj2-add-card{margin:0 0 14px;background:var(--paper,#fff);border:1px solid var(--line,#d7e6e8);border-radius:16px;padding:0 16px;box-shadow:var(--shadow,0 8px 22px rgba(0,0,0,.04));overflow:hidden}
+#view .mj2-add-card>summary{cursor:pointer;list-style:none;color:var(--navy,#123c4b);font-weight:800;min-height:62px;display:flex;align-items:center;gap:12px}
+#view .mj2-add-card>summary::-webkit-details-marker{display:none}
+#view .mj2-add-card>summary::before{content:'+';display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#e8f5f3;color:#126b66;font-size:24px}
+#view .mj2-add-card[open]>summary::before{content:'−'}
+#view .mj2-add-card #achievementForm{margin:0 0 16px;box-shadow:none;max-width:100%}
+#view:has(#awardList):not(.mj2-awards-edit) .mj18-award-admin-controls,
+#view:has(#awardList):not(.mj2-awards-edit) #awardForm{display:none!important}
+#view.mj2-awards-edit:has(#awardList) #awardForm,#view.mj2-awards-edit:has(#awardList) #awardForm.hidden-form{display:block!important}
+#view.mj2-about .stat-card,#view.mj2-about .surface{background:#fff;color:var(--ink,#173f4d);border:1px solid var(--line,#d7e6e8);border-radius:16px;box-shadow:0 7px 24px rgba(13,59,70,.05)}
+#view.mj2-about .panel-head{border-bottom:1px solid var(--line,#d7e6e8)}
+#view #mj15Dashboard .mj2-approval-group{margin:12px 0;padding:16px;border:1px solid #cfe0e3;border-radius:14px;background:#fff;min-width:0}
+#view #mj15Dashboard .mj2-approval-group h3{margin:0 0 12px;color:#153e4b;font-size:16px}
+#view #mj15Dashboard .mj2-approval-list{display:grid;gap:10px}
+#view #mj15Dashboard .mj2-approval-group .admin-item{margin:0;min-width:0;max-width:100%;box-sizing:border-box}
+#view #mj15Dashboard .mj2-admin-actions{display:flex;justify-content:flex-start;gap:8px;flex-wrap:wrap;margin:9px 0}
+#view #mj15Dashboard .mj2-admin-actions button{cursor:pointer;min-height:42px;padding:10px 15px;border:1px solid #12605d;border-radius:9px;background:#0c5e65;color:#fff;font:inherit;font-weight:700}
+#view #mj15Dashboard .mj2-admin-actions button:disabled{opacity:.6;cursor:wait}
+#view #mj15Dashboard .mj2-approval-group input,#view #mj15Dashboard .mj2-approval-group select,#view #mj15Dashboard .mj2-approval-group textarea{min-height:45px;max-width:100%;width:100%;box-sizing:border-box;border-radius:9px;border:1px solid #9ac7c9;background:#fff;color:#133847;padding:9px 12px;font:inherit}
+#view #mj15Dashboard .mj2-approval-group textarea{min-height:86px}
+#view #mj15Dashboard .mj2-knowledge-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid #e1ecee;border-radius:10px;padding:12px;background:#f8fbfb;overflow-wrap:anywhere}
+#view #mj15Dashboard .mj2-knowledge-row .mj2-row-actions{display:flex;gap:8px;flex-wrap:wrap}
+#view #mj15Dashboard .mj2-knowledge-row .mj2-row-actions button{min-height:42px;border-radius:9px;border:1px solid #9dc8c8;background:#f1f8f7;color:#155a5f;font-weight:700;padding:8px 12px;cursor:pointer}
+#view #mj15Dashboard .mj2-knowledge-row .mj2-row-actions button[data-mj2-action='reject']{border-color:#dec2c2;background:#fff7f7;color:#943e3e}
+#view #mj15Dashboard .mj2-approval-group p{margin:8px 0;line-height:1.65;color:#49636d}
+@media(max-width:650px){#view #mj15Dashboard .mj2-approval-group{padding:10px}#view #mj15Dashboard .mj2-knowledge-row .mj2-row-actions{width:100%}#view #mj15Dashboard .mj2-knowledge-row .mj2-row-actions button{flex:1}}
+
+/* v19.3 — remove the filter card, not the achievement gallery or its save handlers. */
+#view:has(#achievementList) .mj18-utility-card:has(#searchAchievements){display:none!important}
+/* Unified approval accordion: existing action nodes and listeners remain untouched. */
+#view.mj16-admin-only #mj15Dashboard>.mj15-panel:first-child{
+  border:1px solid #bcd8da;background:#fff;border-radius:15px;
+  box-shadow:0 6px 20px rgba(9,66,76,.055)
+}
+#view.mj16-admin-only #mj15Dashboard>.mj15-panel:first-child>summary{
+  padding:16px 18px;background:#f4f9f9;color:#133f4c;
+  min-height:60px;font-size:16px;line-height:1.5;font-weight:800
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;overflow:visible
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements>.stat-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin:0 0 4px
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .stat-card{
+  background:#fbfdfd;border:1px solid #d7e7e8;border-radius:11px;
+  box-shadow:none;padding:12px;min-width:0
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements details.mj2-approval-group{
+  display:block;width:100%;margin:0;padding:0;min-width:0;
+  box-sizing:border-box;border:1px solid #d1e3e5;border-radius:12px;
+  background:#fff;box-shadow:none;overflow:hidden
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements details.mj2-approval-group>summary{
+  display:flex;align-items:center;gap:10px;min-height:55px;padding:12px 15px;
+  background:#f5fafa;color:#144754;font-family:inherit;font-weight:800;font-size:15px;line-height:1.5;
+  cursor:pointer;list-style:none;outline-offset:-3px;box-sizing:border-box
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements details.mj2-approval-group>summary::-webkit-details-marker{display:none}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements details.mj2-approval-group>summary::before{
+  content:'+';display:grid;place-items:center;flex:0 0 26px;height:26px;
+  border-radius:7px;background:#e7f1f2;color:#14646c;font:800 19px/1 Arial,sans-serif
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements details.mj2-approval-group[open]>summary::before{content:'−'}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-approval-count{
+  margin-inline-start:auto;color:#426a73;font-family:inherit;font-weight:700;font-size:13px;line-height:1.5;
+  padding:2px 7px;background:#eaf3f3;border-radius:7px;font-variant-numeric:tabular-nums
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-approval-content{
+  padding:14px;min-width:0;border-top:1px solid #e0ebed;box-sizing:border-box
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements details.mj2-approval-group:not([open])>.mj2-approval-content{
+  display:none!important
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .panel-head{display:none!important}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-list,
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-approval-list{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:9px;min-width:0
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-item,
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-knowledge-row{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0;min-width:0;
+  max-width:100%;box-sizing:border-box;background:#fbfdfd;border:1px solid #d8e6e8;
+  border-radius:10px;padding:12px;text-align:right;direction:rtl;overflow-wrap:anywhere
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-item>div:nth-child(2){
+  flex:1 1 230px;min-width:0;overflow-wrap:anywhere
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-item h4{
+  color:#153f4a;font-size:15px;line-height:1.6;margin:0 0 3px
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-item p,
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-knowledge-row p{
+  color:#5c737b;font-size:13px;line-height:1.65;margin:3px 0
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-actions,
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-row-actions{
+  display:flex;flex:1 1 210px;gap:8px;align-items:center;justify-content:flex-start;
+  flex-wrap:wrap;min-width:0
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-actions button,
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-row-actions button,
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-admin-actions button{
+  box-sizing:border-box;min-height:44px;border-radius:9px;padding:9px 12px;
+  font-family:inherit;font-weight:700;font-size:13px;line-height:1.5;white-space:normal;cursor:pointer;border:1px solid #a9cbd0;
+  background:#eff7f7;color:#155863
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-actions button.approve,
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-admin-actions button{
+  background:#0e686b;border-color:#0e686b;color:#fff
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-actions button:focus-visible,
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements details>summary:focus-visible{
+  outline:2px solid #13817f;outline-offset:2px
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-row-actions button[data-mj2-action='reject']{
+  border-color:#dec2c2;background:#fff8f8;color:#913f3f
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements :is(input,select,textarea,.manjaz-hijri-trigger){
+  width:100%!important;max-width:100%;min-height:46px!important;box-sizing:border-box;
+  padding:9px 12px;border:1px solid #aeced1;border-radius:10px;background:#fff;
+  color:#153e4a;font-family:inherit;font-weight:500;font-size:14px;line-height:1.5;text-align:right;direction:rtl
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements select{
+  appearance:auto;cursor:pointer
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements :is(input,select,textarea):focus-visible{
+  outline:2px solid #12817d;outline-offset:2px;border-color:#12817d
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements textarea{min-height:90px!important;resize:vertical}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements label{color:#244b57;font-size:13px;font-weight:700}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-admin-actions{
+  display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px
+}
+#view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-knowledge-status{
+  margin:6px 0 10px;color:#48656e;font-size:13px
+}
+@media(max-width:650px){
+  #view.mj16-admin-only #mj15Dashboard #mj15Achievements>.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-approval-content{padding:10px}
+  #view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-actions,
+  #view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-row-actions{flex:1 1 100%}
+  #view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-actions button,
+  #view.mj16-admin-only #mj15Dashboard #mj15Achievements .mj2-row-actions button{flex:1 1 120px}
+}
