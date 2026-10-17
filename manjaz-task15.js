@@ -39,23 +39,23 @@ function CSS(){if(document.getElementById('mj15Css'))return;const el=document.cr
   outline:2px solid #0f7776;outline-offset:2px;border-color:#0f7776
  }
  #view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid){
-   display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;align-items:end
+   display:grid;grid-template-columns:minmax(0,1fr)!important;gap:12px;align-items:stretch
  }
  #view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid)>label{min-width:0;max-width:100%;box-sizing:border-box}
  #view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid)>label.wide{grid-column:auto}
  #view.mj16-admin-only #mj15Dashboard .mj13-card{width:100%;max-width:100%;box-sizing:border-box}
- #view.mj16-admin-only #mj15Dashboard .mj15-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #view.mj16-admin-only #mj15Dashboard .mj15-form-grid{grid-template-columns:minmax(0,1fr)!important}
  #view.mj16-admin-only #mj15Dashboard .mj15-form-grid .wide{grid-column:1/-1}
  .mj15-paper.certificate-paper .mj16-watermark-layer{
    position:absolute!important;inset:0!important;z-index:999!important;display:flex!important;
    align-items:center;justify-content:center;pointer-events:none!important;
-   color:rgba(8,83,91,.22)!important;font:900 170px/1 Tahoma,Arial,sans-serif!important;
+   color:rgba(8,83,91,.30)!important;font:900 170px/1 Tahoma,Arial,sans-serif!important;
    letter-spacing:12px;transform:rotate(-24deg);transform-origin:50% 50%;
    background:transparent!important;user-select:none;white-space:nowrap
  }
  .mj15-paper.certificate-paper .mj16-watermark-layer::after{content:'معاينة فقط';position:absolute;top:68%;font:900 37px/1.3 Tahoma,Arial,sans-serif;letter-spacing:1px}
  .mj15-paper-frame .mj15-paper:not(.mj15-watermark) .mj16-watermark-layer{display:none!important}
- @media(max-width:650px){#view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid){grid-template-columns:repeat(2,minmax(0,1fr))}}
+ @media(max-width:650px){#view.mj16-admin-only #mj15Dashboard .form-grid:not(.mj15-form-grid){grid-template-columns:minmax(0,1fr)!important}}
  #mj15Dashboard{direction:rtl;display:grid;gap:12px;margin:17px 0 26px}
  .mj15-panel{background:#fff;border:1px solid #cfe0e3;border-radius:15px;box-shadow:0 4px 12px rgba(16,45,55,.04);overflow:hidden}
  .mj15-panel>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:18px;color:#133847;font-weight:800;font-size:17px;outline-offset:-3px}
@@ -99,6 +99,120 @@ function CSS(){if(document.getElementById('mj15Css'))return;const el=document.cr
  .mj15-paper .cert-final-workshop{font-size:var(--mj15-title-size,25px)}
  .mj15-paper .cert-final-name{font-size:var(--mj15-name-size,34px)}
  .mj15-watermark::after{content:'منجز';}}
+
+ /* MANJAZ Task16 corrected – official Manjaz palette, same-sized controls and one field per row. */
+ #view.mj16-admin-only #mj15Dashboard{
+  --mj16-navy:#0b3047;--mj16-petrol:#0b5960;--mj16-turquoise:#0f5f59;
+  --mj16-line:#a4caca;--mj16-paper:#fff;--mj16-field-size:46px;
+ }
+ #view.mj16-admin-only #mj15Dashboard .mj15-body,
+ #view.mj16-admin-only #mj15Dashboard .mj13-card,
+ #view.mj16-admin-only #mj15Dashboard .surface.panel{
+  min-width:0;max-width:100%;box-sizing:border-box
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(.form-grid,.mj15-form-grid,.mj14-form-grid){
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:10px!important;align-items:stretch!important;min-width:0;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(.form-grid,.mj15-form-grid,.mj14-form-grid)>:is(label,.wide){
+  grid-column:1/-1!important;min-width:0;width:100%;max-width:100%;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(.form-grid,.mj15-form-grid,.mj14-request-form,.mj13-card,.mj15-form) label{
+  display:grid!important;grid-template-columns:minmax(102px,29%) minmax(0,1fr)!important;
+  column-gap:12px!important;row-gap:4px!important;align-items:center!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  margin:0!important;padding:0!important;box-sizing:border-box!important;
+  color:var(--mj16-navy)!important;font-size:13px!important;font-weight:700!important;line-height:1.55!important;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea,.manjaz-hijri-trigger){
+  display:block;box-sizing:border-box!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  min-height:var(--mj16-field-size)!important;height:var(--mj16-field-size)!important;
+  border:1px solid var(--mj16-line)!important;border-radius:10px!important;
+  background:var(--mj16-paper)!important;color:var(--mj16-navy)!important;
+  padding:9px 12px!important;text-align:right!important;direction:rtl!important;
+  font:500 14px/1.4 Tahoma,"Segoe UI",Arial,sans-serif!important;
+  box-shadow:0 1px 4px rgba(11,48,71,.045)!important;
+  color-scheme:light;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(textarea){
+  height:auto!important;min-height:94px!important;resize:vertical!important;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(input,select,textarea):focus-visible,
+ #view.mj16-admin-only #mj15Dashboard .manjaz-hijri-trigger:focus-visible{
+  border-color:var(--mj16-turquoise)!important;outline:2px solid #1d9390!important;
+  outline-offset:1px!important;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(input,select,textarea):disabled{
+  background:#edf5f5!important;color:#4d6570!important;opacity:1!important;
+ }
+ #view.mj16-admin-only #mj15Dashboard select option{background:#fff;color:var(--mj16-navy)}
+ #view.mj16-admin-only #mj15Dashboard :is(.mj15-actions,.section-actions,.form-actions,.mj14-form-actions){
+  display:flex!important;flex-wrap:wrap!important;gap:9px!important;
+  align-items:center!important;min-width:0!important;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(.mj15-actions,.section-actions,.form-actions,.mj14-form-actions) :is(button,a),
+ #view.mj16-admin-only #mj15Dashboard .mj13-card>button{
+  min-height:46px!important;box-sizing:border-box!important;
+  border:1px solid var(--mj16-petrol)!important;border-radius:10px!important;
+  padding:9px 14px!important;
+  background:var(--mj16-petrol)!important;color:#fff!important;
+  font:700 14px/1.45 Tahoma,"Segoe UI",Arial,sans-serif!important;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(.mj15-actions,.section-actions,.form-actions,.mj14-form-actions) :is(.secondary,.btn-ghost){
+  background:#f5faf9!important;color:var(--mj16-petrol)!important;
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(.mj13-card h3,.mj15-body h3){color:var(--mj16-navy);line-height:1.5}
+ #view.mj16-admin-only #mj15Dashboard .mj15-choice[aria-pressed="true"]{
+  background:#e1f2f0!important;color:var(--mj16-petrol)!important;
+  border-color:var(--mj16-turquoise)!important;
+ }
+ #view.mj16-admin-only #mj15Dashboard .mj15-choice{
+  border-color:var(--mj16-line);color:var(--mj16-navy);
+ }
+ #view.mj16-admin-only #mj15Dashboard :is(.mj15-record button,.mj15-choice,.mj13-admin-link){
+  box-sizing:border-box;min-height:46px;border-radius:10px;
+  font:700 13px/1.4 Tahoma,"Segoe UI",Arial,sans-serif;
+ }
+ #view.mj16-admin-only #mj15Dashboard .mj15-record button{
+  border:1px solid var(--mj16-line);background:#f5faf9;color:var(--mj16-petrol);
+ }
+ #view.mj16-admin-only #mj15Dashboard .mj13-card>label{display:grid!important}
+ #view.mj16-admin-only #mj15Dashboard .mj13-card :is(select,.manjaz-hijri-trigger){flex:1;max-width:100%}
+ #view.mj16-admin-only #mj15Dashboard .mj13-card :is(p,h3){width:100%;box-sizing:border-box}
+ /* Explicit beneficiary preview, with full official certificate inside a fitted viewport. */
+ #view.mj16-admin-only #mj15Dashboard .mj16-preview-control{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  flex-wrap:wrap;min-width:0;color:var(--mj16-navy);
+ }
+ #view.mj16-admin-only #mj15Dashboard .mj16-preview-control button{
+  min-height:46px;border:1px solid var(--mj16-turquoise);border-radius:10px;
+  background:var(--mj16-petrol);color:#fff;padding:10px 16px;
+  font:700 14px Tahoma,Arial,sans-serif;cursor:pointer;
+ }
+ .mj16-certificate-dialog{
+  direction:rtl;box-sizing:border-box;width:min(96vw,1200px);max-width:96vw;
+  max-height:95dvh;overflow:auto;border:1px solid #a4caca;border-radius:15px;
+  background:#f3f8f8;color:#0b3047;padding:12px;
+  box-shadow:0 12px 48px rgba(8,38,56,.2)
+ }
+ .mj16-certificate-dialog::backdrop{background:rgba(4,29,43,.72)}
+ .mj16-certificate-dialog .mj16-dialog-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+ .mj16-certificate-dialog .mj16-dialog-header strong{font-size:15px}
+ .mj16-certificate-dialog .mj16-dialog-close{border:1px solid #0b5960;background:#fff;border-radius:8px;min-height:42px;padding:8px 12px;color:#0b5960;cursor:pointer;font:700 14px Tahoma,Arial,sans-serif}
+ .mj16-certificate-dialog .mj15-preview{margin:0;padding:8px;max-width:100%;overflow:hidden}
+ .mj16-certificate-dialog .mj15-paper-frame{width:100%;overflow:hidden}
+ .mj16-certificate-dialog .mj15-paper.certificate-paper{position:absolute!important;inset:0 0 auto auto;width:1123px!important;min-width:1123px!important;height:794px!important;max-width:none!important;min-height:794px!important;transform:scale(var(--mj15-scale,.3));transform-origin:top right}
+ .mj16-certificate-dialog p{font-size:12px;color:#37525a;margin:8px 2px}
+ @media(max-width:650px){
+  #view.mj16-admin-only #mj15Dashboard :is(.mj15-actions,.section-actions,.form-actions,.mj14-form-actions)>:is(button,a){flex:1 1 145px}
+  #view.mj16-admin-only #mj15Dashboard :is(.form-grid,.mj15-form-grid)>label{grid-column:1/-1!important}
+  #view.mj16-admin-only #mj15Dashboard :is(.form-grid,.mj15-form-grid,.mj14-request-form,.mj13-card,.mj15-form) label{
+   grid-template-columns:minmax(88px,32%) minmax(0,1fr)!important;gap:8px!important;font-size:12px!important;
+  }
+  .mj16-certificate-dialog{padding:7px;max-height:95dvh}
+  .mj16-certificate-dialog .mj15-preview{padding:4px}
+ }
  `;document.head.appendChild(el)}
 function certData(form){const f=new FormData(form);return Object.fromEntries([...f.entries()].map(([k,v])=>[k,String(v).trim()]));}
 function certHTML(cat,d={},watermark=true){
@@ -124,14 +238,28 @@ function formHTML(cat,values={},admin=false,readonly=false){const t=T(cat),exec=
  <label>المدة (إن وجدت)<input name="duration" maxlength="150" value="${v('duration')}" ${readonly?'disabled':''}></label>
  <label class="wide">البريد الإلكتروني لاستلام الشهادة *<input name="email" type="email" required maxlength="254" autocomplete="email" value="${v('email')}" ${readonly?'disabled':''}></label>
  </div>
- <div class="mj15-preview" data-mj15-preview="1"><div class="mj15-paper-frame">${certHTML(cat,values,true)}</div></div>
+ <div class="mj16-preview-control"><strong>معاينة الشهادة للمستفيدة</strong><button type="button" data-mj16-preview-open aria-label="معاينة الشهادة كاملة بالقالب الرسمي وعلامة منجز">◉ معاينة الشهادة كاملة</button></div>
+ <div class="mj15-preview" data-mj15-preview="1" aria-label="معاينة الشهادة الرسمية مع علامة منجز"><div class="mj15-paper-frame">${certHTML(cat,values,true)}</div></div>
+ <p class="mj15-note">المعاينة بالقالب الرسمي وبعلامة مائية «منجز». لا يمكن إصدار أو تنزيل شهادة رسمية من حساب المستفيدة.</p>
  ${admin?`<p class="mj15-note">حفظ أي تعديل إداري يلغي الاعتماد السابق، ويلزم إعادة الاعتماد قبل الإصدار.</p><div class="mj15-actions"><button type="submit">حفظ التعديل الإداري</button>${values._status==='معتمد'?'':'<button type="button" class="secondary" data-mj15-approve>اعتماد الطلب</button>'}</div>`:
  `<div class="mj15-actions"><button type="submit" ${readonly?'disabled':''}>${state.requestId?'حفظ التعديل':'إرسال طلب إصدار الشهادة'}</button><button type="button" class="secondary" data-mj15-edit ${!readonly?'disabled':''}>✎ تعديل</button><button type="button" class="secondary" data-mj15-new>+ طلب جديد</button></div>`}
  <div class="mj15-status" role="status" data-mj15-status></div></form>`;
 }
 function publicMarkup(){const t=T(state.category),r=ownCurrent(),vals=r?.fields||{};return `<div class="mj15-choices" role="group" aria-label="اختيار فئة الشهادة">${TYPES.map(x=>`<button class="mj15-choice" data-mj15-cat="${x[0]}" aria-pressed="${x[0]===state.category}">${H(x[1])}</button>`).join('')}</div><h3 style="margin:8px 0">${H(t[1])}</h3><p class="mj15-note">المعاينة كاملة بالقالب الرسمي وعلامة مائية «منجز». لا يحق للمستفيدة إصدار شهادة رسمية.</p><div id="mj15PublicForm">${formHTML(state.category,vals,false,!!r)}</div><div class="mj15-records">${own().filter(r=>r.category===state.category).map(r=>`<div class="mj15-record"><span>${H(r.fields?.name||'')} — ${H(r.fields?.title||'')}</span><button data-mj15-own="${H(r.id)}">فتح وتعديل</button></div>`).join('')}</div>`}
 function fitPreviews(){document.querySelectorAll('.mj15-preview .mj15-paper-frame').forEach(frame=>{const width=frame.clientWidth;if(!width)return;const scale=Math.min(1,width/1123);frame.style.height=Math.round(794*scale)+'px';const paper=frame.querySelector('.mj15-paper');if(paper)paper.style.setProperty('--mj15-scale',String(scale))})}
-function uiField(root){const f=root.closest('form');if(!f)return;const preview=f.querySelector('[data-mj15-preview]');if(preview){preview.querySelector('.mj15-paper-frame').innerHTML=certHTML(f.dataset.category||state.category,certData(f),true);fitPreviews()}}
+function uiField(root){const f=root.closest('form');if(!f)return;const cat=f.dataset.category||state.category;const content=certHTML(cat,certData(f),true);const preview=f.querySelector('[data-mj15-preview]');if(preview){preview.querySelector('.mj15-paper-frame').innerHTML=content;fitPreviews()}
+ const dialog=document.getElementById('mj16CertificatePreviewDialog');if(dialog?.open&&dialog._sourceForm===f){const target=dialog.querySelector('.mj15-paper-frame');if(target){target.innerHTML=content;fitPreviews()}}
+}
+function openBeneficiaryPreview(button){const form=button.closest('form[data-mj15-form]');if(!form)return;
+ let dialog=document.getElementById('mj16CertificatePreviewDialog');
+ if(!dialog){dialog=document.createElement('dialog');dialog.id='mj16CertificatePreviewDialog';dialog.className='mj16-certificate-dialog';dialog.innerHTML=`<div class="mj16-dialog-header"><strong>معاينة الشهادة كاملة – علامة مائية «منجز»</strong><button type="button" class="mj16-dialog-close" data-mj16-close aria-label="إغلاق معاينة الشهادة">إغلاق ×</button></div><div class="mj15-preview"><div class="mj15-paper-frame"></div></div><p>هذه نسخة للمعاينة فقط. الإصدار الرسمي متاح للإدارة بعد الاعتماد.</p>`;document.body.appendChild(dialog);
+ dialog.addEventListener('click',e=>{if(e.target.closest('[data-mj16-close]'))dialog.close()});
+ dialog.addEventListener('close',()=>{dialog._sourceForm=null});}
+ dialog._sourceForm=form;
+ dialog.querySelector('.mj15-paper-frame').innerHTML=certHTML(form.dataset.category||state.category,certData(form),true);
+ dialog.showModal();fitPreviews();requestAnimationFrame(fitPreviews);
+}
+
 function token(){let s;try{s=JSON.parse(sessionStorage.getItem(SK)||'null')}catch(_){s=null};if(!s?.access_token)throw Error('يجب تسجيل الدخول من «الصلاحيات الإدارية» أولًا.');if(s.expires_at&&Number(s.expires_at)<Date.now()/1000)throw Error('انتهت الجلسة الإدارية؛ سجّلي الدخول مرة أخرى.');return s.access_token}
 async function verifiedToken(){let b=token();const r=await fetch(BASE+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+b},cache:'no-store'});if(!r.ok)throw Error('تعذر التحقق من الحساب الإداري.');const u=await r.json();if(String(u.email||'').toLowerCase()!=='munjz.s94@hotmail.com')throw Error('هذا الحساب غير مخوّل لإدارة طلبات الشهادات.');return b}
 async function rpc(name,body,bearer=null){const resp=await fetch(`${BASE}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:KEY,Authorization:`Bearer ${bearer||KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!resp.ok){const err=await resp.json().catch(()=>({}));throw Error(err.message||`تعذر الحفظ (${resp.status}).`)}return resp.json().catch(()=>null)}
@@ -167,7 +295,7 @@ function mount(){const view=document.getElementById('view');if((location.hash||'
  display();fitPreviews();const reqid=urlParam('cert_request_id');if(reqid&&/^[0-9a-f-]{36}$/.test(reqid)&&!state.selected){state.selected=reqid;document.getElementById('mj15Powers').open=true;const panel=document.getElementById('mj15Requests');panel.open=true;fetchAll().then(()=>{refreshAdmin();const mode=urlParam('cert_action')==='issue'?'issue':'approve';printMessages(reqid,mode);const el=document.getElementById(mode==='issue'?'mj15Issuance':'mj15Powers');el.open=true}).catch(()=>{});}}
 let observing=false;
 function boot(){const view=document.getElementById('view');if(!view)return;const ob=new MutationObserver(()=>{if(observing)return;observing=true;try{mount()}finally{observing=false}});ob.observe(view,{childList:true,subtree:true});mount();addEventListener('hashchange',()=>queueMicrotask(mount));addEventListener('resize',fitPreviews,{passive:true});document.addEventListener('toggle',e=>{if(e.target.matches?.('.mj15-panel')&&e.target.open)requestAnimationFrame(fitPreviews)},true)}
-document.addEventListener('click',async e=>{const cat=e.target.closest('[data-mj15-cat]');if(cat){state.category=cat.dataset.mj15Cat;state.requestId='';const z=document.getElementById('mj15PublicArea');if(z){z.innerHTML=publicMarkup();window.ManjazHijriPicker?.refresh?.()}return}
+document.addEventListener('click',async e=>{const previewBtn=e.target.closest('[data-mj16-preview-open]');if(previewBtn){openBeneficiaryPreview(previewBtn);return}const cat=e.target.closest('[data-mj15-cat]');if(cat){document.getElementById('mj16CertificatePreviewDialog')?.close();state.category=cat.dataset.mj15Cat;state.requestId='';const z=document.getElementById('mj15PublicArea');if(z){z.innerHTML=publicMarkup();window.ManjazHijriPicker?.refresh?.()}return}
  const v=e.target.closest('[data-mj15-own]');if(v){state.requestId=v.dataset.mj15Own;document.getElementById('mj15PublicArea').innerHTML=publicMarkup();window.ManjazHijriPicker?.refresh?.();fitPreviews();return}
  const edit=e.target.closest('[data-mj15-edit]');if(edit){const x=ownCurrent();if(x){document.getElementById('mj15PublicForm').innerHTML=formHTML(state.category,x.fields,false,false)}else{const box=document.getElementById('mj15PublicForm');if(box)box.innerHTML=formHTML(state.category,{},false,false)}window.ManjazHijriPicker?.refresh?.();fitPreviews();return}
  if(e.target.closest('[data-mj15-new]')){state.requestId='';document.getElementById('mj15PublicArea').innerHTML=publicMarkup();window.ManjazHijriPicker?.refresh?.();fitPreviews();return}
