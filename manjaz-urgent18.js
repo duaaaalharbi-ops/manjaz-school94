@@ -137,153 +137,137 @@
 
 
 /* Daily duty stylesheet is deliberately bundled with the entry script */
-(()=>{const id="mjDailyDutyCss20";if(document.getElementById(id))return;const s=document.createElement("style");s.id=id;s.textContent="/* Independent Manjaz daily duty section, fully RTL and printable */\n.mj-duty{direction:rtl;color:var(--ink,#173345);display:grid;gap:16px;max-width:1100px;margin:0 auto 22px;font:inherit}\n.mj-duty-head{border-radius:16px;background:linear-gradient(100deg,var(--navy,#0b3047),#0c636b);color:#fff;padding:22px 26px}\n.mj-duty-head span{opacity:.9;font-size:13px}.mj-duty-head h2{margin:8px 0;font-size:25px;color:#fff}.mj-duty-head p{margin:0;color:#f2faf9}\n.mj-duty-toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:14px;background:#fff;border:1px solid var(--line,#d4e3e5);border-radius:14px}\n.mj-duty-toolbar label{display:grid;gap:5px;flex:1 1 180px;font-weight:700}\n.mj-duty button,.mj-duty input,.mj-duty select{font:inherit;box-sizing:border-box}\n.mj-duty button{border:0;background:var(--teal,#0d7779);color:#fff;padding:10px 15px;min-height:44px;border-radius:9px;font-weight:700;cursor:pointer}\n.mj-duty button.secondary{background:#fff;border:1px solid #a6c6c7;color:#195d65}.mj-duty button:disabled{opacity:.55;cursor:not-allowed}\n.mj-duty input,.mj-duty select{border:1px solid #bdcfd4;border-radius:9px;background:#fff;color:var(--ink,#173345);padding:10px 12px;min-width:0;width:100%;height:46px;text-align:right;direction:rtl}\n.mj-duty-policy{background:#eff8f7;padding:12px 16px;border-right:4px solid #14847d;border-radius:9px;line-height:1.9}\n#dutyStatus:not(:empty){padding:10px 12px;border-radius:9px;background:#ecf7f5;color:#155a52}#dutyStatus.error{background:#fff1ef;color:#8c2424}\n.mj-duty-panel{border:1px solid var(--line,#d4e3e5);background:#fff;border-radius:15px;overflow:hidden}\n.mj-duty-panel summary{font-weight:800;cursor:pointer;list-style:none;min-height:60px;padding:18px;box-sizing:border-box;color:var(--navy,#0b3047)}\n.mj-duty-panel summary::before{content:'+';margin-left:12px;color:var(--teal,#0d7779);font-size:23px}.mj-duty-panel[open] summary::before{content:'−'}\n.mj-duty-body{padding:16px;border-top:1px solid var(--line,#d4e3e5)}\n.mj-duty-auto-actions{display:flex;gap:10px;flex-wrap:wrap}.mj-duty-hint{color:#58757b;font-size:13px;line-height:1.8}\n.mj-duty-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}\n.mj-duty-slot{border:1px solid #d5e6e6;border-radius:12px;overflow:hidden;background:#fbfefe;min-width:0}\n.mj-duty-slot h3{padding:14px;margin:0;background:#eaf5f3;font-size:16px;color:#16545d}\n.mj-duty-slot h3 small{font-size:12px;opacity:.8;margin-inline-start:4px}\n.mj-duty-six{padding:12px;display:grid;gap:9px}.mj-duty-six label{display:flex;gap:8px;align-items:center;min-width:0}\n.mj-duty-six label>span{border-radius:6px;background:#e3eff0;padding:8px;color:#175a5c;min-width:16px;text-align:center}\n.mj-duty-six label>select{flex:1;font-size:12px}\n#dutyPersonForm{display:grid;grid-template-columns:2fr 1fr auto;align-items:end;gap:10px;margin-bottom:15px}\n#dutyPersonForm label{display:grid;gap:5px;font-size:13px;font-weight:700}\n.mj-duty-people{display:grid;gap:6px}.mj-duty-people>div,.mj-duty-share>div{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:9px 11px;border:1px solid #e1eaec;border-radius:9px}\n.mj-duty-people small,.mj-duty-share small{color:#5d7279;font-size:12px}\n.mj-duty-share{display:grid;gap:7px;margin-top:12px}.mj-duty-share>div span{display:grid;gap:4px}\n.mj-duty-stats-wrap{overflow-x:auto}.mj-duty-stats-wrap table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}\n.mj-duty-stats-wrap th,.mj-duty-stats-wrap td{border-bottom:1px solid #dfeaec;padding:10px 12px;text-align:right}\n.mj-duty-stats-wrap th{background:#eaf5f3;color:#123e48}\n.mj-duty-public{max-width:700px;margin:28px auto;padding:20px;background:#fff;border:1px solid #cfe0e3;border-radius:14px}.mj-duty-public h2{margin:0}\n.mj-duty-notice{padding:15px;border:1px solid #cfe0e3;border-radius:10px;margin-bottom:13px}\n.mj-duty-home{padding:16px 20px}.mj-duty-home .panel-head{margin-bottom:12px}.mj-duty-home a{display:inline-block;margin-top:9px}\n@media(max-width:900px){.mj-duty-slots{grid-template-columns:1fr}}\n@media(max-width:600px){.mj-duty-head{padding:16px}.mj-duty-body{padding:10px}#dutyPersonForm{grid-template-columns:1fr}.mj-duty-six label>select{font-size:13px}}\n@media print{\n body :is(#nav,.mobile-nav,.sidebar,.header,.topbar,.mj-duty-toolbar,.mj-duty-auto-actions,#dutyPersonForm,#dutyPeople,#dutyPublish,#dutyStats,.mj-duty-people,.mj-duty-policy,#dutyStatus){display:none!important}\n .mj-duty-panel:not(:first-of-type){display:none!important}.mj-duty{max-width:none}.mj-duty-panel{border:0}.mj-duty-panel .mj-duty-body{display:block!important}.mj-duty-panel summary{display:none!important}\n .mj-duty-slot{break-inside:avoid;print-color-adjust:exact}.mj-duty-slots{grid-template-columns:repeat(3,minmax(0,1fr))}\n }\n";document.head.appendChild(s)})();
 
-/* MANJAZ DAILY DUTY 1.0 — isolated from the reserve module.
-   Requires daily-duty.sql to be installed in Supabase before first use. */
+/* MANJAZ DUTY 21: styles scoped to the new section */
+(function(){const id="mjDailyDutyCSS21";if(document.getElementById(id))return;const node=document.createElement("style");node.id=id;node.textContent="/* Daily duty 21 – reuse the reserve design tokens and components; isolate all rules. */\n.mj-duty{direction:rtl;text-align:right;color:var(--ink,#173345);max-width:1180px;margin:0 auto 32px;display:grid;gap:16px;font-family:inherit}\n.mj-duty .page-intro{margin-bottom:0}\n.mj-duty :is(.reserve-public-card,.reserve-tab,.reserve-table,.reserve-actions,.reserve-mini,.reserve-card-grid,.reserve-work-card,.reserve-tabs){font-family:inherit}\n.mj-duty .reserve-public-card{background:var(--white,#fff);border:1px solid var(--line,#dae7ea);border-radius:14px;overflow:hidden;margin-bottom:12px}\n.mj-duty .reserve-public-card summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;cursor:pointer;min-height:60px;list-style:none;color:var(--navy,#0b3047)}\n.mj-duty .reserve-public-card summary strong{font-size:16px}\n.mj-duty .reserve-public-card summary span{font-size:13px;color:#627d83}\n.mj-duty .reserve-public-card summary:before{content:'+';font-weight:800;font-size:22px;color:var(--teal,#0d8082);margin-inline-end:6px}\n.mj-duty .reserve-public-card[open] summary:before{content:'−'}\n.mj-duty .reserve-public-card-content{padding:14px 16px;border-top:1px solid var(--line,#dae7ea)}\n.mj-duty .surface.panel,.mj-duty .surface.form-card{background:var(--white,#fff);border:1px solid var(--line,#dae7ea);border-radius:14px;padding:18px}\n.mj-duty .panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}\n.mj-duty .panel-head h3{margin:0;color:var(--navy,#0b3047)}\n.mj-duty .panel-head span{color:#6b8288;font-size:13px}\n.mj-duty .duty-date-row{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:12px 0}\n.mj-duty .duty-date-label{display:grid;gap:6px;font-weight:700;max-width:250px;flex:1 1 170px}\n.mj-duty :is(input,select){height:46px;box-sizing:border-box;background:#fff;border:1px solid var(--line,#c9dcdf);border-radius:10px;padding:9px 11px;min-width:0;max-width:100%;color:var(--ink,#173345);direction:rtl;font:inherit}\n.mj-duty .duty-hijri{padding:10px;color:#335e65}\n.mj-duty button{font-family:inherit;cursor:pointer;min-height:42px}\n.mj-duty button:disabled{opacity:.5;cursor:not-allowed}\n.mj-duty .form-actions,.mj-duty .reserve-actions,.mj-duty .duty-admin-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:12px 0}\n.mj-duty .btn{padding:10px 16px;border-radius:10px;font-size:14px;font-weight:700}\n.mj-duty .reserve-mini{border:1px solid #bad1d4;border-radius:9px;color:#145b60;background:#fff;padding:8px 12px;font-weight:700}\n.mj-duty .reserve-mini.danger{color:#9b2929;border-color:#e4baba}\n.mj-duty .reserve-tab{border:1px solid #cce0e3;background:#fff;border-radius:10px;color:#275f67;padding:10px 14px;font-weight:700}\n.mj-duty .reserve-tab.active,.mj-duty .reserve-work-card.active{border-color:var(--teal,#128080);background:var(--teal-soft,#e7f4f2)}\n.mj-duty .reserve-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:14px 0}\n.mj-duty .reserve-work-card{border:1px solid var(--line,#d9e6e7);border-radius:12px;background:#fff;text-align:right;display:grid;gap:6px;padding:15px;min-height:95px;color:var(--navy,#0b3047)}\n.mj-duty .reserve-work-card strong{font-size:15px}.mj-duty .reserve-work-card small{color:#687f82;font-size:12px;line-height:1.6}\n.mj-duty .reserve-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}\n.mj-duty .reserve-share-box{padding:13px;background:#f5fbfa;border:1px solid #d3e5e4;border-radius:12px;margin:14px 0}\n.mj-duty .reserve-public-note{color:#526e73;line-height:1.8;font-size:13px}\n.mj-duty .reserve-table-wrap{overflow-x:auto;max-width:100%}\n.mj-duty .reserve-table{border-collapse:collapse;width:100%;min-width:400px;font-size:13px}\n.mj-duty .reserve-table :is(td,th){text-align:right;padding:10px 12px;border:1px solid #e0eaec;white-space:normal}\n.mj-duty .reserve-table th{background:#edf6f5;color:#214b57}\n.mj-duty .reserve-status{color:#13745f;font-weight:700}\n.mj-duty .reserve-status.pending{color:#9a5925}\n.mj-duty .duty-totals{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;color:#42666d}\n.mj-duty .duty-totals span{padding:7px 10px;background:#f2f8f8;border-radius:8px;font-size:12px}\n.mj-duty #dutyStatus:not(:empty){border-radius:10px;padding:10px 13px;background:#edf8f6;color:#146259}\n.mj-duty #dutyStatus.error{background:#fff1ee;color:#9d2929}\n.mj-duty [hidden],#dutyPreviewBackdrop[hidden]{display:none!important}\n.mj-duty .duty-slot-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}\n.mj-duty .duty-slot{border-radius:12px;border:1px solid #dae6e6;overflow:hidden;min-width:0;background:#fbfefd}\n.mj-duty .duty-slot h3{background:#eaf5f3;color:#184f59;padding:13px;margin:0;font-size:15px}\n.mj-duty .duty-slot h3 small{font-size:11px;margin-inline:6px;font-weight:500}\n.mj-duty .duty-slots-grid{display:grid;gap:7px;padding:10px}\n.mj-duty .duty-slots-grid label{display:flex;gap:7px;align-items:center;min-width:0}\n.mj-duty .duty-slots-grid label span{display:grid;place-items:center;width:25px;flex:0 0 25px;border-radius:7px;background:#eaf4f4;color:#216267}\n.mj-duty .duty-slots-grid select{width:100%;font-size:12px}\n.mj-duty #dutyPersonForm{display:grid;grid-template-columns:2fr 1fr auto;align-items:end;gap:9px;margin:12px 0}\n.mj-duty #dutyPersonForm label{display:grid;gap:7px}\n.mj-duty .duty-link-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid #e0e8e9;border-radius:10px;padding:10px 12px;margin:7px 0}\n.mj-duty .duty-link-row span{display:grid;gap:5px}.mj-duty .duty-link-row small{color:#637f82}\n.mj-duty-link-public{max-width:720px;margin:20px auto;padding:22px}.mj-duty-link-public h2{color:var(--navy,#0b3047)}\n#dutyPreviewBackdrop{position:fixed;inset:0;background:rgba(10,27,39,.62);z-index:999999;overflow:auto;padding:16px;display:flex;align-items:flex-start;justify-content:center}\n#dutyPreviewBackdrop .duty-preview{width:min(900px,100%);padding:16px;background:#fff;border-radius:14px;direction:rtl;box-sizing:border-box}\n#dutyPreviewBackdrop .duty-preview-tools{display:flex;gap:10px;justify-content:flex-start;margin-bottom:14px}\n#dutyPrintSheet{direction:rtl;color:#111;font:13px/1.6 Tahoma,Arial,sans-serif;background:white;min-height:180px;padding:12mm}\n#dutyPrintSheet .duty-sheet-heading{text-align:center;margin-bottom:16px}\n#dutyPrintSheet h1{font-size:21px;margin:14px 0;color:#123745}\n#dutyPrintSheet table{border-collapse:collapse;width:100%;table-layout:fixed}\n#dutyPrintSheet :is(th,td){border:1px solid #a8b7bd;text-align:right;padding:8px;min-height:30px;vertical-align:middle}\n#dutyPrintSheet th{background:#e9f4f3;color:#163c48}\n#dutyPrintSheet .duty-sheet-totals{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;border-top:1px solid #cbd6d7;margin-top:18px;padding-top:10px}\n@media(max-width:960px){.mj-duty .duty-slot-columns{grid-template-columns:1fr}.mj-duty .reserve-card-grid{grid-template-columns:1fr}}\n@media(max-width:640px){.mj-duty .page-intro{padding:8px}.mj-duty .reserve-public-card summary{display:grid;grid-template-columns:auto 1fr;justify-content:start}.mj-duty .reserve-public-card summary span{grid-column:2}.mj-duty .surface.panel,.mj-duty .surface.form-card{padding:12px}.mj-duty #dutyPersonForm{grid-template-columns:1fr}}\n@page{size:A4 portrait;margin:12mm}\n@media print{\n body:has(#dutyPreviewBackdrop:not([hidden])) *{visibility:hidden!important}\n body:has(#dutyPreviewBackdrop:not([hidden])) #dutyPreviewBackdrop,body:has(#dutyPreviewBackdrop:not([hidden])) #dutyPreviewBackdrop :is(*, *::before, *::after){visibility:visible!important}\n #dutyPreviewBackdrop:not([hidden]){position:absolute!important;inset:0!important;display:block!important;padding:0!important;background:white!important;overflow:visible!important}\n #dutyPreviewBackdrop .duty-preview{width:100%!important;padding:0!important;border:0!important;box-shadow:none!important}\n #dutyPreviewBackdrop .duty-preview-tools{display:none!important}\n #dutyPrintSheet{padding:0!important;min-height:0!important;font-size:11px}\n #dutyPrintSheet tr{break-inside:avoid}\n #dutyPrintSheet thead{display:table-header-group}\n}\n";document.head.append(node)})();
+
+/* Manjaz daily duty 21.0 — reserve-pattern UI, independent storage; no excellence section. */
 (()=>{'use strict';
-const URL='https://idkjuqfxcweqekdkcktk.supabase.co';
-const API='sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL';
-const KEY='manjaz_admin_auth_session_v1';
-const ROUTE='#daily-duty', SHARED='#duty-view?token=';
+const BASE='https://idkjuqfxcweqekdkcktk.supabase.co',KEY='sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL';
+const AUTH_KEY='manjaz_admin_auth_session_v1',ROUTE='#daily-duty';
 const SLOTS=[['morning','مناوبة الصباح'],['break','مناوبة الفسحة'],['end','مناوبة نهاية الدوام']];
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const today=()=>new Date(Date.now()+3*3600000).toISOString().slice(0,10);
-let roster=[], assignments=[], links=[], dutyDate=today(), busy=false, currentRoute='';
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const localDate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const dateLong=d=>{try{return new Intl.DateTimeFormat('ar-SA-u-ca-gregory',{dateStyle:'full',timeZone:'Asia/Riyadh'}).format(new Date(d+'T12:00:00+03:00'))}catch{return d}};
+const hijri=d=>{try{return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'long',day:'numeric',timeZone:'Asia/Riyadh'}).format(new Date(d+'T12:00:00+03:00'))}catch{return d}};
+const slotName=k=>SLOTS.find(x=>x[0]===k)?.[1]||k;
 const root=()=>document.getElementById('view');
-const adminSession=()=>{try{const x=JSON.parse(sessionStorage.getItem(KEY)||'null');return x?.access_token&&(!x.expires_at||x.expires_at>Date.now()/1000)?x:null}catch(_){return null}};
-const h=(admin=false)=>({apikey:API,Authorization:'Bearer '+(adminSession()?.access_token||API),'Content-Type':'application/json'});
-async function request(path,{method='GET',body=null,admin=false}={}){
- if(admin&&!adminSession())throw Error('سجلي الدخول إلى الصلاحيات الإدارية قبل إدارة المناوبة');
- const res=await fetch(URL+'/rest/v1/'+path,{method,headers:h(admin),...(body?{body:JSON.stringify(body)}:{}),cache:'no-store'});
- const txt=await res.text();let payload;
- try{payload=txt?JSON.parse(txt):null}catch{payload=txt}
- if(!res.ok)throw Error(payload?.message||payload?.hint||'تعذر الاتصال بقاعدة البيانات ('+res.status+')');
- return payload;
+let date=localDate(),roster=[],assignments=[],links=[],history=[],published=false,activeCard='manual',busy=false,routeKey='',publicStats=null;
+function session(){try{const s=JSON.parse(sessionStorage.getItem(AUTH_KEY)||'null');return s?.access_token&&(!s.expires_at||s.expires_at>Date.now()/1000)?s:null}catch{return null}}
+function headers(){return {apikey:KEY,Authorization:'Bearer '+(session()?.access_token||KEY),'Content-Type':'application/json'}}
+async function api(path,body,admin=false){if(admin&&!session())throw Error('سجلي الدخول للإدارة أولًا');const r=await fetch(BASE+'/rest/v1/'+path,{method:body?'POST':'GET',headers:headers(),...(body?{body:JSON.stringify(body)}:{}),cache:'no-store'});const t=await r.text();let data;try{data=t?JSON.parse(t):null}catch{data=t}if(!r.ok)throw Error(data?.message||data?.hint||'تعذر الاتصال بقاعدة البيانات '+r.status);return data}
+const rpc=(name,params={},admin=false)=>api('rpc/'+name,params,admin);
+const log=t=>{const p=document.getElementById('dutyStatus');if(p){p.textContent=t||'';p.classList.toggle('error',/تعذر|يلزم|غير |خطأ/.test(t))}};
+const urlFor=(h)=>location.href.split('#')[0]+h;
+function home(){const view=root();if(!view || (location.hash&&location.hash!=='#home'))return;
+ const grid=view.querySelector('.manjaz-home-grid');if(!grid||grid.querySelector('#mjDutyHomeCard'))return;
+ const card=document.createElement('article');card.id='mjDutyHomeCard';card.className='manjaz-home-card';
+ card.innerHTML='<div class="manjaz-home-card-title"><span class="manjaz-home-icon" aria-hidden="true">▦</span><h3>المناوبة اليومية</h3></div><div class="manjaz-home-actions"><a class="manjaz-home-action view" href="#daily-duty">استعراض</a></div>';
+ const reserve=[...grid.children].find(x=>x.textContent.includes('الاحتياط اليومي'));
+ if(reserve)reserve.after(card);else grid.append(card);
 }
-const rpc=(name,data,admin=true)=>request('rpc/'+name,{method:'POST',body:data,admin});
-const slotLabel=code=>SLOTS.find(([k])=>k===code)?.[1]||code;
-function notify(message,isError=false){const p=document.getElementById('dutyStatus');if(p){p.textContent=message;p.classList.toggle('error',isError);p.setAttribute('role','status')}}
-function home(){
- const v=root();if(!v || !/^#home(?:$|\?)/.test(location.hash||'#home') || v.querySelector('#mjDutyHomeCard'))return;
- const section=document.createElement('section');section.className='surface panel mj-duty-home';section.id='mjDutyHomeCard';
- section.innerHTML='<div class="panel-head"><h3>المناوبة اليومية</h3><span>الصباح • الفسحة • نهاية الدوام</span></div><p>إنشاء جدول المناوبة، النشر الفردي، تأكيد الاطلاع والإحصائيات.</p><a class="btn btn-primary" href="#daily-duty">إدارة المناوبة اليومية</a>';
- v.appendChild(section);
+function nav(){const n=document.getElementById('nav');if(n&&!n.querySelector('[data-route="daily-duty"]')){const a=document.createElement('a');a.href=ROUTE;a.dataset.route='daily-duty';a.innerHTML='<span class="icon">▦</span><span>المناوبة اليومية</span>';const reserve=n.querySelector('[href*="reserve"]');reserve?reserve.after(a):n.append(a)}}
+const dateInput=()=>`<label class="duty-date-label">اليوم والتاريخ <input type="date" id="dutyDate" value="${esc(date)}"></label><span class="duty-hijri" id="dutyHijri">${esc(hijri(date))}</span>`;
+function layout(){const view=root();if(!view)return;view.innerHTML=`<div id="mjDutyRoot" class="mj-duty" dir="rtl">
+ <section class="page-intro"><div><span class="kicker">منجز</span><h2>المناوبة اليومية</h2><p>الثانوية الرابعة والتسعون – مسارات</p></div></section>
+ <section class="surface panel duty-main-toolbar"><div class="panel-head"><h3>عرض المناوبة</h3><span id="dutyDayLabel">${esc(dateLong(date))}</span></div>
+ <div class="duty-date-row">${dateInput()}</div><div class="form-actions duty-toolbar-actions"><button class="btn btn-ghost" id="dutyReload" type="button">عرض الجدول</button><button class="btn btn-ghost" id="dutyPrint" type="button">طباعة الجدول</button><button class="btn btn-primary" id="dutyPublishPreview" type="button">جدول النشر</button><button class="btn btn-ghost" id="dutyAdminOpen" type="button">دخول الإدارة</button></div></section>
+ <div id="dutyStatus" role="status" aria-live="polite"></div>
+ <div class="reserve-public-card-stack duty-public-stack">
+ <details class="reserve-public-card" id="dutyPublicCardDaily" open><summary><strong>جدول المناوبة اليومية</strong><span>الصباح والفسحة ونهاية الدوام – تأكيد الاطلاع</span></summary><div class="reserve-public-card-content" id="dutyPublicTable">جارٍ تحميل الجدول...</div></details>
+ <details class="reserve-public-card" id="dutyPublicCardStatistics"><summary><strong>إحصائيات المناوبة</strong><span>يومي وأسبوعي وشهري هجري وتراكمي</span></summary><div class="reserve-public-card-content" id="dutyStats">جارٍ تحميل الإحصائيات...</div></details></div>
+ <section class="surface panel reserve-admin-block duty-admin" id="dutyAdmin" hidden><div class="panel-head"><h3>إدارة المناوبة اليومية</h3><span>دخول إداري</span></div>
+ <nav class="reserve-tabs duty-admin-nav" aria-label="أقسام المناوبة"><button class="reserve-tab active" data-dtab="workspace">إنشاء ومتابعة المناوبة</button><button class="reserve-tab" data-dtab="teachers">المنفذات والجداول</button><button class="reserve-tab" data-dtab="settings">الإعدادات</button></nav>
+ <section class="reserve-share-box"><strong>مشاركة روابط المناوبة</strong><div class="reserve-actions"><button type="button" class="reserve-mini" id="dutyCopyDay">نسخ رابط جدول اليوم</button><button type="button" class="reserve-mini" id="dutyWhatsapp">مشاركة عبر واتساب</button></div></section>
+ <div id="dutyAdminWorkspace"></div></section>
+ </div><div id="dutyPreviewBackdrop" hidden></div>`;
+ document.getElementById('dutyDate').onchange=e=>{date=e.target.value||localDate();refresh()};
+ document.getElementById('dutyReload').onclick=()=>refresh();
+ document.getElementById('dutyPrint').onclick=()=>preview(true);
+ document.getElementById('dutyPublishPreview').onclick=()=>preview(false);
+ document.getElementById('dutyAdminOpen').onclick=()=>{if(!session()){log('للدخول الإداري سجلي الدخول أولًا من قسم الصلاحيات الإدارية.');location.hash='#admin-permissions';return}const p=document.getElementById('dutyAdmin');p.hidden=false;p.scrollIntoView({behavior:'smooth',block:'start'});loadAdmin()};
+ document.getElementById('dutyCopyDay').onclick=()=>copy(urlFor('#daily-duty?date='+date));
+ document.getElementById('dutyWhatsapp').onclick=()=>{const body=`السلام عليكم ورحمة الله وبركاته\nجدول المناوبة اليومية\n${dateLong(date)}\n${urlFor('#daily-duty?date='+date)}\nيرجى الاطلاع على تكليفات اليوم وتأكيد الاطلاع من الرابط الشخصي.`;const u='https://api.whatsapp.com/send?text='+encodeURIComponent(body);window.open(u,'_blank','noopener,noreferrer')||location.assign(u)};
+ document.querySelectorAll('[data-dtab]').forEach(b=>b.onclick=()=>adminTab(b.dataset.dtab));
+ if(session())document.getElementById('dutyAdmin').hidden=false;
+ refresh();
 }
-function nav(){const nav=document.getElementById('nav');if(nav&&!nav.querySelector('[data-route="daily-duty"]')){
- const a=document.createElement('a');a.href=ROUTE;a.dataset.route='daily-duty';a.innerHTML='<span class="icon">▦</span><span>المناوبة اليومية</span>';
- const reserve=nav.querySelector('a[href*="reserve"]'); if(reserve)reserve.after(a);else nav.appendChild(a);
- }const n=document.querySelector('.mobile-nav');if(n&&!n.querySelector('[href="#daily-duty"]')){
- const a=document.createElement('a');a.href=ROUTE;a.innerHTML='<span>▦</span><small>المناوبة</small>';n.appendChild(a);
- }}
-function pageMarkup(){return `<div id="mjDutyRoot" class="mj-duty" dir="rtl">
-<header class="mj-duty-head"><span>منجز | الثانوية الرابعة والتسعون – مسارات</span><h2>المناوبة اليومية</h2><p>إنشاء يدوي أو توليد آلي متوازن، نشر الجدول، وروابط الاطلاع الفردية. <strong id="dutyPrintDate">${esc(dutyDate)}</strong></p></header>
-<div class="mj-duty-toolbar"><label>اليوم والتاريخ <input id="dutyDate" type="date" value="${esc(dutyDate)}"></label><button id="dutyReload" type="button">عرض الجدول</button><button id="dutyPrint" type="button" class="secondary">طباعة / حفظ PDF</button></div>
-<div id="dutyStatus" role="status" aria-live="polite"></div>
-<div class="mj-duty-policy">التوليد الآلي: <strong>الفسحة للإداريات فقط</strong>، والصباح ونهاية الدوام للمعلمات والإداريات. ٦ منفذات لكل فترة، دون تكرار الاسم في اليوم، مع موازنة الأعداد وتدوير الفترات.</div>
-<details class="mj-duty-panel" open><summary>إنشاء جدول المناوبة</summary><div class="mj-duty-body" id="dutyBoard"><p>جارٍ تحميل البيانات...</p></div></details>
-<details class="mj-duty-panel"><summary>قائمة المنفذات (معلمات وإداريات)</summary><div class="mj-duty-body"><form id="dutyPersonForm"><label>الاسم<input id="dutyPersonName" required minlength="2" maxlength="160" placeholder="الاسم الكامل"></label><label>الفئة<select id="dutyPersonRole"><option value="teacher">معلمة</option><option value="administrative">إدارية</option></select></label><button type="submit">إضافة منفذة</button></form><div id="dutyPeople"></div></div></details>
-<details class="mj-duty-panel"><summary>نشر المناوبة وروابط الاطلاع</summary><div class="mj-duty-body" id="dutyPublish"><p>يظهر بعد حفظ الجدول.</p></div></details>
-<details class="mj-duty-panel"><summary>إحصائيات المناوبة والعدالة</summary><div class="mj-duty-body" id="dutyStats"><p>جارٍ تحميل الإحصائيات...</p></div></details>
-</div>`}
-function entryListMarkup(slot){
- return `<section class="mj-duty-slot"><h3>${slotLabel(slot)} <small>٦ منفذات</small></h3><div class="mj-duty-six">${Array.from({length:6},(_,i)=>{
-  const old=assignments.find(a=>a.slot===slot&&a.position===i+1);
-  return `<label><span>${i+1}</span><select data-slot="${slot}" data-position="${i+1}" aria-label="${slotLabel(slot)}، المنفذة ${i+1}"><option value="">اختاري الاسم</option>${roster.filter(p=>p.active).map(p=>`<option value="${esc(p.id)}" ${p.id===old?.person_id?'selected':''}>${esc(p.full_name)} — ${p.role==='administrative'?'إدارية':'معلمة'}</option>`).join('')}</select></label>`}).join('')}</div></section>`;
+function dayTable(data){const p=document.getElementById('dutyPublicTable');if(!p)return;
+ const rows=data?.rows||[];published=Boolean(data?.published);
+ const totals=SLOTS.map(([slot,name])=>({name,count:rows.filter(r=>r.slot===slot).length}));
+ p.innerHTML=`<p class="reserve-public-note">${published?'الجدول المعتمد لهذا اليوم؛ يمكنك متابعة حالة الاطلاع.':'لم يُنشر جدول المناوبة لهذا اليوم.'}</p>
+ <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>فترة المناوبة</th><th>اسم المنفذة</th><th>حالة الاطلاع</th></tr></thead><tbody>${rows.length?SLOTS.map(([key,title])=>rows.filter(r=>r.slot===key).map((r,i)=>`<tr><td>${i===0?esc(title):'—'}</td><td>${esc(r.name)}</td><td><span class="reserve-status ${r.viewed_at?'':'pending'}">${r.viewed_at?'تم الاطلاع':'لم يتم الاطلاع'}</span></td></tr>`).join('')).join(''):'<tr><td colspan="3">لا يوجد جدول منشور في التاريخ المحدد</td></tr>'}</tbody></table></div>
+ <div class="duty-totals">${totals.map(x=>`<span>${x.name}: <strong>${x.count}</strong></span>`).join('')}<span>الإجمالي: <strong>${rows.length}</strong></span></div>`;
 }
-function board(){const p=document.getElementById('dutyBoard');if(!p)return;
- p.innerHTML=`<div class="mj-duty-auto-actions"><button type="button" id="dutyGenerate">توليد آلي عادل</button><button type="button" id="dutySave">حفظ الجدول / التعديلات اليدوية</button></div>
- <p class="mj-duty-hint">يمكن تغيير أي اسم بعد التوليد من القائمة المنسدلة ثم حفظ الجدول. لا تتغير بيانات الاحتياط.</p>
- <div class="mj-duty-slots">${SLOTS.map(x=>entryListMarkup(x[0])).join('')}</div>`;
- p.querySelector('#dutyGenerate').onclick=()=>action(async()=>{if(!confirm('توليد جدول جديد سيستبدل تكليفات هذا التاريخ ويلغي روابطه السابقة. هل تستمرين؟'))return;
- await rpc('mj_duty_generate',{p_date:dutyDate});await load();notify('تم توليد ١٨ تكليفًا بعدالة، ومناوبة الفسحة للإداريات فقط.')});
- p.querySelector('#dutySave').onclick=()=>action(async()=>{
- const rows=[...p.querySelectorAll('select[data-slot]')].map(x=>({slot:x.dataset.slot,position:Number(x.dataset.position),person_id:x.value}));
- if(rows.some(r=>!r.person_id)){throw Error('اختاري ٦ منفذات لكل فترة قبل الحفظ')}
- if(new Set(rows.map(r=>r.person_id)).size!==18)throw Error('لا يمكن إسناد أكثر من مناوبة في اليوم إلى المنفذة نفسها');
- if(!confirm('حفظ التعديلات سيُلغي روابط النشر القديمة، ويمكن نشر الجدول مجددًا. هل تستمرين؟'))return;
- await rpc('mj_duty_save',{p_date:dutyDate,p_assignments:rows});await load();notify('تم حفظ الجدول والتعديلات. يجب النشر لتفعيل الروابط الفردية.')});
+function islamicMonthKey(d){return new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura',{year:'numeric',month:'2-digit',timeZone:'Asia/Riyadh'}).format(new Date(d+'T12:00:00+03:00'))}
+function monthStart(d){let dt=new Date(d+'T12:00:00+03:00');const key=islamicMonthKey(d);for(let i=0;i<35;i++){const prev=new Date(dt.getTime()-86400000);if(islamicMonthKey(prev.toISOString().slice(0,10))!==key)break;dt=prev}return dt.toISOString().slice(0,10)}
+function renderStats(data,prior=false){const root=document.getElementById('dutyStats');if(!root)return;
+ const rows=data?.rows||[],usePrior=prior;
+ root.innerHTML=`<p class="reserve-public-note">إحصائيات المناوبات المعتمدة في جداول النشر فقط، مع استبعاد الخانات الفارغة.</p>
+ <div class="reserve-actions duty-stats-buttons"><button type="button" class="reserve-tab ${!usePrior?'active':''}" data-dstats="current">الأسبوع الحالي</button><button type="button" class="reserve-tab ${usePrior?'active':''}" data-dstats="previous">الأسبوع السابق</button></div>
+ <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المنفذة</th><th>الفئة</th><th>اليوم</th><th>الأسبوع</th><th>الشهر الهجري</th><th>التراكمي</th><th>الصباح</th><th>الفسحة</th><th>النهاية</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.role==='administrative'?'إدارية':'معلمة'}</td><td>${Number(r.day_count||0)}</td><td>${Number(usePrior?r.previous_week_count:r.week_count)||0}</td><td>${Number(r.month_count||0)}</td><td>${Number(r.total_count||0)}</td><td>${Number(r.morning_count||0)}</td><td>${Number(r.break_count||0)}</td><td>${Number(r.end_count||0)}</td></tr>`).join(''):'<tr><td colspan="9">لا توجد إحصائيات منشورة</td></tr>'}</tbody></table></div>`;
+ root.querySelectorAll('[data-dstats]').forEach(b=>b.onclick=()=>renderStats(data,b.dataset.dstats==='previous'));
 }
-function people(){const e=document.getElementById('dutyPeople');if(!e)return;
- if(!roster.length){e.innerHTML='<p>لا توجد أسماء بعد. أضيفي المعلمات والإداريات من النموذج أعلاه.</p>';return;}
- e.innerHTML=`<div class="mj-duty-people">${roster.map(p=>`<div><span>${esc(p.full_name)} <small>(${p.role==='administrative'?'إدارية':'معلمة'})</small></span></div>`).join('')}</div>`;
+function cardPicker(slot){return `<section class="duty-slot"><h3>${esc(slotName(slot))} <small>الحد الأقصى ٦</small></h3><div class="duty-slots-grid">${Array.from({length:6},(_,i)=>{const old=assignments.find(a=>a.slot===slot&&Number(a.position)===i+1);return `<label><span>${i+1}</span><select data-slot="${slot}" data-position="${i+1}" aria-label="${esc(slotName(slot))} - المنفذة ${i+1}"><option value="">خانة غير مستخدمة</option>${roster.filter(x=>x.active).map(x=>`<option value="${esc(x.id)}" ${old?.person_id===x.id?'selected':''}>${esc(x.full_name)} — ${x.role==='administrative'?'إدارية':'معلمة'}</option>`).join('')}</select></label>`}).join('')}</div></section>`}
+function workspace(){const p=document.getElementById('dutyAdminWorkspace');if(!p)return;
+ p.innerHTML=`<div class="reserve-card-grid duty-work-tabs">${[['manual','الإنشاء اليدوي','اختيار المنفذات يدويًا من قوائم قابلة للتعديل'],['auto','الإنشاء الآلي','التوليد العادل مع تخصيص الفسحة للإداريات'],['ranking','احتساب المفاضلة','متابعة عدالة التوزيع دون لوحة تميز']].map(([k,title,desc])=>`<button type="button" class="reserve-work-card ${activeCard===k?'active':''}" data-dcard="${k}"><strong>${title}</strong><small>${desc}</small></button>`).join('')}</div><div id="dutyWorkspaceContent"></div>`;
+ p.querySelectorAll('[data-dcard]').forEach(b=>b.onclick=()=>{activeCard=b.dataset.dcard;workspace()});
+ const section=document.getElementById('dutyWorkspaceContent');
+ if(activeCard==='ranking'){section.innerHTML='<section class="surface panel"><h3>احتساب المفاضلة</h3><p>تعتمد المفاضلة على أقل عدد من التكليفات السابقة، وتدوير الفترات بين المؤهلات، دون إنشاء ترتيب للتميز أو شهادات.</p><div id="dutyRanking"></div></section>';const totals=new Map;(publicStats?.rows||[]).forEach(x=>{const person=roster.find(p=>p.full_name===x.name&&p.role===x.role);if(person)totals.set(person.id,Number(x.total_count||0))});section.querySelector('#dutyRanking').innerHTML='<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>المنفذة</th><th>التكليفات السابقة</th></tr></thead><tbody>'+roster.filter(x=>x.active).sort((a,b)=>(totals.get(a.id)||0)-(totals.get(b.id)||0)).map(x=>`<tr><td>${esc(x.full_name)}</td><td>${totals.get(x.id)||0}</td></tr>`).join('')+'</tbody></table></div>';return}
+ const auto=activeCard==='auto';
+ section.innerHTML=`<section class="surface form-card"><div class="form-section-title">${auto?'الإنشاء الآلي':'الإنشاء اليدوي'}</div><p class="reserve-public-note">${auto?'الفسحة للإداريات فقط في التوليد الآلي، وتوزيع متوازن دون تكرار الاسم في اليوم.':'الاختيار يدوي من القائمة المشتركة للمعلمات والإداريات.'} حد أقصى ٦ منفذات لكل فترة، ويُقبل الحفظ بأقل من ٦.</p>
+ <p><strong>التاريخ:</strong> ${esc(dateLong(date))} — ${esc(hijri(date))}</p>
+ <div class="duty-slot-columns">${SLOTS.map(x=>cardPicker(x[0])).join('')}</div>
+ <section class="duty-admin-actions"><button type="button" class="btn btn-primary" id="dutySave">حفظ واعتماد جدول اليوم</button>${auto?'<button type="button" class="btn btn-primary" id="dutyGenerate">توليد آلي عادل</button>':''}<button type="button" class="reserve-mini danger" id="dutyClear">حذف جدول اليوم</button></section><p id="dutyEditNote" class="reserve-public-note">يمكن تغيير الأسماء بعد التوليد أو عند الغياب، ثم حفظ التعديلات.</p>
+ <div id="dutyLinks"></div></section>`;
+ section.querySelector('#dutySave').onclick=()=>doAction(async()=>{const rows=collect();const counts=SLOTS.map(x=>rows.filter(y=>y.slot===x[0]).length);if(counts.some(x=>x<1))throw Error('اختاري منفذة واحدة على الأقل في كل فترة');if(new Set(rows.map(r=>r.person_id)).size!==rows.length)throw Error('المنفذة مكررة في اليوم نفسه؛ اختاري أسماء مختلفة');if(!confirm('حفظ الجدول سيوقف النشر السابق حتى تعيدي نشره. هل تستمرين؟'))return;
+ await rpc('mj_duty_save',{p_date:date,p_assignments:rows},true);await loadAdmin();await loadPublic();log('تم حفظ '+rows.length+' تكليفًا. يمكن النشر بعد مراجعة جدول النشر.')});
+ if(auto)section.querySelector('#dutyGenerate').onclick=()=>doAction(async()=>{if(!confirm('سيُعاد توليد جدول التاريخ المحدد وفق العدالة. هل تستمرين؟'))return;const r=await rpc('mj_duty_generate',{p_date:date},true);await loadAdmin();await loadPublic();log('تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.')});
+ section.querySelector('#dutyClear').onclick=()=>doAction(async()=>{if(!confirm('هل تريدين حذف تكليفات هذا اليوم وروابط اطلاعها؟'))return;await rpc('mj_duty_delete_day',{p_date:date},true);await loadAdmin();await loadPublic();log('تم حذف تكليفات اليوم فقط.')});
+ linkPanel();
 }
-const SHARE=()=>location.href.split('#')[0]+SHARED;
-function publish(){const e=document.getElementById('dutyPublish');if(!e)return;
- let html=`<p>الجدول يحتوي على ${assignments.length} من ١٨ تكليفًا.</p><button id="dutyPublishBtn" type="button" ${assignments.length!==18?'disabled':''}>نشر جدول اليوم وإنشاء روابط فردية</button>`;
- if(links.length){html+=`<div class="mj-duty-share">${links.map(l=>{
- const name=roster.find(p=>p.id===l.person_id)?.full_name||'المنفذة';
- return `<div><span><strong>${esc(name)}</strong><small>${l.viewed_at?'تم الاطلاع':'لم تطلع بعد'}</small></span><button type="button" data-copy="${esc(SHARE()+encodeURIComponent(l.link_token))}">نسخ رابط فردي</button></div>`}).join('')}</div>`}
- e.innerHTML=html;
- e.querySelector('#dutyPublishBtn').onclick=()=>action(async()=>{await rpc('mj_duty_publish',{p_date:dutyDate});await load();notify('تم نشر الجدول وتجهيز الروابط الفردية، ولم يتم إرسال أي رسائل تلقائيًا.')});
- e.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const url=b.dataset.copy;try{await navigator.clipboard.writeText(url);notify('تم نسخ الرابط الفردي.')}catch(_){prompt('انسخي الرابط الفردي:',url)}});
+function collect(){return [...document.querySelectorAll('#dutyWorkspaceContent select[data-slot]')].filter(x=>x.value).map(x=>({slot:x.dataset.slot,position:Number(x.dataset.position),person_id:x.value}))}
+async function copy(t){try{await navigator.clipboard.writeText(t);log('تم نسخ الرابط.')}catch{prompt('انسخي الرابط:',t)}}
+function linkPanel(){const p=document.getElementById('dutyLinks');if(!p)return;
+ p.innerHTML=`<section class="duty-link-panel"><h3>نشر الجدول وروابط اطلاع المنفذات</h3><p>العدد المحفوظ: <strong>${assignments.length}</strong> من حد أقصى ١٨ تكليفًا؛ لا تُنشأ روابط للخانات الفارغة.</p>
+ <div class="reserve-actions"><button type="button" class="btn btn-primary" id="dutyPublishButton" ${assignments.length<3?'disabled':''}>نشر جدول اليوم</button><button type="button" class="btn btn-ghost" id="dutyPreviewButton">معاينة جدول النشر</button></div>
+ <div class="duty-links">${links.map(l=>{const p=roster.find(r=>r.id===l.person_id);const u=urlFor('#duty-view?token='+encodeURIComponent(l.link_token));return `<div class="duty-link-row"><span><strong>${esc(p?.full_name||'المنفذة')}</strong><small>${l.viewed_at?'تم الاطلاع':'لم يتم الاطلاع'}</small></span><button type="button" class="reserve-mini" data-url="${esc(u)}">نسخ الرابط الفردي</button></div>`}).join('')}</div></section>`;
+ p.querySelector('#dutyPublishButton').onclick=()=>doAction(async()=>{const r=await rpc('mj_duty_publish',{p_date:date},true);await loadAdmin();await loadPublic();log('تم نشر '+r.links+' روابط، ويمكن الآن نسخ الروابط الفردية.')});
+ p.querySelector('#dutyPreviewButton').onclick=()=>preview(false);
+ p.querySelectorAll('[data-url]').forEach(x=>x.onclick=()=>copy(x.dataset.url));
 }
-function stats(rows){const e=document.getElementById('dutyStats');if(!e)return;
- const sorted=roster.filter(p=>p.active).map(p=>{
- const own=rows.filter(r=>r.person_id===p.id);
- return {p,total:own.length,morning:own.filter(x=>x.slot==='morning').length,break:own.filter(x=>x.slot==='break').length,end:own.filter(x=>x.slot==='end').length}
- }).sort((a,b)=>b.total-a.total||a.p.full_name.localeCompare(b.p.full_name,'ar'));
- e.innerHTML=sorted.length?`<p>الإحصائيات تشمل التكليفات المحفوظة، مع احتساب مناوبة الفسحة للإداريات فقط عند التوليد الآلي.</p><div class="mj-duty-stats-wrap"><table><thead><tr><th>المنفذة</th><th>الفئة</th><th>الصباح</th><th>الفسحة</th><th>النهاية</th><th>الإجمالي</th></tr></thead><tbody>${sorted.map(x=>`<tr><td>${esc(x.p.full_name)}</td><td>${x.p.role==='administrative'?'إدارية':'معلمة'}</td><td>${x.morning}</td><td>${x.break}</td><td>${x.end}</td><td><strong>${x.total}</strong></td></tr>`).join('')}</tbody></table></div>`:'<p>أضيفي أسماء المنفذات لإظهار الإحصائيات.</p>';
+function rosterPanel(){return `<section class="surface form-card"><div class="form-section-title">قائمة المنفذات: المعلمات والإداريات</div><p class="reserve-public-note">تضم القائمة الإداريات الـ١٧ المستوردات؛ لا توجد أسماء مستثناة. يتيح النموذج إضافة المعلمات أو تعديل الاسم والتصنيف.</p>
+ <form id="dutyPersonForm"><label>الاسم الكامل<input name="full_name" id="dutyPersonName" maxlength="160" required></label><label>الفئة<select name="role" id="dutyPersonRole"><option value="teacher">معلمة</option><option value="administrative">إدارية</option></select></label><button class="btn btn-primary" type="submit">إضافة منفذة</button></form>
+ <div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>اسم المنفذة</th><th>الفئة</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody>${roster.map(p=>`<tr><td>${esc(p.full_name)}</td><td>${p.role==='administrative'?'إدارية':'معلمة'}</td><td>${p.active?'نشطة':'موقوفة'}</td><td><button class="reserve-mini" type="button" data-edit-person="${esc(p.id)}">تعديل</button></td></tr>`).join('')}</tbody></table></div></section>`}
+function adminTab(tab){document.querySelectorAll('[data-dtab]').forEach(b=>b.classList.toggle('active',b.dataset.dtab===tab));const e=document.getElementById('dutyAdminWorkspace');if(!e)return;
+ if(tab==='workspace'){workspace();return}
+ if(tab==='settings'){e.innerHTML='<section class="surface panel"><h3>إعدادات المناوبة</h3><p>الحد الأقصى لكل فترة ٦ منفذات، والحد الأدنى للحفظ منفذة واحدة لكل فترة. الفسحة للإداريات فقط عند التوليد الآلي. لا استثناءات؛ ولا توجد لوحة تميز.</p><p>النشر الفردي وتأكيد الاطلاع والإحصائيات مستقلة تمامًا عن قسم الاحتياط.</p></section>';return}
+ e.innerHTML=rosterPanel();e.querySelector('#dutyPersonForm').onsubmit=ev=>{ev.preventDefault();doAction(async()=>{const fd=new FormData(ev.currentTarget),name=String(fd.get('full_name')||'').trim(),role=fd.get('role');if(name.length<2)throw Error('الاسم قصير');const result=await fetch(BASE+'/rest/v1/mj_duty_people',{method:'POST',headers:{...headers(),Prefer:'return=minimal'},body:JSON.stringify({full_name:name,role,active:true})});if(!result.ok)throw Error('تعذر إضافة الاسم أو أنه موجود مسبقًا');await loadAdmin();log('أُضيف الاسم إلى القائمة.')})};
+ e.querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>{const p=roster.find(x=>x.id===b.dataset.editPerson);if(!p)return;const name=prompt('تعديل الاسم الكامل:',p.full_name);if(name===null)return;const role=prompt('الفئة: teacher للمعلمة، administrative للإدارية',p.role);if(role===null)return;if(!['teacher','administrative'].includes(role)||name.trim().length<2){log('الاسم أو الفئة غير صالحين');return}doAction(async()=>{const resp=await fetch(BASE+'/rest/v1/mj_duty_people?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',headers:{...headers(),Prefer:'return=minimal'},body:JSON.stringify({full_name:name.trim(),role})});if(!resp.ok)throw Error('تعذر تحديث بيانات المنفذة');await loadAdmin();log('تم تعديل الاسم والتصنيف دون حذف تاريخ المناوبات')})});
 }
-async function fetchHistory(){
- const all=[];
- for(let offset=0;offset<50000;offset+=1000){
-  const part=await request('mj_duty_assignments?select=duty_date,slot,person_id&order=duty_date.desc&limit=1000&offset='+offset,{admin:true});
-  all.push(...part);
-  if(part.length<1000)return all;
- }
- throw Error('تجاوز عدد السجلات الحد المسموح للإحصائيات؛ يلزم تصدير أرشيف سابق');
+async function doAction(fn){if(busy)return;busy=true;try{await fn()}catch(e){log('تعذر التنفيذ: '+(e.message||e))}finally{busy=false}}
+async function loadPublic(){try{const [day,stats]=await Promise.all([rpc('mj_duty_public_day',{p_date:date}),rpc('mj_duty_public_stats',{p_date:date,p_month_start:monthStart(date)})]);if(!document.getElementById('mjDutyRoot'))return;dayTable(day);publicStats=stats;renderStats(stats)}catch(e){log('تعذر عرض المناوبة: '+e.message)}}
+async function loadAdmin(){if(!document.getElementById('dutyAdmin')||!session())return;
+ try{const [r,a,l,h]=await Promise.all([api('mj_duty_people?select=id,full_name,role,active&order=full_name.asc',null,true),api('mj_duty_assignments?select=duty_date,slot,position,person_id&duty_date=eq.'+date+'&order=slot.asc,position.asc',null,true),api('mj_duty_links?select=duty_date,person_id,link_token,viewed_at&duty_date=eq.'+date,null,true),api('mj_duty_assignments?select=duty_date,slot,person_id&order=duty_date.desc&limit=5000',null,true)]);
+ roster=r;assignments=a;links=l;history=h;adminTab(document.querySelector('[data-dtab].active')?.dataset.dtab||'workspace');
+ }catch(e){log('تعذر تحميل الإدارة: '+e.message)}}
+async function refresh(){document.getElementById('dutyDayLabel').textContent=dateLong(date);document.getElementById('dutyHijri').textContent=hijri(date);await loadPublic();if(session())await loadAdmin()}
+function sheetHTML(){const rows=published?(publicDayRows||[]):[];return `<div id="dutyPrintSheet" dir="rtl" lang="ar"><div class="duty-sheet-heading"><div><strong>الثانوية الرابعة والتسعون – مسارات</strong></div><h1>جدول النشر — المناوبة اليومية</h1><p><b>اليوم والتاريخ:</b> ${esc(dateLong(date))} | <b>التاريخ الهجري:</b> ${esc(hijri(date))}</p></div><table><thead><tr><th>فترة المناوبة</th><th>اسم المنفذة</th><th>حالة الاطلاع</th><th>التوقيع</th></tr></thead><tbody>${rows.length?SLOTS.map(([slot,title])=>rows.filter(x=>x.slot===slot).map((x,i)=>`<tr><td>${i===0?esc(title):'—'}</td><td>${esc(x.name)}</td><td>${x.viewed_at?'تم الاطلاع':'لم يتم الاطلاع'}</td><td></td></tr>`).join('')).join(''):'<tr><td colspan="4">لا توجد تكليفات منشورة</td></tr>'}</tbody></table><div class="duty-sheet-totals">${SLOTS.map(([k,n])=>`<span>${n}: <b>${rows.filter(r=>r.slot===k).length}</b></span>`).join('')}<span>الإجمالي: <b>${rows.length}</b></span></div></div>`}
+let publicDayRows=[];
+function preview(printNow){const wrap=document.getElementById('dutyPreviewBackdrop');if(!wrap)return;
+ wrap.hidden=false;wrap.innerHTML=`<section class="duty-preview" role="dialog" aria-modal="true" aria-label="معاينة جدول النشر"><div class="duty-preview-tools"><button class="btn btn-primary" type="button" id="dutyPrintGo">طباعة / حفظ PDF</button><button class="btn btn-ghost" type="button" id="dutyPreviewClose">إغلاق</button></div>${sheetHTML()}</section>`;
+ wrap.querySelector('#dutyPreviewClose').onclick=()=>{wrap.hidden=true;wrap.innerHTML=''};
+ wrap.querySelector('#dutyPrintGo').onclick=()=>window.print();
+ if(printNow)window.print();
 }
-async function load(){
- const [ps,as,ls,all]=await Promise.all([
- request('mj_duty_people?select=id,full_name,role,active&order=full_name.asc',{admin:true}),
- request('mj_duty_assignments?select=duty_date,slot,position,person_id&duty_date=eq.'+encodeURIComponent(dutyDate)+'&order=slot.asc,position.asc',{admin:true}),
- request('mj_duty_links?select=duty_date,person_id,link_token,viewed_at&duty_date=eq.'+encodeURIComponent(dutyDate),{admin:true}),
- fetchHistory()
- ]);
- roster=ps||[];assignments=as||[];links=ls||[];const d=document.getElementById('dutyPrintDate');if(d)d.textContent=dutyDate;board();people();publish();stats(all||[]);
-}
-async function action(fn){if(busy)return;busy=true;
- const buttons=[...document.querySelectorAll('#mjDutyRoot button')];buttons.forEach(b=>b.disabled=true);
- try{await fn()}catch(err){notify(err.message||'تعذر تنفيذ العملية',true)}finally{busy=false;buttons.forEach(b=>{if(b.isConnected && !b.closest('[hidden]'))b.disabled=false});
-  const pb=document.getElementById('dutyPublishBtn');if(pb)pb.disabled=assignments.length!==18;
- }}
-function initPage(){
- const v=root();if(!v)return;v.innerHTML=pageMarkup();
- document.getElementById('dutyDate').onchange=e=>{dutyDate=e.target.value||today();action(async()=>{await load();notify('تم عرض جدول التاريخ المحدد.')})};
- document.getElementById('dutyReload').onclick=()=>action(async()=>{dutyDate=document.getElementById('dutyDate').value;await load();notify('تم تحديث بيانات اليوم.')});
- document.getElementById('dutyPrint').onclick=()=>window.print();
- document.getElementById('dutyPersonForm').onsubmit=e=>{e.preventDefault();action(async()=>{
- const name=document.getElementById('dutyPersonName').value.trim();const role=document.getElementById('dutyPersonRole').value;
- if(name.length<2)throw Error('أدخلي الاسم الكامل');
- await request('mj_duty_people',{method:'POST',admin:true,body:{full_name:name,role,active:true}});await load();notify('تمت إضافة المنفذة إلى القائمة.');document.getElementById('dutyPersonName').value='';
- })};
- if(!adminSession()){notify('يجب تسجيل الدخول من «الصلاحيات الإدارية» قبل إدارة المناوبة.',true);
-  const p=document.getElementById('dutyBoard');p.innerHTML='<a class="btn btn-primary" href="#admin-permissions">فتح الصلاحيات الإدارية لتسجيل الدخول</a>';
-  return;
- }
- action(async()=>{await load();notify('الجدول جاهز للتعديل اليدوي أو التوليد الآلي.')});
-}
-async function publicPage(token){const v=root();if(!v)return;
- v.innerHTML='<div class="mj-duty mj-duty-public" dir="rtl"><h2>إشعار المناوبة اليومية</h2><p id="dutyPublicMessage">جارٍ التحقق من الرابط...</p><div id="dutyPublicControls"></div></div>';
- const msg=document.getElementById('dutyPublicMessage'),panel=document.getElementById('dutyPublicControls');
- try{
-  const data=await rpc('mj_duty_link_view',{p_token:token},false);
-  if(!msg.isConnected)return;
-  msg.textContent='الثانوية الرابعة والتسعون – مسارات | '+data.name+' | '+data.date;
-  panel.innerHTML='<div class="mj-duty-notice">'+data.slots.map(x=>`<p><strong>${esc(slotLabel(x.slot))}</strong> — تكليف رقم ${Number(x.position)}</p>`).join('')+'</div><button type="button" id="dutyAcknowledge" '+(data.viewed_at?'disabled':'')+'>'+(data.viewed_at?'تم الاطلاع':'تم الاطلاع')+'</button><p id="dutyAckStatus">'+(data.viewed_at?'سبق تأكيد الاطلاع.':'')+'</p>';
-  const button=document.getElementById('dutyAcknowledge');button.onclick=async()=>{button.disabled=true;
-   try{await rpc('mj_duty_ack',{p_token:token},false);document.getElementById('dutyAckStatus').textContent='تم تسجيل الاطلاع بنجاح في سجل المناوبة.'}
-   catch(err){button.disabled=false;document.getElementById('dutyAckStatus').textContent=err.message}}
- }catch(err){msg.textContent=err.message||'الرابط غير صالح';panel.innerHTML=''}
-}
-function route(){nav();const hash=location.hash||'#home';if(hash==='#daily-duty'){
- if(currentRoute!=='daily-duty'||!document.getElementById('mjDutyRoot')){currentRoute='daily-duty';initPage()}
- }else if(hash.startsWith('#duty-view?token=')){
- if(currentRoute!==hash || !document.querySelector('.mj-duty-public')){currentRoute=hash;publicPage(decodeURIComponent(hash.slice('#duty-view?token='.length)))}
- }else {currentRoute='';if(hash==='#home'||hash==='')home()}}
-let scheduled=false;
-function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;route()})}
+// Keep the print dataset tied to the published, public and current date.
+const _dayTable=dayTable;dayTable=function(data){publicDayRows=data?.rows||[];_dayTable(data)};
+async function publicLink(token){const view=root();if(!view)return;view.innerHTML=`<section class="mj-duty mj-duty-link-public surface panel" dir="rtl"><h2>إشعار المناوبة اليومية</h2><p id="dutyPublicMessage">جارٍ التحقق من الرابط الشخصي...</p><div id="dutyPublicControls"></div></section>`;
+ try{const d=await rpc('mj_duty_link_view',{p_token:token});const message=document.getElementById('dutyPublicMessage');if(!message)return;message.textContent=`الثانوية الرابعة والتسعون – مسارات | ${d.name} | ${dateLong(d.date)}`;const panel=document.getElementById('dutyPublicControls');panel.innerHTML=`<div class="duty-personal-slots">${d.slots.map(x=>`<p><strong>${esc(slotName(x.slot))}</strong> — التكليف ${Number(x.position)}</p>`).join('')}</div><button class="btn btn-primary" type="button" id="dutyAcknowledge" ${d.viewed_at?'disabled':''}>${d.viewed_at?'تم الاطلاع':'تأكيد الاطلاع'}</button><p id="dutyAckStatus">${d.viewed_at?'تم تسجيل الاطلاع سابقًا.':''}</p>`;panel.querySelector('#dutyAcknowledge').onclick=()=>doAction(async()=>{await rpc('mj_duty_ack',{p_token:token});panel.querySelector('#dutyAcknowledge').disabled=true;panel.querySelector('#dutyAcknowledge').textContent='تم الاطلاع';panel.querySelector('#dutyAckStatus').textContent='تم تسجيل وقت الاطلاع بنجاح.'})}catch(e){document.getElementById('dutyPublicMessage').textContent='تعذر عرض الرابط: '+e.message}}
+function route(){nav();const h=location.hash||'#home';if(h.startsWith('#duty-view?token=')){if(routeKey!==h||!document.querySelector('.mj-duty-link-public')){routeKey=h;publicLink(decodeURIComponent(h.slice('#duty-view?token='.length)))}return}
+ if(/^#daily-duty(?:\?|$)/.test(h)){const value=/[?&]date=(\d{4}-\d{2}-\d{2})/.exec(h);if(value)date=value[1];if(routeKey!==h||!document.getElementById('mjDutyRoot')){routeKey=h;layout()}return}
+ routeKey='';if(h==='#home'||h==='#')home();}
+let pending=false;function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;route()})}
 function boot(){nav();const v=root();if(v)new MutationObserver(schedule).observe(v,{childList:true,subtree:false});window.addEventListener('hashchange',schedule);schedule()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

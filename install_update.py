@@ -1,49 +1,35 @@
 #!/usr/bin/env python3
-"""Manjaz: install daily duty + award add card in an existing repository checkout.
-Changes ONLY index.html and manjaz-urgent18.js. Makes backups. No database actions.
-"""
+"""Non-destructive, idempotent installer for existing Manjaz GitHub checkout."""
 from pathlib import Path
+import sys,re,shutil
 from datetime import datetime
-import shutil
-import re
-import sys
+HERE=Path(__file__).resolve().parent
+PAT=r'(<script\s+src=["\']manjaz-urgent18\.js\?v=)[^"\']+(["\']\s*></script>)'
 
-SOURCE = Path(__file__).resolve().parent
-MARKER = r'(<script\s+src=["\']manjaz-urgent18\.js\?v=)[^"\']+(["\']\s*></script>)'
-
-def install(destination):
-    destination = Path(destination).expanduser().resolve()
-    html_path=destination/'index.html'
-    js_path=destination/'manjaz-urgent18.js'
-    if not html_path.is_file() or not js_path.is_file():
-        raise RuntimeError('المجلد غير صحيح؛ يجب وجود index.html و manjaz-urgent18.js في الجذر')
-    html=html_path.read_text(encoding='utf-8')
-    if 'app.js?' not in html or not re.search(MARKER, html):
-        raise RuntimeError('نسخة index.html مختلفة عن المصدر المتوقع؛ توقف التثبيت دون تعديل')
-    src=(SOURCE/'manjaz-urgent18.js').read_text(encoding='utf-8')
-    if 'mj_duty_generate' not in src or 'mj19AwardEntry' not in src:
-        raise RuntimeError('ملف التحديث غير مكتمل')
-    updated,count=re.subn(MARKER,lambda m:m.group(1)+'20.0-daily-duty'+m.group(2),html,count=1)
-    if count!=1:
-        raise RuntimeError('تعذر تحديث إصدار ملف JavaScript')
-    stamp=datetime.now().strftime('%Y%m%d_%H%M%S')
-    backup=destination/('BACKUP_BEFORE_DAILY_DUTY_'+stamp)
-    backup.mkdir()
-    shutil.copy2(html_path,backup/'index.html')
-    shutil.copy2(js_path,backup/'manjaz-urgent18.js')
+def install(folder):
+    folder=Path(folder).expanduser().resolve()
+    html=folder/'index.html'; js=folder/'manjaz-urgent18.js'
+    if not html.is_file() or not js.is_file():
+        raise RuntimeError('مجلد الموقع غير صحيح: يلزم وجود index.html و manjaz-urgent18.js')
+    old=html.read_text(encoding='utf-8');updated,n=re.subn(PAT,lambda m:m.group(1)+'21.0-reserve-pattern'+m.group(2),old,count=1)
+    if n!=1 or '<script src="app.js?' not in old:
+        raise RuntimeError('ملف الموقع لا يطابق الإصدار المتوقع؛ توقّف بدون تعديل')
+    new=(HERE/'manjaz-urgent18.js').read_text(encoding='utf-8')
+    assert 'mj_duty_public_day' in new and 'mj19AwardEntry' in new and 'reserve-public-card' in new
+    if js.read_text(encoding='utf-8')==new and old==updated:
+        print('التحديث مثبت بالفعل؛ لم تُغير أي ملفات');return
+    backup=folder/('BACKUP_MANJAZ_21_'+datetime.now().strftime('%Y%m%d_%H%M%S'))
+    backup.mkdir(exist_ok=False)
+    shutil.copy2(html,backup/html.name);shutil.copy2(js,backup/js.name)
     try:
-        js_path.write_text(src,encoding='utf-8')
-        html_path.write_text(updated,encoding='utf-8')
-        assert 'manjaz-urgent18.js?v=20.0-daily-duty' in html_path.read_text(encoding='utf-8')
+        js.write_text(new,encoding='utf-8');html.write_text(updated,encoding='utf-8')
+        assert '21.0-reserve-pattern' in html.read_text(encoding='utf-8')
     except Exception:
-        shutil.copy2(backup/'index.html',html_path)
-        shutil.copy2(backup/'manjaz-urgent18.js',js_path)
-        raise
-    print('تم تجهيز ملفات الرفع: index.html و manjaz-urgent18.js')
-    print('نسخة الاسترجاع:',backup)
-    print('مهم: يلزم تشغيل daily-duty.sql مرة واحدة في Supabase SQL Editor لتفعيل الحفظ والروابط.')
+        shutil.copy2(backup/html.name,html);shutil.copy2(backup/js.name,js);raise
+    print('تم تجهيز الرفع اليدوي: index.html و manjaz-urgent18.js')
+    print('نسخة احتياطية:',backup)
 
 if __name__=='__main__':
-    if len(sys.argv)!=2: sys.exit('الاستخدام: python install_update.py /path/to/manjaz-school94')
     try:install(sys.argv[1])
-    except Exception as e:sys.exit('لم يكتمل التثبيت: '+str(e))
+    except IndexError:raise SystemExit('الاستخدام: python install_update.py <مسار مجلد الموقع>')
+    except Exception as e:raise SystemExit('لم يكتمل التحديث: '+str(e))
