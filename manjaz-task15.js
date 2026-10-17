@@ -246,7 +246,19 @@ function formHTML(cat,values={},admin=false,readonly=false){const t=T(cat),exec=
  <div class="mj15-status" role="status" data-mj15-status></div></form>`;
 }
 function publicMarkup(){const t=T(state.category),r=ownCurrent(),vals=r?.fields||{};return `<div class="mj15-choices" role="group" aria-label="اختيار فئة الشهادة">${TYPES.map(x=>`<button class="mj15-choice" data-mj15-cat="${x[0]}" aria-pressed="${x[0]===state.category}">${H(x[1])}</button>`).join('')}</div><h3 style="margin:8px 0">${H(t[1])}</h3><p class="mj15-note">المعاينة كاملة بالقالب الرسمي وعلامة مائية «منجز». لا يحق للمستفيدة إصدار شهادة رسمية.</p><div id="mj15PublicForm">${formHTML(state.category,vals,false,!!r)}</div><div class="mj15-records">${own().filter(r=>r.category===state.category).map(r=>`<div class="mj15-record"><span>${H(r.fields?.name||'')} — ${H(r.fields?.title||'')}</span><button data-mj15-own="${H(r.id)}">فتح وتعديل</button></div>`).join('')}</div>`}
-function fitPreviews(){document.querySelectorAll('.mj15-preview .mj15-paper-frame').forEach(frame=>{const width=frame.clientWidth;if(!width)return;const scale=Math.min(1,width/1123);frame.style.height=Math.round(794*scale)+'px';const paper=frame.querySelector('.mj15-paper');if(paper)paper.style.setProperty('--mj15-scale',String(scale))})}
+function fitPreviews(){
+ // Fit the unchanged 1123x794 official paper to every viewport, including open mobile dialogs.
+ document.querySelectorAll('.mj15-preview .mj15-paper-frame').forEach(frame=>{
+  const paper=frame.querySelector('.mj15-paper');
+  if(!paper)return;
+  const width=Math.max(0,frame.getBoundingClientRect().width);
+  if(width<1)return;
+  const scale=Math.min(1,width/1123);
+  frame.style.height=Math.ceil(794*scale)+'px';
+  paper.style.setProperty('--mj15-scale',String(scale));
+  paper.style.transformOrigin='top right';
+ });
+}
 function uiField(root){const f=root.closest('form');if(!f)return;const cat=f.dataset.category||state.category;const content=certHTML(cat,certData(f),true);const preview=f.querySelector('[data-mj15-preview]');if(preview){preview.querySelector('.mj15-paper-frame').innerHTML=content;fitPreviews()}
  const dialog=document.getElementById('mj16CertificatePreviewDialog');if(dialog?.open&&dialog._sourceForm===f){const target=dialog.querySelector('.mj15-paper-frame');if(target){target.innerHTML=content;fitPreviews()}}
 }
@@ -257,7 +269,14 @@ function openBeneficiaryPreview(button){const form=button.closest('form[data-mj1
  dialog.addEventListener('close',()=>{dialog._sourceForm=null});}
  dialog._sourceForm=form;
  dialog.querySelector('.mj15-paper-frame').innerHTML=certHTML(form.dataset.category||state.category,certData(form),true);
- dialog.showModal();fitPreviews();requestAnimationFrame(fitPreviews);
+ dialog.showModal();fitPreviews();
+ requestAnimationFrame(()=>{fitPreviews();requestAnimationFrame(fitPreviews)});
+ // Watch width changes from fonts, orientation and responsive panels, not only window resize.
+ if(!dialog._mj17ResizeObserver && typeof ResizeObserver==='function'){
+  dialog._mj17ResizeObserver=new ResizeObserver(()=>{if(dialog.open)requestAnimationFrame(fitPreviews)});
+  dialog._mj17ResizeObserver.observe(dialog.querySelector('.mj15-preview'));
+ }
+
 }
 
 function token(){let s;try{s=JSON.parse(sessionStorage.getItem(SK)||'null')}catch(_){s=null};if(!s?.access_token)throw Error('يجب تسجيل الدخول من «الصلاحيات الإدارية» أولًا.');if(s.expires_at&&Number(s.expires_at)<Date.now()/1000)throw Error('انتهت الجلسة الإدارية؛ سجّلي الدخول مرة أخرى.');return s.access_token}
