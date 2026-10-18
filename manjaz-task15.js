@@ -365,11 +365,11 @@ function adminListMarkup(mode){
      '<p class="mj15-note">لا توجد طلبات في هذه المجموعة حاليًا.</p>')+'</section>';
  return '<div class="mj36-list-summary">'+H(adminSummary(state.adminList))+'</div>'+
  (mode==='issue'?group('الشهادات المعتمدة',approved,'issue'):
-    group('الطلبات الجديدة',pending,'approve')+group('الشهادات المعتمدة',approved,'issue'));
+    group('الطلبات الجديدة',pending,'approve')+group('الشهادات المعتمدة',approved,'approve'));
 }
 
 function adminSelection(id,mode){const x=state.adminList.find(q=>q.id===id);if(!x)return '';const data=getValues(x);const paper=certHTML(x.category,data,false);return `<div class="mj15-hint"><strong>${H(T(x.category)[1])}</strong> — الحالة: ${H(x.status)}</div>
- ${mode==='approve' && ['مستلم','معتمد'].includes(x.status)?`<div class="mj34-review-layout"><div class="mj34-review-fields">${formHTML(x.category,{...data,_status:x.status},true,false)}</div><div class="mj15-preview mj34-side-preview"><div class="mj15-paper-frame">${paper}</div></div></div>`:`<div class="mj15-preview" id="mj15IssuedPreview"><div class="mj15-paper-frame">${paper}</div></div><div class="mj15-actions"><button data-mj15-issue="${H(x.id)}" ${!['معتمد','تم الإصدار'].includes(x.status)?'disabled':''}>${x.status==='معتمد'?'إصدار وتنزيل PDF':x.status==='تم الإصدار'?'تحميل الشهادة PDF':x.status==='تم الإرسال'?'تحميل الشهادة PDF':'بانتظار اعتماد الطلب'}</button></div><p class="mj15-note">الشهادة المعتمدة خالية من العلامة المائية، ومتاحة للتحميل من لوحة الإدارة.</p><div class="mj15-status" data-mj15-status></div>`}`;}
+ ${mode==='approve' && ['مستلم','معتمد'].includes(x.status)?`<div class="mj34-review-layout"><div class="mj34-review-fields">${formHTML(x.category,{...data,_status:x.status},true,false)}</div><div class="mj15-preview mj34-side-preview"><div class="mj15-paper-frame">${paper}</div></div></div>`:`<div class="mj15-preview" id="mj15IssuedPreview"><div class="mj15-paper-frame">${paper}</div></div><div class="mj15-actions"><button data-mj15-issue="${H(x.id)}" ${!['معتمد','تم الإصدار','تم الإرسال'].includes(x.status)?'disabled':''}>${x.status==='معتمد'?'إصدار وتنزيل PDF':x.status==='تم الإصدار'?'تحميل الشهادة PDF':x.status==='تم الإرسال'?'تحميل الشهادة PDF':'بانتظار اعتماد الطلب'}</button></div><p class="mj15-note">الشهادة المعتمدة خالية من العلامة المائية، ومتاحة للتحميل من لوحة الإدارة.</p><div class="mj15-status" data-mj15-status></div>`}`;}
 async function openAdminCertificatePreview(id){
  await verifiedToken(); // Only authenticated school administration can open a clean preview.
  const x=state.adminList.find(r=>r.id===id&&(MJ36_NEW_STATUS.has(r.status)||MJ36_APPROVED_STATUS.has(r.status)));
