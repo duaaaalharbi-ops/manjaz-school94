@@ -61,7 +61,7 @@
 .mj36-request-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 #mj15Dashboard .mj36-request-actions>button{
  padding:8px 11px;border:1px solid #bedad7;background:#f5faf9;border-radius:9px;
- color:#105360;font:700 12px/1.4 inherit;cursor:pointer;min-height:36px;
+ color:#105360;font-family:inherit;font-size:12px;font-weight:700;line-height:1.4;cursor:pointer;min-height:36px;
  display:inline-flex;align-items:center;gap:5px
 }
 #mj15Dashboard .mj36-request-actions>button:hover{border-color:#438e8c;background:#e7f2f0}
