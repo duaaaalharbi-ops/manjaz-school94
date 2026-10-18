@@ -294,16 +294,22 @@ function formHTML(cat,values={},admin=false,readonly=false){const t=T(cat),exec=
 }
 function publicMarkup(){const t=T(state.category),r=ownCurrent(),vals=r?.fields||{};return `<div class="mj15-choices" role="group" aria-label="اختيار فئة الشهادة">${TYPES.map(x=>`<button class="mj15-choice" data-mj15-cat="${x[0]}" aria-pressed="${x[0]===state.category}">${H(x[1])}</button>`).join('')}</div><h3 style="margin:8px 0">${H(t[1])}</h3><p class="mj15-note">المعاينة كاملة بالقالب الرسمي وعلامة مائية «منجز». لا يحق للمستفيدة إصدار شهادة رسمية.</p><div id="mj15PublicForm">${formHTML(state.category,vals,false,!!r)}</div><div class="mj15-records">${own().filter(r=>r.category===state.category).map(r=>`<div class="mj15-record"><span>${H(r.fields?.name||'')} — ${H(r.fields?.title||'')}</span><button data-mj15-own="${H(r.id)}">فتح وتعديل</button></div>`).join('')}</div>`}
 function fitPreviews(){
- // Fit the unchanged 1123x794 official paper to every viewport, including open mobile dialogs.
+ // Fit BOTH landscape dimensions, including dialog viewport height; never crop official logos or footer.
  document.querySelectorAll('.mj15-preview .mj15-paper-frame').forEach(frame=>{
   const paper=frame.querySelector('.mj15-paper');
   if(!paper)return;
-  const width=Math.max(0,frame.getBoundingClientRect().width);
-  if(width<1)return;
-  const scale=Math.min(1,width/1123);
+  const width=frame.getBoundingClientRect().width;
+  if(width<=0)return;
+  const dialog=frame.closest('dialog[open]');
+  const maxHeight=dialog?Math.max(120,window.innerHeight-210):Infinity;
+  const scale=Math.min(1,width/1123,maxHeight/794);
   frame.style.height=Math.ceil(794*scale)+'px';
+  frame.style.minHeight=Math.ceil(794*scale)+'px';
+  frame.style.overflow='hidden';
   paper.style.setProperty('--mj15-scale',String(scale));
+  paper.style.setProperty('transform','scale('+scale+')','important');
   paper.style.transformOrigin='top right';
+  paper.style.margin='0';
  });
 }
 function uiField(root){const f=root.closest('form');if(!f)return;const cat=f.dataset.category||state.category;const content=certHTML(cat,certData(f),true);const preview=f.querySelector('[data-mj15-preview]');if(preview){preview.querySelector('.mj15-paper-frame').innerHTML=content;fitPreviews()}
@@ -390,7 +396,7 @@ async function openAdminCertificatePreview(id){
  '<p class="mj15-note">هذه معاينة إدارية دون علامة مائية؛ إصدار الشهادة النهائية يتطلب الاعتماد.</p>';
  if(dialog.open)dialog.close();
  dialog.showModal();
- requestAnimationFrame(fitPreviews);
+ requestAnimationFrame(()=>{fitPreviews();requestAnimationFrame(fitPreviews)});
 }
 async function archiveAdminCertificate(id){
  const x=state.adminList.find(r=>r.id===id);
