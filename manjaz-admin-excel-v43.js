@@ -16,7 +16,12 @@ const today=()=>{
  const part=k=>parts.find(x=>x.type===k)?.value||"";
  return part("year")+"-"+part("month")+"-"+part("day");
 };
-const validDate=v=>/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(String(v||""))&&!Number.isNaN(new Date(v+"T12:00:00Z").getTime());
+const validDate=v=>{
+ const value=String(v||"");
+ if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value))return false;
+ const d=new Date(value+"T12:00:00Z");
+ return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===value;
+};
 const day=v=>new Date(v+"T12:00:00+03:00");
 const hijriKey=v=>{
  if(!validDate(v))return "";
@@ -95,6 +100,7 @@ async function tableRows(table,select,auth,filter="",order=""){
   if(!Array.isArray(batch))throw Error("لم تُرجع قاعدة البيانات قائمة سجلات.");
   rows.push(...batch);
   if(batch.length<500)break;
+  if(offset===99500)throw Error("تجاوز عدد السجلات الحد الآمن للتصدير؛ لم يتم إصدار ملف ناقص. يلزم تقسيم البيانات بحسب الفترة.");
  }
  return rows;
 }
