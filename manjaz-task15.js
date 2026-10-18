@@ -314,7 +314,18 @@ function adminListMarkup(mode){
 function adminSelection(id,mode){const x=state.adminList.find(q=>q.id===id);if(!x)return '';const data=getValues(x);const paper=certHTML(x.category,data,x.status==='مستلم');return `<div class="mj15-hint"><strong>${H(T(x.category)[1])}</strong> — الحالة: ${H(x.status)}</div>
  ${mode==='approve' && ['مستلم','معتمد'].includes(x.status)?`<div class="mj34-review-layout"><div class="mj34-review-fields">${formHTML(x.category,{...data,_status:x.status},true,false)}</div><div class="mj15-preview mj34-side-preview"><div class="mj15-paper-frame">${paper}</div></div></div>`:`<div class="mj15-preview" id="mj15IssuedPreview"><div class="mj15-paper-frame">${paper}</div></div><div class="mj15-actions"><button data-mj15-issue="${H(x.id)}" ${!['معتمد','تم الإصدار'].includes(x.status)?'disabled':''}>${x.status==='معتمد'?'إصدار وتنزيل PDF':x.status==='تم الإصدار'?'تحميل الشهادة PDF':x.status==='تم الإرسال'?'تحميل الشهادة PDF':'بانتظار اعتماد الطلب'}</button></div><p class="mj15-note">الشهادة المعتمدة خالية من العلامة المائية، ومتاحة للتحميل من لوحة الإدارة.</p><div class="mj15-status" data-mj15-status></div>`}`;}
 function printMessages(id,mode){const area=document.getElementById(mode==='approve'?'mj15ApprovalDetail':'mj15IssueDetail');if(!area)return;const x=state.adminList.find(r=>r.id===id);if(!x)return;state.selected=id;area.dataset.mode=mode;area.dataset.id=id;area.innerHTML=adminSelection(id,mode);area.querySelector('[data-mj15-form]')?.setAttribute('data-category',x.category);window.ManjazHijriPicker?.refresh?.();fitPreviews()}
-async function refreshAdmin(){await fetchAll();const a=document.getElementById('mj15ApprovalList'),b=document.getElementById('mj15IssueList');if(a)a.innerHTML=adminListMarkup('approve');if(b)b.innerHTML=adminListMarkup('issue')}
+async function refreshAdmin(){
+ await fetchAll();
+ const a=document.getElementById('mj15ApprovalList'),b=document.getElementById('mj15IssueList');
+ if(a)a.innerHTML=adminListMarkup('approve');
+ if(b)b.innerHTML=adminListMarkup('issue');
+ const approval=state.adminList.find(x=>x.status==='مستلم'||x.status==='معتمد');
+ const issued=state.adminList.find(x=>['تم الإصدار','تم الإرسال'].includes(x.status));
+ const detail=document.getElementById('mj15ApprovalDetail');
+ const issuedDetail=document.getElementById('mj15IssueDetail');
+ if(approval&&detail&&!detail.dataset.id)printMessages(approval.id,'approve');
+ if(issued&&issuedDetail&&!issuedDetail.dataset.id)printMessages(issued.id,'issue');
+}
 async function adminAction(id,action,fields=null,err=''){
  const bearer=await verifiedToken();
  if(action==='edit'){
