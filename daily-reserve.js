@@ -389,8 +389,9 @@ function bindReserveBundleActions(){
   });
 }
 function reserveNotificationPanelHTML(){
-  return `<section class="reserve-share-box reserve-admin-only" aria-label="إشعارات المعلمات" id="reserveNotifyPanel">
-    <div class="panel-head"><h3>إشعارات المعلمات عبر واتساب</h3><span id="reserveNotifyCounter"></span></div>
+  return `<details class="reserve-admin-fold reserve-admin-only" aria-label="إشعارات المعلمات" id="reserveNotifyPanel">
+    <summary><strong>إشعارات المعلمات عبر واتساب</strong><span id="reserveNotifyCounter"></span></summary>
+    <div class="reserve-fold-body">
     <p class="reserve-public-note">رسالة رسمية واحدة ورابط واحد لكل معلمة، مهما تعددت حصصها في اليوم. يتم الإرسال يدويًا بعد فتح واتساب؛ لا تعني فتح المحادثة تسليم الرسالة.</p>
     <div class="reserve-actions">
       <button class="reserve-mini" id="reserveNotifyAll" type="button">إرسال إشعارات الجميع (بالتتابع)</button>
@@ -404,7 +405,8 @@ function reserveNotificationPanelHTML(){
       <div id="reservePhonebookStatus" role="status"></div>
       <div id="reservePhonebookList"></div>
     </details>
-  </section>`;
+    </div>
+  </details>`;
 }
 function reserveNotificationRowsHTML(groups){
   if(!groups.length)return '<div class="empty-inline">لا توجد معلمات مكلفات بحصص احتياط معتمدة لهذا اليوم.</div>';
@@ -987,7 +989,39 @@ function injectStyle(){
   .reserve-bundle-course label{display:grid;gap:7px;font-weight:800;color:#284954}
   .reserve-bundle-course input{max-width:100%;box-sizing:border-box;padding:10px;border:1px solid #bed3d5;border-radius:8px;font:inherit}
   .reserve-bundle-feedback{color:#185c60;font-weight:700;min-height:18px}
-  #reserveNotifyPanel{margin-top:14px}
+  #reserveNotifyPanel{margin-top:0}
+  #dailyReserveRoot .reserve-admin-stack{display:grid;gap:12px;margin-top:15px;min-width:0}
+  #dailyReserveRoot .reserve-admin-fold,#dailyReserveRoot .reserve-work-fold{
+    background:#fff;border:1px solid #d7e4e5;border-radius:14px;overflow:hidden;min-width:0;
+    box-shadow:0 3px 12px rgba(11,48,71,.04);padding:0
+  }
+  #dailyReserveRoot .reserve-admin-fold>summary,#dailyReserveRoot .reserve-work-fold>summary{
+    display:flex;gap:12px;align-items:center;flex-wrap:wrap;min-height:62px;
+    cursor:pointer;list-style:none;padding:14px 16px;color:#0b3047
+  }
+  #dailyReserveRoot .reserve-admin-fold>summary::-webkit-details-marker,
+  #dailyReserveRoot .reserve-work-fold>summary::-webkit-details-marker{display:none}
+  #dailyReserveRoot .reserve-admin-fold>summary::after,
+  #dailyReserveRoot .reserve-work-fold>summary::after{content:"⌄";margin-right:auto;color:#0f5f59;font-size:25px}
+  #dailyReserveRoot .reserve-admin-fold[open]>summary::after,
+  #dailyReserveRoot .reserve-work-fold[open]>summary::after{content:"⌃"}
+  #dailyReserveRoot .reserve-admin-fold>summary strong,#dailyReserveRoot .reserve-work-fold>summary strong{font-size:16px}
+  #dailyReserveRoot .reserve-admin-fold>summary span{color:#60757c;font-size:12px;overflow-wrap:anywhere}
+  #dailyReserveRoot .reserve-work-fold>summary small{display:block;flex-basis:100%;color:#64777f;font-size:12px}
+  #dailyReserveRoot .reserve-admin-fold[open]>summary,#dailyReserveRoot .reserve-work-fold[open]>summary{background:#f7fbfa;border-bottom:1px solid #e2eaeb}
+  #dailyReserveRoot .reserve-fold-body,#dailyReserveRoot .reserve-work-content{padding:14px 16px;min-width:0}
+  #dailyReserveRoot .reserve-work-accordions{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+  #dailyReserveRoot .reserve-work-content>.surface,#dailyReserveRoot .reserve-work-content>.reserve-grid{margin:0}
+  #dailyReserveRoot .reserve-workspace-sharing,#dailyReserveRoot #reserveWorkspaceNotify{display:none!important}
+  #dailyReserveRoot .reserve-admin-sync{font-size:12px;color:#24675e;background:#eef7f4;padding:11px;border:1px solid #cfe2dc;border-radius:9px}
+  #dailyReserveRoot .reserve-admin-sync[data-state="busy"]{color:#805b24;background:#fff8e9;border-color:#ecddb7}
+  #dailyReserveRoot .reserve-admin-sync[data-state="error"]{color:#a23d36;background:#fff3f0;border-color:#f2d2c9}
+  #dailyReserveRoot .reserve-admin-fold .reserve-actions{margin-top:10px}
+  #dailyReserveRoot .reserve-admin-fold .reserve-fold-body>small{color:#60757c}
+  #dailyReserveRoot .reserve-admin-fold>summary:focus-visible,#dailyReserveRoot .reserve-work-fold>summary:focus-visible{outline:3px solid #80bab0;outline-offset:-3px}
+  @media(max-width:760px){#dailyReserveRoot .reserve-admin-fold>summary,#dailyReserveRoot .reserve-work-fold>summary{padding:13px;min-height:58px}
+  #dailyReserveRoot .reserve-admin-fold>summary strong,#dailyReserveRoot .reserve-work-fold>summary strong{font-size:14px}
+  #dailyReserveRoot .reserve-admin-fold .reserve-fold-body,#dailyReserveRoot .reserve-work-fold .reserve-work-content{padding:12px}}
   .reserve-notify-queue{border:1px solid #9ecfc7;background:#f0f9f7;padding:12px;border-radius:10px;margin:12px 0}
   .reserve-phonebook-admin{margin-top:18px;border-top:1px solid #dce6e5;padding-top:12px}
   .reserve-phonebook-admin summary{cursor:pointer;font-weight:900;color:#0c5262;margin-bottom:10px}
@@ -1382,28 +1416,36 @@ function bindReserveSharing(){
   byId("reservePreviewPublishLink")?.addEventListener("click",()=>window.open(reserveDeepLink("publish",state.currentDate),"_blank","noopener,noreferrer"));
 }
 function adminHTML(){
-  return `<section class="surface panel reserve-admin-block">
-    <div class="panel-head"><h3>إدارة الاحتياط اليومي</h3><span>${esc(state.admin?.user?.email||"حساب إداري")}</span></div>
-    <div class="reserve-tabs">
-      <button class="reserve-tab active" data-admin-tab="workspace">إنشاء ومتابعة الاحتياط</button>
-      <button class="reserve-tab" data-admin-tab="teachers">المعلمات والجداول</button>
-      <button class="reserve-tab" data-admin-tab="settings">الإعدادات</button>
-      <button class="reserve-tab" id="reserveLogout">خروج</button>
-    </div>
-    <section class="reserve-share-box reserve-admin-only" aria-label="مشاركة رابط قسم الاحتياط">
-      <strong>مشاركة جدول الاحتياط اليومي وجدول النشر</strong>
-      <small>الروابط خاصة بقسم الاحتياط في «منجز» فقط. مشاركة واتساب تفتح رسالة جاهزة لا تُرسل تلقائيًا.</small>
-      <div class="reserve-actions">
-        <button class="reserve-mini" id="reserveCopyShare" type="button">نسخ الرسالة الرسمية والرابطين</button>
-        <button class="reserve-mini" id="reserveWhatsAppShare" type="button">مشاركة عبر واتساب</button>
-        <button class="reserve-mini" id="reservePreviewDailyLink" type="button">اختبار رابط الجدول اليومي</button>
-        <button class="reserve-mini" id="reservePreviewPublishLink" type="button">اختبار رابط جدول النشر</button>
+  return `<div class="reserve-admin-stack reserve-admin-block" id="reserveAdminPanel">
+    <details class="reserve-admin-fold" id="reserveManagementCard">
+      <summary><strong>إدارة الاحتياط اليومي</strong><span>${esc(state.admin?.user?.email||"حساب إداري")}</span></summary>
+      <div class="reserve-fold-body">
+        <div class="reserve-tabs">
+          <button class="reserve-tab active" data-admin-tab="workspace">إنشاء ومتابعة الاحتياط</button>
+          <button class="reserve-tab" data-admin-tab="teachers">المعلمات والجداول</button>
+          <button class="reserve-tab" data-admin-tab="settings">الإعدادات</button>
+          <button class="reserve-tab" id="reserveLogout">خروج</button>
+        </div>
+        <div id="reserveAdminAuxBody"></div>
       </div>
-      <div id="reserveShareMsg" role="status" aria-live="polite"></div>
-    </section>
+    </details>
+    <details class="reserve-admin-fold" id="reserveShareCard" aria-label="مشاركة رابط قسم الاحتياط">
+      <summary><strong>مشاركة جدول الاحتياط اليومي وجدول النشر</strong></summary>
+      <div class="reserve-fold-body">
+        <small>الروابط خاصة بقسم الاحتياط في «منجز» فقط. مشاركة واتساب تفتح رسالة جاهزة لا تُرسل تلقائيًا.</small>
+        <div class="reserve-actions">
+          <button class="reserve-mini" id="reserveCopyShare" type="button">نسخ الرسالة الرسمية والرابطين</button>
+          <button class="reserve-mini" id="reserveWhatsAppShare" type="button">مشاركة عبر واتساب</button>
+          <button class="reserve-mini" id="reservePreviewDailyLink" type="button">اختبار رابط الجدول اليومي</button>
+          <button class="reserve-mini" id="reservePreviewPublishLink" type="button">اختبار رابط جدول النشر</button>
+        </div>
+        <div id="reserveShareMsg" role="status" aria-live="polite"></div>
+      </div>
+    </details>
     ${reserveNotificationPanelHTML()}
-    <div id="reserveAdminBody" style="margin-top:14px"></div>
-  </section>`;
+    <div id="reserveAdminBody"></div>
+    <div class="reserve-admin-sync" id="reserveAdminSyncStatus" role="status" aria-live="polite">البيانات جاهزة — يتم التحديث بعد الحفظ والحذف والتوليد.</div>
+  </div>`;
 }
 
 // Task 8: same four existing sharing actions, visible in both editing modes.
@@ -1485,36 +1527,44 @@ function adminAssignmentsHTML(items){
 
 
 function workspaceHTML(){
-  return `<div>
-    <div class="reserve-card-grid">
-      <button class="reserve-work-card ${state.workspaceCard==="manual"?"active":""}" data-reserve-card="manual" type="button">
-        <strong>الإنشاء اليدوي</strong><small>إدخال جميع الغائبات أولًا ثم اختيار معلمات التسديد يدويًا من القوائم المتاحة.</small>
-      </button>
-      <button class="reserve-work-card ${state.workspaceCard==="auto"?"active":""}" data-reserve-card="auto" type="button">
-        <strong>الإنشاء الآلي</strong><small>توليد الاحتياط حسب محرك المفاضلة والاستثناءات ثم التعديل والاعتماد.</small>
-      </button>
-      <button class="reserve-work-card ${state.workspaceCard==="ranking"?"active":""}" data-reserve-card="ranking" type="button">
-        <strong>احتساب المفاضلة</strong><small>تفاصيل الأسبوع الحالي، العدالة، النصاب، العبء، والتصحيح الإداري.</small>
-      </button>
-      <button class="reserve-work-card ${state.workspaceCard==="excellence"?"active":""}" data-reserve-card="excellence" type="button">
-        <strong>التميز في شغل الاحتياط</strong><small>الحصص اليومية والأسبوعية والتراكمية وعناوين التفعيل والتصدير.</small>
-      </button>
-    </div>
-    <div id="reserveWorkspaceBody" style="margin-top:14px"></div>
-  </div>`;
+  const sections=[
+    ["manual","الإنشاء اليدوي","إدخال جميع الغائبات أولًا ثم اختيار معلمات التسديد يدويًا من القوائم المتاحة."],
+    ["auto","الإنشاء الآلي","توليد الاحتياط حسب محرك المفاضلة والاستثناءات ثم التعديل والاعتماد."],
+    ["ranking","احتساب المفاضلة","تفاصيل الأسبوع الحالي، العدالة، النصاب، العبء، والتصحيح الإداري."],
+    ["excellence","التميز في شغل الاحتياط","الحصص اليومية والأسبوعية والتراكمية وعناوين التفعيل والتصدير."]
+  ];
+  return `<div class="reserve-card-grid reserve-work-accordions">${sections.map(([kind,title,note])=>
+    `<details class="reserve-work-fold" data-reserve-card="${kind}">
+       <summary><strong>${title}</strong><small>${note}</small></summary>
+       <div class="reserve-work-content"></div>
+     </details>`).join("")}</div>`;
 }
 function renderWorkspaceCard(kind){
-  state.workspaceCard=kind||"manual";
-  document.querySelectorAll("[data-reserve-card]").forEach(b=>b.classList.toggle("active",b.dataset.reserveCard===state.workspaceCard));
-  const body=byId("reserveWorkspaceBody"); if(!body)return;
-  if(state.workspaceCard==="auto"){body.innerHTML=dayAdminHTML();bindDayAdmin();return}
-  if(state.workspaceCard==="ranking"){body.innerHTML=rankingAdminHTML();bindRankingAdmin();return}
-  if(state.workspaceCard==="excellence"){body.innerHTML=excellenceAdminHTML();bindExcellenceAdmin();return}
+  const chosen=String(kind||"manual");
+  const fold=[...document.querySelectorAll("details[data-reserve-card]")].find(x=>x.dataset.reserveCard===chosen);
+  if(!fold)return;
+  state.workspaceCard=chosen;
+  document.querySelectorAll("details[data-reserve-card]").forEach(card=>{card.open=card===fold;});
+  const body=fold.querySelector(".reserve-work-content");
+  if(!body)return;
+  if(chosen==="auto"){body.innerHTML=dayAdminHTML();bindDayAdmin();return;}
+  if(chosen==="ranking"){body.innerHTML=rankingAdminHTML();bindRankingAdmin();return;}
+  if(chosen==="excellence"){body.innerHTML=excellenceAdminHTML();bindExcellenceAdmin();return;}
   body.innerHTML=manualAdminHTML();bindManualAdmin();
 }
 function bindWorkspace(){
-  document.querySelectorAll("[data-reserve-card]").forEach(b=>b.onclick=()=>renderWorkspaceCard(b.dataset.reserveCard));
-  renderWorkspaceCard(state.workspaceCard||"manual");
+  document.querySelectorAll("details[data-reserve-card]").forEach(card=>
+    card.addEventListener("toggle",()=>{
+      if(card.open){
+        if(state.workspaceCard!==card.dataset.reserveCard||
+          !card.querySelector(".reserve-work-content")?.hasChildNodes()){
+          renderWorkspaceCard(card.dataset.reserveCard);
+        }
+      }else if(state.workspaceCard===card.dataset.reserveCard)state.workspaceCard="";
+    })
+  );
+  // All four editor cards begin collapsed; none of their operational tools is duplicated.
+  state.workspaceCard="";
 }
 
 function manualPhysicalCandidates(date,period,absentIds=[],allNames=false,exceptAssignmentId="",plannedDemand=0){
@@ -2664,9 +2714,17 @@ function refreshReserveStatisticsViews(){
 // Never rebuild or replace the original WhatsApp queue controls.
 async function reserveSyncAdminMutation(date=state.currentDate){
   if(date!==state.currentDate)return; // Do not repopulate another day's cards after a date change.
-  refreshReserveStatisticsViews();
-  if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel();
-  if(date===state.currentDate&&byId("reservePublishOverlay"))openReservePublication(date);
+  const status=byId("reserveAdminSyncStatus");
+  if(status){status.dataset.state="busy";status.textContent="جارٍ تحديث البيانات واللوحات...";}
+  try{
+    refreshReserveStatisticsViews();
+    if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel();
+    if(date===state.currentDate&&byId("reservePublishOverlay"))openReservePublication(date);
+    if(status){status.dataset.state="ready";status.textContent="تم تحديث بيانات الاحتياط — "+fmtDateTimeHijri(new Date().toISOString());}
+  }catch(error){
+    if(status){status.dataset.state="error";status.textContent="تعذر تحديث بعض البيانات؛ أعيدي فتح القسم.";}
+    throw error;
+  }
 }
 async function refreshAndRenderPublic(){
   await loadAll();
@@ -2867,11 +2925,17 @@ function bindAdminShell(){
   renderAdminTab("workspace");
 }
 function renderAdminTab(tab){
-  const body=byId("reserveAdminBody"); if(!body)return;
-  body.innerHTML=tab==="teachers"?teachersAdminHTML():tab==="settings"?settingsHTML():workspaceHTML();
-  if(tab==="teachers")bindTeachersAdmin();
-  else if(tab==="settings")bindSettingsAdmin();
-  else bindWorkspace();
+  const body=byId("reserveAdminBody"),aux=byId("reserveAdminAuxBody");
+  if(!body||!aux)return;
+  if(tab==="teachers"||tab==="settings"){
+    body.innerHTML="";
+    aux.innerHTML=tab==="teachers"?teachersAdminHTML():settingsHTML();
+    if(tab==="teachers")bindTeachersAdmin();else bindSettingsAdmin();
+  }else{
+    aux.innerHTML="";
+    body.innerHTML=workspaceHTML();
+    bindWorkspace();
+  }
 }
 
 function plainData(x){
