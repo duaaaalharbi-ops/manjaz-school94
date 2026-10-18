@@ -1016,6 +1016,15 @@ function injectStyle(){
   #dailyReserveRoot .reserve-admin-sync{font-size:12px;color:#24675e;background:#eef7f4;padding:11px;border:1px solid #cfe2dc;border-radius:9px}
   #dailyReserveRoot .reserve-admin-sync[data-state="busy"]{color:#805b24;background:#fff8e9;border-color:#ecddb7}
   #dailyReserveRoot .reserve-admin-sync[data-state="error"]{color:#a23d36;background:#fff3f0;border-color:#f2d2c9}
+  #dailyReserveRoot .reserve-delete-notice{padding:13px 15px;border:1px solid #d7e4e5;border-radius:11px;background:#f6fbfa;color:#19565e;font-weight:800;line-height:1.8}
+  #dailyReserveRoot .reserve-delete-notice[hidden]{display:none!important}
+  #dailyReserveRoot .reserve-delete-notice[data-state="busy"]{background:#fff9ed;color:#77551d;border-color:#efd9aa}
+  #dailyReserveRoot .reserve-delete-notice[data-state="success"]{background:#edf8f2;color:#236344;border-color:#b9dec9}
+  #dailyReserveRoot .reserve-delete-notice[data-state="error"]{background:#fff2ef;color:#994539;border-color:#efc3bb}
+  #dailyReserveRoot #reserveManualMsg:not(:empty),#dailyReserveRoot #reserveDayMsg:not(:empty){display:block;margin-top:10px;padding:11px 12px;border:1px solid #d1dfdc;border-radius:9px;background:#f7fbfa;line-height:1.7;font-weight:700}
+  #dailyReserveRoot #reserveManualMsg[data-deletion-state="busy"],#dailyReserveRoot #reserveDayMsg[data-deletion-state="busy"]{background:#fff9ed;color:#77551d;border-color:#efd9aa}
+  #dailyReserveRoot #reserveManualMsg[data-deletion-state="success"],#dailyReserveRoot #reserveDayMsg[data-deletion-state="success"]{background:#edf8f2;color:#236344;border-color:#b9dec9}
+  #dailyReserveRoot #reserveManualMsg[data-deletion-state="error"],#dailyReserveRoot #reserveDayMsg[data-deletion-state="error"]{background:#fff2ef;color:#994539;border-color:#efc3bb}
   #dailyReserveRoot .reserve-admin-fold .reserve-actions{margin-top:10px}
   #dailyReserveRoot .reserve-admin-fold .reserve-fold-body>small{color:#60757c}
   #dailyReserveRoot .reserve-admin-fold>summary:focus-visible,#dailyReserveRoot .reserve-work-fold>summary:focus-visible{outline:3px solid #80bab0;outline-offset:-3px}
@@ -1443,6 +1452,7 @@ function adminHTML(){
       </div>
     </details>
     ${reserveNotificationPanelHTML()}
+    <div id="reserveDeleteNotice" class="reserve-delete-notice" role="status" aria-live="polite" hidden></div>
     <div id="reserveAdminBody"></div>
     <div class="reserve-admin-sync" id="reserveAdminSyncStatus" role="status" aria-live="polite">البيانات جاهزة — يتم التحديث بعد الحفظ والحذف والتوليد.</div>
   </div>`;
@@ -1817,6 +1827,15 @@ function manualConflictMessages(date,selections,absentIds){
 }
 // Task 6: scoped table deletion, with post-write verification before success feedback.
 // Shared absences belonging to the other creation mode are never deleted.
+function reserveTableDeleteNotice(mode,phase,detail=""){
+  const messages={busy:"جارٍ الحذف...",success:"تم الحذف بنجاح",error:"تعذر الحذف"};
+  const label=messages[phase]||detail;
+  const message=detail?label+" — "+detail:label;
+  const local=byId(mode==="manual"?"reserveManualMsg":"reserveDayMsg");
+  if(local){local.dataset.deletionState=phase;local.textContent=message;}
+  const global=byId("reserveDeleteNotice");
+  if(global){global.hidden=false;global.dataset.state=phase;global.textContent=message;}
+}
 async function reserveDeleteTableForDate(mode,date){
   if(mode!=="auto"&&mode!=="manual")throw new Error("نوع الجدول غير صحيح");
   await ensureAdmin();
@@ -1836,8 +1855,15 @@ async function reserveDeleteTableForDate(mode,date){
   await loadAll();
   if(obsoleteAbsences.some(a=>absencesOn(date).some(x=>String(x.id)===String(a.id))))
     throw new Error("تعذر التحقق من حذف الغياب المرتبط بالجدول");
-  await reserveSyncAdminMutation(date);
-  return {deleted:original.length+removedAbsences,empty:false};
+  let syncWarning=false;
+  try{await reserveSyncAdminMutation(date)}
+  catch(error){
+    // Persistence and read-back checks succeeded; a secondary panel refresh
+    // must not turn an actual deletion into a false deletion failure.
+    console.error("تعذر تحديث اللوحات بعد التحقق من الحذف",error);
+    syncWarning=true;
+  }
+  return {deleted:original.length+removedAbsences,empty:false,syncWarning};
 }
 async function saveManualAssignments(){
   const msg=byId("reserveManualMsg"),date=byId("reserveManualDate")?.value||state.currentDate;
@@ -1921,17 +1947,26 @@ function bindManualAdmin(){
   });
   byId("reserveDeleteManualTable")?.addEventListener("click",async()=>{
     const date=state.currentDate,msg=byId("reserveManualMsg"),button=byId("reserveDeleteManualTable");
+    if(button.disabled)return;
     const count=assignmentsOn(date).filter(a=>a.manual===true).length;
     const absences=absencesOn(date).filter(a=>a.source==="manual").length;
     if(!count&&!absences){msg.textContent="لا يوجد جدول يدوي لحذفه.";return;}
     if(!confirm(`هل تريدين حذف جدول الإنشاء اليدوي ليوم ${dayName(date)} الموافق ${fmtDate(date)}؟\nسيُحذف ${count} تكليف يدوي مع سجلات الغياب اليدوية غير المستخدمة.\nستبقى التكليفات الآلية والجداول الأخرى محفوظة.`))return;
-    button.disabled=true;msg.textContent="جارٍ حذف الجدول اليدوي...";
+    button.disabled=true;button.textContent="جارٍ الحذف...";button.setAttribute("aria-busy","true");
+    reserveTableDeleteNotice("manual","busy","جدول الإنشاء اليدوي — "+fmtDate(date));
     try{
-      await reserveDeleteTableForDate("manual",date);
+      const result=await reserveDeleteTableForDate("manual",date);
       renderWorkspaceCard("manual");
-      const next=byId("reserveManualMsg");if(next)next.textContent="تم الحذف";
-    }catch(err){console.error(err);const next=byId("reserveManualMsg");if(next)next.textContent="تعذر إكمال الحذف أو التحقق منه. تحققي من البيانات وأعيدي المحاولة.";}
-    finally{const next=byId("reserveDeleteManualTable");if(next)next.disabled=false;}
+      reserveTableDeleteNotice("manual","success",result.syncWarning?
+        "حُذف الجدول وتأكد حفظ التغيير، لكن تعذر تحديث بعض البطاقات.":
+        "جدول الإنشاء اليدوي — "+fmtDate(date));
+    }catch(err){
+      console.error("تعذر حذف جدول الاحتياط اليدوي",err);
+      reserveTableDeleteNotice("manual","error","لم يكتمل التحقق من الحذف؛ قد تكون بعض السجلات حُذفت. "+(err?.message||"أعيدي المحاولة."));
+    }finally{
+      const next=byId("reserveDeleteManualTable");
+      if(next){next.disabled=false;next.textContent="حذف الجدول";next.removeAttribute("aria-busy");}
+    }
   });
   byId("reserveManualTeacherLinks")?.addEventListener("click",async event=>{
     const b=event.target.closest(".reserve-manual-copy-action,.reserve-manual-open-action,.reserve-manual-send-action");
@@ -3156,17 +3191,26 @@ function bindDayAdmin(){
   });
   byId("reserveDeleteAutoTable")?.addEventListener("click",async()=>{
     const date=state.currentDate,msg=byId("reserveDayMsg"),button=byId("reserveDeleteAutoTable");
+    if(button.disabled)return;
     const count=assignmentsOn(date).filter(a=>a.manual!==true).length;
     const absences=absencesOn(date).filter(a=>a.source==="auto").length;
     if(!count&&!absences){msg.textContent="لا يوجد جدول آلي لحذفه.";return;}
     if(!confirm(`هل تريدين حذف جدول الإنشاء الآلي ليوم ${dayName(date)} الموافق ${fmtDate(date)}؟\nسيُحذف ${count} تكليف آلي مع سجلات الغياب الآلية غير المستخدمة.\nستبقى التكليفات اليدوية والجداول الأخرى محفوظة.`))return;
-    button.disabled=true;msg.textContent="جارٍ حذف الجدول الآلي...";
+    button.disabled=true;button.textContent="جارٍ الحذف...";button.setAttribute("aria-busy","true");
+    reserveTableDeleteNotice("auto","busy","جدول الإنشاء الآلي — "+fmtDate(date));
     try{
-      await reserveDeleteTableForDate("auto",date);
+      const result=await reserveDeleteTableForDate("auto",date);
       renderWorkspaceCard("auto");
-      const next=byId("reserveDayMsg");if(next)next.textContent="تم الحذف";
-    }catch(err){console.error(err);const next=byId("reserveDayMsg");if(next)next.textContent="تعذر إكمال الحذف أو التحقق منه. تحققي من البيانات وأعيدي المحاولة.";}
-    finally{const next=byId("reserveDeleteAutoTable");if(next)next.disabled=false;}
+      reserveTableDeleteNotice("auto","success",result.syncWarning?
+        "حُذف الجدول وتأكد حفظ التغيير، لكن تعذر تحديث بعض البطاقات.":
+        "جدول الإنشاء الآلي — "+fmtDate(date));
+    }catch(err){
+      console.error("تعذر حذف جدول الاحتياط الآلي",err);
+      reserveTableDeleteNotice("auto","error","لم يكتمل التحقق من الحذف؛ قد تكون بعض السجلات حُذفت. "+(err?.message||"أعيدي المحاولة."));
+    }finally{
+      const next=byId("reserveDeleteAutoTable");
+      if(next){next.disabled=false;next.textContent="حذف الجدول";next.removeAttribute("aria-busy");}
+    }
   });
   byId("reserveApproveAuto")?.addEventListener("click",async()=>{
     const msg=byId("reserveDayMsg"),button=byId("reserveApproveAuto"),date=state.currentDate;
