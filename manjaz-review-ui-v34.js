@@ -9,6 +9,7 @@ const css=document.createElement("style");css.id="manjazReviewV34CSS";
 css.textContent=`
 /* Use the established Manjaz petrol/turquoise palette and card geometry. */
 #view:has(#achievementList) .mj18-utility-card{display:none!important}
+#view:has(#achievementList) .achievement-card.mj34-partnership-hidden{display:none!important}
 #view:has(#partnerList)>.page-intro,
 #view:has(#partnerList)>.stat-grid,
 #view:has(#partnerList)>.section-actions,
@@ -95,6 +96,26 @@ function normalize(){
   const route=(location.hash||"#home").slice(1).split("&")[0].split("?")[0];
   const view=document.getElementById("view");if(!view)return;
   if(route==="partners"){
+   // Keep legacy achievements tagged as partnership visible in this section.
+   const list=document.getElementById("partnerList");
+   if(list&&typeof window.getItems==="function"){
+    const legacy=window.getItems().filter(x=>/الشراك/.test(String(x.category||""))&&x._kind!=="partner");
+    for(const item of legacy){
+     if(list.querySelector('[data-mj34-legacy-id="'+String(item.id)+'"]'))continue;
+     const card=document.createElement("article");
+     card.className="achievement-card mj34-legacy-partnership";
+     card.dataset.mj34LegacyId=String(item.id);
+     card.innerHTML='<div class="card-cover">'+
+       (item.coverUrl?'<img loading="lazy" alt="" src="'+esc(item.coverUrl)+'">':'<div class="card-cover-placeholder">الشراكة المجتمعية</div>')+
+       '</div><span class="badge">'+esc(item.status||"تحت المراجعة")+'</span>'+
+       '<h3>'+esc(item.title||"شراكة مجتمعية")+'</h3>'+
+       '<div class="meta"><span>'+esc(item.entity||item.team||"")+'</span><span>'+esc(item.date||"")+'</span></div>'+
+       '<p>'+esc(item.impact||item.description||"")+'</p>'+
+       '<button type="button" class="small-btn mj34-legacy-details">عرض التفاصيل</button>';
+     card.querySelector(".mj34-legacy-details").onclick=()=>{if(typeof window.openDetails==="function")window.openDetails("achievement",String(item.id))};
+     list.appendChild(card);
+    }
+   }
    const wantAdd=sessionStorage.getItem("manjaz_v34_add_partner")==="1";
    if(wantAdd&&document.getElementById("partnerForm")){
     sessionStorage.removeItem("manjaz_v34_add_partner");
@@ -104,6 +125,13 @@ function normalize(){
    const form=document.getElementById("partnerForm");
    if(!wantAdd&&form&&form.style.display==="none")view.classList.remove("mj34-add-partner");
   }else view.classList.remove("mj34-add-partner");
+  if(route==="achievements"){
+    const list=document.getElementById("achievementList");
+    if(list)for(const card of list.querySelectorAll(".achievement-card")){
+      const category=card.querySelector(".meta span")?.textContent||"";
+      if(/الشراك/.test(category))card.classList.add("mj34-partnership-hidden");
+    }
+  }
   if(route!=="admin")return;
   const dash=document.getElementById("mj15Dashboard");if(!dash)return;
   const section=dash.querySelector(".mj15-panel");
@@ -121,6 +149,13 @@ function normalize(){
      reject.dataset.id=approve.dataset.id;reject.dataset.kind=approve.dataset.kind;approve.after(reject);
     }
    }
+  }
+  // Existing partnership-category achievements are classified as partnership
+  // in the review UI, but keep their original record ID and kind for safe approval.
+  for(const row of document.querySelectorAll('#adminList .admin-item')){
+    const summary=row.querySelector("p");
+    if(summary&&/^منجز\s*•\s*الشراك/.test(summary.textContent||""))
+      summary.textContent=summary.textContent.replace(/^منجز/,"شراكة");
   }
   const powers=document.getElementById("mj15Powers");
   const body=powers?.querySelector(".mj15-body");
