@@ -133,7 +133,7 @@ async function restoreInlinePowersLogin(){
  if(!form)return;
  try{
   await authorizedToken();
-  if(form.isConnected)setPowersAuthenticated(true);
+  if(form.isConnected){setPowersAuthenticated(true);document.dispatchEvent(new Event('manjaz:admin-session-changed'));}
  }catch(_){
   if(form.isConnected)setPowersAuthenticated(false);
  }
@@ -199,6 +199,7 @@ function addInlinePowersAuth(body){
    container.querySelector("#mj34InlinePassword").value="";
    feedback.textContent="";
    setPowersAuthenticated(true);
+   document.dispatchEvent(new Event('manjaz:admin-session-changed'));
   }catch(err){
    container.querySelector("#mj34InlinePassword").value="";
    feedback.textContent=err?.message||"تعذر تسجيل الدخول";
@@ -211,6 +212,9 @@ function addInlinePowersAuth(body){
   sessionStorage.removeItem(SESSION);
   form.reset();feedback.textContent="";
   setPowersAuthenticated(false);
+  const issued=document.getElementById('mj15IssueList');if(issued)issued.replaceChildren();
+  const detail=document.getElementById('mj15IssueDetail');if(detail)detail.replaceChildren();
+  document.dispatchEvent(new Event('manjaz:admin-session-changed'));
  });
  void restoreInlinePowersLogin();
 }
