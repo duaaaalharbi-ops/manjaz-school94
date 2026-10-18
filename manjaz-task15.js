@@ -376,8 +376,57 @@ function adminListMarkup(mode){
 
 function adminSelection(id,mode){const x=state.adminList.find(q=>q.id===id);if(!x)return '';const data=getValues(x);const paper=certHTML(x.category,data,false);return `<div class="mj15-hint"><strong>${H(T(x.category)[1])}</strong> — الحالة: ${H(x.status)}</div>
  ${mode==='approve' && ['مستلم','معتمد'].includes(x.status)?`<div class="mj34-review-layout"><div class="mj34-review-fields">${formHTML(x.category,{...data,_status:x.status},true,false)}</div><div class="mj15-preview mj34-side-preview"><div class="mj15-paper-frame">${paper}</div></div></div>`:`<div class="mj15-preview" id="mj15IssuedPreview"><div class="mj15-paper-frame">${paper}</div></div><div class="mj15-actions"><button data-mj15-issue="${H(x.id)}" ${!['معتمد','تم الإصدار','تم الإرسال'].includes(x.status)?'disabled':''}>${x.status==='معتمد'?'إصدار وتنزيل PDF':x.status==='تم الإصدار'?'تحميل الشهادة PDF':x.status==='تم الإرسال'?'تحميل الشهادة PDF':'بانتظار اعتماد الطلب'}</button></div><p class="mj15-note">الشهادة المعتمدة خالية من العلامة المائية، ومتاحة للتحميل من لوحة الإدارة.</p><div class="mj15-status" data-mj15-status></div>`}`;}
+// A self-contained, landscape certificate renderer isolates official CSS from
+// mobile responsive rules on the Manjaz admin dashboard (especially iOS Safari).
+function renderIsolatedAdminCertificate(host,record){
+ if(!host||!record)return;
+ const paper=certHTML(record.category,getValues(record),false);
+ const frame=document.createElement('iframe');
+ frame.className='mj38-certificate-iframe';
+ frame.title='معاينة الشهادة المعتمدة دون علامة مائية';
+ frame.setAttribute('scrolling','no');
+ frame.setAttribute('aria-label','معاينة الشهادة الرسمية');
+ frame.style.cssText='position:absolute;top:0;right:0;width:1123px;height:794px;display:block;border:0;background:#fffdf8;transform-origin:top right;max-width:none;min-width:1123px';
+ const base=H(new URL('.',location.href).href);
+ frame.srcdoc='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">'+
+   '<meta name="viewport" content="width=1123"><base href="'+base+'">'+
+   '<link rel="stylesheet" href="certificates.css?v=13.7">'+
+   '<style>html,body{margin:0!important;padding:0!important;width:1123px!important;height:794px!important;'+
+   'overflow:hidden!important;background:#fffdf8!important}'+
+   '.certificate-paper.cert-final{display:block!important;position:relative!important;'+
+   'margin:0!important;padding:0!important;top:0!important;right:0!important;'+
+   'width:1123px!important;min-width:1123px!important;max-width:1123px!important;'+
+   'height:794px!important;min-height:794px!important;max-height:794px!important;'+
+   'transform:none!important;opacity:1!important;visibility:visible!important;'+
+   'background-size:100% 100%!important}'+
+   '.mj16-watermark-layer,.mj15-watermark::after{display:none!important}'+
+   '</style></head><body>'+paper+'</body></html>';
+ host.replaceChildren(frame);
+ host.style.position='relative';
+ host.style.overflow='hidden';
+ host.style.background='#fffdf8';
+ host.style.maxWidth='1123px';
+ const fit=()=>{
+   if(!host.isConnected)return;
+   const width=Math.max(180,Math.min(1123,host.getBoundingClientRect().width));
+   const isDialog=!!host.closest('dialog[open]');
+   const heightAllowance=isDialog?Math.max(150,window.innerHeight-230):794;
+   const scale=Math.max(.12,Math.min(1,width/1123,heightAllowance/794));
+   frame.style.transform='scale('+scale+')';
+   host.style.height=Math.ceil(794*scale)+'px';
+ };
+ host._mj38Fit=fit;
+ frame.addEventListener('load',fit);
+ if(typeof ResizeObserver==='function'){
+   const obs=new ResizeObserver(fit);
+   obs.observe(host);
+   host._mj38Observer?.disconnect?.();
+   host._mj38Observer=obs;
+ }
+ requestAnimationFrame(()=>{fit();requestAnimationFrame(fit)});
+}
 async function openAdminCertificatePreview(id){
- await verifiedToken(); // Only authenticated school administration can open a clean preview.
+ await verifiedToken();
  const x=state.adminList.find(r=>r.id===id&&(MJ36_NEW_STATUS.has(r.status)||MJ36_APPROVED_STATUS.has(r.status)));
  if(!x)throw Error('الطلب غير متاح للمعاينة أو تم حذفه.');
  let dialog=document.getElementById('mj36AdminCertificatePreview');
@@ -388,15 +437,19 @@ async function openAdminCertificatePreview(id){
    dialog.setAttribute('aria-label','معاينة الشهادة للإدارة');
    document.body.appendChild(dialog);
    dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
+   window.addEventListener('resize',()=>{
+     const stage=document.querySelector('#mj36AdminCertificatePreview[open] .mj38-certificate-stage');
+     if(stage?._mj38Fit)stage._mj38Fit();
+   },{passive:true});
  }
  dialog.innerHTML='<div class="mj36-dialog-head"><strong>معاينة إدارية — '+H(x.name)+
  '</strong><button type="button" data-mj36-preview-close aria-label="إغلاق المعاينة">إغلاق ×</button></div>'+
- '<div class="mj15-preview mj36-admin-preview"><div class="mj15-paper-frame">'+
- certHTML(x.category,getValues(x),false)+'</div></div>'+
+ '<div class="mj38-certificate-stage" role="img" aria-label="الشهادة الرسمية للمراجعة"></div>'+
  '<p class="mj15-note">هذه معاينة إدارية دون علامة مائية؛ إصدار الشهادة النهائية يتطلب الاعتماد.</p>';
  if(dialog.open)dialog.close();
  dialog.showModal();
- requestAnimationFrame(()=>{fitPreviews();requestAnimationFrame(fitPreviews)});
+ const stage=dialog.querySelector('.mj38-certificate-stage');
+ renderIsolatedAdminCertificate(stage,x);
 }
 async function archiveAdminCertificate(id){
  const x=state.adminList.find(r=>r.id===id);
