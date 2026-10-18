@@ -313,7 +313,23 @@ function adminSelection(id,mode){const x=state.adminList.find(q=>q.id===id);if(!
  ${mode==='approve' && ['مستلم','معتمد'].includes(x.status)?`<div class="mj34-review-layout"><div class="mj34-review-fields">${formHTML(x.category,{...data,_status:x.status},true,false)}</div><div class="mj15-preview mj34-side-preview"><div class="mj15-paper-frame">${paper}</div></div></div>`:`<div class="mj15-preview" id="mj15IssuedPreview"><div class="mj15-paper-frame">${paper}</div></div><div class="mj15-actions"><button data-mj15-issue="${H(x.id)}" ${!['معتمد','تم الإصدار'].includes(x.status)?'disabled':''}>${x.status==='معتمد'?'إصدار وتنزيل PDF':x.status==='تم الإصدار'?'تحميل الشهادة PDF':x.status==='تم الإرسال'?'تحميل الشهادة PDF':'بانتظار اعتماد الطلب'}</button></div><p class="mj15-note">الشهادة المعتمدة خالية من العلامة المائية، ومتاحة للتحميل من لوحة الإدارة.</p><div class="mj15-status" data-mj15-status></div>`}`;}
 function printMessages(id,mode){const area=document.getElementById(mode==='approve'?'mj15ApprovalDetail':'mj15IssueDetail');if(!area)return;const x=state.adminList.find(r=>r.id===id);if(!x)return;state.selected=id;area.dataset.mode=mode;area.dataset.id=id;area.innerHTML=adminSelection(id,mode);area.querySelector('[data-mj15-form]')?.setAttribute('data-category',x.category);window.ManjazHijriPicker?.refresh?.();fitPreviews()}
 async function refreshAdmin(){await fetchAll();const a=document.getElementById('mj15ApprovalList'),b=document.getElementById('mj15IssueList');if(a)a.innerHTML=adminListMarkup('approve');if(b)b.innerHTML=adminListMarkup('issue')}
-async function adminAction(id,action,fields=null,err=''){const bearer=await verifiedToken();const args={p_request_id:id,p_action:action};if(fields)Object.assign(args,{p_name:fields.name,p_title:fields.title,p_description:fields.description,p_date_iso:fields.date,p_date_display:hijri(fields.date),p_duration:fields.duration||'',p_email:fields.email||'',p_execution_type:fields.executionType||''});if(err)args.p_error=err;await rpc('manjaz_certificate_admin_action',args,bearer);await refreshAdmin()}
+async function adminAction(id,action,fields=null,err=''){
+ const bearer=await verifiedToken();
+ if(action==='edit'){
+  if(!fields)throw Error('بيانات التعديل غير مكتملة');
+  await rpc('manjaz_certificate_admin_edit_v34',{
+   p_request_id:id,p_name:fields.name,p_title:fields.title,
+   p_description:fields.description,p_date_iso:fields.date,
+   p_date_display:hijri(fields.date),p_duration:fields.duration||'',
+   p_execution_type:fields.executionType||''
+  },bearer);
+ }else{
+  const args={p_request_id:id,p_action:action};
+  if(err)args.p_error=err;
+  await rpc('manjaz_certificate_admin_action',args,bearer);
+ }
+ await refreshAdmin();
+}
 async function previewPdf(paper){const load=(url,key)=>new Promise((resolve,reject)=>{if(window[key])return resolve();const el=document.createElement('script');el.src=url;el.onload=resolve;el.onerror=()=>reject(Error('تعذر تحميل أداة PDF.'));document.head.appendChild(el)});await load('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js','html2canvas');await load('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','jspdf');if(document.fonts?.ready)await document.fonts.ready;await Promise.all([...paper.querySelectorAll('img')].map(img=>new Promise(done=>{if(img.complete)return done();img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true})})));const canvas=await window.html2canvas(paper,{scale:Math.min(5,Math.max(3,3300/Math.max(paper.offsetWidth,1))),useCORS:true,allowTaint:false,backgroundColor:'#ffffff'});const pdf=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});const ratio=Math.min(297/canvas.width,210/canvas.height);const w=canvas.width*ratio,h=canvas.height*ratio;pdf.addImage(canvas.toDataURL('image/png'),'PNG',(297-w)/2,(210-h)/2,w,h);return pdf}
 const base64=async blob=>new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]);r.onerror=()=>reject(Error('تعذرت قراءة PDF'));r.readAsDataURL(blob)});
 async function issue(id,host){
