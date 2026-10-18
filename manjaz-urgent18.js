@@ -374,13 +374,13 @@ function workspace(){const p=document.getElementById('dutyAdminWorkspace');if(!p
  if(counts.some(x=>x<1))throw Error('اختاري منفذة واحدة على الأقل في كل فترة. لا يلزم ملء الخانات الست.');
  if(new Set(rows.map(r=>r.person_id)).size!==rows.length)throw Error('المنفذة مكررة في اليوم نفسه؛ اختاري أسماء مختلفة.');
  if(!session())throw Error('انتهت صلاحية الدخول الإداري. أعيدي تسجيل الدخول داخل المناوبة.');
- if(!confirm('حفظ الجدول سيوقف النشر السابق حتى تعيدي نشره. هل تستمرين؟'))return;
+ if(!confirm('حفظ الجدول سيوقف النشر السابق حتى تعيدي نشره. هل تستمرين؟'))return false;
  const result=await rpc('mj_duty_save',{p_date:selectedDate,p_assignments:rows},true);
  if(result?.saved!==true||Number(result.assignments)!==rows.length)throw Error('لم تؤكد قاعدة البيانات حفظ جميع التكليفات.');
  await refresh();log('تم حفظ '+rows.length+' تكليفًا بتاريخ '+dateLong(selectedDate)+'. يمكن النشر بعد المراجعة.');
-}, {button:section.querySelector('#dutySave'),status:section.querySelector('#dutyInlineActionStatus'),pending:'جارٍ حفظ المناوبات والتحقق من قاعدة البيانات...'});
- if(auto)section.querySelector('#dutyGenerate').onclick=()=>doAction(async()=>{if(!confirm('سيُعاد توليد جدول التاريخ المحدد وفق العدالة. هل تستمرين؟'))return;const r=await rpc('mj_duty_generate',{p_date:date},true);await refresh();log('تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.')});
- section.querySelector('#dutyClear').onclick=()=>doAction(async()=>{if(!confirm('هل تريدين حذف تكليفات هذا اليوم وروابط اطلاعها؟'))return;await rpc('mj_duty_delete_day',{p_date:date},true);await refresh();log('تم حذف تكليفات اليوم فقط.')});
+}, {button:section.querySelector('#dutySave'),status:section.querySelector('#dutyInlineActionStatus'),pending:'جارٍ الحفظ...',success:'تم الحفظ'});
+ if(auto)section.querySelector('#dutyGenerate').onclick=()=>doAction(async()=>{if(!confirm('سيُعاد توليد جدول التاريخ المحدد وفق العدالة. هل تستمرين؟'))return false;const r=await rpc('mj_duty_generate',{p_date:date},true);await refresh();log('تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.')}, {button:section.querySelector('#dutyGenerate'),pending:'جارٍ التوليد...',success:'تم التوليد'});
+ section.querySelector('#dutyClear').onclick=()=>doAction(async()=>{if(!confirm('هل تريدين حذف تكليفات هذا اليوم وروابط اطلاعها؟'))return false;await rpc('mj_duty_delete_day',{p_date:date},true);await refresh();log('تم حذف تكليفات اليوم فقط.')}, {button:section.querySelector('#dutyClear'),pending:'جارٍ الحذف...',success:'تم الحذف'});
  linkPanel();
 }
 function collect(){return [...document.querySelectorAll('#dutyWorkspaceContent select[data-slot]')].filter(x=>x.value).map(x=>({slot:x.dataset.slot,position:Number(x.dataset.position),person_id:x.value}))}
@@ -393,7 +393,7 @@ function linkPanel(){const panel=document.getElementById('dutyLinks');if(!panel)
  <div class="reserve-actions"><button type="button" class="btn btn-primary" id="dutyPublishButton" ${assignments.length<3?'disabled':''}>نشر جدول اليوم</button><button type="button" class="btn btn-ghost" id="dutyPreviewButton">معاينة جدول النشر</button></div>
  ${published?`<div class="reserve-actions"><button type="button" class="reserve-mini" id="dutyCopyShared">نسخ رابط الاطلاع العام</button><button type="button" class="reserve-mini" id="dutyShareShared">مشاركة واتساب بالرابطين</button></div><p class="reserve-public-note">تم الاطلاع: <strong>${confirmed}</strong> من <strong>${assignments.length}</strong> منفذة. تُحدَّث حالة الاطلاع تلقائيًا.</p>`:''}
  </section>`;
- panel.querySelector('#dutyPublishButton').onclick=()=>doAction(async()=>{const r=await rpc('mj_duty_publish',{p_date:date},true);await refresh();log('تم نشر جدول اليوم. يمكنك إرسال رابط الاطلاع العام ورابط جدول النشر عبر واتساب.')});
+ panel.querySelector('#dutyPublishButton').onclick=()=>doAction(async()=>{await rpc('mj_duty_publish',{p_date:date},true);await refresh();log('تم نشر جدول اليوم. يمكنك إرسال رابط الاطلاع العام ورابط جدول النشر عبر واتساب.')}, {button:panel.querySelector('#dutyPublishButton'),pending:'جارٍ النشر...',success:'تم النشر'});
  panel.querySelector('#dutyPreviewButton').onclick=()=>preview(false);
  panel.querySelector('#dutyCopyShared')?.addEventListener('click',()=>document.getElementById('dutyCopyDay')?.click());
  panel.querySelector('#dutyShareShared')?.addEventListener('click',()=>document.getElementById('dutyWhatsapp')?.click());
@@ -408,15 +408,27 @@ function adminTab(tab){document.querySelectorAll('[data-dtab]').forEach(b=>b.cla
  e.querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>{const p=roster.find(x=>x.id===b.dataset.editPerson);if(!p)return;const name=prompt('تعديل الاسم الكامل:',p.full_name);if(name===null)return;const role=prompt('الفئة: teacher للمعلمة، administrative للإدارية',p.role);if(role===null)return;if(!['teacher','administrative'].includes(role)||name.trim().length<2){log('الاسم أو الفئة غير صالحين');return}doAction(async()=>{const resp=await fetch(BASE+'/rest/v1/mj_duty_people?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',headers:{...headers(),Prefer:'return=minimal'},body:JSON.stringify({full_name:name.trim(),role})});if(!resp.ok)throw Error('تعذر تحديث بيانات المنفذة');await loadAdmin();log('تم تعديل الاسم والتصنيف دون حذف تاريخ المناوبات')})});
 }
 async function doAction(fn,options={}){
- const feedback=options.status,button=options.button;
- if(busy){if(feedback)feedback.textContent='توجد عملية جارية، انتظري حتى تكتمل.';return false}
+ const feedback=options.status,button=options.button,globalStatus=document.getElementById('dutyStatus');
+ if(busy){const msg='توجد عملية جارية، انتظري حتى تكتمل.';if(feedback)feedback.textContent=msg;if(globalStatus)globalStatus.textContent=msg;return false}
  busy=true;
  const originalLabel=button?.textContent;
- if(button){button.disabled=true;button.textContent='جارٍ الحفظ...'}
- if(feedback){feedback.textContent=options.pending||'جارٍ تنفيذ العملية...';feedback.classList.remove('error')}
- try{await fn();if(feedback?.isConnected)feedback.textContent='اكتملت العملية.';return true}
- catch(e){const message='تعذر التنفيذ: '+(e?.message||e);log(message);if(feedback?.isConnected){feedback.textContent=message;feedback.classList.add('error');feedback.scrollIntoView({block:'nearest',behavior:'smooth'})}return false}
- finally{busy=false;if(button?.isConnected){button.disabled=false;button.textContent=originalLabel}}
+ const label=options.pending||'جارٍ الحفظ...';
+ if(button){button.disabled=true;button.textContent=label}
+ if(feedback){feedback.textContent=label;feedback.classList.remove('error')}
+ if(globalStatus)globalStatus.textContent=label;
+ try{
+   const result=await fn();
+   if(result===false){if(globalStatus)globalStatus.textContent='أُلغيت العملية';return false}
+   const success=options.success||'تم الحفظ';
+   if(feedback?.isConnected)feedback.textContent=success;
+   const live=document.getElementById('dutyStatus');if(live)live.textContent=success;
+   return true
+ }catch(e){
+   const message='تعذر التنفيذ: '+(e?.message||e);log(message);
+   const live=document.getElementById('dutyStatus');if(live)live.textContent=message;
+   if(feedback?.isConnected){feedback.textContent=message;feedback.classList.add('error')}
+   return false
+ }finally{busy=false;if(button?.isConnected){button.disabled=false;button.textContent=originalLabel}}
 }
 async function loadPublic(requestDate=date,serial=refreshSequence){
  const results=await Promise.allSettled([rpc('mj_duty_public_day',{p_date:requestDate}),rpc('mj_duty_public_stats',{p_date:requestDate,p_month_start:monthStart(requestDate)})]);
@@ -547,7 +559,7 @@ function boot(){nav();const v=root();if(v)new MutationObserver(schedule).observe
 let dutyLastPublicPoll=0;
 function dutyAutoUpdateAcknowledgements(){
  if(!document.getElementById('mjDutyRoot')||!location.hash.startsWith('#daily-duty')||document.visibilityState==='hidden'||busy)return;
- if(Date.now()-dutyLastPublicPoll<8000)return;
+ if(Date.now()-dutyLastPublicPoll<4000)return;
  dutyLastPublicPoll=Date.now();void loadPublic(date,refreshSequence);
  // Refresh link acknowledgement badges without re-rendering manual selection fields.
  if(session() && !document.getElementById('dutyAdmin')?.hidden && document.getElementById('dutyLinks')){
@@ -559,6 +571,6 @@ function dutyAutoUpdateAcknowledgements(){
 }
 window.addEventListener('focus',dutyAutoUpdateAcknowledgements);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')dutyAutoUpdateAcknowledgements()});
-setInterval(dutyAutoUpdateAcknowledgements,30000);
+setInterval(dutyAutoUpdateAcknowledgements,5000);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
