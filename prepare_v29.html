@@ -1,0 +1,182 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>منجز — إعداد تحديث الاحتياط 29</title>
+<style>body{margin:0;background:#f3f7f8;color:#183944;font:16px Tahoma,Arial,sans-serif;line-height:1.85}.main{max-width:710px;margin:35px auto;padding:25px;background:#fff;border:1px solid #dce7e6;border-radius:16px;box-sizing:border-box}h1{margin:0 0 8px;font-size:23px;color:#0a6159}h2{font-size:18px}p{margin:7px 0 18px}button,.download{display:inline-block;background:#0b665c;color:white;padding:12px 23px;border:0;border-radius:9px;font:bold 15px Tahoma,Arial;cursor:pointer;text-decoration:none}button:disabled{opacity:.5}label{display:block;margin:15px 0;font-size:14px}input{display:block;max-width:100%;margin-top:5px}#result{padding:12px;margin-top:15px;background:#f1f7f6;border-radius:8px;white-space:pre-line;overflow-wrap:anywhere}.warn{color:#8a3b2b}small{color:#6d7b7a}li{margin:7px 0}</style></head><body><main class="main"><h1>تحديث ضوابط الاحتياط الآلي — 29.0</h1><p>أداة آمنة لإعداد الملفات المعدلة مباشرةً من مصدر منصة «منجز». لا تحذف بيانات قاعدة الاحتياط ولا تغيّر سجلاتها.</p>
+<p>تصلح ضوابط المفاضلة الأسبوعية، والاستبعاد عند عدم تفعيل الكادر الكامل، وعدم تخفيف القيود بعد ١٢ حصة، وتحمي الحفظ والاعتماد من مخالفة القيود.</p>
+<button type="button" id="create" onclick="prepareUpdate()">إنشاء حزمة التحديث</button> <a id="download" class="download" hidden>تحميل ملف ZIP الناتج</a>
+<div id="result" role="status">جاهزة للإعداد. يتطلب جلب ملفات GitHub الاتصال بالإنترنت.</div>
+<h2>في حال تعذر الجلب تلقائيًا</h2><p>حمّلي ملفَي المصدر الأصليين من GitHub، ثم حدديهما هنا وأعيدي المحاولة:</p>
+<label>ملف daily-reserve.js الأصلي<input type="file" id="reserveFile" accept=".js,.txt"></label>
+<label>ملف home-v3.js الأصلي<input type="file" id="homeFile" accept=".js,.txt"></label><label>ملف index.html الأصلي<input type="file" id="indexFile" accept=".html,.txt"></label>
+<hr><small>بعد تنزيل الحزمة، ارفعي ملفات JavaScript و index.html إلى جذر المستودع بالأسماء نفسها. إذا وجد البرنامج أي اختلاف في المصدر يمنع التحديث الصحيح، سيتوقف دون إنتاج حزمة.</small></main>
+<script type="text/plain" id="engine">// 29.0 — strict weekly auto nomination. Full cadre checkbox is the ONLY flexibility switch.
+const AUTO_OFF_EXCLUSIONS=new Set([
+  "عبير المولد","عايدة الصاعدي","نجوى الغامدي","عواطف الحربي",
+  "لمياء البلادي","لمياء البالدي","نورة العنزي","أفراح الجدعاني",
+  "بدرية الحربي","بدريه الحربي"
+]);
+function weeklyAutoDraftCount(teacherId,date,exceptId=""){
+  const wr=weekRange(date);
+  return state.assignments.filter(a=>a.published!==true&&a.status!=="ملغي"&&a.date>=wr.start&&a.date<=date&&String(a.id)!==String(exceptId)&&String(a.assignedTeacherId)===String(teacherId)).length;
+}
+function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts={}){
+  const full=state.autoAllNames===true; // Explicit user switch; no demand-based emergency exception.
+  const counts=assignmentCounts(date),className=clean(opts.className||"");
+  const candidates=[];
+  state.teachers.forEach(t=>{
+    const id=String(t.id),flags=teacherFlags(t),load=Number(t.workload||0);
+    if(id===String(absentTeacherId)||t.active===false||t.excluded===true||flags.absolute)return;
+    const roleText=[t.role,t.subject,t.jobTitle,t.position].map(x=>clean(x||"")).join(" ");
+    const personName=clean(t.name||"");
+    if(t.supportStaff===true||/مرشد|إرشاد|ارشاد|توجيه طلاب|محضر.*مختبر|مختبر/.test(roleText)||/^(دخيلة|مها العتيبي|نجلاء هوساوي)/.test(personName))return;
+    if(!full&&(load>=20||nameSetContains(AUTO_OFF_EXCLUSIONS,t.name)||flags.permanentExcluded))return;
+    if(isAbsent(id,date)||breastfeedingBlocked(t,date,period))return;
+    if(regularCell(id,date,period)||occupiedByReserve(id,date,period,exceptAssignmentId))return;
+    if(adjacentOriginalCount(id,date,period)>0)return; // Always disallow adjacency to original lesson.
+    if(className&&sameClassReserveToday(id,date,className,exceptAssignmentId))return;
+    const stats=counts.get(id)||{week:0,daily:0};
+    const week=Number(stats.week||0)+weeklyAutoDraftCount(id,date,exceptAssignmentId);
+    if(week>=20)return;
+    const missed=currentWeekAbsenceLoad(id,date);
+    const pending=Math.max(0,missed-week);
+    candidates.push({teacherId:id,name:t.name||"",workload:load,week,term:0,daily:Number(stats.daily||0),missed,makeupPending:pending>0,makeupBalance:pending,ownClass:className?teacherHasClass(id,className):false,effectiveLoad:load+week,dailyOriginal:dailyOriginalCount(id,date),adjacentOriginal:0,fullCadre:full});
+  });
+  candidates.sort((a,b)=>a.workload-b.workload||(full?b.makeupBalance-a.makeupBalance:0)||a.week-b.week||(full?b.missed-a.missed:0)||a.dailyOriginal-b.dailyOriginal||a.name.localeCompare(b.name,"ar"));
+  return candidates.slice(0,Math.max(1,Number(opts.limit||3))).map((x,i)=>({...x,score:i+1}));
+}
+function reserveAutoAllowed(a,teacherId){
+  if(!a||!teacherId)return false;
+  return candidateRanking(a.date,Number(a.period),a.absentTeacherId,String(a.id),{className:a.className,limit:9999}).some(x=>String(x.teacherId)===String(teacherId));
+}
+</script>
+<script type="text/plain" id="options">function manualCandidateOptions(a){
+  const eligible=candidateRanking(a.date,Number(a.period),a.absentTeacherId,String(a.id),{className:a.className,limit:9999}).map(c=>({teacherId:String(c.teacherId),name:c.name}));
+  const assigned=String(a.assignedTeacherId||"");
+  if(assigned&&!eligible.some(x=>x.teacherId===assigned))eligible.unshift({teacherId:assigned,name:(a.assignedTeacherName||"الاسم السابق")+" — غير مؤهلة آليًا، يُرجى تغييرها",invalid:true});
+  return eligible;
+}
+</script>
+<script type="text/plain" id="unlock">function reserveUnlockAssigneeSelector(select){
+  if(!select)return;
+  // This helper is shared by auto and manual editing. Keep manual fully flexible.
+  if(select.classList.contains('reserve-flex-select')){
+    const previous=select.value;
+    select.innerHTML=reserveFlexibleAssigneeOptions(previous);
+    select.value=previous;select.hidden=false;select.disabled=false;select.focus();return;
+  }
+  const row=select.closest("[data-assignment]");
+  const a=state.assignments.find(x=>String(x.id)===String(row?.dataset.assignment));
+  if(!a)return;
+  const options=manualCandidateOptions(a),selected=String(select.value||"");
+  select.innerHTML='<option value="">اختاري المكلفة</option>'+options.map(x=>`<option value="${esc(x.teacherId)}" ${x.invalid?"disabled":""}>${esc(x.name)}</option>`).join("");
+  select.value=options.some(x=>x.teacherId===selected&&!x.invalid)?selected:"";
+  select.disabled=false;select.hidden=false;select.focus();
+}
+</script>
+<script>'use strict';
+function patchSource(source,engine,options,unlock){
+  let s=source;const changes=[];
+  function one(from,to,label){
+    const count=s.split(from).length-1;
+    if(count!==1)throw Error('فشل إصلاح «'+label+'» (المطابقات: '+count+'). لا ترفعي ملفًا غير مكتمل.');
+    s=s.replace(from,to);changes.push(label);
+  }
+  function region(first,next,replacement,label){
+    const a=s.indexOf(first),b=s.indexOf(next,a+first.length);
+    if(a<0||b<0||s.indexOf(first,a+first.length)!==-1)throw Error('تعذر تحديد كتلة «'+label+'» بشكل آمن.');
+    s=s.slice(0,a)+replacement.trimEnd()+'\n'+s.slice(b);changes.push(label);
+  }
+  one('autoAllNames:true,autoAbsentIds:','autoAllNames:false,autoAbsentIds:','عدم تفعيل الكادر الكامل افتراضيًا');
+  one('manual:false,source:"auto",published:false,status:"مسودة"',
+      'manual:false,source:"auto",fullCadreEnabled:state.autoAllNames===true,published:false,status:"مسودة"','تسجيل اختيار الكادر الكامل عند الإنشاء');
+  one('if(inRange(a.date,wr.start,wr.end))missed+=(a.periods||[]).length;\n    else if(a.date===addDays(wr.start,-3)&&dayKey(a.date)==="thu")missed+=(a.periods||[]).length;',
+      'if(inRange(a.date,wr.start,wr.end)&&a.date<=date)missed+=(a.periods||[]).length;','أولوية الغياب للأسبوع الحالي فقط');
+  region('function candidateRanking(','\nfunction injectStyle(){',engine,'محرك الترشيح الآلي');
+  region('function manualCandidateOptions(','function adminAssignmentsHTML(',options,'قائمة المؤهلات');
+  one('<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>',
+      '<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""} ${c.invalid?"disabled":""}>${esc(c.name)}</option>','إبطال الخيار غير المؤهل');
+  one('const date=state.currentDate,abs=absencesOn(date),assign=assignmentsOn(date);',
+      'const date=state.currentDate,abs=absencesOn(date),assign=assignmentsOn(date).filter(a=>a.manual!==true);','حصر جدول الإنشاء الآلي بالتكليفات الآلية');
+  one('<small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small>',
+      '<small class="reserve-source-note">ترشيح آلي بضوابط الأسبوع الحالي؛ المساندات للإنشاء اليدوي فقط</small>','تسمية القائمة');
+  one('إتاحة جميع الكادر للتعديل:</strong> إظهار المعلمات جميعًا، بمن فيهن المستثنيات، إضافة إلى الموجهات الطلابيات ومحضرة المختبر. يظهر ترشيح ذكي واحد لكل حصة، ويمكن استبداله من القائمة المنسدلة. عند الإسناد المخالف تظهر التحذيرات.',
+      'تفعيل الكادر الكامل:</strong> يسمح بترشيح المعلمات المتاحات مع استمرار قيود الغياب والحصص الأصلية وساعة الرضاعة والتعارض. لا يشمل المرشدات أو محضرة المختبر. دون التفعيل يستبعد النصاب ٢٠ فأكثر والأسماء المحددة. لا تُخفف الضوابط بعد ١٢ حصة.','شرح الكادر الكامل');
+  region('function reserveUnlockAssigneeSelector(','function reserveSavedManualAssignmentsHTML(',unlock,'منع الالتفاف على الضوابط عبر التعديل');
+  one('const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,\n    manualOverride:changed',
+      'const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,\n    ...(a.manual!==true?{fullCadreEnabled:state.autoAllNames===true}:{}),\n    manualOverride:changed', 'حفظ اختيار الكادر الكامل عند التعديل الفردي');
+  one('const changed=String(a.assignedTeacherId)!==String(t.id);\n  const warnings=manualConflictMessages',
+      'if(a.manual!==true&&!reserveAutoAllowed(a,t.id))throw new Error("المعلمة غير مؤهلة للإنشاء الآلي؛ اختاري الإنشاء اليدوي للتكليف الاستثنائي.");\n  const changed=String(a.assignedTeacherId)!==String(t.id);\n  const warnings=manualConflictMessages','التحقق قبل الحفظ الفردي');
+  one('if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId&&teacherOf(x.teacherId)))){',
+      'if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId&&teacherOf(x.teacherId)&&reserveAutoAllowed(a,x.teacherId)))){','التحقق قبل الاعتماد الجماعي');
+  one('manual:false,source:"auto",candidates:(a.candidates||[]).slice(0,1),',
+      'manual:false,source:"auto",fullCadreEnabled:state.autoAllNames===true,candidates:(a.candidates||[]).slice(0,1),','حفظ وضع الكادر الكامل عند الاعتماد');
+  one('msg.textContent="يجب اختيار معلمة لكل حصة من القوائم المنسدلة قبل الاعتماد.";return;',
+      'msg.textContent="يجب اختيار معلمة مؤهلة حسب قيود الأسبوع لكل حصة. لن يُعتمد التكليف المخالف.";return;','رسالة الاعتماد');
+  one('<th>احتياط الأسبوع</th><th>الأسبوع السابق</th><th>التراكمي</th><th>نقص غياب</th>',
+      '<th>احتياط الأسبوع</th><th>نقص غياب الأسبوع الحالي</th>', 'حذف تراكمي الأسابيع الماضية من بطاقة المفاضلة');
+  one('<td><strong>${r.week}</strong></td><td>${r.prevWeek}</td><td>${r.term}</td><td>${r.missed}</td>',
+      '<td><strong>${r.week}</strong></td><td>${r.missed}</td>', 'قصر جدول المفاضلة على الأسبوع الحالي');
+  one('    if(previousWeekReserveCount(t.id,date)>0)warnings.push(`${t.name}: لديها احتياط في الأسبوع السابق؛ يفضّل تدوير الإسناد عند توفر بديل.`);','', 'إزالة التحذيرات المنقولة من الأسبوع السابق');
+  one('a.effective-b.effective||a.week-b.week||a.prevWeek-b.prevWeek||a.dailyOriginal-b.dailyOriginal',
+      'a.workload-b.workload||a.week-b.week||a.dailyOriginal-b.dailyOriginal','إلغاء تأثير الأسبوع السابق على المفاضلة');
+  one('<label>حد تفعيل وضع الضرورة اليومي<input id="rwEmergency" type="number" min="1" value="${Number(state.settings?.emergencyDailyDemand||EMERGENCY_DAILY_DEMAND)}"></label>',
+      '<label>قواعد الترشيح الآلي<strong>ثابتة مهما زاد عدد الحصص، ولا تتغير بعد ١٢ حصة</strong><input id="rwEmergency" type="hidden" value="${Number(state.settings?.emergencyDailyDemand||EMERGENCY_DAILY_DEMAND)}"></label>','تعطيل وضع الضرورة المخالف');
+  if(changes.length!==20||!s.includes('reserveAutoAllowed(a,x.teacherId)')||!s.includes('autoAllNames:false,autoAbsentIds:')||!s.includes('fullCadreEnabled:state.autoAllNames===true'))throw Error('فشل التحقق من سلامة التحديث.');
+  return {source:s,changes};
+}
+function patchLoader(source){
+ const re=/daily-reserve\.js\?v=[0-9][a-zA-Z0-9._-]*/g;
+ const hits=source.match(re)||[];
+ if(hits.length!==1)throw Error('لم أجد استدعاء daily-reserve.js مرة واحدة في home-v3.js.');
+ return source.replace(re,'daily-reserve.js?v=29.0-strict-weekly-full');
+}
+function patchIndex(source){
+ const re=/home-v3\.js\?v=[0-9][a-zA-Z0-9._-]*/g;
+ const hits=source.match(re)||[];
+ if(hits.length!==1)throw Error('لم يُعثر على استدعاء home-v3.js مرة واحدة في index.html.');
+ return source.replace(re,'home-v3.js?v=29.0-strict-weekly-full');
+}
+if(typeof module!=='undefined'&&module.exports)module.exports={patchSource,patchLoader,patchIndex};
+</script>
+<script>
+const byId=id=>document.getElementById(id);
+const GITHUB='https://raw.githubusercontent.com/duaaaalharbi-ops/manjaz-school94/main/';
+async function readRemote(name,id){
+ const f=byId(id).files[0];if(f)return f.text();
+ let last;
+ for(const base of [GITHUB,'https://duaaaalharbi-ops.github.io/manjaz-school94/']){
+  try{const r=await fetch(base+name+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const body=await r.text();if(body.length<500)throw Error('الملف غير مكتمل');return body;}catch(e){last=e;}
+ }
+ throw Error('تعذر جلب '+name+'. استخدمي حقل اختيار الملف أسفل الأداة. '+(last?.message||''));
+}
+const enc=new TextEncoder();
+function crc32(data){let c=-1;for(const x of data){c^=x;for(let j=0;j<8;j++)c=(c>>>1)^((c&1)?0xEDB88320:0);}return (c^(-1))>>>0;}
+function zipFiles(files){
+ const body=[],central=[];let offset=0;
+ for(const [name,contents] of files){
+  const nb=enc.encode(name),db=enc.encode(contents),crc=crc32(db);
+  const local=new Uint8Array(30+nb.length),v=new DataView(local.buffer);
+  v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,2048,true);v.setUint16(8,0,true);v.setUint32(14,crc,true);v.setUint32(18,db.length,true);v.setUint32(22,db.length,true);v.setUint16(26,nb.length,true);local.set(nb,30);
+  body.push(local,db);
+  const item=new Uint8Array(46+nb.length),w=new DataView(item.buffer);
+  w.setUint32(0,0x02014b50,true);w.setUint16(4,20,true);w.setUint16(6,20,true);w.setUint16(8,2048,true);w.setUint32(16,crc,true);w.setUint32(20,db.length,true);w.setUint32(24,db.length,true);w.setUint16(28,nb.length,true);w.setUint32(42,offset,true);item.set(nb,46);
+  central.push(item);offset+=local.length+db.length;
+ }
+ const centralSize=central.reduce((n,b)=>n+b.length,0),footer=new Uint8Array(22),fv=new DataView(footer.buffer);
+ fv.setUint32(0,0x06054b50,true);fv.setUint16(8,files.length,true);fv.setUint16(10,files.length,true);fv.setUint32(12,centralSize,true);fv.setUint32(16,offset,true);
+ return new Blob([...body,...central,footer],{type:'application/zip'});
+}
+async function prepareUpdate(){
+ const button=byId('create'),message=byId('result'),download=byId('download');button.disabled=true;download.hidden=true;
+ try{
+  message.textContent='جارٍ قراءة ملفات المنصة والتحقق من المطابقات...';
+  const [reserve,home,index]=await Promise.all([readRemote('daily-reserve.js','reserveFile'),readRemote('home-v3.js','homeFile'),readRemote('index.html','indexFile')]);
+  const patched=patchSource(reserve,byId('engine').textContent,byId('options').textContent,byId('unlock').textContent);
+  const homePatched=patchLoader(home); const indexPatched=patchIndex(index);
+  const readme='تحديث احتياط منجز 29.0\n1) ارفعي الملفات الثلاثة daily-reserve.js و home-v3.js و index.html مكان الموجودين بالاسم نفسه.\n2) اختبري أولًا دون تفعيل الكادر الكامل ثم مع تفعيله.\n3) لا ترفعي ملفات txt أو HTML إلى الموقع.\n4) لم تتغير سجلات البيانات أو قسم الإنشاء اليدوي.\n';
+  const blob=zipFiles([['daily-reserve.js',patched.source],['home-v3.js',homePatched],['index.html',indexPatched],['README_AR.txt',readme]]);
+  if(download.href.startsWith('blob:'))URL.revokeObjectURL(download.href);
+  download.href=URL.createObjectURL(blob);download.download='Manjaz_Reserve_Weekly_Strict_v29.zip';download.hidden=false;
+  message.textContent='اكتمل التحديث والتحقق من '+patched.changes.length+' إصلاحًا.\nحجم الحزمة: '+Math.round(blob.size/1024)+' كيلوبايت. اضغطي تحميل ملف ZIP الناتج.';
+ }catch(e){message.textContent='لم يُنشأ الملف حفاظًا على سلامة المنصة: '+(e?.message||e);message.classList.add('warn');}
+ finally{button.disabled=false;}
+}
+</script></body></html>
