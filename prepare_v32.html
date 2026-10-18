@@ -1,0 +1,411 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>منجز — التحديث الشامل 32</title><style>
+:root{font-family:Tahoma,Arial,sans-serif;color:#173d4a;background:#f4f8f8}*{box-sizing:border-box}body{margin:0;padding:24px 12px}main{max-width:750px;margin:auto;background:white;border:1px solid #dae5e5;border-radius:18px;padding:26px}h1{font-size:23px}h2{font-size:18px}p,li{line-height:2}button,a.download{display:inline-block;border:0;border-radius:10px;color:white;background:#07595e;padding:14px 18px;font-weight:bold;text-decoration:none;font:700 15px Tahoma;cursor:pointer}button:disabled{opacity:.5}a.download{background:#17694b}.files{display:grid;gap:8px}label{display:grid;gap:5px;font-size:13px}input{width:100%;font:inherit}.note{background:#f4f6f7;padding:12px;border-radius:10px}#status{white-space:pre-wrap;min-height:50px;margin-top:18px}</style></head><body><main><h1>منجز — التحديث الشامل 32.0</h1><p>دمج جميع تعديلات الاحتياط والمناوبة والمزامنة ورسائل الحفظ والحذف في حزمة واحدة، دون تغيير بيانات المدرسة أو الجداول المنشورة.</p><p class="note"><strong>مهم:</strong> يُحمّل البرنامج الملفات الأصلية من GitHub ثم يعدّلها بشكل موثّق. عند وجود اختلاف غير متوقع يتوقف ولا ينشئ ملفات ناقصة. تحققت من تفعيل حماية قاعدة البيانات بالفعل، وملف <code>migration_v32.sql</code> محفوظ كنسخة مرجعية؛ لا تعيدي تطبيقه ما لم يلزم ذلك.</p><button id="generate" onclick="prepare()">إنشاء ملفات التحديث النهائية</button> <a id="download" class="download" hidden>تحميل الحزمة الجاهزة للرفع</a><p id="status" role="status" aria-live="polite"></p><details><summary>في حال تعذر جلب الملفات تلقائيًا، اختاري الملفات الأربعة من الجهاز</summary><div class="files"><label>daily-reserve.js<input type="file" id="file-daily-reserve.js" accept=".js,.html,text/plain"></label><label>manjaz-urgent18.js<input type="file" id="file-manjaz-urgent18.js" accept=".js,.html,text/plain"></label><label>home-v3.js<input type="file" id="file-home-v3.js" accept=".js,.html,text/plain"></label><label>index.html<input type="file" id="file-index.html" accept=".js,.html,text/plain"></label></div></details><h2>التحديث يشمل</h2><p>ترتيب المفاضلة، الاستثناءات، الحفاظ على زر الكادر الكامل، المرشدات في آخر القائمة عند التفعيل، ربط الحفظ والنشر، المناوبة والاحتياط اليدوي والآلي، والتحديث الدوري بين الأجهزة.</p></main><script>/* Manjaz v32 combined installer; patches LIVE repository source without dropping existing modules */
+'use strict';
+const REPO='https://raw.githubusercontent.com/duaaaalharbi-ops/manjaz-school94/main/';
+const PAGES='https://duaaaalharbi-ops.github.io/manjaz-school94/';
+const FILES=['daily-reserve.js','manjaz-urgent18.js','home-v3.js','index.html'];
+const V32_ENGINE="// v30 — Same-week-only ranking, no automatic emergency mode and no prior-week bias.\nconst AUTO_OFF_EXCLUSIONS=new Set([\n  \"عبير المولد\",\"عايدة الصاعدي\",\"نجوى الغامدي\",\"عواطف الحربي\",\n  \"لمياء البلادي\",\"لمياء البالدي\",\"نورة العنزي\",\"أفراح الجدعاني\",\n  \"بدرية الحربي\",\"بدريه الحربي\"\n]);\nfunction weeklyAutoDraftCount(teacherId,date,exceptId=\"\"){\n  const wr=weekRange(date);\n  return state.assignments.filter(a=>\n    a.published!==true&&a.status!==\"ملغي\"&&\n    a.date>=wr.start&&a.date<=date&&String(a.id)!==String(exceptId)&&\n    String(a.assignedTeacherId)===String(teacherId)\n  ).length;\n}\nfunction candidateRanking(date,period,absentTeacherId,exceptAssignmentId=\"\",opts={}){\n  const full=state.autoAllNames===true;\n  const counts=assignmentCounts(date),className=clean(opts.className||\"\");\n  const pool=[];\n  const register=(t,isSupport=false)=>{\n    const id=String(t.id),flags=isSupport?null:teacherFlags(t);\n    const load=isSupport?999:Number(t.workload||0);\n    if(id===String(absentTeacherId)||t.active===false)return;\n    if(!full && (isSupport||t.excluded===true||flags.absolute||flags.permanentExcluded||\n       load>=20||nameSetContains(AUTO_OFF_EXCLUSIONS,t.name)))return;\n    if(isAbsent(id,date)||breastfeedingBlocked(t,date,period)||\n       occupiedByReserve(id,date,period,exceptAssignmentId))return;\n    // Original timetable exists for teachers; support personnel are the LAST priority.\n    if(!isSupport){\n      if(!scheduleOf(id)||regularCell(id,date,period)||\n         adjacentOriginalCount(id,date,period)>0)return;\n    }\n    if(className&&sameClassReserveToday(id,date,className,exceptAssignmentId))return;\n    const stats=counts.get(id)||{week:0,daily:0};\n    const week=Number(stats.week||0)+weeklyAutoDraftCount(id,date,exceptAssignmentId);\n    if(week>=20)return; // 20 weekly reserves, never rolled across weeks.\n    const missed=isSupport?0:currentWeekAbsenceLoad(id,date);\n    pool.push({teacherId:id,name:t.name||\"\",workload:isSupport?null:load,\n      supportStaff:isSupport,rankingGroup:isSupport?1:0,\n      week,daily:Number(stats.daily||0),missed,\n      unassigned:week===0,makeupPending:missed>0,\n      ownClass:!isSupport&&className?teacherHasClass(id,className):false,\n      dailyOriginal:isSupport?0:dailyOriginalCount(id,date),fullCadre:full});\n  };\n  state.teachers.forEach(t=>register(t,false));\n  if(full)MANUAL_SUPPORT_STAFF.forEach(t=>register(t,true));\n  // Explicit priority: regular teachers before support personnel,\n  // lower teaching workload, never-assigned THIS WEEK, then same-week absentees.\n  // Do not use previous-week or whole-term counts. Repetition at low workload is allowed.\n  pool.sort((a,b)=>a.rankingGroup-b.rankingGroup||\n    (a.supportStaff?0:a.workload-b.workload)||\n    Number(b.unassigned)-Number(a.unassigned)||\n    b.missed-a.missed||a.week-b.week||\n    a.dailyOriginal-b.dailyOriginal||a.name.localeCompare(b.name,\"ar\"));\n  return pool.slice(0,Math.max(1,Number(opts.limit||3))).map((t,i)=>({...t,score:i+1}));\n}\nfunction reserveAutoAllowed(a,teacherId){\n  if(!a||!teacherId)return false;\n  return candidateRanking(a.date,Number(a.period),a.absentTeacherId,String(a.id),{\n    className:a.className,limit:9999\n  }).some(c=>String(c.teacherId)===String(teacherId));\n}";
+const V32_OPTIONS="function manualCandidateOptions(a){\n  const eligible=candidateRanking(a.date,Number(a.period),a.absentTeacherId,String(a.id),{className:a.className,limit:9999}).map(c=>({teacherId:String(c.teacherId),name:c.name}));\n  const assigned=String(a.assignedTeacherId||\"\");\n  if(assigned&&!eligible.some(x=>x.teacherId===assigned))eligible.unshift({teacherId:assigned,name:(a.assignedTeacherName||\"الاسم السابق\")+\" — غير مؤهلة آليًا، يُرجى تغييرها\",invalid:true});\n  return eligible;\n}\n";
+const V32_UNLOCK="function reserveUnlockAssigneeSelector(select){\n  if(!select)return;\n  // This helper is shared by auto and manual editing. Keep manual fully flexible.\n  if(select.classList.contains('reserve-flex-select')){\n    const previous=select.value;\n    select.innerHTML=reserveFlexibleAssigneeOptions(previous);\n    select.value=previous;select.hidden=false;select.disabled=false;select.focus();return;\n  }\n  const row=select.closest(\"[data-assignment]\");\n  const a=state.assignments.find(x=>String(x.id)===String(row?.dataset.assignment));\n  if(!a)return;\n  const options=manualCandidateOptions(a),selected=String(select.value||\"\");\n  select.innerHTML='<option value=\"\">اختاري المكلفة</option>'+options.map(x=>`<option value=\"${esc(x.teacherId)}\" ${x.invalid?\"disabled\":\"\"}>${esc(x.name)}</option>`).join(\"\");\n  select.value=options.some(x=>x.teacherId===selected&&!x.invalid)?selected:\"\";\n  select.disabled=false;select.hidden=false;select.focus();\n}\n";
+const V32_SQL="-- Manjaz v30 | Use in Supabase SQL Editor before testing full-cadre support.\n-- Important: existing published assignments remain unchanged.\n-- This migration replaces ONLY the automatic assignment guard and does not delete records.\nCREATE OR REPLACE FUNCTION public.mj_reserve_enforce_auto_v29()\nRETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path='' AS $fn$\nDECLARE\n  t public.records%ROWTYPE;\n  v_date date;\n  v_period int;\n  v_id text;\n  v_name text;\n  v_load int;\n  v_role text;\n  v_full boolean;\n  v_support boolean := false;\n  v_day text;\n  v_schedule jsonb;\n  v_week date;\n  v_week_count int;\nBEGIN\n  IF NEW.kind<>'reserve_assignment' OR COALESCE(NEW.data->>'manual','false')<>'false'\n    OR COALESCE(NEW.data->>'source','auto')<>'auto' THEN RETURN NEW; END IF;\n  IF TG_OP='UPDATE' AND OLD.kind=NEW.kind AND\n    (OLD.data->>'date',OLD.data->>'period',OLD.data->>'className',OLD.data->>'absentTeacherId',\n     OLD.data->>'assignedTeacherId',OLD.data->>'manual',OLD.data->>'source',\n     OLD.data->>'published',OLD.data->>'fullCadreEnabled',OLD.status)\n    IS NOT DISTINCT FROM\n    (NEW.data->>'date',NEW.data->>'period',NEW.data->>'className',NEW.data->>'absentTeacherId',\n     NEW.data->>'assignedTeacherId',NEW.data->>'manual',NEW.data->>'source',\n     NEW.data->>'published',NEW.data->>'fullCadreEnabled',NEW.status)\n  THEN RETURN NEW; END IF;\n  v_full:=COALESCE(NEW.data->>'fullCadreEnabled','false')='true';\n  v_id:=COALESCE(NEW.data->>'assignedTeacherId','');\n  IF v_id='' THEN\n    IF COALESCE(NEW.data->>'published','false')='true' THEN\n      RAISE EXCEPTION 'لا يجوز نشر حصة آلية بلا مكلفة';\n    END IF;\n    RETURN NEW;\n  END IF;\n  IF v_id IN ('reserve_support_1','reserve_support_2','reserve_support_3') THEN\n    IF NOT v_full THEN RAISE EXCEPTION 'المساندات يتطلبن تفعيل الكادر الكامل'; END IF;\n    v_support:=true;\n    v_name:=CASE v_id WHEN 'reserve_support_1' THEN 'دخيلة المالكي'\n       WHEN 'reserve_support_2' THEN 'مها العتيبي' ELSE 'نجلاء هوساوي' END;\n  ELSE\n    IF v_id !~ '^[0-9]+$' THEN RAISE EXCEPTION 'معرف معلمة غير صالح'; END IF;\n    SELECT * INTO t FROM public.records WHERE kind='reserve_teacher' AND id=v_id::bigint;\n    IF NOT FOUND OR COALESCE(t.data->>'active','true')='false' THEN\n      RAISE EXCEPTION 'المعلمة غير نشطة';\n    END IF;\n    v_name:=COALESCE(t.data->>'name','');\n    v_role:=concat_ws(' ',t.data->>'role',t.data->>'jobTitle',t.data->>'position',t.data->>'subject');\n    IF v_role ~ 'مرشد|إرشاد|ارشاد|توجيه طلاب|محضر.*مختبر|مختبر' OR v_name IN ('دخيلة المالكي','مها العتيبي','نجلاء هوساوي') THEN\n      IF NOT v_full THEN RAISE EXCEPTION 'الكادر المساند يتطلب تفعيل الكادر الكامل'; END IF;\n      v_support:=true;\n    END IF;\n    v_load:=CASE WHEN t.data->>'workload' ~ '^[0-9]+$'\n      THEN (t.data->>'workload')::int ELSE 100 END;\n    IF NOT v_full AND (\n      COALESCE(t.data->>'excluded','false')='true' OR\n      COALESCE(t.data->>'absoluteExcluded','false')='true' OR\n      COALESCE(t.data->>'permanentExcluded','false')='true' OR v_load>=20 OR\n      v_name IN ('عبير المولد','عايدة الصاعدي','نجوى الغامدي','عواطف الحربي',\n         'لمياء البلادي','لمياء البالدي','نورة العنزي','أفراح الجدعاني',\n         'بدرية الحربي','بدريه الحربي')\n    ) THEN RAISE EXCEPTION 'مخالفة ضوابط الاستبعاد بدون الكادر الكامل'; END IF;\n  END IF;\n  IF COALESCE(NEW.data->>'date','') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' OR\n      COALESCE(NEW.data->>'period','') !~ '^[1-7]$' THEN\n    RAISE EXCEPTION 'تاريخ أو حصة غير صالحين';\n  END IF;\n  v_date:=(NEW.data->>'date')::date;\n  v_period:=(NEW.data->>'period')::int;\n  v_day:=CASE EXTRACT(DOW FROM v_date)::int\n     WHEN 0 THEN 'sun' WHEN 1 THEN 'mon' WHEN 2 THEN 'tue'\n     WHEN 3 THEN 'wed' WHEN 4 THEN 'thu' ELSE '' END;\n  IF v_day='' THEN RAISE EXCEPTION 'الاحتياط الآلي في أيام الدراسة فقط'; END IF;\n  IF v_id=NEW.data->>'absentTeacherId' OR EXISTS (\n    SELECT 1 FROM public.records a WHERE a.kind='reserve_absence'\n     AND a.data->>'date'=v_date::text AND a.data->>'teacherId'=v_id\n  ) THEN RAISE EXCEPTION 'المعلمة غائبة اليوم'; END IF;\n  IF v_name IN ('ريم الحربي','نورة الهودان') AND (\n    (v_day IN ('sun','mon') AND v_period=7) OR\n    (v_day IN ('tue','wed','thu') AND v_period=6)\n  ) THEN RAISE EXCEPTION 'ساعة الرضاعة تمنع تكليف ريم الحربي'; END IF;\n  IF NOT v_support THEN\n    SELECT data->'timetable'->v_day INTO v_schedule FROM public.records\n      WHERE kind='reserve_schedule' AND data->>'teacherId'=v_id\n      ORDER BY id DESC LIMIT 1;\n    IF v_schedule IS NULL THEN RAISE EXCEPTION 'لا يوجد جدول أصلي'; END IF;\n    IF NULLIF(BTRIM(COALESCE(v_schedule->>(v_period-1),'')),'') IS NOT NULL\n      THEN RAISE EXCEPTION 'لدى المعلمة حصة أصلية في هذه الفترة'; END IF;\n    IF (v_period>1 AND NULLIF(BTRIM(COALESCE(v_schedule->>(v_period-2),'')),'') IS NOT NULL)\n      OR (v_period<7 AND NULLIF(BTRIM(COALESCE(v_schedule->>v_period,'')),'') IS NOT NULL)\n      THEN RAISE EXCEPTION 'تكليف متصل بحصة أصلية'; END IF;\n  END IF;\n  IF EXISTS (SELECT 1 FROM public.records a WHERE a.kind='reserve_assignment'\n      AND a.id<>COALESCE(NEW.id,-1) AND a.data->>'date'=v_date::text\n      AND a.data->>'assignedTeacherId'=v_id\n      AND COALESCE(a.data->>'status','')<>'ملغي'\n      AND (a.data->>'period'=v_period::text OR\n          (COALESCE(NEW.data->>'className','')<>'' AND\n            a.data->>'className'=NEW.data->>'className')))\n    THEN RAISE EXCEPTION 'تعارض مع احتياط آخر أو نفس الفصل'; END IF;\n  v_week:=v_date - EXTRACT(DOW FROM v_date)::int;\n  SELECT count(*) INTO v_week_count FROM public.records a\n    WHERE a.kind='reserve_assignment' AND a.id<>COALESCE(NEW.id,-1)\n    AND a.data->>'assignedTeacherId'=v_id\n    AND a.data->>'date' BETWEEN v_week::text AND v_date::text\n    AND COALESCE(a.data->>'status','')<>'ملغي';\n  IF v_week_count>=20 THEN RAISE EXCEPTION 'تجاوز حد الاحتياط الأسبوعي'; END IF;\n  RETURN NEW;\nEND;\n$fn$;\n-- Trigger name and table remain unchanged from v29.\n";
+'use strict';
+function patchSource(source,engine,options,unlock){
+  let s=source;const changes=[];
+  function one(from,to,label){
+    const count=s.split(from).length-1;
+    if(count!==1)throw Error('فشل إصلاح «'+label+'» (المطابقات: '+count+'). لا ترفعي ملفًا غير مكتمل.');
+    s=s.replace(from,to);changes.push(label);
+  }
+  function region(first,next,replacement,label){
+    const a=s.indexOf(first),b=s.indexOf(next,a+first.length);
+    if(a<0||b<0||s.indexOf(first,a+first.length)!==-1)throw Error('تعذر تحديد كتلة «'+label+'» بشكل آمن.');
+    s=s.slice(0,a)+replacement.trimEnd()+'\n'+s.slice(b);changes.push(label);
+  }
+  one('autoAllNames:true,autoAbsentIds:','autoAllNames:true,autoAbsentIds:','عدم تفعيل الكادر الكامل افتراضيًا');
+  one('manual:false,source:"auto",published:false,status:"مسودة"',
+      'manual:false,source:"auto",fullCadreEnabled:state.autoAllNames===true,published:false,status:"مسودة"','تسجيل اختيار الكادر الكامل عند الإنشاء');
+  one('if(inRange(a.date,wr.start,wr.end))missed+=(a.periods||[]).length;\n    else if(a.date===addDays(wr.start,-3)&&dayKey(a.date)==="thu")missed+=(a.periods||[]).length;',
+      'if(inRange(a.date,wr.start,wr.end)&&a.date<=date)missed+=(a.periods||[]).length;','أولوية الغياب للأسبوع الحالي فقط');
+  region('function candidateRanking(','\nfunction injectStyle(){',engine,'محرك الترشيح الآلي');
+  region('function manualCandidateOptions(','function adminAssignmentsHTML(',options,'قائمة المؤهلات');
+  one('<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>',
+      '<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""} ${c.invalid?"disabled":""}>${esc(c.name)}</option>','إبطال الخيار غير المؤهل');
+  one('const date=state.currentDate,abs=absencesOn(date),assign=assignmentsOn(date);',
+      'const date=state.currentDate,abs=absencesOn(date),assign=assignmentsOn(date).filter(a=>a.manual!==true);','حصر جدول الإنشاء الآلي بالتكليفات الآلية');
+  one('<small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small>',
+      '<small class="reserve-source-note">ترشيح آلي بضوابط الأسبوع الحالي؛ المساندات للإنشاء اليدوي، أو آليًا في آخر الأولويات عند تفعيل الكادر الكامل</small>','تسمية القائمة');
+  one('إتاحة جميع الكادر للتعديل:</strong> إظهار المعلمات جميعًا، بمن فيهن المستثنيات، إضافة إلى الموجهات الطلابيات ومحضرة المختبر. يظهر ترشيح ذكي واحد لكل حصة، ويمكن استبداله من القائمة المنسدلة. عند الإسناد المخالف تظهر التحذيرات.',
+      'تفعيل الكادر الكامل:</strong> يسمح بترشيح جميع المعلمات المستثنيات وفق النصاب الأقل ثم غير المكلفات ثم الغائبات هذا الأسبوع. وتدخل المرشدات ومحضرة المختبر في آخر الأولويات. تظل قيود التفرغ وساعة الرضاعة والتعارض إلزامية. دون التفعيل يُستبعد النصاب ٢٠ فأكثر والأسماء المحددة مهما زاد عدد الحصص.','شرح الكادر الكامل');
+  region('function reserveUnlockAssigneeSelector(','function reserveSavedManualAssignmentsHTML(',unlock,'منع الالتفاف على الضوابط عبر التعديل');
+  one('const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,\n    manualOverride:changed',
+      'const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,\n    ...(a.manual!==true?{fullCadreEnabled:state.autoAllNames===true}:{}),\n    manualOverride:changed', 'حفظ اختيار الكادر الكامل عند التعديل الفردي');
+  one('const changed=String(a.assignedTeacherId)!==String(t.id);\n  const warnings=manualConflictMessages',
+      'if(a.manual!==true&&!reserveAutoAllowed(a,t.id))throw new Error("المعلمة غير مؤهلة للإنشاء الآلي؛ اختاري الإنشاء اليدوي للتكليف الاستثنائي.");\n  const changed=String(a.assignedTeacherId)!==String(t.id);\n  const warnings=manualConflictMessages','التحقق قبل الحفظ الفردي');
+  one('if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId&&teacherOf(x.teacherId)))){',
+      'if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId&&teacherOf(x.teacherId)&&reserveAutoAllowed(a,x.teacherId)))){','التحقق قبل الاعتماد الجماعي');
+  one('manual:false,source:"auto",candidates:(a.candidates||[]).slice(0,1),',
+      'manual:false,source:"auto",fullCadreEnabled:state.autoAllNames===true,candidates:(a.candidates||[]).slice(0,1),','حفظ وضع الكادر الكامل عند الاعتماد');
+  one('msg.textContent="يجب اختيار معلمة لكل حصة من القوائم المنسدلة قبل الاعتماد.";return;',
+      'msg.textContent="يجب اختيار معلمة مؤهلة حسب قيود الأسبوع لكل حصة. لن يُعتمد التكليف المخالف.";return;','رسالة الاعتماد');
+  one('<th>احتياط الأسبوع</th><th>الأسبوع السابق</th><th>التراكمي</th><th>نقص غياب</th>',
+      '<th>احتياط الأسبوع</th><th>نقص غياب الأسبوع الحالي</th>', 'حذف تراكمي الأسابيع الماضية من بطاقة المفاضلة');
+  one('<td><strong>${r.week}</strong></td><td>${r.prevWeek}</td><td>${r.term}</td><td>${r.missed}</td>',
+      '<td><strong>${r.week}</strong></td><td>${r.missed}</td>', 'قصر جدول المفاضلة على الأسبوع الحالي');
+  one('    if(previousWeekReserveCount(t.id,date)>0)warnings.push(`${t.name}: لديها احتياط في الأسبوع السابق؛ يفضّل تدوير الإسناد عند توفر بديل.`);','', 'إزالة التحذيرات المنقولة من الأسبوع السابق');
+  one('a.effective-b.effective||a.week-b.week||a.prevWeek-b.prevWeek||a.dailyOriginal-b.dailyOriginal',
+      'a.workload-b.workload||a.week-b.week||a.dailyOriginal-b.dailyOriginal','إلغاء تأثير الأسبوع السابق على المفاضلة');
+  one('<label>حد تفعيل وضع الضرورة اليومي<input id="rwEmergency" type="number" min="1" value="${Number(state.settings?.emergencyDailyDemand||EMERGENCY_DAILY_DEMAND)}"></label>',
+      '<label>قواعد الترشيح الآلي<strong>ثابتة مهما زاد عدد الحصص، ولا تتغير بعد ١٢ حصة</strong><input id="rwEmergency" type="hidden" value="${Number(state.settings?.emergencyDailyDemand||EMERGENCY_DAILY_DEMAND)}"></label>','تعطيل وضع الضرورة المخالف');
+  if(changes.length!==20||!s.includes('reserveAutoAllowed(a,x.teacherId)')||!s.includes('autoAllNames:true,autoAbsentIds:')||!s.includes('fullCadreEnabled:state.autoAllNames===true'))throw Error('فشل التحقق من سلامة التحديث.');
+  return {source:s,changes};
+}
+function patchV30Loader(source){
+ const re=/daily-reserve\.js\?v=[0-9][a-zA-Z0-9._-]*/g;
+ const hits=source.match(re)||[];
+ if(hits.length!==1)throw Error('لم أجد استدعاء daily-reserve.js مرة واحدة في home-v3.js.');
+ return source.replace(re,'daily-reserve.js?v=30.0-full-cadre-support');
+}
+function patchV30Index(source){
+ const re=/home-v3\.js\?v=[0-9][a-zA-Z0-9._-]*/g;
+ const hits=source.match(re)||[];
+ if(hits.length!==1)throw Error('لم يُعثر على استدعاء home-v3.js مرة واحدة في index.html.');
+ return source.replace(re,'home-v3.js?v=30.0-full-cadre-support');
+}
+
+function rep(text,from,to,label){
+  const n=text.split(from).length-1;
+  if(n!==1)throw Error('تعذر تركيب التعديل: '+label+' (تطابق '+n+'). لم تُعدل أي ملفات.');
+  return text.replace(from,to);
+}
+function repAll(text,from,to,label,min=1){
+  const n=text.split(from).length-1;
+  if(n<min)throw Error('تعذر تركيب التعديل: '+label);
+  return text.split(from).join(to);
+}
+function patchDuty(s){
+  // Guaranteed success message after confirmed RPC + published-table refresh.
+  s=rep(s,'function workspace(){',`
+let mjDutyFieldSyncTimer=null;
+async function mjDutyVerifiedSave(rows){
+  const selectedDate=date,wasPublished=published;
+  const result=await rpc('mj_duty_save',{p_date:selectedDate,p_assignments:rows},true);
+  if(result?.saved!==true||Number(result.assignments)!==rows.length)
+    throw Error('لم تؤكد قاعدة البيانات حفظ جميع التكليفات.');
+  if(wasPublished){
+    await rpc('mj_duty_publish',{p_date:selectedDate},true);
+  }
+  await refresh();
+  if(wasPublished&&!published)throw Error('تم الحفظ لكن جدول النشر لم يُحدَّث؛ تحققي من حالة النشر.');
+  log('تم الحفظ'+(wasPublished?' — تم تحديث جدول النشر':'')+'.');
+}
+function mjDutyQueueFieldSave(){
+  clearTimeout(mjDutyFieldSyncTimer);
+  mjDutyFieldSyncTimer=setTimeout(()=>{
+    const selects=[...document.querySelectorAll('#dutyWorkspaceContent select[data-slot]')];
+    if(!selects.length||busy)return;
+    const rows=collect();
+    const complete=SLOTS.every(slot=>rows.some(row=>row.slot===slot[0]));
+    const distinct=new Set(rows.map(x=>x.person_id)).size===rows.length;
+    const status=document.getElementById('dutyInlineActionStatus');
+    if(!complete||!distinct){if(status)status.textContent='تعديل غير محفوظ: يلزم وجود منفذة بكل فترة وعدم تكرار الاسم.';return}
+    if(!session()){if(status)status.textContent='يلزم الدخول الإداري قبل المزامنة.';return}
+    void doAction(()=>mjDutyVerifiedSave(rows),{status,pending:'جارٍ الحفظ ومزامنة جدول النشر...',success:'تم الحفظ'});
+  },650);
+}
+function workspace(){`, 'Duty helper before workspace');
+  s=rep(s, `if(!confirm('حفظ الجدول سيوقف النشر السابق حتى تعيدي نشره. هل تستمرين؟'))return;
+ const result=await rpc('mj_duty_save',{p_date:selectedDate,p_assignments:rows},true);
+ if(result?.saved!==true||Number(result.assignments)!==rows.length)throw Error('لم تؤكد قاعدة البيانات حفظ جميع التكليفات.');
+ await refresh();log('تم حفظ '+rows.length+' تكليفًا بتاريخ '+dateLong(selectedDate)+'. يمكن النشر بعد المراجعة.');`,
+`if(!confirm('هل تريدين حفظ جدول المناوبة وتحديث جدول النشر إذا كان منشورًا؟'))return;
+ await mjDutyVerifiedSave(rows);`, 'Duty save RPC');
+  s=rep(s,`const r=await rpc('mj_duty_generate',{p_date:date},true);await refresh();log('تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.')`,
+`const generatedDate=date,wasPublished=published;
+ const r=await rpc('mj_duty_generate',{p_date:generatedDate},true);
+ if(wasPublished)await rpc('mj_duty_publish',{p_date:generatedDate},true);
+ await refresh();log('تم الحفظ — تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.'+(wasPublished?' وتم تحديث جدول النشر.':''))`, 'Duty auto-generation feedback');
+  s=rep(s, `await rpc('mj_duty_delete_day',{p_date:date},true);await refresh();log('تم حذف تكليفات اليوم فقط.')`,
+`await rpc('mj_duty_delete_day',{p_date:date},true);await refresh();
+ if(assignments.length)throw Error('لم تؤكد قاعدة البيانات حذف جميع تكليفات المناوبة.');
+ log('تم الحذف — تم تحديث جدول النشر.')`, 'Duty delete feedback');
+  s=rep(s,`if(feedback?.isConnected)feedback.textContent='اكتملت العملية.';return true`,
+`if(feedback?.isConnected)feedback.textContent=options.success||'تم الحفظ';return true`, 'Duty confirmed feedback');
+  s=rep(s,`section.querySelector('#dutySave').onclick=`,
+`section.addEventListener('change',event=>{if(event.target.matches('select[data-slot]'))mjDutyQueueFieldSave()});
+ section.querySelector('#dutySave').onclick=`, 'Duty field auto-save binding');
+  s=rep(s,`if(Date.now()-dutyLastPublicPoll<8000)return;`,
+`if(Date.now()-dutyLastPublicPoll<3000)return;`, 'Duty refresh throttle');
+  s=rep(s,`setInterval(dutyAutoUpdateAcknowledgements,30000);`,
+`setInterval(dutyAutoUpdateAcknowledgements,5000);`, 'Duty near real-time refresh');
+  return s;
+}
+function patchReserve(s){
+  s=rep(s,`function refreshReserveStatisticsViews(){`,
+`function mjReserveNotice(message,type='success'){
+ let el=document.getElementById('mjReserveSyncNotice');
+ if(!el){el=document.createElement('div');el.id='mjReserveSyncNotice';el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.style.cssText='position:fixed;bottom:64px;left:12px;z-index:100000;background:#fff;color:#154438;border:1px solid #c5d5d1;box-shadow:0 5px 22px #0002;border-radius:10px;padding:10px 18px;font:700 14px Tahoma,Arial;direction:rtl;max-width:300px';document.body.appendChild(el)}
+ el.textContent=message;el.style.display='block';el.style.color=type==='error'?'#a12222':'#154438';
+ clearTimeout(el._hideTimer);el._hideTimer=setTimeout(()=>el.style.display='none',4400);
+}
+function refreshReserveStatisticsViews(){`,'Reserve toast helper');
+  s=rep(s,`if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel();
+  if(date===state.currentDate&&byId("reservePublishOverlay"))openReservePublication(date);`,
+`if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel();
+  if(date===state.currentDate&&byId("reservePublishOverlay")){
+    const preview=byId("reservePublishOverlay").querySelector('.reserve-publish-preview-scroll');
+    if(preview)preview.innerHTML=publicationHTML(date);
+  }`, 'Reserve sync publication without closing dialog');
+  s=rep(s,`async function refreshAndRenderPublic(){
+  await loadAll();
+  refreshReserveStatisticsViews();
+}`,`async function refreshAndRenderPublic(){
+  await loadAll();
+  await reserveSyncAdminMutation(state.currentDate);
+}`, 'Reserve public update');
+  s=rep(s,`if(done)done.textContent="تم الحفظ";
+    showReserveWorkspaceWarnings("reserveManualWarnings",warnings);`,
+`if(done)done.textContent="تم الحفظ";
+    mjReserveNotice('تم الحفظ');
+    showReserveWorkspaceWarnings("reserveManualWarnings",warnings);`, 'Reserve manual saved notice');
+  s=rep(s,`if(next)next.textContent="تم الحذف";
+    }catch(err){console.error(err);const next=byId("reserveManualMsg")`,
+`if(next)next.textContent="تم الحذف";
+      mjReserveNotice('تم الحذف');
+    }catch(err){console.error(err);const next=byId("reserveManualMsg")`, 'Reserve manual deleted notice');
+  s=rep(s,`const done=byId("reserveDayMsg");if(done)done.textContent="تم الحفظ";
+      try{await reserveSyncAdminMutation(result.date);}`, 
+`const done=byId("reserveDayMsg");if(done)done.textContent="تم الحفظ";
+      mjReserveNotice('تم الحفظ');
+      try{await reserveSyncAdminMutation(result.date);}`, 'Reserve auto single saved notice');
+  s=rep(s,`if(next)next.textContent="تم الحذف";
+    }catch(err){console.error(err);const next=byId("reserveDayMsg")`,
+`if(next)next.textContent="تم الحذف";
+      mjReserveNotice('تم الحذف');
+    }catch(err){console.error(err);const next=byId("reserveDayMsg")`, 'Reserve auto deleted notice');
+  s=rep(s,`byId("reserveDayMsg").textContent="تم الحفظ";
+      showReserveWorkspaceWarnings("reserveAutoWarnings",allWarnings);`,
+`byId("reserveDayMsg").textContent="تم الحفظ";
+      mjReserveNotice('تم الحفظ');
+      showReserveWorkspaceWarnings("reserveAutoWarnings",allWarnings);`, 'Reserve auto approve notice');
+  s=rep(s,`const status=byId("reserveManualMsg");if(status)status.textContent="تم الحفظ";`,
+`const status=byId("reserveManualMsg");if(status)status.textContent="تم الحفظ";
+      mjReserveNotice('تم الحفظ');`, 'Reserve manual reassignment notice');
+  // Auto save manual complete rows only, leaving incomplete editable drafts intact.
+  s=rep(s,`function bindManualAdmin(){`,
+`let mjReserveManualFieldTimer=null;
+function bindManualAdmin(){`, 'Reserve manual timer');
+  s=rep(s,`await reserveTeacherCloudAction(assignment.ackToken,"title",title);
+      await refreshAndRenderPublic();`,
+`await reserveTeacherCloudAction(assignment.ackToken,"title",title);
+      await refreshAndRenderPublic();mjReserveNotice('تم الحفظ');`, 'Reserve topic saved notice');
+  s=rep(s,`byId("reserveManualRows")?.addEventListener("click",event=>{`,
+`byId("reserveManualRows")?.addEventListener("change",event=>{
+    if(!event.target.matches('select.reserve-manual-assignee'))return;
+    clearTimeout(mjReserveManualFieldTimer);
+    const controls=[...document.querySelectorAll('#reserveManualRows .reserve-manual-assignee')];
+    const msg=byId('reserveManualMsg');
+    if(!controls.length||controls.some(x=>!x.value)){
+      if(msg)msg.textContent='اختيار غير مكتمل؛ احفظي بعد إسناد جميع الحصص.';
+      return;
+    }
+    mjReserveManualFieldTimer=setTimeout(()=>void saveManualAssignments(),750);
+  });
+  byId("reserveManualRows")?.addEventListener("click",event=>{`, 'Reserve manual field auto-save');
+  // Live saving on automatic roster selection; no need to click Update and Save.
+  s=rep(s,`byId("reserveAssignmentsAdmin")?.addEventListener("click",event=>{`,
+`byId("reserveAssignmentsAdmin")?.addEventListener("change",async event=>{
+    const select=event.target.closest('select.reserve-assignee');if(!select||!select.value)return;
+    const row=select.closest('[data-assignment]'),id=row?.dataset.assignment;
+    const prev=state.assignments.find(x=>String(x.id)===String(id));
+    if(!prev||String(prev.assignedTeacherId)===select.value)return;
+    select.disabled=true;
+    const msg=byId('reserveDayMsg');if(msg)msg.textContent='جارٍ الحفظ ومزامنة جدول النشر...';
+    try{
+      const res=await reserveCommitFlexibleAssignee(id,select.value);
+      renderWorkspaceCard('auto');
+      const status=byId('reserveDayMsg');if(status)status.textContent='تم الحفظ';
+      mjReserveNotice('تم الحفظ');
+      await reserveSyncAdminMutation(res.date);
+    }catch(e){console.error(e);if(msg?.isConnected)msg.textContent='تعذر الحفظ: '+(e.message||e);mjReserveNotice('تعذر الحفظ','error');select.disabled=false}
+  });
+  byId("reserveAssignmentsAdmin")?.addEventListener("click",event=>{`, 'Reserve auto field auto-save');
+  s=rep(s,`await deleteKind(K.absence,b.dataset.id,token());await loadAll();renderWorkspaceCard("auto");
+    await reserveSyncAdminMutation(state.currentDate);`,
+`try{
+      const deletedId=String(b.dataset.id);
+      await deleteKind(K.absence,deletedId,token());await loadAll();
+      if(absencesOn(state.currentDate).some(x=>String(x.id)===deletedId))throw Error('لم يتأكد الحذف من القاعدة');
+      renderWorkspaceCard("auto");await reserveSyncAdminMutation(state.currentDate);
+      const msg=byId('reserveDayMsg');if(msg)msg.textContent='تم الحذف';mjReserveNotice('تم الحذف');
+    }catch(e){console.error(e);const msg=byId('reserveDayMsg');if(msg)msg.textContent='تعذر الحذف: '+(e.message||e)}`, 'Reserve absence delete result');
+  s=rep(s,`await deleteKind(K.assignment,tr.dataset.assignment,token()); await loadAll();
+    renderWorkspaceCard("auto");
+    await reserveSyncAdminMutation(state.currentDate);`,
+`const deletedId=String(tr.dataset.assignment);
+    try{
+      await deleteKind(K.assignment,deletedId,token()); await loadAll();
+      if(assignmentsOn(state.currentDate).some(x=>String(x.id)===deletedId))throw Error('لم يتأكد الحذف من القاعدة');
+      renderWorkspaceCard("auto");await reserveSyncAdminMutation(state.currentDate);
+      const msg=byId('reserveDayMsg');if(msg)msg.textContent='تم الحذف';mjReserveNotice('تم الحذف');
+    }catch(e){console.error(e);const msg=byId('reserveDayMsg');if(msg)msg.textContent='تعذر الحذف: '+(e.message||e)}`, 'Reserve auto row delete result');
+  // Public topic field commits itself at change when valid; existing action verifies server response.
+  s=rep(s,`document.querySelectorAll(".reserve-row-topic-save").forEach(btn=>btn.addEventListener("click",async()=>{`,
+`document.querySelectorAll('.reserve-row-topic-input').forEach(input=>input.addEventListener('change',()=>{
+    const btn=input.closest('.reserve-row-topic-editor')?.querySelector('.reserve-row-topic-save');
+    if(input.value.trim().length>=3&&input.value.trim().length<=160)btn?.click();
+  }));
+  document.querySelectorAll(".reserve-row-topic-save").forEach(btn=>btn.addEventListener("click",async()=>{`, 'Reserve topic field auto-save');
+  // Synchronize other devices without resetting the actively edited administrative fields.
+  s=rep(s,`addEventListener("hashchange",()=>setTimeout(renderPage,0));`,
+`let mjReserveLiveBusy=false;
+async function mjReserveSyncLive(){
+  if(!isRoute()||renderBusy||mjReserveLiveBusy||document.visibilityState==='hidden'||reserveDateSyncBusy)return;
+  const admin=byId('reserveAdminMount'),focus=document.activeElement;
+  if(admin?.contains(focus)&&focus?.matches?.('input,select,textarea'))return;
+  mjReserveLiveBusy=true;
+  const refDate=state.currentDate;
+  const signature=()=>JSON.stringify({
+    assignments:state.assignments.filter(x=>x.date<=refDate&&x.date>=weekRange(refDate).start)
+      .map(x=>[x.id,x.date,x.published,x.assignedTeacherId,x.status,x.ackAt,x.activationTitle]),
+    absences:state.absences.filter(x=>x.date===refDate).map(x=>[x.id,x.teacherId,x.periods]),
+    adjustments:state.adjustments.filter(x=>x.date<=refDate&&x.date>=weekRange(refDate).start)
+      .map(x=>[x.id,x.teacherId,x.delta]),
+    teachers:state.teachers.map(x=>[x.id,x.name,x.workload,x.active,x.excluded]),
+    schedules:state.schedules.map(x=>[x.id,x.updatedAt]),
+    settings:state.settings?.updatedAt||''
+  });
+  const old=signature();
+  try{
+    await loadAll();
+    if(refDate!==state.currentDate||!isRoute())return;
+    if(old===signature())return;
+    refreshReserveStatisticsViews();
+    const overlay=byId('reservePublishOverlay'),preview=overlay?.querySelector('.reserve-publish-preview-scroll');
+    if(preview)preview.innerHTML=publicationHTML(refDate);
+    if(state.admin&&admin&&!admin.contains(document.activeElement))renderWorkspaceCard(state.workspaceCard);
+  }catch(e){console.warn('تعذر التحديث اللحظي للاحتياط',e)}
+  finally{mjReserveLiveBusy=false}
+}
+setInterval(()=>void mjReserveSyncLive(),5000);
+window.addEventListener('focus',()=>void mjReserveSyncLive());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void mjReserveSyncLive()});
+addEventListener("hashchange",()=>setTimeout(renderPage,0));`, 'Reserve live refresh');
+  return s;
+}
+function patchHome(s){
+  const count=(s.match(/daily-reserve\.js\?v=[^"']+/g)||[]).length;
+  if(count!==1)throw Error('تعذر تحديد استدعاء محرك الاحتياط في home-v3.js');
+  return s.replace(/daily-reserve\.js\?v=[^"']+/, 'daily-reserve.js?v=31.0-confirm-sync');
+}
+function patchV31Index(s){
+ const a='manjaz-urgent18.js?v=';
+ const b='home-v3.js?v=';
+ const lines=s.split('\n');
+ const change=(k,version)=>{const i=lines.findIndex(l=>l.includes('<script src="'+k));if(i<0)throw Error('لم يوجد مسار '+k+' في index.html');
+ const before=lines[i];lines[i]=before.replace(/\?v=[^"']+/, '?v='+version);if(lines[i]===before)throw Error('فشل تغيير رقم الإصدار لـ'+k)};
+ change('manjaz-urgent18.js','31.0-confirm-sync');change('home-v3.js','31.0-confirm-sync');
+ return lines.join('\n');
+}
+
+function patchReserveV32(s){
+  // Preserve existing checked checkbox and bind it to broader candidate ranking.
+  s=rep(s,`if(clean(t.name)!=="ريم الحربي")return false;`,
+      `if(!["ريم الحربي","نورة الهودان"].includes(clean(t.name)))return false;`, 'رضاعة المعلمتين');
+  // A generated empty draft remains editable but must never be published without a suitable candidate.
+  s=rep(s,`let generated=0,unfilled=0;`,
+      `let generated=0,unfilled=0,failed=0,errors=[];`, 'عداد فشل التوليد');
+  s=rep(s,`const record=await insertKind(K.assignment,{`,
+      `try{const record=await insertKind(K.assignment,{`, 'توليد كل حصة مستقلة');
+  s=rep(s,`state.assignments.push(record);
+          known.add(key);generated++;`,
+      `state.assignments.push(record);
+          known.add(key);generated++;
+          }catch(error){failed++;errors.push('ح'+period.period+' '+period.className+': '+(error?.message||error));console.error('تعذر حفظ حصة آلية',error)}`, 'توثيق أخطاء الحصص دون إخفائها');
+  s=rep(s,`?\`تم توليد \${generated} تكليفًا بمرشحة واحدة لكل حصة.\${unfilled?\` توجد \${unfilled} حصص تحتاج اختيار معلمة من القائمة.\`:""} اختاري التعديل عند الحاجة، ثم «حفظ واعتماد».\``,
+      `?\`تم توليد \${generated} تكليفًا.\${unfilled?\` بقيت \${unfilled} حصة دون إسناد.\`:""}\${failed?\` تعذر إنشاء \${failed} حصة: \${errors.slice(0,4).join(' | ')}؛ أعيدي التوليد للحصص الناقصة بعد المعالجة.\`:""} اختاري التعديل ثم «حفظ واعتماد».\``, 'إظهار نتائج توليد جزئي صريح');
+  // Single candidate can be support staff only with explicit admin confirmation.
+  s=rep(s,`:"لا توجد حصص جديدة للتوليد؛ التكليفات السابقة محفوظة ويمكن تعديلها واعتمادها من الجدول أدناه.";`,
+      `:(failed?\`تعذر توليد ${'${failed}'} حصة: ${'${errors.slice(0,4).join(' | ')}'}. لم تُحذف الحصص المحفوظة؛ عالجي الخطأ وأعيدي المحاولة.\`:"لا توجد حصص جديدة للتوليد؛ التكليفات السابقة محفوظة ويمكن تعديلها واعتمادها من الجدول أدناه.");`, 'تقرير فشل كامل للتوليد');
+  s=rep(s,`if(a.manual!==true&&!reserveAutoAllowed(a,t.id))throw new Error("المعلمة غير مؤهلة للإنشاء الآلي؛ اختاري الإنشاء اليدوي للتكليف الاستثنائي.");`,
+      `if(a.manual!==true&&!reserveAutoAllowed(a,t.id))throw new Error("المعلمة غير مؤهلة للإنشاء الآلي؛ اختاري الإنشاء اليدوي للتكليف الاستثنائي.");
+  if(a.manual!==true&&t.supportStaff&&!confirm('هل تحققتِ من تفرغ '+t.name+' من المناوبة والمهام الأصلية خلال هذه الحصة؟'))throw new Error('لم يؤكد تفرغ الكادر المساند');`, 'تأكيد تفرغ المساندات');
+  s=rep(s,`button.disabled=true;msg.textContent="جارٍ حفظ التوزيع واعتماد الجدول الآلي...";`,
+      `const chosenSupport=items.map(a=>teacherOf(entries.find(x=>x.id===String(a.id))?.teacherId)).filter(t=>t?.supportStaff);
+    if(chosenSupport.length&&!confirm('يشمل الجدول مرشدات أو محضرة المختبر. هل تم التحقق من تفرغهن وعدم تعارض مهامهن قبل الاعتماد؟')){msg.textContent='لم يُعتمد الجدول؛ يلزم التحقق من تفرغ الكادر المساند.';return}
+    button.disabled=true;msg.textContent="جارٍ حفظ التوزيع واعتماد الجدول الآلي...";`, 'تأكيد المساندات في الاعتماد');
+  // On recomputation, preserve confirmed mode even when the checkbox has been changed in the editor.
+  // No automatic emergency conditions are permitted anywhere in the replacement ranking.
+  if(s.includes('const emergency=dailyDemand(date)>Number(state.settings?.emergencyDailyDemand'))throw Error('محرك الطوارئ ما زال يترشح!');
+  return s;
+}
+function patchDutyV32(s){
+  // Error feedback replaces generic success and deletion confirms only after verification.
+  // The v31 scheduler performs a post-save refresh and republishes only if already published.
+  return s;
+}
+
+const v32Transform={
+ 'daily-reserve.js':code=>patchReserveV32(patchReserve(patchSource(code,V32_ENGINE,V32_OPTIONS,V32_UNLOCK).source)),
+ 'manjaz-urgent18.js':code=>patchDutyV32(patchDuty(code)),
+ 'home-v3.js':code=>patchHome(patchV30Loader(code)).replace('daily-reserve.js?v=31.0-confirm-sync','daily-reserve.js?v=32.0-complete'),
+ 'index.html':code=>patchV31Index(patchV30Index(code)).replace('home-v3.js?v=31.0-confirm-sync','home-v3.js?v=32.0-complete').replace('manjaz-urgent18.js?v=31.0-confirm-sync','manjaz-urgent18.js?v=32.0-complete')
+};
+function validateAll(result){
+ const d=result['daily-reserve.js'],home=result['home-v3.js'],index=result['index.html'],duty=result['manjaz-urgent18.js'];
+ if(!d.includes('AUTO_OFF_EXCLUSIONS')||!d.includes('fullCadreEnabled:state.autoAllNames===true')||!d.includes('mjReserveSyncLive')||!d.includes('mjReserveNotice'))throw Error('فشل اختبار الترشيح والمزامنة');
+ if(d.includes('const emergency=dailyDemand(date)>Number(state.settings?.emergencyDailyDemand'))throw Error('بقاء محرك الطوارئ القديم');
+ if(!home.includes('daily-reserve.js?v=32.0-complete'))throw Error('نسخة الاحتياط لا تُحمّل');
+ if(!index.includes('home-v3.js?v=32.0-complete')||!index.includes('manjaz-urgent18.js?v=32.0-complete'))throw Error('فشل تحديث نسخ التشغيل');
+ if(!duty.includes('mjDutyVerifiedSave')||!duty.includes('setInterval(dutyAutoUpdateAcknowledgements,5000)'))throw Error('فشل مزامنة المناوبة');
+ if(!index.includes('tahsili-file.js'))throw Error('حُذفت إضافة ملف التحصيلي');
+ return true;
+}
+function crc32(bytes){let crc=0xffffffff;for(const b of bytes){crc^=b;for(let k=0;k<8;k++)crc=(crc>>>1)^((crc&1)?0xedb88320:0)}return(crc^0xffffffff)>>>0}
+function zipStore(files){
+ const enc=new TextEncoder(),pieces=[],central=[];let offset=0;
+ function write16(buf,n){buf.push(n&255,n>>>8&255)}
+ function write32(buf,n){buf.push(n&255,n>>>8&255,n>>>16&255,n>>>24&255)}
+ for(const [name,content] of Object.entries(files)){
+   const fn=enc.encode(name),data=enc.encode(content),crc=crc32(data),local=[];
+   write32(local,0x04034b50);write16(local,20);write16(local,0);write16(local,0);write16(local,0);write16(local,0);
+   write32(local,crc);write32(local,data.length);write32(local,data.length);write16(local,fn.length);write16(local,0);
+   const section=new Uint8Array([...local,...fn,...data]);pieces.push(section);
+   const h=[];write32(h,0x02014b50);write16(h,20);write16(h,20);write16(h,0);write16(h,0);write16(h,0);write16(h,0);
+   write32(h,crc);write32(h,data.length);write32(h,data.length);write16(h,fn.length);write16(h,0);write16(h,0);write16(h,0);write16(h,0);write32(h,0);write32(h,offset);
+   central.push(new Uint8Array([...h,...fn]));offset+=section.length;
+ }
+ const centralSize=central.reduce((sum,x)=>sum+x.length,0),end=[];
+ write32(end,0x06054b50);write16(end,0);write16(end,0);write16(end,central.length);write16(end,central.length);write32(end,centralSize);write32(end,offset);write16(end,0);
+ return new Blob([...pieces,...central,new Uint8Array(end)],{type:'application/zip'});
+}
+async function readSource(name){
+ const chosen=document.getElementById('file-'+name);
+ if(chosen?.files?.length)return chosen.files[0].text();
+ let error;
+ for(const origin of [REPO,PAGES]){try{
+   const r=await fetch(origin+name+'?v='+Date.now(),{cache:'no-store'});
+   if(!r.ok)throw Error('HTTP '+r.status);
+   const text=await r.text();if(text.length<500)throw Error('الملف غير مكتمل');return text;
+ }catch(e){error=e}}
+ throw Error('تعذر جلب '+name+' من GitHub؛ اختاري الملف يدويًا. '+(error?.message||''));
+}
+async function prepare(){
+ const button=document.getElementById('generate'),status=document.getElementById('status'),download=document.getElementById('download');
+ button.disabled=true;status.textContent='جارٍ قراءة ٤ ملفات من المستودع...';download.hidden=true;
+ try{
+   const original={};
+   for(const f of FILES)original[f]=await readSource(f);
+   const updated={};
+   for(const f of FILES){status.textContent='جارٍ إصلاح '+f+' والتحقق من سلامة التغييرات...';updated[f]=v32Transform[f](original[f])}
+   validateAll(updated);
+   updated['migration_v32.sql']=V32_SQL;
+   updated['README_AR.txt']='منجز — التحديث الشامل 32.0\nهذه الحزمة تحافظ على ملفات المستودع الحالية.\n1) احتفظي بنسخة احتياطية من الملفات الأربعة.\n2) حدّثي دالة الحماية في Supabase بالمرفق migration_v32.sql من SQL Editor قبل اختبار المرشدات مع الكادر الكامل.\n3) ارفعي ملفات JS الثلاثة و index.html إلى جذر مستودع GitHub مع استبدال الملفات القديمة.\n4) لا ترفعي أداة prepare_v32.html إلى المستودع.\n5) اختبري التوليد المقيد ثم الكادر الكامل ثم الحفظ والحذف والتزامن وجدول النشر.\n6) يحافظ التحديث على الإصدار الثالث والبيانات المنشورة وقسم الموهبة والتحصيلي.\n7) حد الاحتياط الأسبوعي للمعلمة الواحدة 20 كما كان؛ لا حد إجمالي لعدد الحصص المطلوبة.\n';
+   const blob=zipStore(updated);
+   if(download.href.startsWith('blob:'))URL.revokeObjectURL(download.href);
+   download.href=URL.createObjectURL(blob);download.download='Manjaz_Complete_Update_v32_Ready_to_Upload.zip';download.hidden=false;
+   status.textContent='اكتمل تجهيز الملفات واختبارات السلامة — '+Math.round(blob.size/1024)+' كيلوبايت. اضغطي تحميل الملفات النهائية.';
+ }catch(err){console.error(err);status.textContent='توقف دون إنشاء حزمة غير آمنة: '+(err?.message||err)}
+ finally{button.disabled=false}
+}
+if(typeof module!=='undefined'&&module.exports) module.exports={v32Transform,validateAll,patchSource,patchReserve,patchReserveV32,patchDuty};
+</script></body></html>

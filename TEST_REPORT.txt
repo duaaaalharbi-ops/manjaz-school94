@@ -1,10 +1,15 @@
-Manjaz Reserve Policy Update 28.0 — Test report
-Tested: 2026-10-18
-1) Node patcher applied 16 exact-match transformations to a controlled source fixture; mismatch fails closed: PASSED.
-2) Engine tests include workload>=20 exclusion, named exceptions, counsellors/lab, full-cadre inclusion, maternal period constraint, same-week draft load, 20 weekly reserve cap, repeat lowest workload, and per-row save eligibility: PASSED.
-3) Browser builder ZIP creation tested in JavaScript runtime with mocked GitHub responses: PASSED.
-4) Python zipfile verified CRC and four expected generated files: PASSED.
-5) JavaScript syntax checks for patcher, engine, options, unlock: PASSED.
-6) Direct GitHub update attempt: FAILED (403 Resource not accessible by integration).
-7) Live website/save-to-Supabase end-to-end: NOT TESTED.
-No live reserve records were changed.
+التحقق المحلي — تحديث منجز الشامل 32.0
+
+PASS: Node.js syntax check for installer_v32.js.
+PASS: تجهيز أداة HTML مستقلة سليمة دون حاجة إلى رفعها للمستودع.
+PASS: تعديل المناوبة على مصدر إصدار 27 محفوظ وتجميعه دون خطأ JavaScript.
+PASS: اجتياز 8 استبدالات مستهدفة إضافية لمحرك الاحتياط على مدخل اختبار مضبوط.
+PASS: ترقية مؤشر تحميل الاحتياط إلى 32.0.
+PASS: ترقية مؤشر تحميل المناوبة والصفحة الرئيسية إلى 32.0.
+PASS: قواعد منع الطوارئ ومرونة الكادر الكامل مضمنة في محرّك الاستبدال.
+PASS: قاعدة البيانات فعّلت دعم الكادر الكامل والكادر المساند وضابط رضاعة المعلمتين — تحققت من وجود الدالة.
+
+NOT YET VERIFIED: الملفات الناتجة من أداة المتصفح أمام ملفات GitHub الأربعة كاملة في جلسة محلية واحدة؛ الأداة نفسها تجري فحص المطابقة قبل التسليم.
+NOT DEPLOYED: لا توجد كتابة ناجحة إلى GitHub من هذا الاتصال.
+NOT CLAIMED: مزامنة حقيقية بالدفع من Supabase Realtime أو ضمان تحديث أقل من 5 ثوانٍ.
+DATA: لم نغيّر الجداول المنشورة أو سجلات الغياب والاحتياط.
