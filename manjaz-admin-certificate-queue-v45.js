@@ -19,6 +19,7 @@ function injectCSS(){
  #view.mj16-admin-only #mj15Requests #mj15ApprovalDetail{grid-column:1;min-width:0}
  #view.mj16-admin-only #mj15Requests #mj15ApprovalDetail{display:none}
  #view.mj16-admin-only #mj15Requests.mj45-detail-open #mj15ApprovalDetail{display:block}
+ #view.mj16-admin-only #mj15Requests.mj45-guest #mj15CertificatePowers{display:none!important}
  #view.mj16-admin-only #mj15Requests .mj36-request-group{margin:0}
  #view.mj16-admin-only #mj15Requests[data-mj45-group="pending"] .mj36-request-group:nth-of-type(2),
  #view.mj16-admin-only #mj15Requests[data-mj45-group="approved"] .mj36-request-group:nth-of-type(1){display:none!important}
@@ -96,6 +97,7 @@ function organize(){
    button.setAttribute("aria-pressed",String(button.dataset.mj45Tab===requests.dataset.mj45Group));
   const feedback=area.querySelector(".mj45-message");
   let token=null;try{token=JSON.parse(sessionStorage.getItem("manjaz_admin_auth_session_v1")||"null")}catch(_){}
+  requests.classList.toggle('mj45-guest',!token?.access_token);
   if(!token?.access_token){
    if(!feedback){
     const prompt=document.createElement("div");prompt.className="mj45-message";
