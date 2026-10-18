@@ -32,7 +32,7 @@ function addDays(v,n){
 }
 function weekRange(v){
  const d=new Date(v+"T12:00:00Z");const start=addDays(v,-d.getUTCDay());
- return [start,addDays(start,6)];
+ return [start,addDays(start,4)]; // الأسبوع الدراسي: الأحد إلى الخميس
 }
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const types={reserve:"الاحتياط",duty:"المناوبة"};
