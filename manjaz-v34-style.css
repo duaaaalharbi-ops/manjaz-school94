@@ -34,3 +34,55 @@
 #view:has(#partnerList)>#partnerForm{display:none!important}
 #view.mj34-add-partner:has(#partnerList)>#partnerForm{display:block!important}
 #view:has(#partnerList)>#partnerList{margin-top:0}
+
+/* v36: certificate request review — new / approved groups */
+#mj15CertificatePowers .mj36-list-summary,
+#mj15Issuance .mj36-list-summary{
+ padding:11px 13px;background:#eff7f7;border:1px solid #cfe4e2;border-radius:10px;
+ color:#174956;font-size:13px;font-weight:700;margin-bottom:12px
+}
+#mj15CertificatePowers .mj36-request-group,
+#mj15Issuance .mj36-request-group{
+ margin:12px 0 16px;padding:10px;background:#fff;border:1px solid #dce9e8;border-radius:12px
+}
+#mj15CertificatePowers .mj36-request-group>h4,
+#mj15Issuance .mj36-request-group>h4{
+ font-size:15px;font-weight:800;color:#174953;margin:4px 0 12px;padding-bottom:10px;
+ border-bottom:1px solid #e2eceb;display:flex;justify-content:space-between;gap:8px
+}
+#mj15CertificatePowers .mj36-request-row,
+#mj15Issuance .mj36-request-row{
+ display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+ gap:10px;padding:12px;border:1px solid #e4ecec;border-radius:10px;margin:8px 0;background:#fff
+}
+.mj36-request-info{display:grid;gap:5px;flex:1 1 175px;min-width:0;overflow-wrap:anywhere}
+.mj36-request-info>strong{font-weight:800;color:#0e4650}
+.mj36-request-info>small{color:#617477;font-size:12px}
+.mj36-request-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+#mj15Dashboard .mj36-request-actions>button{
+ padding:8px 11px;border:1px solid #bedad7;background:#f5faf9;border-radius:9px;
+ color:#105360;font:700 12px/1.4 inherit;cursor:pointer;min-height:36px;
+ display:inline-flex;align-items:center;gap:5px
+}
+#mj15Dashboard .mj36-request-actions>button:hover{border-color:#438e8c;background:#e7f2f0}
+#mj15Dashboard .mj36-request-actions>button.mj36-approve{background:#0e625f;color:#fff}
+#mj15Dashboard .mj36-request-actions>button.mj36-delete{color:#a13430;background:#fff7f5;border-color:#e8c6c0}
+#mj15Dashboard .mj36-request-actions>button:disabled{opacity:.6;cursor:wait}
+dialog.mj36-preview-dialog{
+ border:1px solid #c5dcda;border-radius:16px;background:#fff;color:#173f47;
+ width:min(96vw,1230px);max-width:1230px;max-height:94vh;overflow:auto;
+ padding:14px;box-shadow:0 16px 56px rgba(3,35,40,.25);direction:rtl
+}
+dialog.mj36-preview-dialog::backdrop{background:rgba(3,35,40,.67)}
+.mj36-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.mj36-dialog-head strong{font-size:15px;color:#154a53}
+.mj36-dialog-head button{border:1px solid #c4dad8;border-radius:9px;background:#f4f9f8;
+ padding:9px 13px;color:#174d56;cursor:pointer}
+dialog.mj36-preview-dialog .mj36-admin-preview{max-width:1123px;margin:0 auto;min-width:0;overflow:hidden}
+dialog.mj36-preview-dialog .mj15-paper-frame{width:100%;max-width:1123px}
+dialog.mj36-preview-dialog .mj15-note{margin:10px 0 0;color:#596f73;font-size:12px}
+@media(max-width:730px){
+ #mj15CertificatePowers .mj36-request-row,#mj15Issuance .mj36-request-row{display:grid}
+ .mj36-request-actions{width:100%}
+ dialog.mj36-preview-dialog{padding:10px;max-height:90vh}
+}
