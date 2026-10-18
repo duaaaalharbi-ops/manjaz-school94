@@ -1806,7 +1806,10 @@ async function saveManualAssignments(){
   const warnings=manualConflictMessages(date,selections,absentIds);
   // Administration explicitly allows all rule warnings to be overridden.
   // Never block saving completed substitutions; keep an audit trail.
-  msg.textContent="جارٍ حفظ واعتماد الجدول اليدوي...";
+  const saveButton=byId("reserveManualSave");
+  if(saveButton?.disabled)return;
+  if(saveButton){saveButton.disabled=true;saveButton.textContent="جارٍ الحفظ...";}
+  msg.textContent="جارٍ الحفظ... يتم حفظ واعتماد الجدول اليدوي.";
   try{
     await ensureAdmin();
     for(const id of absentIds){
@@ -1857,6 +1860,7 @@ async function saveManualAssignments(){
       if(done)done.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات. أعيدي فتح القسم.";}
   }catch(err){console.error(err);const current=byId("reserveManualMsg")||msg;
     if(current)current.textContent=`تعذر إكمال الحفظ أو التحقق منه: ${err.message||"خطأ غير معروف"}. قد تكون بعض الحصص محفوظة.`;}
+  finally{if(saveButton?.isConnected){saveButton.disabled=false;saveButton.textContent="حفظ";}}
 }
 function bindManualAdmin(){
   bindHijriDateControl("reserveManualDate",next=>syncReserveSectionDate(next));
