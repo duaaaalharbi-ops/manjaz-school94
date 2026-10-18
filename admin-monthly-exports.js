@@ -375,7 +375,7 @@ function boot(){
   const view=document.getElementById("view");if(!view)return;
   let running=false;
   const obs=new MutationObserver(()=>{if(running)return;running=true;try{mount()}finally{running=false;}});
-  obs.observe(view,{childList:true,subtree:true});
+  obs.observe(view,{childList:true,subtree:false});
   mount();addEventListener("hashchange",()=>queueMicrotask(mount));
 }
 /* Shared, existing RTL Office Open XML Excel engine for weekly/monthly/cumulative exports. */
