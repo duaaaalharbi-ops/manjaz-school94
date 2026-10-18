@@ -1,0 +1,10 @@
+Manjaz Reserve Policy Update 28.0 — Test report
+Tested: 2026-10-18
+1) Node patcher applied 16 exact-match transformations to a controlled source fixture; mismatch fails closed: PASSED.
+2) Engine tests include workload>=20 exclusion, named exceptions, counsellors/lab, full-cadre inclusion, maternal period constraint, same-week draft load, 20 weekly reserve cap, repeat lowest workload, and per-row save eligibility: PASSED.
+3) Browser builder ZIP creation tested in JavaScript runtime with mocked GitHub responses: PASSED.
+4) Python zipfile verified CRC and four expected generated files: PASSED.
+5) JavaScript syntax checks for patcher, engine, options, unlock: PASSED.
+6) Direct GitHub update attempt: FAILED (403 Resource not accessible by integration).
+7) Live website/save-to-Supabase end-to-end: NOT TESTED.
+No live reserve records were changed.
