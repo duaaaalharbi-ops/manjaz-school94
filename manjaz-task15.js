@@ -25,6 +25,8 @@ let state={category:TYPES[0][0],requestId:'',adminList:[],selected:'',loading:fa
 function CSS(){if(document.getElementById('mj15Css'))return;const el=document.createElement('style');el.id='mj15Css';el.textContent=`
  #view.mj16-admin-only #mj15Dashboard .mj34-review-layout{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1fr);gap:16px;align-items:start}
  #view.mj16-admin-only #mj15Dashboard .mj34-review-layout>.mj15-preview{width:100%;margin:0;min-width:0}
+ #view.mj16-admin-only #mj15Dashboard .mj34-review-fields .mj15-preview,
+ #view.mj16-admin-only #mj15Dashboard .mj34-review-fields .mj16-preview-control{display:none!important}
  #view.mj16-admin-only #mj15Dashboard .mj15-panel{background:#fff;border:1px solid #cbdcdd;border-radius:14px;overflow:hidden;box-shadow:0 3px 14px rgba(7,58,68,.06)}
  #view.mj16-admin-only #mj15Dashboard .mj15-panel>summary{background:#f4f8f8;color:#123e48;border-bottom:1px solid #e0e9e9;font:700 15px/1.6 Tahoma,Arial,sans-serif;padding:15px 18px}
  #view.mj16-admin-only #mj15Dashboard .mj15-panel>.mj15-body{background:#fff;color:#20434a;padding:16px}
