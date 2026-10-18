@@ -24,14 +24,40 @@ async function getApproved(){
  const data=await response.json();if(!Array.isArray(data))throw Error("استجابة غير صحيحة");
  return data.filter(r=>r&&["معتمد","تم الإصدار","تم الإرسال"].includes(r.status)&&r.approved_at);
 }
+function approvalDate(value){
+ if(!value)return "—";
+ const date=new Date(value);
+ if(Number.isNaN(date.getTime()))return "—";
+ return new Intl.DateTimeFormat("ar-SA-u-ca-gregory",{
+   day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Asia/Riyadh"
+ }).format(date);
+}
+function actionIcon(kind){
+ return kind==="preview"?
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>':
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v3h16v-3"/></svg>';
+}
 function renderRows(){
  const box=document.getElementById("mj37CertificateList");if(!box)return;
- box.innerHTML=items.length?items.map(r=>
-  '<article class="mj37-card"><div class="mj37-label">'+esc(CATEGORIES[r.category]||"شهادة معتمدة")+'</div>'+
-  '<h3>'+esc(r.name)+'</h3><p>'+esc(r.title)+'</p><small>تاريخ الشهادة: '+esc(r.display_date||r.date_iso||"")+'</small>'+
-  '<div class="mj37-actions"><button type="button" data-mj37-preview="'+esc(r.id)+'">معاينة كاملة</button>'+
-  '<button type="button" class="primary" data-mj37-download="'+esc(r.id)+'">إصدار وتحميل PDF</button></div></article>'
- ).join(""):'<div class="mj37-empty">لا توجد شهادات معتمدة متاحة للإصدار حاليًا.</div>';
+ if(!items.length){
+  box.innerHTML='<div class="mj37-empty">لا توجد شهادات معتمدة حاليًا.</div>';
+  return;
+ }
+ const sorted=[...items].sort((a,b)=>
+  new Date(b.approved_at||0).getTime()-new Date(a.approved_at||0).getTime());
+ box.innerHTML='<div class="mj41-table-scroll"><table class="mj41-cert-table">'+
+   '<thead><tr><th scope="col">الاسم</th><th scope="col">نوع الشهادة</th>'+
+   '<th scope="col">تاريخ الاعتماد</th><th scope="col">مشاهدة</th>'+
+   '<th scope="col">تحميل</th></tr></thead><tbody>'+
+   sorted.map(r=>'<tr>'+
+    '<td data-label="الاسم"><strong>'+esc(r.name)+'</strong></td>'+
+    '<td data-label="نوع الشهادة">'+esc(CATEGORIES[r.category]||"شهادة معتمدة")+'</td>'+
+    '<td data-label="تاريخ الاعتماد" class="mj41-date">'+esc(approvalDate(r.approved_at))+'</td>'+
+    '<td class="mj41-action-cell"><button type="button" class="mj41-icon-button" '+
+      'data-mj37-preview="'+esc(r.id)+'" aria-label="مشاهدة شهادة '+esc(r.name)+'" title="مشاهدة الشهادة">'+actionIcon("preview")+'</button></td>'+
+    '<td class="mj41-action-cell"><button type="button" class="mj41-icon-button" '+
+      'data-mj37-download="'+esc(r.id)+'" aria-label="تحميل شهادة '+esc(r.name)+'" title="تحميل PDF">'+actionIcon("download")+'</button></td>'+
+   '</tr>').join('')+'</tbody></table></div>';
 }
 function fitDialog(dialog){
  if(!dialog?.open)return;
@@ -111,10 +137,8 @@ async function mountInto(host){
  if(!host||!host.isConnected)return;
  const serial=++requestSerial;
  host.innerHTML='<section class="mj37-page mj37-embedded" dir="rtl">'+
-  '<div class="mj37-toolbar"><a href="#approved-certificates" class="mj37-public-link">فتح صفحة الشهادات للمستفيدات</a>'+
-  '<button type="button" data-mj37-refresh>تحديث الشهادات</button></div>'+
-  '<div id="mj37Status" role="status" aria-live="polite">جارٍ تحميل الشهادات المعتمدة دون تسجيل دخول...</div>'+
-  '<div id="mj37CertificateList" class="mj37-grid"></div></section>';
+  '<div id="mj37Status" role="status" aria-live="polite"></div>'+
+  '<div id="mj37CertificateList"></div></section>';
  try{
   const rows=await getApproved();
   if(!host.isConnected||serial!==requestSerial)return;
@@ -130,15 +154,15 @@ async function render(){
  if(!active())return;
  const view=root();if(!view)return;
  const serial=++requestSerial;
- view.innerHTML='<section class="mj37-page" dir="rtl">'+
-  '<div class="mj37-head"><h2>إصدار الشهادات المعتمدة</h2><p>استعراض وإصدار شهادات منجز التي اعتمدتها إدارة المدرسة دون تسجيل دخول.</p></div>'+
-  '<div class="mj37-toolbar"><button id="mj37Refresh" type="button">تحديث الشهادات</button></div>'+
-  '<div id="mj37Status" aria-live="polite" role="status">جارٍ تحميل الشهادات المعتمدة...</div>'+
-  '<div id="mj37CertificateList" class="mj37-grid"></div></section>';
+ view.innerHTML='<section class="mj37-page mj41-approved-page" dir="rtl">'+
+  '<div class="mj37-head"><h2>الشهادات المعتمدة</h2></div>'+
+  '<div class="mj41-table-toolbar"><button id="mj37Refresh" type="button" aria-label="تحديث قائمة الشهادات">تحديث</button></div>'+
+  '<div id="mj37Status" aria-live="polite" role="status"></div>'+
+  '<div id="mj37CertificateList"></div></section>';
  try{
   const loaded=await getApproved();
   if(!active()||serial!==requestSerial)return;
-  items=loaded;renderRows();status("الشهادات المعتمدة المتاحة: "+items.length);
+  items=loaded;renderRows();status("");
  }catch(e){if(active()&&serial===requestSerial)status(e.message||"تعذر عرض الشهادات",true)}
 }
 document.addEventListener("click",e=>{
