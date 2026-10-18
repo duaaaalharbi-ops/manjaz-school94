@@ -912,6 +912,12 @@ function render(){
   } else if(route==="reports"){
     view.appendChild(clone("reportsTpl"));
     wireReports();
+  } else if(route==="approved-certificates"){
+    // Public route is owned by the approved-only certificate module.
+    // Re-render it after cloud sync instead of replacing it with a placeholder.
+    if(typeof window.renderManjazPublicCertificates==="function")
+      window.renderManjazPublicCertificates();
+    else view.innerHTML='<section class="surface panel">جارٍ تحميل الشهادات المعتمدة...</section>';
   } else if(route==="lessons" || route==="lessons-add"){
     view.appendChild(clone("lessonsTpl"));
     if(route==="lessons-add") try{sessionStorage.setItem("manjaz_home_open_add","lesson")}catch(_){ }
