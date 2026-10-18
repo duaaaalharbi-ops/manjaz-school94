@@ -30,6 +30,40 @@ function CSS(){if(document.getElementById('mj15Css'))return;const el=document.cr
  #view.mj16-admin-only #mj15Dashboard .mj15-panel{background:#fff;border:1px solid #cbdcdd;border-radius:14px;overflow:hidden;box-shadow:0 3px 14px rgba(7,58,68,.06)}
  #view.mj16-admin-only #mj15Dashboard .mj15-panel>summary{background:#f4f8f8;color:#123e48;border-bottom:1px solid #e0e9e9;font:700 15px/1.6 Tahoma,Arial,sans-serif;padding:15px 18px}
  #view.mj16-admin-only #mj15Dashboard .mj15-panel>.mj15-body{background:#fff;color:#20434a;padding:16px}
+ /* Uniform expanded review content: same width, surface, spacing and palette as all other admin cards. */
+ #view.mj16-admin-only #mj15Dashboard #mj15Achievements{
+   width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+   background:#fff;align-content:start;overflow-wrap:anywhere
+ }
+ #view.mj16-admin-only #mj15Dashboard #mj15Achievements>.stat-grid{
+   display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));
+   gap:10px;margin:0;min-width:0
+ }
+ #view.mj16-admin-only #mj15Dashboard #mj15Achievements>.stat-grid>.stat-card,
+ #view.mj16-admin-only #mj15Dashboard #mj15Achievements>.stat-grid>.stat-card.gold{
+   background:#f6faf9;border:1px solid #d9e7e5;color:#174852;
+   border-radius:10px;box-shadow:none;min-width:0;padding:12px;gap:5px
+ }
+ #view.mj16-admin-only #mj15Dashboard #mj15Achievements>.stat-grid>.stat-card :is(span,b){
+   color:#174852
+ }
+ #view.mj16-admin-only #mj15Dashboard #mj15Achievements>.stat-grid>.stat-card b{
+   font-size:clamp(18px,2vw,23px);line-height:1.25
+ }
+ #view.mj16-admin-only #mj15Dashboard #mj15Achievements>#adminList{
+   width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+   display:grid;grid-template-columns:minmax(0,1fr);gap:10px
+ }
+ #view.mj16-admin-only #mj15Dashboard #mj15Achievements .admin-item{
+   max-width:100%;min-width:0;box-sizing:border-box;
+   background:#fff;border:1px solid #deebe9;box-shadow:none
+ }
+ @media(max-width:650px){
+   #view.mj16-admin-only #mj15Dashboard #mj15Achievements>.stat-grid{
+     grid-template-columns:repeat(2,minmax(0,1fr))
+   }
+ }
+
  @media(max-width:850px){#view.mj16-admin-only #mj15Dashboard .mj34-review-layout{grid-template-columns:minmax(0,1fr)}}
  /* Task16: admin route shows only the five cards. Preserve all existing DOM data and listeners. */
  #view.mj16-admin-only>:not(#mj15Dashboard){display:none!important}
@@ -381,7 +415,27 @@ function mount(){const view=document.getElementById('view');if((location.hash||'
  <details class="mj15-panel" id="mj15Issuance"><summary><span class="mj15-number">٣</span>إصدار الشهادات المعتمدة</summary><div class="mj15-body"><p class="mj15-note">تظهر الشهادات هنا تلقائيًا بعد اعتمادها، ويمكن معاينتها وتحميلها دون العلامة المائية.</p><div class="mj15-actions"><button type="button" data-mj15-refresh>عرض الشهادات المعتمدة</button></div><div class="mj15-status" id="mj15IssueMsg"></div><div id="mj15IssueList"></div><div id="mj15IssueDetail"></div></div></details>
  <details class="mj15-panel"><summary><span class="mj15-number">٤</span>إصدار كشوف مطابقة الحضور</summary><div class="mj15-body" id="mj15Attendance"><p class="mj15-note">قواعد بيانات شهادات الورش والدروس التطبيقية السابقة وملفات Excel الأصلية دون تغيير.</p></div></details>
  <details class="mj15-panel" id="mj15Powers"><summary><span class="mj15-number">٥</span>الصلاحيات الإدارية</summary><div class="mj15-body"><p class="mj15-hint">الأدوات التالية محمية بتسجيل الدخول الإداري.</p><a class="mj13-admin-link" href="#admin-permissions">الدخول إلى الصلاحيات الإدارية وأدوات الشهادات السابقة</a><div id="mj15ReservePowers"><h3>إصدار كشوف إحصائيات الاحتياط اليومي</h3></div><div id="mj15CertificatePowers"><h3>اعتماد طلبات الشهادات</h3><div class="mj15-actions"><button type="button" data-mj15-refresh>عرض طلبات الاعتماد</button></div><div class="mj15-status" id="mj15ApproveMsg"></div><div id="mj15ApprovalList"></div><div id="mj15ApprovalDetail"></div></div></div></details>`;const intro=view.querySelector('.page-intro');if(intro)intro.after(dash);else view.prepend(dash);}
- const stats=view.querySelector('.stat-grid'),adminPanel=list.closest('.surface.panel')||list.parentElement;const achieve=document.getElementById('mj15Achievements');if(stats&&stats.parentElement!==achieve)achieve.appendChild(stats);if(adminPanel&&adminPanel.parentElement!==achieve)achieve.appendChild(adminPanel);
+ // Review panel uses the same direct .mj15-body structure as every other card.
+ // Do not nest the legacy .surface.panel (it duplicated padding, border and colors).
+ const achieve=document.getElementById('mj15Achievements');
+ if(achieve){
+  const stats=view.querySelector('.stat-grid');
+  if(stats&&stats.parentElement!==achieve)achieve.appendChild(stats);
+  if(list.parentElement!==achieve){
+   const wrapper=list.closest('.surface.panel');
+   if(wrapper&&wrapper!==achieve){
+    for(const child of [...wrapper.children]){
+     if(child.classList.contains('panel-head'))continue;
+     achieve.appendChild(child); // moving DOM nodes preserves existing click handlers
+    }
+    wrapper.remove();
+   }else{
+    achieve.appendChild(list);
+    const empty=document.getElementById('adminEmpty');
+    if(empty&&empty.parentElement!==achieve)achieve.appendChild(empty);
+   }
+  }
+ }
  const attend=document.getElementById('mj15Attendance');for(const id of ['workshopAuditPanel','lessonAuditPanel']){const e=document.getElementById(id);if(e&&e.parentElement!==attend)attend.appendChild(e)}
  const cards=document.getElementById('mj13ExportCards');if(cards){const reserve=cards.querySelector('#mj13ReserveDownload')?.closest('.mj13-card');const exports=cards.querySelector('#mj13CertificateDownload')?.closest('.mj13-card');const power=document.getElementById('mj15ReservePowers'),certPower=document.getElementById('mj15CertificatePowers');if(reserve&&reserve.parentElement!==power)power.appendChild(reserve);if(exports&&exports.parentElement!==certPower)certPower.appendChild(exports);cards.style.display='none';if(cards.parentElement!==power)power.appendChild(cards)}
  display();fitPreviews();const reqid=urlParam('cert_request_id');if(reqid&&/^[0-9a-f-]{36}$/.test(reqid)&&!state.selected){state.selected=reqid;document.getElementById('mj15Powers').open=true;const panel=document.getElementById('mj15Requests');panel.open=true;fetchAll().then(()=>{refreshAdmin();const mode=urlParam('cert_action')==='issue'?'issue':'approve';printMessages(reqid,mode);const el=document.getElementById(mode==='issue'?'mj15Issuance':'mj15Powers');el.open=true}).catch(()=>{});}}
