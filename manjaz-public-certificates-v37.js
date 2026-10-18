@@ -53,9 +53,9 @@ function renderRows(){
     '<td data-label="الاسم"><strong>'+esc(r.name)+'</strong></td>'+
     '<td data-label="نوع الشهادة">'+esc(CATEGORIES[r.category]||"شهادة معتمدة")+'</td>'+
     '<td data-label="تاريخ الاعتماد" class="mj41-date">'+esc(approvalDate(r.approved_at))+'</td>'+
-    '<td class="mj41-action-cell"><button type="button" class="mj41-icon-button" '+
+    '<td data-label="معاينة" class="mj41-action-cell"><button type="button" class="mj41-icon-button" '+
       'data-mj37-preview="'+esc(r.id)+'" aria-label="مشاهدة شهادة '+esc(r.name)+'" title="مشاهدة الشهادة">'+actionIcon("preview")+'</button></td>'+
-    '<td class="mj41-action-cell"><button type="button" class="mj41-icon-button" '+
+    '<td data-label="تحميل PDF" class="mj41-action-cell"><button type="button" class="mj41-icon-button" '+
       'data-mj37-download="'+esc(r.id)+'" aria-label="تحميل شهادة '+esc(r.name)+'" title="تحميل PDF">'+actionIcon("download")+'</button></td>'+
    '</tr>').join('')+'</tbody></table></div>';
 }
