@@ -1475,7 +1475,11 @@ function reserveWorkspaceSharingHTML(){
 }
 function dayAdminHTML(){
   const date=state.currentDate,abs=absencesOn(date),assign=assignmentsOn(date);
-  const autoSelected=new Set((state.autoAbsentIds?.length?state.autoAbsentIds:abs.map(a=>a.teacherId)).map(String));
+  // After a verified table deletion, do not silently reselect retained shared absences.
+  // Otherwise, show saved automatic-mode absences only, not the manual-mode choices.
+  const selectedAutoIds=state.autoAbsentIds?.length?state.autoAbsentIds:
+    state.autoAbsentSelectionResetDate===date?[]:abs.filter(a=>a.source==="auto").map(a=>a.teacherId);
+  const autoSelected=new Set(selectedAutoIds.map(String));
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
@@ -1956,6 +1960,12 @@ function bindManualAdmin(){
     reserveTableDeleteNotice("manual","busy","جدول الإنشاء اليدوي — "+fmtDate(date));
     try{
       const result=await reserveDeleteTableForDate("manual",date);
+      // Clear draft selections only after verified deletion, before re-rendering.
+      if(state.currentDate===date){
+        state.manualAbsentIds=[];
+        state.manualRows=[];
+        if(state.lastReserveWarnings?.date===date&&state.lastReserveWarnings.source==="manual")state.lastReserveWarnings=null;
+      }
       renderWorkspaceCard("manual");
       reserveTableDeleteNotice("manual","success",result.syncWarning?
         "حُذف الجدول وتأكد حفظ التغيير، لكن تعذر تحديث بعض البطاقات.":
@@ -2852,6 +2862,7 @@ async function syncReserveSectionDate(next,keepWeekAnchor=false){
   state.manualRows=[];
   state.manualAbsentIds=[];
   state.autoAbsentIds=[];
+  state.autoAbsentSelectionResetDate="";
   reserveDateSyncBusy=true;
   try{
     await renderPage();
@@ -3040,6 +3051,7 @@ function bindDayAdmin(){
     if(!dayKey(date)){msg.textContent="اختاري تاريخًا من الأحد إلى الخميس.";return}
     const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
     state.autoAbsentIds=ids;
+    state.autoAbsentSelectionResetDate="";
     msg.textContent="جارٍ حفظ أسماء الغائبات...";
     try{
       await ensureAdmin();
@@ -3066,6 +3078,7 @@ function bindDayAdmin(){
     if(!dayKey(date)){msg.textContent="اختاري تاريخًا من الأحد إلى الخميس.";return;}
     if(!ids.length&&!absencesOn(date).length){msg.textContent="اختاري أسماء الغائبات أولًا، ثم اضغطي التوليد.";return;}
     state.autoAbsentIds=ids;
+    state.autoAbsentSelectionResetDate="";
     button.disabled=true;button.textContent="جارٍ التوليد...";
     msg.textContent="جارٍ التوليد... يجري فحص أهلية كل مرشحة وحفظ المسودات.";
     let created=0,repaired=0,unfilled=0,processed=0;
@@ -3200,6 +3213,12 @@ function bindDayAdmin(){
     reserveTableDeleteNotice("auto","busy","جدول الإنشاء الآلي — "+fmtDate(date));
     try{
       const result=await reserveDeleteTableForDate("auto",date);
+      // Unselect the multi-select immediately; surviving shared absences remain in DB.
+      if(state.currentDate===date){
+        state.autoAbsentIds=[];
+        state.autoAbsentSelectionResetDate=date;
+        if(state.lastReserveWarnings?.date===date&&state.lastReserveWarnings.source==="auto")state.lastReserveWarnings=null;
+      }
       renderWorkspaceCard("auto");
       reserveTableDeleteNotice("auto","success",result.syncWarning?
         "حُذف الجدول وتأكد حفظ التغيير، لكن تعذر تحديث بعض البطاقات.":
