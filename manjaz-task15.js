@@ -360,33 +360,6 @@ async function verifiedToken(){
   throw Error('هذه العملية متاحة لحساب إدارة منجز فقط.');
  return session.access_token;
 }
-async function ensureIssuedCertificatesVisible(){
- const card=document.getElementById('mj15Issuance');
- if(!card?.open)return;
- const message=card.querySelector('#mj15IssueMsg');
- const list=card.querySelector('#mj15IssueList');
- if(message)message.textContent='جارٍ جلب الشهادات المعتمدة للمستفيدات...';
- if(!list)return;
- try{
-  // Read ONLY approved public fields through an anonymous, restricted RPC.
-  // No administrative session, email, or request token is ever required.
-  const rows=await rpc('manjaz_public_approved_certificates_v37',{});
-  if(!Array.isArray(rows))throw Error('تعذر قراءة قائمة الشهادات المعتمدة');
-  const approved=rows.filter(r=>r?.approved_at&&['معتمد','تم الإصدار','تم الإرسال'].includes(r.status));
-  list.innerHTML='<div class="mj39-public-issue-list">'+
-    (approved.length?approved.map(r=>
-      '<article class="mj15-record"><span><strong>'+H(r.name)+'</strong><small>'+
-      H(T(r.category)[1])+' · '+H(r.title)+'</small></span>'+
-      '<a class="mj39-public-download-link" href="#approved-certificates">معاينة وإصدار</a></article>'
-    ).join(''):'<p class="mj15-note">لا توجد شهادات معتمدة متاحة حاليًا.</p>')+
-    '</div>';
-  if(message)message.textContent='الشهادات المتاحة: '+approved.length+'. المعاينة والتحميل متاحان للمستفيدات دون تسجيل دخول.';
- }catch(error){
-  console.error('Public issued certificates',error);
-  list.innerHTML='';
-  if(message)message.textContent='تعذر تحميل الشهادات المعتمدة: '+(error?.message||'تعذر الاتصال');
- }
-}
 async function rpc(name,body,bearer=null){const resp=await fetch(`${BASE}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:KEY,Authorization:`Bearer ${bearer||KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!resp.ok){const err=await resp.json().catch(()=>({}));throw Error(err.message||`تعذر الحفظ (${resp.status}).`)}return resp.json().catch(()=>null)}
 function getValues(r){return {name:r.name||'',title:r.title||'',description:r.short_description||'',date:r.date_iso||'',duration:r.duration||'',email:r.recipient_email||'',executionType:r.execution_type||''}}
 async function submitPublic(form){if(!form.reportValidity())return;let b=form.querySelector('button[type="submit"]'),m=form.querySelector('[data-mj15-status]');const values=certData(form),rec=ownCurrent(),id=rec?.id||null,k=rec?.editToken||rand();b.disabled=true;m.textContent='جارٍ تسجيل الطلب...';try{const out=await rpc('manjaz_certificate_request_save_v15',{p_category:state.category,p_name:values.name,p_title:values.title,p_description:values.description,p_date_iso:values.date,p_date_display:hijri(values.date),p_duration:values.duration||'',p_edit_token:k,p_request_id:id,p_email:'',p_execution_type:values.executionType||''});const saved=Array.isArray(out)?out[0]:out;if(!saved?.request_id)throw Error('لم تؤكد قاعدة البيانات الحفظ.');const row={id:saved.request_id,category:state.category,editToken:k,fields:values,updatedAt:saved.saved_at};store(row);state.requestId=row.id;const place=document.getElementById('mj15PublicArea');if(place){place.innerHTML=publicMarkup();place.querySelector('[data-mj15-status]').textContent=id?'تم حفظ التعديل.':'تم تسجيل الطلب وإرساله للمراجعة. لن تصدر الشهادة إلا بعد موافقة الإدارة.';window.ManjazHijriPicker?.refresh?.();}}
@@ -593,7 +566,7 @@ function display(){const root=document.getElementById('mj15Dashboard');if(!root)
 function mount(){const view=document.getElementById('view');if((location.hash||'').slice(1).split('&')[0]!=='admin'){view?.classList.remove('mj16-admin-only');return}const list=document.getElementById('adminList');if(!view||!list)return;CSS();view.classList.add('mj16-admin-only');let dash=document.getElementById('mj15Dashboard');if(!dash){dash=document.createElement('div');dash.id='mj15Dashboard';dash.innerHTML=`
  <details class="mj15-panel"><summary><span class="mj15-number">١</span>اعتماد الطلبات</summary><div class="mj15-body" id="mj15Achievements"></div></details>
  <details class="mj15-panel" id="mj15Requests"><summary><span class="mj15-number">٢</span>طلبات إصدار الشهادات الجديدة</summary><div class="mj15-body" id="mj15PublicArea"></div></details>
- <details class="mj15-panel" id="mj15Issuance"><summary><span class="mj15-number">٣</span>إصدار الشهادات المعتمدة – للمستفيدات</summary><div class="mj15-body"><p class="mj15-note">الشهادات التي اعتمدتها الإدارة؛ يمكن معاينتها وتحميلها من هذا القسم دون علامة مائية.</p><div class="mj15-actions"><button type="button" data-mj15-refresh>عرض الشهادات المعتمدة</button></div><div class="mj15-status" id="mj15IssueMsg" role="status"></div><p class="mj15-note"><a class="mj39-public-download-link" href="#approved-certificates">فتح صفحة المستفيدات: استعراض وإصدار الشهادات المعتمدة</a></p><div id="mj15IssueList"></div><div id="mj15IssueDetail"></div></div></details>
+ <details class="mj15-panel" id="mj15Issuance"><summary><span class="mj15-number">٣</span>إصدار الشهادات المعتمدة</summary><div class="mj15-body mj41-beneficiary-card"><div class="mj15-actions"><button type="button" class="btn btn-primary" data-mj41-open-approved>عرض الشهادات المعتمدة</button></div></div></details>
  <details class="mj15-panel"><summary><span class="mj15-number">٤</span>إصدار كشوف مطابقة الحضور</summary><div class="mj15-body" id="mj15Attendance"><p class="mj15-note">قواعد بيانات شهادات الورش والدروس التطبيقية السابقة وملفات Excel الأصلية دون تغيير.</p></div></details>
  <details class="mj15-panel" id="mj15Powers"><summary><span class="mj15-number">٥</span>الصلاحيات الإدارية</summary><div class="mj15-body"><p class="mj15-hint">الأدوات التالية محمية بتسجيل الدخول الإداري.</p><a class="mj13-admin-link" href="#admin-permissions">الدخول إلى الصلاحيات الإدارية وأدوات الشهادات السابقة</a><div id="mj15ReservePowers"><h3>إصدار كشوف إحصائيات الاحتياط اليومي</h3></div><div id="mj15CertificatePowers"><h3>اعتماد طلبات الشهادات</h3><div class="mj15-actions"><button type="button" data-mj15-refresh>عرض طلبات الاعتماد</button></div><div class="mj15-status" id="mj15ApproveMsg"></div><div id="mj15ApprovalList"></div><div id="mj15ApprovalDetail"></div></div></div></details>`;const intro=view.querySelector('.page-intro');if(intro)intro.after(dash);else view.prepend(dash);}
  // Review panel uses the same direct .mj15-body structure as every other card.
@@ -621,9 +594,11 @@ function mount(){const view=document.getElementById('view');if((location.hash||'
  const cards=document.getElementById('mj13ExportCards');if(cards){const reserve=cards.querySelector('#mj13ReserveDownload')?.closest('.mj13-card');const exports=cards.querySelector('#mj13CertificateDownload')?.closest('.mj13-card');const power=document.getElementById('mj15ReservePowers'),certPower=document.getElementById('mj15CertificatePowers');if(reserve&&reserve.parentElement!==power)power.appendChild(reserve);if(exports&&exports.parentElement!==certPower)certPower.appendChild(exports);cards.style.display='none';if(cards.parentElement!==power)power.appendChild(cards)}
  display();fitPreviews();const reqid=urlParam('cert_request_id');if(reqid&&/^[0-9a-f-]{36}$/.test(reqid)&&!state.selected){state.selected=reqid;document.getElementById('mj15Powers').open=true;const panel=document.getElementById('mj15Requests');panel.open=true;fetchAll().then(()=>{refreshAdmin();const mode='approve';printMessages(reqid,mode);const el=document.getElementById('mj15Powers');if(el)el.open=true}).catch(()=>{});}}
 let observing=false;
-function boot(){const view=document.getElementById('view');if(!view)return;const ob=new MutationObserver(()=>{if(observing)return;observing=true;try{mount()}finally{observing=false}});ob.observe(view,{childList:true,subtree:true});mount();addEventListener('hashchange',()=>queueMicrotask(mount));addEventListener('resize',fitPreviews,{passive:true});document.addEventListener('toggle',e=>{if(e.target.matches?.('.mj15-panel')&&e.target.open){requestAnimationFrame(fitPreviews);if(e.target.id==='mj15Issuance')void ensureIssuedCertificatesVisible()}},true);
- document.addEventListener('manjaz:admin-session-changed',()=>{const issued=document.getElementById('mj15Issuance');if(issued?.open)void ensureIssuedCertificatesVisible()});}
+function boot(){const view=document.getElementById('view');if(!view)return;const ob=new MutationObserver(()=>{if(observing)return;observing=true;try{mount()}finally{observing=false}});ob.observe(view,{childList:true,subtree:true});mount();addEventListener('hashchange',()=>queueMicrotask(mount));addEventListener('resize',fitPreviews,{passive:true});document.addEventListener('toggle',e=>{if(e.target.matches?.('.mj15-panel')&&e.target.open){requestAnimationFrame(fitPreviews)}},true);
+}
 document.addEventListener('click',async e=>{
+ const openApproved=e.target.closest('[data-mj41-open-approved]');
+ if(openApproved){location.hash='#approved-certificates';return}
  const loginShortcut=e.target.closest('[data-mj39-inline-auth]');
  if(loginShortcut){
   const card=document.getElementById('mj15Powers');
