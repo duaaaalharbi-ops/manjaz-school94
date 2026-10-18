@@ -314,6 +314,17 @@ document.addEventListener("change",e=>{
    return;
   }
   if(!select.isConnected)return;
+  if(val==="reserve"||val==="duty"){
+   const powers=document.getElementById("mj15Powers");
+   for(const id of ["mj15ReservePowers","mj15CertificatePowers"]){
+    const legacy=powers?.querySelector("#"+id);
+    if(legacy)legacy.style.display="none";
+   }
+   const host=powers?.querySelector("#mj34PowerNavigation");
+   if(host&&window.ManjazAdminExcelExportsV43?.mount)window.ManjazAdminExcelExportsV43.mount(host,val);
+   else if(host)host.textContent="جارٍ تحميل أدوات التصدير؛ أعيدي فتح القائمة بعد تحديث الصفحة.";
+   return;
+  }
   const powers=document.getElementById("mj15Powers");
   const reserve=powers?.querySelector("#mj15ReservePowers"),cert=powers?.querySelector("#mj15CertificatePowers");
   const nav=powers?.querySelector("#mj34PowerNavigation");
