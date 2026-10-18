@@ -212,8 +212,7 @@ function addInlinePowersAuth(body){
   sessionStorage.removeItem(SESSION);
   form.reset();feedback.textContent="";
   setPowersAuthenticated(false);
-  const issued=document.getElementById('mj15IssueList');if(issued)issued.replaceChildren();
-  const detail=document.getElementById('mj15IssueDetail');if(detail)detail.replaceChildren();
+  // Public approved certificates remain visible when an administrator logs out.
   document.dispatchEvent(new Event('manjaz:admin-session-changed'));
  });
  void restoreInlinePowersLogin();
