@@ -178,6 +178,13 @@ function injectStyle(){
     .admin-cert-preview.is-visible{display:block}
     .admin-cert-message{margin-top:10px;font-weight:700}
     .admin-cert-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    #adminCertificatePreview .mj37-admin-stage{overflow:hidden;width:100%;box-sizing:border-box}
+    #adminCertificatePreview .mj37-admin-frame{position:relative;min-width:0;overflow:hidden;direction:rtl}
+    #adminCertificatePreview .mj37-admin-frame>.certificate-paper.cert-final{
+      position:absolute!important;right:0!important;top:0!important;left:auto!important;
+      width:1123px!important;height:794px!important;min-width:1123px!important;max-width:none!important;
+      min-height:794px!important;margin:0!important;transform-origin:top right!important;box-shadow:none!important
+    }
     @media(max-width:760px){.admin-tools-grid{grid-template-columns:1fr}}
   `;
   document.head.appendChild(s);
@@ -332,14 +339,30 @@ function thanksFormHTML(){
 
 function previewHTML(){
   return `<div id="adminCertificatePreview" class="admin-cert-preview">
-    <div class="certificate-stage">
-      <div id="adminCertificatePaper" class="certificate-paper"></div>
+    <div class="certificate-stage mj37-admin-stage">
+      <div id="adminCertificateFrame" class="mj37-admin-frame">
+        <div id="adminCertificatePaper" class="certificate-paper"></div>
+      </div>
     </div>
     <div class="admin-cert-actions">
       <button class="btn btn-primary" type="button" id="adminCertificateDownload">تحميل الشهادة PDF</button>
     </div>
   </div>`;
 }
+
+function fitAdminCertificate(){
+ const frame=document.getElementById("adminCertificateFrame");
+ const paper=document.getElementById("adminCertificatePaper");
+ const container=frame?.closest(".certificate-stage");
+ if(!frame||!paper||!container||!container.getBoundingClientRect().width)return;
+ const width=Math.max(1,container.getBoundingClientRect().width-16);
+ const scale=Math.min(1,width/1123);
+ frame.style.height=Math.ceil(794*scale)+"px";
+ frame.style.width="100%";
+ paper.style.setProperty("transform","scale("+scale+")","important");
+ paper.style.transformOrigin="top right";
+}
+window.addEventListener("resize",fitAdminCertificate,{passive:true});
 
 function arabicDate(raw){
   if(!raw) return "";
@@ -520,6 +543,7 @@ async function mountTool(type,session){
     // issue and enable download immediately, then log to the cloud in the background.
     renderCertificate(type,data);
     document.getElementById("adminCertificatePreview").classList.add("is-visible");
+    requestAnimationFrame(()=>{fitAdminCertificate();requestAnimationFrame(fitAdminCertificate)});
     document.getElementById("adminCertificateDownload").onclick=()=>downloadPDF(type,data);
     msg.textContent="تم إصدار الشهادة، وجارٍ توثيقها سحابيًا...";
     document.getElementById("adminCertificatePreview").scrollIntoView({behavior:"smooth",block:"start"});
