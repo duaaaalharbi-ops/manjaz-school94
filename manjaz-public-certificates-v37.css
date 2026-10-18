@@ -66,3 +66,77 @@ dialog.mj37-dialog::backdrop{background:rgba(4,35,39,.65)}
  .mj41-approved-page .mj37-head h2{font-size:17px}
  .mj41-cert-table th,.mj41-cert-table td{padding:10px 12px}
 }
+
+
+/* v42: actual phone layout for approved certificates; desktop table stays unchanged. */
+@media(max-width:720px){
+  /* The previous 650px minimum width clipped names and action buttons on phones. */
+  #view .mj41-approved-page,
+  #view .mj41-approved-page #mj37CertificateList,
+  #view .mj41-approved-page .mj41-table-scroll{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    box-sizing:border-box!important
+  }
+  #view .mj41-approved-page{gap:12px;padding-bottom:22px}
+  #view .mj41-approved-page .mj37-head{padding:13px 15px}
+  #view .mj41-approved-page .mj37-head h2{font-size:18px;line-height:1.5}
+  #view .mj41-approved-page .mj41-table-toolbar{justify-content:flex-start}
+  #view .mj41-approved-page .mj41-table-scroll{
+    overflow:visible!important;border:0;box-shadow:none;background:transparent
+  }
+  #view .mj41-approved-page .mj41-cert-table{
+    display:block;width:100%!important;max-width:100%!important;min-width:0!important;
+    table-layout:fixed;border-collapse:separate;font-size:13px
+  }
+  #view .mj41-approved-page .mj41-cert-table thead{display:none}
+  #view .mj41-approved-page .mj41-cert-table tbody{display:grid;gap:12px;width:100%;min-width:0}
+  #view .mj41-approved-page .mj41-cert-table tbody tr{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    width:100%;min-width:0;box-sizing:border-box;
+    overflow:hidden;background:#fff;border:1px solid #d5e5e2;border-radius:13px;
+    box-shadow:0 3px 10px rgba(8,58,65,.05)
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    min-width:0;max-width:100%;box-sizing:border-box;
+    white-space:normal;overflow-wrap:anywhere;word-break:normal;
+    font-size:13px;line-height:1.65;text-align:right;
+    padding:10px 13px;border-bottom:1px solid #e5eeec
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td:nth-child(-n+3){grid-column:1/-1}
+  #view .mj41-approved-page .mj41-cert-table tbody td::before{
+    content:attr(data-label);flex:0 0 90px;
+    color:#527478;font-size:12px;font-weight:700;text-align:right;
+    white-space:normal
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td:first-child{
+    background:#f3f8f7;color:#103f49;font-size:14px
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td:first-child strong{
+    flex:1;min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:right
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td.mj41-date{
+    white-space:normal;direction:rtl
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td.mj41-action-cell{
+    grid-column:auto;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+    gap:6px;padding:10px 6px;border-bottom:0;width:auto;background:#fff
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td.mj41-action-cell::before{
+    flex:0 0 100%;text-align:center;color:#42636a
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td.mj41-action-cell .mj41-icon-button{
+    min-width:42px;min-height:42px;width:42px;height:42px;flex:0 0 42px
+  }
+  #view .mj41-approved-page .mj41-cert-table tbody td.mj41-action-cell:last-child{
+    border-right:1px solid #e6efed
+  }
+  dialog.mj37-dialog{
+    width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;
+    max-height:calc(100dvh - 16px);padding:9px;box-sizing:border-box
+  }
+  dialog.mj37-dialog .mj37-dialog-head{gap:8px;align-items:center}
+  dialog.mj37-dialog .mj37-dialog-head strong{min-width:0;line-height:1.6}
+  dialog.mj37-dialog .mj37-preview{overflow:hidden;width:100%;box-sizing:border-box}
+  dialog.mj37-dialog .mj37-dialog-bottom button{flex:1;min-width:0}
+}
