@@ -69,13 +69,29 @@ function organize(){
    if(old)old.remove();
    if(nav.value==="certificates")nav.value="";
   }
+  // Reuse the live beneficiary form and deduplicate stale accordion wrappers.
+  // A previous remount could move the form, leaving empty wrappers behind.
   const publicArea=document.getElementById("mj15PublicArea");
-  if(publicArea&&!publicArea.closest(".mj45-beneficiary-details")){
-    const details=document.createElement("details");
-    details.className="mj45-beneficiary-details";
-    details.innerHTML='<summary>نموذج تقديم طلب شهادة للمستفيدات</summary><div class="mj45-public-slot"></div>';
-    area.appendChild(details);
-    details.querySelector(".mj45-public-slot").appendChild(publicArea);
+  const wrappers=[...area.querySelectorAll(".mj45-beneficiary-details")];
+  let beneficiary=wrappers.find(item=>publicArea&&item.contains(publicArea))||wrappers[0];
+  if(!beneficiary&&publicArea){
+    beneficiary=document.createElement("details");
+    beneficiary.className="mj45-beneficiary-details";
+    beneficiary.innerHTML='<summary>نموذج تقديم طلب شهادة للمستفيدات</summary><div class="mj45-public-slot"></div>';
+    area.appendChild(beneficiary);
+  }
+  if(beneficiary){
+    beneficiary.id="mj45BeneficiaryForm";
+    let slot=beneficiary.querySelector(".mj45-public-slot");
+    if(!slot){slot=document.createElement("div");slot.className="mj45-public-slot";beneficiary.appendChild(slot);}
+    if(publicArea&&publicArea.parentElement!==slot)slot.appendChild(publicArea);
+    for(const duplicate of wrappers){
+      if(duplicate!==beneficiary){
+        const form=duplicate.querySelector("#mj15PublicArea");
+        if(form&&form!==publicArea&&!beneficiary.contains(form))slot.appendChild(form);
+        duplicate.remove();
+      }
+    }
   }
   const certificate=document.getElementById("mj15CertificatePowers");
   if(certificate&&certificate.parentElement!==area){
