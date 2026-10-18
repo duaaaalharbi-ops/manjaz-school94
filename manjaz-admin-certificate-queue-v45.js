@@ -128,7 +128,7 @@ function boot(){
   new MutationObserver(()=>{
    if(queued)return;queued=true;
    queueMicrotask(()=>{queued=false;organize()});
-  }).observe(view,{childList:true,subtree:true});
+  }).observe(view,{childList:true,subtree:false});
  }
  organize();
  addEventListener("hashchange",()=>queueMicrotask(organize));
