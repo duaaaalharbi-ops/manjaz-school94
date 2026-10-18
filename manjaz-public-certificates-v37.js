@@ -107,6 +107,25 @@ async function download(row,button){
  }catch(error){console.error("manjaz public certificate",error);status("تعذر إصدار الشهادة: "+(error?.message||error),true)}
  finally{stage?.remove();downloading=false;if(button?.isConnected){button.disabled=false;button.textContent=original}}
 }
+async function mountInto(host){
+ if(!host||!host.isConnected)return;
+ const serial=++requestSerial;
+ host.innerHTML='<section class="mj37-page mj37-embedded" dir="rtl">'+
+  '<div class="mj37-toolbar"><a href="#approved-certificates" class="mj37-public-link">فتح صفحة الشهادات للمستفيدات</a>'+
+  '<button type="button" data-mj37-refresh>تحديث الشهادات</button></div>'+
+  '<div id="mj37Status" role="status" aria-live="polite">جارٍ تحميل الشهادات المعتمدة دون تسجيل دخول...</div>'+
+  '<div id="mj37CertificateList" class="mj37-grid"></div></section>';
+ try{
+  const rows=await getApproved();
+  if(!host.isConnected||serial!==requestSerial)return;
+  items=rows;
+  renderRows();
+  status('الشهادات المعتمدة المتاحة لجميع المستفيدات: '+items.length);
+ }catch(error){
+  if(host.isConnected&&serial===requestSerial)status(error?.message||'تعذر تحميل الشهادات المعتمدة',true);
+ }
+}
+window.ManjazPublicApprovedCertificates={mountInto};
 async function render(){
  if(!active())return;
  const view=root();if(!view)return;
@@ -125,6 +144,7 @@ async function render(){
 document.addEventListener("click",e=>{
  const close=e.target.closest("[data-mj37-close]");if(close){document.getElementById("mj37Dialog")?.close();return}
  if(e.target.id==="mj37Refresh"){void render();return}
+ if(e.target.closest("[data-mj37-refresh]")){void mountInto(document.getElementById("mj15IssueList"));return}
  const prev=e.target.closest("[data-mj37-preview]");if(prev){
   const item=getItem(prev.dataset.mj37Preview);if(item)try{preview(item)}catch(err){status(err.message,true)}
   return;
