@@ -378,5 +378,7 @@ function boot(){
   obs.observe(view,{childList:true,subtree:true});
   mount();addEventListener("hashchange",()=>queueMicrotask(mount));
 }
+/* Shared, existing RTL Office Open XML Excel engine for weekly/monthly/cumulative exports. */
+window.ManjazAdminExcelKitV43=Object.freeze({makeXlsx,download,reserveRow,RESERVE_HEADERS});
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
 })();
