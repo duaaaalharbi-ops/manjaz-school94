@@ -1,0 +1,297 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>منجز — تحديث الحفظ والمزامنة 31.0</title><style>
+:root{font-family:Tahoma,Arial,sans-serif;color:#173d44;background:#f3f8f7}*{box-sizing:border-box}body{margin:0;padding:24px 12px;line-height:1.85}main{max-width:760px;margin:auto;background:white;padding:24px;border-radius:16px;box-shadow:0 6px 30px #092e3414}h1{font-size:23px;margin:0;color:#0c554c}h2{font-size:17px;color:#16443d}p{margin:8px 0 14px}button{border:0;border-radius:10px;background:#096b60;color:white;font-size:16px;font-weight:700;padding:13px 18px;cursor:pointer}button:disabled{opacity:.55}#status{white-space:pre-wrap;color:#126357;font-weight:700;margin:12px 0}.muted{color:#5e7475}.fallback{border-top:1px solid #d7e6e3;padding-top:12px;margin-top:16px}.fallback summary{cursor:pointer;font-weight:bold}.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:5px 0}input[type=file]{width:100%;max-width:260px}.fine{font-size:13px;color:#607778}.warn{color:#9a3426}code{direction:ltr;unicode-bidi:embed}li{margin:5px 0}</style></head><body><main>
+<h1>الثانوية الرابعة والتسعون — منجز</h1><h2>تحديث تأكيد الحفظ والحذف والمزامنة 31.0</h2>
+<p>ينشئ هذا الملف نسخة معدّلة من <strong>أحدث ملفات مستودع منجز</strong> دون حذف سجلات قاعدة البيانات أو تغيير ضوابط المفاضلة.</p>
+<p>التحديث يشمل الاحتياط اليومي والمناوبة اليومية، في الإنشاء اليدوي والآلي، ويظهر <strong>تم الحفظ</strong> و<strong>تم الحذف</strong> بعد نجاح عملية قاعدة البيانات. يُحدّث النشر عند حفظ تغيير معتمد، ويجري فحصًا تلقائيًا كل خمس ثوانٍ للمعلومات التي تتغير على أجهزة أخرى.</p>
+<button id="build" type="button">إنشاء وتحميل حزمة التحديث</button><div id="status" role="status" aria-live="polite"></div>
+<details class="fallback"><summary>إذا تعذر تحميل ملفات GitHub تلقائيًا</summary><p class="fine">اختاري الملفات الأربعة من جهازك، ثم أعيدي الضغط على إنشاء الحزمة. جميع الملفات الأخرى تبقى دون تغيير.</p>
+<div class="row"><label for="file-daily-reserve.js">daily-reserve.js</label><input type="file" id="file-daily-reserve.js" accept=".js"></div>
+<div class="row"><label for="file-manjaz-urgent18.js">manjaz-urgent18.js</label><input type="file" id="file-manjaz-urgent18.js" accept=".js"></div>
+<div class="row"><label for="file-home-v3.js">home-v3.js</label><input type="file" id="file-home-v3.js" accept=".js"></div>
+<div class="row"><label for="file-index.html">index.html</label><input type="file" id="file-index.html" accept=".html"></div>
+</details>
+<h2>بعد إنشاء الحزمة</h2><ol><li>افتحي الملف المضغوط الناتج باسم <strong>Manjaz_Sync_v31_Files.zip</strong>.</li><li>ارفعي الملفات الأربعة إلى جذر مستودع <code>duaaaalharbi-ops/manjaz-school94</code>، واستبدلي النسخ السابقة.</li><li>اضغطي <strong>Commit changes</strong>.</li><li>حدّثي الموقع واختبري الحفظ والحذف في يوم تجريبي.</li></ol><p class="fine">لا تتغير التكليفات أو الجداول المنشورة السابقة عند تجهيز الملفات. لا تُنشَر المسودات غير المعتمدة تلقائيًا. قد تؤدي التعديلات المحفوظة على جدول المناوبة المنشور إلى إعادة النشر لحفظ استمراريته.</p>
+</main><script>/* Manjaz v31 installer: source-preserving transforms, operating on current repo version. */
+const REPO='https://raw.githubusercontent.com/duaaaalharbi-ops/manjaz-school94/main/';
+const FILES=['daily-reserve.js','manjaz-urgent18.js','home-v3.js','index.html'];
+function rep(text,from,to,label){
+  const n=text.split(from).length-1;
+  if(n!==1)throw Error('تعذر تركيب التعديل: '+label+' (تطابق '+n+'). لم تُعدل أي ملفات.');
+  return text.replace(from,to);
+}
+function repAll(text,from,to,label,min=1){
+  const n=text.split(from).length-1;
+  if(n<min)throw Error('تعذر تركيب التعديل: '+label);
+  return text.split(from).join(to);
+}
+function patchDuty(s){
+  // Guaranteed success message after confirmed RPC + published-table refresh.
+  s=rep(s,'function workspace(){',`
+let mjDutyFieldSyncTimer=null;
+async function mjDutyVerifiedSave(rows){
+  const selectedDate=date,wasPublished=published;
+  const result=await rpc('mj_duty_save',{p_date:selectedDate,p_assignments:rows},true);
+  if(result?.saved!==true||Number(result.assignments)!==rows.length)
+    throw Error('لم تؤكد قاعدة البيانات حفظ جميع التكليفات.');
+  if(wasPublished){
+    await rpc('mj_duty_publish',{p_date:selectedDate},true);
+  }
+  await refresh();
+  if(wasPublished&&!published)throw Error('تم الحفظ لكن جدول النشر لم يُحدَّث؛ تحققي من حالة النشر.');
+  log('تم الحفظ'+(wasPublished?' — تم تحديث جدول النشر':'')+'.');
+}
+function mjDutyQueueFieldSave(){
+  clearTimeout(mjDutyFieldSyncTimer);
+  mjDutyFieldSyncTimer=setTimeout(()=>{
+    const selects=[...document.querySelectorAll('#dutyWorkspaceContent select[data-slot]')];
+    if(!selects.length||busy)return;
+    const rows=collect();
+    const complete=SLOTS.every(slot=>rows.some(row=>row.slot===slot[0]));
+    const distinct=new Set(rows.map(x=>x.person_id)).size===rows.length;
+    const status=document.getElementById('dutyInlineActionStatus');
+    if(!complete||!distinct){if(status)status.textContent='تعديل غير محفوظ: يلزم وجود منفذة بكل فترة وعدم تكرار الاسم.';return}
+    if(!session()){if(status)status.textContent='يلزم الدخول الإداري قبل المزامنة.';return}
+    void doAction(()=>mjDutyVerifiedSave(rows),{status,pending:'جارٍ الحفظ ومزامنة جدول النشر...',success:'تم الحفظ'});
+  },650);
+}
+function workspace(){`, 'Duty helper before workspace');
+  s=rep(s, `if(!confirm('حفظ الجدول سيوقف النشر السابق حتى تعيدي نشره. هل تستمرين؟'))return;
+ const result=await rpc('mj_duty_save',{p_date:selectedDate,p_assignments:rows},true);
+ if(result?.saved!==true||Number(result.assignments)!==rows.length)throw Error('لم تؤكد قاعدة البيانات حفظ جميع التكليفات.');
+ await refresh();log('تم حفظ '+rows.length+' تكليفًا بتاريخ '+dateLong(selectedDate)+'. يمكن النشر بعد المراجعة.');`,
+`if(!confirm('هل تريدين حفظ جدول المناوبة وتحديث جدول النشر إذا كان منشورًا؟'))return;
+ await mjDutyVerifiedSave(rows);`, 'Duty save RPC');
+  s=rep(s,`const r=await rpc('mj_duty_generate',{p_date:date},true);await refresh();log('تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.')`,
+`const generatedDate=date,wasPublished=published;
+ const r=await rpc('mj_duty_generate',{p_date:generatedDate},true);
+ if(wasPublished)await rpc('mj_duty_publish',{p_date:generatedDate},true);
+ await refresh();log('تم الحفظ — تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.'+(wasPublished?' وتم تحديث جدول النشر.':''))`, 'Duty auto-generation feedback');
+  s=rep(s, `await rpc('mj_duty_delete_day',{p_date:date},true);await refresh();log('تم حذف تكليفات اليوم فقط.')`,
+`await rpc('mj_duty_delete_day',{p_date:date},true);await refresh();
+ if(assignments.length)throw Error('لم تؤكد قاعدة البيانات حذف جميع تكليفات المناوبة.');
+ log('تم الحذف — تم تحديث جدول النشر.')`, 'Duty delete feedback');
+  s=rep(s,`if(feedback?.isConnected)feedback.textContent='اكتملت العملية.';return true`,
+`if(feedback?.isConnected)feedback.textContent=options.success||'تم الحفظ';return true`, 'Duty confirmed feedback');
+  s=rep(s,`section.querySelector('#dutySave').onclick=`,
+`section.addEventListener('change',event=>{if(event.target.matches('select[data-slot]'))mjDutyQueueFieldSave()});
+ section.querySelector('#dutySave').onclick=`, 'Duty field auto-save binding');
+  s=rep(s,`if(Date.now()-dutyLastPublicPoll<8000)return;`,
+`if(Date.now()-dutyLastPublicPoll<3000)return;`, 'Duty refresh throttle');
+  s=rep(s,`setInterval(dutyAutoUpdateAcknowledgements,30000);`,
+`setInterval(dutyAutoUpdateAcknowledgements,5000);`, 'Duty near real-time refresh');
+  return s;
+}
+function patchReserve(s){
+  s=rep(s,`function refreshReserveStatisticsViews(){`,
+`function mjReserveNotice(message,type='success'){
+ let el=document.getElementById('mjReserveSyncNotice');
+ if(!el){el=document.createElement('div');el.id='mjReserveSyncNotice';el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.style.cssText='position:fixed;bottom:64px;left:12px;z-index:100000;background:#fff;color:#154438;border:1px solid #c5d5d1;box-shadow:0 5px 22px #0002;border-radius:10px;padding:10px 18px;font:700 14px Tahoma,Arial;direction:rtl;max-width:300px';document.body.appendChild(el)}
+ el.textContent=message;el.style.display='block';el.style.color=type==='error'?'#a12222':'#154438';
+ clearTimeout(el._hideTimer);el._hideTimer=setTimeout(()=>el.style.display='none',4400);
+}
+function refreshReserveStatisticsViews(){`,'Reserve toast helper');
+  s=rep(s,`if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel();
+  if(date===state.currentDate&&byId("reservePublishOverlay"))openReservePublication(date);`,
+`if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel();
+  if(date===state.currentDate&&byId("reservePublishOverlay")){
+    const preview=byId("reservePublishOverlay").querySelector('.reserve-publish-preview-scroll');
+    if(preview)preview.innerHTML=publicationHTML(date);
+  }`, 'Reserve sync publication without closing dialog');
+  s=rep(s,`async function refreshAndRenderPublic(){
+  await loadAll();
+  refreshReserveStatisticsViews();
+}`,`async function refreshAndRenderPublic(){
+  await loadAll();
+  await reserveSyncAdminMutation(state.currentDate);
+}`, 'Reserve public update');
+  s=rep(s,`if(done)done.textContent="تم الحفظ";
+    showReserveWorkspaceWarnings("reserveManualWarnings",warnings);`,
+`if(done)done.textContent="تم الحفظ";
+    mjReserveNotice('تم الحفظ');
+    showReserveWorkspaceWarnings("reserveManualWarnings",warnings);`, 'Reserve manual saved notice');
+  s=rep(s,`if(next)next.textContent="تم الحذف";
+    }catch(err){console.error(err);const next=byId("reserveManualMsg")`,
+`if(next)next.textContent="تم الحذف";
+      mjReserveNotice('تم الحذف');
+    }catch(err){console.error(err);const next=byId("reserveManualMsg")`, 'Reserve manual deleted notice');
+  s=rep(s,`const done=byId("reserveDayMsg");if(done)done.textContent="تم الحفظ";
+      try{await reserveSyncAdminMutation(result.date);}`, 
+`const done=byId("reserveDayMsg");if(done)done.textContent="تم الحفظ";
+      mjReserveNotice('تم الحفظ');
+      try{await reserveSyncAdminMutation(result.date);}`, 'Reserve auto single saved notice');
+  s=rep(s,`if(next)next.textContent="تم الحذف";
+    }catch(err){console.error(err);const next=byId("reserveDayMsg")`,
+`if(next)next.textContent="تم الحذف";
+      mjReserveNotice('تم الحذف');
+    }catch(err){console.error(err);const next=byId("reserveDayMsg")`, 'Reserve auto deleted notice');
+  s=rep(s,`byId("reserveDayMsg").textContent="تم الحفظ";
+      showReserveWorkspaceWarnings("reserveAutoWarnings",allWarnings);`,
+`byId("reserveDayMsg").textContent="تم الحفظ";
+      mjReserveNotice('تم الحفظ');
+      showReserveWorkspaceWarnings("reserveAutoWarnings",allWarnings);`, 'Reserve auto approve notice');
+  s=rep(s,`const status=byId("reserveManualMsg");if(status)status.textContent="تم الحفظ";`,
+`const status=byId("reserveManualMsg");if(status)status.textContent="تم الحفظ";
+      mjReserveNotice('تم الحفظ');`, 'Reserve manual reassignment notice');
+  // Auto save manual complete rows only, leaving incomplete editable drafts intact.
+  s=rep(s,`function bindManualAdmin(){`,
+`let mjReserveManualFieldTimer=null;
+function bindManualAdmin(){`, 'Reserve manual timer');
+  s=rep(s,`await reserveTeacherCloudAction(assignment.ackToken,"title",title);
+      await refreshAndRenderPublic();`,
+`await reserveTeacherCloudAction(assignment.ackToken,"title",title);
+      await refreshAndRenderPublic();mjReserveNotice('تم الحفظ');`, 'Reserve topic saved notice');
+  s=rep(s,`byId("reserveManualRows")?.addEventListener("click",event=>{`,
+`byId("reserveManualRows")?.addEventListener("change",event=>{
+    if(!event.target.matches('select.reserve-manual-assignee'))return;
+    clearTimeout(mjReserveManualFieldTimer);
+    const controls=[...document.querySelectorAll('#reserveManualRows .reserve-manual-assignee')];
+    const msg=byId('reserveManualMsg');
+    if(!controls.length||controls.some(x=>!x.value)){
+      if(msg)msg.textContent='اختيار غير مكتمل؛ احفظي بعد إسناد جميع الحصص.';
+      return;
+    }
+    mjReserveManualFieldTimer=setTimeout(()=>void saveManualAssignments(),750);
+  });
+  byId("reserveManualRows")?.addEventListener("click",event=>{`, 'Reserve manual field auto-save');
+  // Live saving on automatic roster selection; no need to click Update and Save.
+  s=rep(s,`byId("reserveAssignmentsAdmin")?.addEventListener("click",event=>{`,
+`byId("reserveAssignmentsAdmin")?.addEventListener("change",async event=>{
+    const select=event.target.closest('select.reserve-assignee');if(!select||!select.value)return;
+    const row=select.closest('[data-assignment]'),id=row?.dataset.assignment;
+    const prev=state.assignments.find(x=>String(x.id)===String(id));
+    if(!prev||String(prev.assignedTeacherId)===select.value)return;
+    select.disabled=true;
+    const msg=byId('reserveDayMsg');if(msg)msg.textContent='جارٍ الحفظ ومزامنة جدول النشر...';
+    try{
+      const res=await reserveCommitFlexibleAssignee(id,select.value);
+      renderWorkspaceCard('auto');
+      const status=byId('reserveDayMsg');if(status)status.textContent='تم الحفظ';
+      mjReserveNotice('تم الحفظ');
+      await reserveSyncAdminMutation(res.date);
+    }catch(e){console.error(e);if(msg?.isConnected)msg.textContent='تعذر الحفظ: '+(e.message||e);mjReserveNotice('تعذر الحفظ','error');select.disabled=false}
+  });
+  byId("reserveAssignmentsAdmin")?.addEventListener("click",event=>{`, 'Reserve auto field auto-save');
+  s=rep(s,`await deleteKind(K.absence,b.dataset.id,token());await loadAll();renderWorkspaceCard("auto");
+    await reserveSyncAdminMutation(state.currentDate);`,
+`try{
+      const deletedId=String(b.dataset.id);
+      await deleteKind(K.absence,deletedId,token());await loadAll();
+      if(absencesOn(state.currentDate).some(x=>String(x.id)===deletedId))throw Error('لم يتأكد الحذف من القاعدة');
+      renderWorkspaceCard("auto");await reserveSyncAdminMutation(state.currentDate);
+      const msg=byId('reserveDayMsg');if(msg)msg.textContent='تم الحذف';mjReserveNotice('تم الحذف');
+    }catch(e){console.error(e);const msg=byId('reserveDayMsg');if(msg)msg.textContent='تعذر الحذف: '+(e.message||e)}`, 'Reserve absence delete result');
+  s=rep(s,`await deleteKind(K.assignment,tr.dataset.assignment,token()); await loadAll();
+    renderWorkspaceCard("auto");
+    await reserveSyncAdminMutation(state.currentDate);`,
+`const deletedId=String(tr.dataset.assignment);
+    try{
+      await deleteKind(K.assignment,deletedId,token()); await loadAll();
+      if(assignmentsOn(state.currentDate).some(x=>String(x.id)===deletedId))throw Error('لم يتأكد الحذف من القاعدة');
+      renderWorkspaceCard("auto");await reserveSyncAdminMutation(state.currentDate);
+      const msg=byId('reserveDayMsg');if(msg)msg.textContent='تم الحذف';mjReserveNotice('تم الحذف');
+    }catch(e){console.error(e);const msg=byId('reserveDayMsg');if(msg)msg.textContent='تعذر الحذف: '+(e.message||e)}`, 'Reserve auto row delete result');
+  // Public topic field commits itself at change when valid; existing action verifies server response.
+  s=rep(s,`document.querySelectorAll(".reserve-row-topic-save").forEach(btn=>btn.addEventListener("click",async()=>{`,
+`document.querySelectorAll('.reserve-row-topic-input').forEach(input=>input.addEventListener('change',()=>{
+    const btn=input.closest('.reserve-row-topic-editor')?.querySelector('.reserve-row-topic-save');
+    if(input.value.trim().length>=3&&input.value.trim().length<=160)btn?.click();
+  }));
+  document.querySelectorAll(".reserve-row-topic-save").forEach(btn=>btn.addEventListener("click",async()=>{`, 'Reserve topic field auto-save');
+  // Synchronize other devices without resetting the actively edited administrative fields.
+  s=rep(s,`addEventListener("hashchange",()=>setTimeout(renderPage,0));`,
+`let mjReserveLiveBusy=false;
+async function mjReserveSyncLive(){
+  if(!isRoute()||renderBusy||mjReserveLiveBusy||document.visibilityState==='hidden'||reserveDateSyncBusy)return;
+  const admin=byId('reserveAdminMount'),focus=document.activeElement;
+  if(admin?.contains(focus)&&focus?.matches?.('input,select,textarea'))return;
+  mjReserveLiveBusy=true;
+  const refDate=state.currentDate;
+  const signature=()=>JSON.stringify({
+    assignments:state.assignments.filter(x=>x.date<=refDate&&x.date>=weekRange(refDate).start)
+      .map(x=>[x.id,x.date,x.published,x.assignedTeacherId,x.status,x.ackAt,x.activationTitle]),
+    absences:state.absences.filter(x=>x.date===refDate).map(x=>[x.id,x.teacherId,x.periods]),
+    adjustments:state.adjustments.filter(x=>x.date<=refDate&&x.date>=weekRange(refDate).start)
+      .map(x=>[x.id,x.teacherId,x.delta]),
+    teachers:state.teachers.map(x=>[x.id,x.name,x.workload,x.active,x.excluded]),
+    schedules:state.schedules.map(x=>[x.id,x.updatedAt]),
+    settings:state.settings?.updatedAt||''
+  });
+  const old=signature();
+  try{
+    await loadAll();
+    if(refDate!==state.currentDate||!isRoute())return;
+    if(old===signature())return;
+    refreshReserveStatisticsViews();
+    const overlay=byId('reservePublishOverlay'),preview=overlay?.querySelector('.reserve-publish-preview-scroll');
+    if(preview)preview.innerHTML=publicationHTML(refDate);
+    if(state.admin&&admin&&!admin.contains(document.activeElement))renderWorkspaceCard(state.workspaceCard);
+  }catch(e){console.warn('تعذر التحديث اللحظي للاحتياط',e)}
+  finally{mjReserveLiveBusy=false}
+}
+setInterval(()=>void mjReserveSyncLive(),5000);
+window.addEventListener('focus',()=>void mjReserveSyncLive());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void mjReserveSyncLive()});
+addEventListener("hashchange",()=>setTimeout(renderPage,0));`, 'Reserve live refresh');
+  return s;
+}
+function patchHome(s){
+  const count=(s.match(/daily-reserve\.js\?v=[^"']+/g)||[]).length;
+  if(count!==1)throw Error('تعذر تحديد استدعاء محرك الاحتياط في home-v3.js');
+  return s.replace(/daily-reserve\.js\?v=[^"']+/, 'daily-reserve.js?v=31.0-confirm-sync');
+}
+function patchIndex(s){
+ const a='manjaz-urgent18.js?v=';
+ const b='home-v3.js?v=';
+ const lines=s.split('\n');
+ const change=(k,version)=>{const i=lines.findIndex(l=>l.includes('<script src="'+k));if(i<0)throw Error('لم يوجد مسار '+k+' في index.html');
+ const before=lines[i];lines[i]=before.replace(/\?v=[^"']+/, '?v='+version);if(lines[i]===before)throw Error('فشل تغيير رقم الإصدار لـ'+k)};
+ change('manjaz-urgent18.js','31.0-confirm-sync');change('home-v3.js','31.0-confirm-sync');
+ return lines.join('\n');
+}
+const TRANSFORMS={'daily-reserve.js':patchReserve,'manjaz-urgent18.js':patchDuty,'home-v3.js':patchHome,'index.html':patchIndex};
+function crc32(bytes){let crc=0xffffffff;for(const b of bytes){crc^=b;for(let k=0;k<8;k++)crc=(crc>>>1)^((crc&1)?0xedb88320:0)}return(crc^0xffffffff)>>>0}
+function zipStore(files){
+ const enc=new TextEncoder(),pieces=[],central=[];let offset=0;
+ function write16(buf,n){buf.push(n&255,n>>>8&255)}
+ function write32(buf,n){buf.push(n&255,n>>>8&255,n>>>16&255,n>>>24&255)}
+ for(const [name,content] of Object.entries(files)){
+   const fn=enc.encode(name),data=enc.encode(content),crc=crc32(data),local=[];
+   write32(local,0x04034b50);write16(local,20);write16(local,0);write16(local,0);write16(local,0);write16(local,0);
+   write32(local,crc);write32(local,data.length);write32(local,data.length);write16(local,fn.length);write16(local,0);
+   const section=new Uint8Array([...local,...fn,...data]);pieces.push(section);
+   const h=[];write32(h,0x02014b50);write16(h,20);write16(h,20);write16(h,0);write16(h,0);write16(h,0);write16(h,0);
+   write32(h,crc);write32(h,data.length);write32(h,data.length);write16(h,fn.length);write16(h,0);write16(h,0);write16(h,0);write16(h,0);write32(h,0);write32(h,offset);
+   central.push(new Uint8Array([...h,...fn]));offset+=section.length;
+ }
+ const centralSize=central.reduce((sum,x)=>sum+x.length,0),end=[];
+ write32(end,0x06054b50);write16(end,0);write16(end,0);write16(end,central.length);write16(end,central.length);write32(end,centralSize);write32(end,offset);write16(end,0);
+ return new Blob([...pieces,...central,new Uint8Array(end)],{type:'application/zip'});
+}
+async function buildPackage(files=FILES){const out={};
+ for(const f of files){
+  let code=null;
+  const pick=document.getElementById('file-'+f);
+  if(pick?.files?.length)code=await pick.files[0].text();
+  else{const response=await fetch(REPO+f+'?t='+Date.now(),{cache:'no-store'});if(!response.ok)throw Error('تعذر جلب '+f+' من GitHub، يمكنك اختيار الملف يدويًا.');code=await response.text()}
+  out[f]=TRANSFORMS[f](code);
+ }
+ out['README-AR.txt']='منجز — تحديث الرسائل والمزامنة 31.0\nارفع الملفات الأربعة إلى جذر مستودع GitHub (استبدال الملفات القائمة).\nيحافظ التحديث على قواعد الاحتياط القائمة دون تعديل.\nرسائل تم الحفظ وتم الحذف بعد نجاح الخادم فقط.\nالمزامنة مباشرة بعد التعديل وبفحص دوري 5 ثوانٍ بين الأجهزة.\nالجداول غير المنشورة لا تنشر تلقائيًا.\n';
+ return out;
+}
+
+const statusElement=document.getElementById('status'),buildButton=document.getElementById('build');
+buildButton.addEventListener('click',async()=>{
+ buildButton.disabled=true;statusElement.classList.remove('warn');statusElement.textContent='جارٍ قراءة أحدث الملفات والتحقق من مواضع التعديل...';
+ try{
+  const output=await buildPackage();
+  for(const [name,code] of Object.entries(output)){
+   if(name.endsWith('.js')&&!code.length)throw Error('الملف الناتج فارغ: '+name);
+  }
+  const blob=zipStore(output),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='Manjaz_Sync_v31_Files.zip';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+  statusElement.textContent='تم إنشاء حزمة التحديث بنجاح. افتحي ملف ZIP الناتج ثم ارفعي الملفات الأربعة إلى GitHub.';
+ }catch(error){console.error(error);statusElement.classList.add('warn');statusElement.textContent='تعذر إنشاء الحزمة: '+(error.message||error)+'\nلن يتم تنزيل ملفات غير مكتملة.';}
+ finally{buildButton.disabled=false;}
+});
+</script></body></html>
