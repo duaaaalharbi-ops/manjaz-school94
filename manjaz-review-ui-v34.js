@@ -341,7 +341,7 @@ document.addEventListener("change",e=>{
 });
 function boot(){
  const view=document.getElementById("view");
- if(view)new MutationObserver(()=>queueMicrotask(normalize)).observe(view,{childList:true,subtree:true});
+ if(view)new MutationObserver(()=>queueMicrotask(normalize)).observe(view,{childList:true,subtree:false});
  normalize();addEventListener("hashchange",()=>queueMicrotask(normalize));
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
