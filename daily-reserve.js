@@ -3171,6 +3171,10 @@ function bindDayAdmin(){
 function bindTeachersAdmin(){
   byId("reserveTeacherForm")?.addEventListener("submit",async e=>{
     e.preventDefault(); const msg=byId("rtMsg");
+    const button=e.target.querySelector('button[type="submit"]');
+    if(button?.disabled)return;
+    if(button){button.disabled=true;button.textContent="جارٍ الحفظ...";}
+    msg.textContent="جارٍ الحفظ...";
     try{
       await insertKind(K.teacher,{
         name:clean(byId("rtName").value),subject:clean(byId("rtSubject").value),
@@ -3179,20 +3183,50 @@ function bindTeachersAdmin(){
       },token());
       await loadAll(); renderAdminTab("teachers");
     }catch(err){console.error(err);msg.textContent="تعذر حفظ المعلمة"}
+    finally{if(button?.isConnected){button.disabled=false;button.textContent="حفظ المعلمة";}}
   });
   document.querySelectorAll(".reserve-edit-schedule").forEach(b=>b.onclick=()=>{
     const row=b.closest("[data-teacher]"),t=teacherOf(row.dataset.teacher),ed=byId("reserveTeacherEditor");
     ed.innerHTML=scheduleEditorHTML(t);ed.style.display="block";ed.scrollIntoView({behavior:"smooth",block:"start"});
     byId("reserveCloseTeacherEditor").onclick=()=>ed.style.display="none";
-    byId("reserveSaveSchedule").onclick=async()=>{
-      const timetable={sun:[],mon:[],tue:[],wed:[],thu:[]};
-      ed.querySelectorAll("[data-day][data-period]").forEach(i=>{timetable[i.dataset.day][Number(i.dataset.period)-1]=clean(i.value)});
-      const existing=scheduleOf(t.id);
-      const data={teacherId:String(t.id),teacherName:t.name,timetable,updatedAt:new Date().toISOString()};
-      if(existing)await patchKind(K.schedule,existing.id,data,token());else await insertKind(K.schedule,data,token());
-      await loadAll();ed.innerHTML=scheduleEditorHTML(t);ed.style.display="block";
-      bindTeachersAdmin();
+    let savingSchedule=false,saveScheduleAgain=false;
+    const saveSchedule=async()=>{
+      if(savingSchedule){saveScheduleAgain=true;return}
+      const button=byId("reserveSaveSchedule");
+      if(!button)return;
+      savingSchedule=true;
+      button.disabled=true;
+      button.textContent="جارٍ الحفظ...";
+      let message=byId("reserveScheduleMessage");
+      if(!message){
+        message=document.createElement("div");message.id="reserveScheduleMessage";
+        message.setAttribute("role","status");message.setAttribute("aria-live","polite");
+        ed.appendChild(message);
+      }
+      try{
+        do{
+          saveScheduleAgain=false;
+          const timetable={sun:[],mon:[],tue:[],wed:[],thu:[]};
+          ed.querySelectorAll("[data-day][data-period]").forEach(i=>{
+            timetable[i.dataset.day][Number(i.dataset.period)-1]=clean(i.value);
+          });
+          const existing=scheduleOf(t.id);
+          const data={teacherId:String(t.id),teacherName:t.name,timetable,updatedAt:new Date().toISOString()};
+          message.textContent="جارٍ الحفظ...";
+          if(existing)await patchKind(K.schedule,existing.id,data,token());
+          else await insertKind(K.schedule,data,token());
+          await loadAll();
+        }while(saveScheduleAgain);
+        message.textContent="تم الحفظ";
+      }catch(err){console.error(err);message.textContent="تعذر الحفظ، أعيدي المحاولة."}
+      finally{
+        savingSchedule=false;
+        if(button.isConnected){button.disabled=false;button.textContent="حفظ الجدول";}
+      }
     };
+    byId("reserveSaveSchedule").onclick=saveSchedule;
+    ed.querySelectorAll("[data-day][data-period]").forEach(input=>
+      input.addEventListener("change",saveSchedule));
   });
   document.querySelectorAll(".reserve-edit-teacher").forEach(b=>b.onclick=async()=>{
     const t=teacherOf(b.closest("[data-teacher]").dataset.teacher); if(!t)return;
@@ -3206,8 +3240,13 @@ function bindTeachersAdmin(){
   document.querySelectorAll(".reserve-delete-teacher").forEach(b=>b.onclick=async()=>{
     const id=b.closest("[data-teacher]").dataset.teacher,t=teacherOf(id);
     if(!confirm(`حذف المعلمة «${t?.name||""}» من قائمة الاحتياط؟`))return;
-    await patchKind(K.teacher,id,{...plainData(t),active:false},token());
-    await loadAll();renderAdminTab("teachers");
+    if(b.disabled)return;
+    b.disabled=true;b.textContent="جارٍ الحذف...";
+    try{
+      await patchKind(K.teacher,id,{...plainData(t),active:false},token());
+      await loadAll();renderAdminTab("teachers");
+    }catch(err){console.error(err);alert("تعذر حذف المعلمة؛ لم يتم تأكيد العملية.")}
+    finally{if(b.isConnected){b.disabled=false;b.textContent="حذف";}}
   });
 }
 
