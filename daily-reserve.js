@@ -1618,6 +1618,14 @@ async function reserveCommitFlexibleAssignee(recordId,teacherId){
 function bindReserveFlexibleAssignmentEditing(container){
   const node=byId(container);
   if(!node)return;
+  // Persist changes to an existing manual assignment as soon as its select changes.
+  // The existing save handler verifies Supabase before showing success.
+  node.addEventListener("change",event=>{
+    const select=event.target.closest("select.reserve-flex-select");
+    const row=select?.closest("[data-reserve-flex-id]");
+    const save=row?.querySelector("button.reserve-flex-save");
+    if(select?.value && save && !save.hidden && !save.disabled)save.click();
+  });
   node.addEventListener("click",async event=>{
     const button=event.target.closest("button.reserve-flex-edit,button.reserve-flex-save");
     if(!button)return;
@@ -2882,6 +2890,14 @@ async function refreshDayCandidates(date){
 
 function bindDayAdmin(){
   bindHijriDateControl("reserveAdminDate",next=>syncReserveSectionDate(next));
+  // Changing a saved automatic assignee commits the change immediately while
+  // retaining the current draft/approved state; the full-day approval is separate.
+  byId("reserveAssignmentsAdmin")?.addEventListener("change",event=>{
+    const select=event.target.closest("select.reserve-assignee");
+    const row=select?.closest("[data-assignment]");
+    const save=row?.querySelector("button.reserve-save-assignee");
+    if(select?.value && save && !save.disabled)save.click();
+  });
   byId("reserveAssignmentsAdmin")?.addEventListener("click",event=>{
     const button=event.target.closest(".reserve-auto-unlock");
     if(button)reserveUnlockAssigneeSelector(button.closest("[data-assignment]")?.querySelector(".reserve-assignee"));
@@ -3196,8 +3212,16 @@ function bindTeachersAdmin(){
 }
 
 function bindSettingsAdmin(){
+  byId("rwEmergency")?.addEventListener("change",()=>{
+    const button=byId("reserveSaveSettings");
+    if(button && !button.disabled)button.click();
+  });
   byId("reserveSaveSettings")?.addEventListener("click",async()=>{
     const msg=byId("reserveSettingsMsg");
+    const button=byId("reserveSaveSettings");
+    if(button.disabled)return;
+    button.disabled=true;
+    msg.textContent="جارٍ الحفظ...";
     const data={
       ...(state.settings?plainData(state.settings):{}),
       sourceVersion:V6_SOURCE,
@@ -3211,6 +3235,7 @@ function bindSettingsAdmin(){
       else await insertKind(K.settings,data,token());
       await loadAll();msg.textContent="تم حفظ الإعدادات";
     }catch(err){console.error(err);msg.textContent="تعذر حفظ الإعدادات"}
+    finally{if(button.isConnected)button.disabled=false}
   });
 }
 
