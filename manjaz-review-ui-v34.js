@@ -3,6 +3,7 @@
 const BASE="https://idkjuqfxcweqekdkcktk.supabase.co";
 const KEY="sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
 const SESSION="manjaz_admin_auth_session_v1";
+const ADMIN_EMAIL="munjz.s94@hotmail.com";
 const STATUS="manjazApprovalV34Status";
 let applying=false,working=false;
 const css=document.createElement("style");css.id="manjazReviewV34CSS";
@@ -37,6 +38,16 @@ css.textContent=`
 #mj15Powers .mj34-admin-link{display:inline-block;margin:10px 0;color:#0a6666;font-weight:700}
 #mj15Powers .mj34-hidden-legacy{display:none!important}
 #mj15Powers .mj34-admin-intro{margin:6px 0 10px;color:#5a6e70}
+#mj15Powers .mj34-inline-login{display:grid;gap:12px;max-width:570px;padding:14px;border:1px solid #cbdedc;border-radius:12px;background:#fbfdfd}
+#mj15Powers .mj34-inline-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#mj15Powers .mj34-inline-fields label{display:grid;gap:6px;color:#144b55;font-weight:700;min-width:0}
+#mj15Powers .mj34-inline-fields input{width:100%;min-width:0;box-sizing:border-box;border:1px solid #bed5d4;border-radius:10px;background:#fff;color:#183a43;padding:12px;font:inherit;direction:ltr;text-align:left}
+#mj15Powers .mj34-inline-login button,#mj15Powers .mj34-inline-logout{min-height:40px;border:0;border-radius:10px;background:#0b6067;color:white;padding:9px 16px;font:700 14px Tahoma,Arial,sans-serif;cursor:pointer}
+#mj15Powers .mj34-inline-logout{background:#edf5f4;border:1px solid #bdd9d5;color:#15545b}
+#mj15Powers .mj34-auth-feedback{font-size:13px;font-weight:600;line-height:1.6;min-height:18px}
+#mj15Powers .mj34-inline-login[hidden],#mj15Powers .mj34-powers-protected[hidden]{display:none!important}
+#mj15Powers .mj34-session-status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;color:#21565d}
+@media(max-width:650px){#mj15Powers .mj34-inline-fields{grid-template-columns:1fr}}
 #${STATUS}{margin:8px 0;padding:10px;border:1px solid #bfdad6;border-radius:9px;background:#f5faf9;font-weight:700}
 @media(max-width:650px){#view.mj16-admin-only #mj15Dashboard .admin-item{display:flex;flex-wrap:wrap} }
 `;
@@ -53,13 +64,24 @@ function status(message,isError=false){
 }
 async function authorizedToken(){
  let s;try{s=JSON.parse(sessionStorage.getItem(SESSION)||"null")}catch{s=null}
- if(!s?.access_token)throw Error("سجّلي الدخول أولًا من الصلاحيات الإدارية");
- if(s.expires_at&&Number(s.expires_at)<Date.now()/1000)throw Error("انتهت الجلسة الإدارية؛ أعيدي تسجيل الدخول");
+ if(!s?.access_token)throw Error("يرجى تسجيل الدخول ببيانات الإدارة أولًا");
+ if(s.expires_at&&Number(s.expires_at)<=Date.now()/1000+30){
+  if(!s.refresh_token)throw Error("انتهت الجلسة الإدارية؛ أعيدي تسجيل الدخول");
+  const renewal=await fetch(BASE+"/auth/v1/token?grant_type=refresh_token",{
+   method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},
+   body:JSON.stringify({refresh_token:s.refresh_token}),cache:"no-store"
+  });
+  if(!renewal.ok)throw Error("انتهت الجلسة الإدارية؛ أعيدي تسجيل الدخول");
+  const refreshed=await renewal.json();
+  s={...s,access_token:refreshed.access_token,refresh_token:refreshed.refresh_token||s.refresh_token,
+   expires_at:Math.floor(Date.now()/1000)+Number(refreshed.expires_in||3600),user:refreshed.user||s.user};
+  sessionStorage.setItem(SESSION,JSON.stringify(s));
+ }
  const r=await fetch(BASE+"/auth/v1/user",{headers:{apikey:KEY,Authorization:"Bearer "+s.access_token},cache:"no-store"});
- if(!r.ok)throw Error("تعذر التحقق من الجلسة الإدارية");
+ if(!r.ok)throw Error("انتهت الجلسة الإدارية؛ أعيدي تسجيل الدخول");
  const u=await r.json();
- if(String(u.email||"").toLowerCase()!=="munjz.s94@hotmail.com")
-  throw Error("الاعتماد متاح لحساب إدارة منجز فقط");
+ if(String(u.email||"").toLowerCase()!==ADMIN_EMAIL)
+  throw Error("هذه الوظيفة مخصصة لحساب إدارة منجز");
  return s.access_token;
 }
 async function review(btn,decision){
@@ -89,6 +111,110 @@ async function review(btn,decision){
  }catch(e){console.error(e);status("تعذر اعتماد الطلب: "+(e?.message||"خطأ غير معروف"),true)}
  finally{working=false;if(btn.isConnected){btn.disabled=false;btn.textContent=original}}
 }
+
+function setPowersAuthenticated(ready){
+ const login=document.getElementById("mj34InlineAdminLogin");
+ const protectedPanel=document.getElementById("mj34PowersProtected");
+ if(!login||!protectedPanel)return;
+ login.hidden=!!ready;protectedPanel.hidden=!ready;
+ if(!ready){
+  const select=document.getElementById("mj34PowersSelect");
+  if(select)select.value="";
+  for(const id of ["mj15ReservePowers","mj15CertificatePowers"]){
+   const panel=document.getElementById(id);
+   if(panel)panel.style.display="none";
+  }
+  const destination=document.getElementById("mj34PowerNavigation");
+  if(destination)destination.replaceChildren();
+ }
+}
+async function restoreInlinePowersLogin(){
+ const form=document.getElementById("mj34InlineAdminLogin");
+ if(!form)return;
+ try{
+  await authorizedToken();
+  if(form.isConnected)setPowersAuthenticated(true);
+ }catch(_){
+  if(form.isConnected)setPowersAuthenticated(false);
+ }
+}
+function addInlinePowersAuth(body){
+ const legacyLink=body.querySelector('a[href="#admin-permissions"]');
+ if(legacyLink)legacyLink.classList.add("mj34-hidden-legacy");
+ const lead=body.querySelector("p.mj15-hint");
+ if(lead)lead.classList.add("mj34-hidden-legacy");
+ const container=document.createElement("div");
+ container.id="mj34InlinePowers";
+ container.innerHTML=
+  '<form id="mj34InlineAdminLogin" class="mj34-inline-login" autocomplete="on">'+
+   '<strong>تسجيل الدخول إلى الصلاحيات الإدارية</strong>'+
+   '<div class="mj34-inline-fields">'+
+    '<label>اسم المستخدم<input id="mj34InlineUsername" type="email" autocomplete="username" placeholder="البريد الإلكتروني الإداري" required></label>'+
+    '<label>كلمة المرور<input id="mj34InlinePassword" type="password" autocomplete="current-password" placeholder="كلمة المرور" required></label>'+
+   '</div><div><button type="submit" id="mj34InlineLoginButton">دخول</button></div>'+
+   '<div class="mj34-auth-feedback" id="mj34InlineAuthMessage" role="status" aria-live="polite"></div>'+
+  '</form>'+
+  '<div id="mj34PowersProtected" class="mj34-powers-protected" hidden>'+
+   '<div class="mj34-session-status"><strong>تم تسجيل الدخول بصلاحية الإدارة</strong>'+
+    '<button type="button" class="mj34-inline-logout" id="mj34InlineLogout">تسجيل الخروج</button></div>'+
+   '<label for="mj34PowersSelect" class="mj34-admin-intro">اختاري الوظيفة الإدارية</label>'+
+   '<select id="mj34PowersSelect" class="mj34-admin-select" aria-label="قائمة الصلاحيات الإدارية">'+
+    '<option value="">اختاري من القائمة</option>'+
+    '<option value="reserve">كشوف الاحتياط</option>'+
+    '<option value="duty">كشوف المناوبة</option>'+
+    '<option value="certificates">طلبات اعتماد الشهادات</option>'+
+   '</select><div id="mj34PowerNavigation"></div>'+
+  '</div>';
+ body.insertBefore(container,body.firstChild);
+ const form=container.querySelector("#mj34InlineAdminLogin");
+ const button=container.querySelector("#mj34InlineLoginButton");
+ const feedback=container.querySelector("#mj34InlineAuthMessage");
+ form.addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(button.disabled)return;
+  const email=String(container.querySelector("#mj34InlineUsername").value||"").trim().toLowerCase();
+  const password=container.querySelector("#mj34InlinePassword").value;
+  button.disabled=true;button.textContent="جارٍ التحقق...";
+  feedback.textContent="جارٍ التحقق من حساب الإدارة...";
+  try{
+   if(email!==ADMIN_EMAIL)throw Error("أدخلي البريد الإلكتروني الإداري المعتمد");
+   const login=await fetch(BASE+"/auth/v1/token?grant_type=password",{
+    method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({email,password}),cache:"no-store"
+   });
+   if(!login.ok)throw Error("اسم المستخدم أو كلمة المرور غير صحيحة");
+   const result=await login.json();
+   if(!result?.access_token)throw Error("لم يكتمل تسجيل الدخول");
+   const verification=await fetch(BASE+"/auth/v1/user",{
+    headers:{apikey:KEY,Authorization:"Bearer "+result.access_token},cache:"no-store"
+   });
+   if(!verification.ok)throw Error("تعذر التحقق من صلاحية الحساب");
+   const user=await verification.json();
+   if(String(user.email||"").toLowerCase()!==ADMIN_EMAIL)throw Error("الحساب لا يمتلك صلاحية الإدارة");
+   sessionStorage.setItem(SESSION,JSON.stringify({
+    access_token:result.access_token,refresh_token:result.refresh_token||"",
+    expires_at:Math.floor(Date.now()/1000)+Number(result.expires_in||3600),
+    user
+   }));
+   container.querySelector("#mj34InlinePassword").value="";
+   feedback.textContent="";
+   setPowersAuthenticated(true);
+  }catch(err){
+   container.querySelector("#mj34InlinePassword").value="";
+   feedback.textContent=err?.message||"تعذر تسجيل الدخول";
+   feedback.style.color="#aa302e";
+  }finally{
+   button.disabled=false;button.textContent="دخول";
+  }
+ });
+ container.querySelector("#mj34InlineLogout").addEventListener("click",()=>{
+  sessionStorage.removeItem(SESSION);
+  form.reset();feedback.textContent="";
+  setPowersAuthenticated(false);
+ });
+ void restoreInlinePowersLogin();
+}
+
 function normalize(){
  if(applying)return;
  applying=true;
@@ -159,18 +285,7 @@ function normalize(){
   }
   const powers=document.getElementById("mj15Powers");
   const body=powers?.querySelector(".mj15-body");
-  if(body&&!body.querySelector("#mj34PowersSelect")){
-   const legacyLink=body.querySelector('a[href="#admin-permissions"]');
-   if(legacyLink)legacyLink.classList.add("mj34-hidden-legacy");
-   const lead=body.querySelector("p.mj15-hint");if(lead)lead.classList.add("mj34-hidden-legacy");
-   const box=document.createElement("div");box.innerHTML=
-     '<label for="mj34PowersSelect" class="mj34-admin-intro">اختاري الوظيفة الإدارية</label>'+
-     '<select id="mj34PowersSelect" class="mj34-admin-select">'+
-     '<option value="">اختاري من القائمة</option><option value="reserve">كشوف الاحتياط</option>'+
-     '<option value="duty">كشوف المناوبة</option><option value="certificates">طلبات اعتماد الشهادات</option></select>'+
-     '<div id="mj34PowerNavigation"></div>';
-   body.insertBefore(box,body.firstChild);
-  }
+  if(body&&!body.querySelector("#mj34InlinePowers"))addInlinePowersAuth(body);
  }finally{applying=false}
 }
 document.addEventListener("click",e=>{
@@ -185,14 +300,30 @@ document.addEventListener("click",e=>{
 },true);
 document.addEventListener("change",e=>{
  if(e.target.id!=="mj34PowersSelect")return;
- const val=e.target.value,powers=document.getElementById("mj15Powers");
- const reserve=powers?.querySelector("#mj15ReservePowers"),cert=powers?.querySelector("#mj15CertificatePowers");
- const nav=powers?.querySelector("#mj34PowerNavigation");
- if(reserve)reserve.style.display=val==="reserve"?"block":"none";
- if(cert)cert.style.display=val==="certificates"?"block":"none";
- if(nav)nav.innerHTML=val==="reserve"?'<a class="mj34-admin-link" href="#daily-reserve">فتح كشوف الاحتياط اليومي</a>':"";
- if(val==="duty")location.hash="#daily-duty";
- if(val==="certificates"){const panel=document.getElementById("mj15Powers");if(panel)panel.open=true;cert?.querySelector('[data-mj15-refresh]')?.click();}
+ const select=e.target,val=select.value;
+ if(!val)return;
+ void (async()=>{
+  try{await authorizedToken()}
+  catch(error){
+   setPowersAuthenticated(false);
+   const message=document.getElementById("mj34InlineAuthMessage");
+   if(message)message.textContent=error.message||"يرجى تسجيل الدخول مرة أخرى";
+   return;
+  }
+  if(!select.isConnected)return;
+  const powers=document.getElementById("mj15Powers");
+  const reserve=powers?.querySelector("#mj15ReservePowers"),cert=powers?.querySelector("#mj15CertificatePowers");
+  const nav=powers?.querySelector("#mj34PowerNavigation");
+  if(reserve)reserve.style.display=val==="reserve"?"block":"none";
+  if(cert)cert.style.display=val==="certificates"?"block":"none";
+  if(nav)nav.innerHTML=val==="reserve"?'<a class="mj34-admin-link" href="#daily-reserve">فتح كشوف الاحتياط اليومي</a>':"";
+  if(val==="duty")location.hash="#daily-duty";
+  if(val==="certificates"){
+   const panel=document.getElementById("mj15Powers");
+   if(panel)panel.open=true;
+   cert?.querySelector('[data-mj15-refresh]')?.click();
+  }
+ })();
 });
 function boot(){
  const view=document.getElementById("view");
