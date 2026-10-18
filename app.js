@@ -32,12 +32,15 @@ function mergeUniqueRecords(groups){
 }
 
 function getItems(){
-  const groups=[parseStoredArray(STORE)];
+  // Preserve older records, but the canonical cloud-synchronized cache takes precedence
+  // over stale legacy copies of the same ID, especially after administrative review.
+  const groups=[];
   /* استرجاع نسخ المنجزات المحلية الأقدم إن وُجدت، دون حذف النسخة الحالية */
   for(let i=0;i<localStorage.length;i++){
     const key=localStorage.key(i)||"";
     if(key!==STORE && /^manjaz_achievements/i.test(key)) groups.push(parseStoredArray(key));
   }
+  groups.push(parseStoredArray(STORE));
   const items=mergeUniqueRecords(groups);
   /* ترحيل آمن إلى المفتاح الحالي */
   try{ localStorage.setItem(STORE,JSON.stringify(items)); }catch{}
