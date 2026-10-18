@@ -153,7 +153,11 @@ document.addEventListener("click",e=>{
 });
 window.addEventListener("resize",()=>fitDialog(document.getElementById("mj37Dialog")),{passive:true});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("mj37Dialog")?.close()});
-window.addEventListener("hashchange",()=>{if(active())void render();else ++requestSerial});
+window.renderManjazPublicCertificates=render;
+window.addEventListener("hashchange",()=>{
+ if(active()&&!document.getElementById("mj37CertificateList"))void render();
+ else if(!active())++requestSerial;
+});
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{if(active())void render()},{once:true});
 else if(active())void render();
 })();
