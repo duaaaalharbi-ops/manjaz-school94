@@ -681,15 +681,11 @@ function sameClassReserveToday(teacherId,date,className,exceptId=""){
   return assignmentsOn(date).some(a=>String(a.id)!==String(exceptId)&&String(a.assignedTeacherId)===String(teacherId)&&clean(a.className)===target);
 }
 function adjacentOriginalCount(teacherId,date,period){
-  let n=0;
-  for(const p of [Number(period)-1,Number(period)+1]){
-    if(p<1||p>7)continue;
-    if(regularCell(teacherId,date,p))n++;
-  }
-  return n;
+  // الاتصال بين احتياط وحصة أصلية مسموح، ولا يخصم من المفاضلة.
+  return 0;
 }
 function breastfeedingBlocked(t,date,period){
-  if(clean(t.name)!=="ريم الحربي")return false;
+  if(!["ريم الحربي","نورة الهودان"].includes(clean(t.name)))return false;
   const dk=dayKey(date);
   return ((dk==="sun"||dk==="mon")&&Number(period)===7)||(["tue","wed","thu"].includes(dk)&&Number(period)===6);
 }
@@ -878,81 +874,48 @@ function consecutivePenalty(teacherId,date,period){
 }
 
 function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts={}){
-  const counts=assignmentCounts(date);
+  const fullCadre=state.autoAllNames!==false;
+  const counts=assignmentCounts(date),week=weekRange(date);
   const targetClass=clean(opts.className||"");
-  const emergency=dailyDemand(date)>Number(state.settings?.emergencyDailyDemand||EMERGENCY_DAILY_DEMAND);
-  const usedPrimary=opts.usedPrimary||new Set(),usedAlt1=opts.usedAlt1||new Set();
-  const all=[];
-  state.teachers.forEach(t=>{
-    if(String(t.id)===String(absentTeacherId))return;
-    if(t.active===false||t.excluded===true)return;
-    const flags=teacherFlags(t);
-    if(flags.absolute)return;
-    if(flags.permanentExcluded&&!conditionalReserveAllowed(date))return;
-    if(isAbsent(t.id,date))return;
-    if(breastfeedingBlocked(t,date,period))return;
-    if(regularCell(t.id,date,period))return;
-    if(occupiedByReserve(t.id,date,period,exceptAssignmentId))return;
-
-    const c=counts.get(String(t.id))||{daily:0,week:0,term:0};
-    const missed=currentWeekAbsenceLoad(t.id,date);
-    const effectiveLoad=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
-    const pending=makeupPending(t,date);
-    const ceiling=ceilingFor(t);
-    if(!emergency&&!pending&&effectiveLoad>=ceiling)return;
-
-    const ownClass=targetClass?teacherHasClass(t.id,targetClass):false;
-    const fatimaSecond=clean(t.name)==="فاطمة حسن"&&/^ثاني/.test(targetClass);
-    const dailyOriginal=dailyOriginalCount(t.id,date);
-    const adjacentOriginal=adjacentOriginalCount(t.id,date,period);
-    const prevWeek=previousWeekReserveCount(t.id,date);
-    const sameClassRepeat=targetClass?sameClassReserveToday(t.id,date,targetClass,exceptAssignmentId):false;
-    const diversityUsed=usedPrimary.has(String(t.id))||usedAlt1.has(String(t.id));
-
-    all.push({
-      teacherId:String(t.id),name:t.name||"",workload:Number(t.workload||0),
-      week:Number(c.week||0),term:Number(c.term||0),daily:Number(c.daily||0),
-      effectiveLoad,missed,makeupPending:pending,ceiling,ownClass,fatimaSecond,
-      dailyOriginal,adjacentOriginal,prevWeek,sameClassRepeat,diversityUsed,
-      permanentExcluded:flags.permanentExcluded,emergency
-    });
-  });
-
-  let pool=all.filter(x=>!x.sameClassRepeat);
-  if(!pool.length&&emergency)pool=all.slice();
-
-  // Keep every non-excluded option when there are enough of them;
-  // do not discard regular teachers merely because exception teachers
-  // have fewer recent substitutions.
-  const enough=Math.max(1,Number(opts.limit||3));
-  const standard=pool.filter(x=>!x.permanentExcluded);
-  if(standard.length>=enough)pool=standard;
-
-  if(!emergency){
-    const fresh=pool.filter(x=>x.prevWeek===0);
-    if(fresh.length>=enough &&
-       (standard.length===0||fresh.filter(x=>!x.permanentExcluded).length>=Math.min(standard.length,enough)))pool=fresh;
+  const usedPrimary=opts.usedPrimary||new Set();
+  const restrictedNames=new Set(["عبير المولد","عايدة الصاعدي","نجوى الغامدي","عواطف الحربي","لمياء البلادي","لمياء البالدي","نورة العنزي","أفراح الجدعاني","بدرية الحربي","بدريه الحربي"]);
+  const rank=[];
+  const roster=fullCadre?manualAssigneeDirectory():state.teachers;
+  for(const t of roster){
+    if(String(t.id)===String(absentTeacherId)||t.active===false)continue;
+    const flags=teacherFlags(t),support=t.supportStaff===true||
+      /مرشد|إرشاد|ارشاد|توجيه طلاب|محضر.*مختبر|مختبر/.test([t.role,t.jobTitle,t.position,t.subject].map(clean).join(" "));
+    if(!fullCadre&&(support||t.excluded===true||flags.absolute||flags.permanentExcluded||
+       Number(t.workload||0)>=20||restrictedNames.has(clean(t.name))))continue;
+    if(isAbsent(t.id,date)||breastfeedingBlocked(t,date,period))continue;
+    if(!support&&!scheduleOf(t.id))continue; // تعذر تأكيد التفرغ في الجدول
+    if(!support&&regularCell(t.id,date,period))continue;
+    if(occupiedByReserve(t.id,date,period,exceptAssignmentId))continue;
+    if(targetClass&&sameClassReserveToday(t.id,date,targetClass,exceptAssignmentId))continue;
+    const weekly=state.assignments.filter(a=>a.status!=="ملغي"&&String(a.id)!==String(exceptAssignmentId)&&
+       String(a.assignedTeacherId)===String(t.id)&&a.date>=week.start&&a.date<=date).length;
+    if(weekly>=20)continue;
+    const absenceCount=state.absences.filter(a=>String(a.teacherId)===String(t.id)&&a.date>=week.start&&a.date<=date)
+       .reduce((n,a)=>n+(a.periods||[]).length,0);
+    const currentDraftUse=assignmentsOn(date).filter(a=>String(a.id)!==String(exceptAssignmentId)&&
+       String(a.assignedTeacherId)===String(t.id)).length;
+    const c=counts.get(String(t.id))||{week:0,term:0,daily:0};
+    rank.push({teacherId:String(t.id),name:t.name||"",workload:Number(t.workload||0),
+      week:weekly,term:Number(c.term||0),daily:currentDraftUse,absenceCount,
+      effectiveLoad:Number(t.workload||0)+weekly,supportStaff:support,
+      diversityUsed:usedPrimary.has(String(t.id))});
   }
-
-  if(!opts.ignoreDiversity){
-    const fresh=pool.filter(x=>!x.diversityUsed);
-    if(fresh.length>=enough&&
-       (standard.length===0||fresh.filter(x=>!x.permanentExcluded).length>=Math.min(standard.length,enough)))pool=fresh;
-  }
-  pool.sort((a,b)=>
-    Number(a.permanentExcluded)-Number(b.permanentExcluded)||
-    a.effectiveLoad-b.effectiveLoad||
-    Number(b.makeupPending)-Number(a.makeupPending)||
-    a.week-b.week||
-    Number(b.ownClass)-Number(a.ownClass)||
-    Number(b.fatimaSecond)-Number(a.fatimaSecond)||
-    a.dailyOriginal-b.dailyOriginal||
-    a.adjacentOriginal-b.adjacentOriginal||
-    a.term-b.term||
-    a.prevWeek-b.prevWeek||
-    a.name.localeCompare(b.name,"ar")
-  );
-  return pool.slice(0,Number(opts.limit||3)).map((x,i)=>({...x,score:i+1}));
+  rank.sort((x,y)=>
+    Number(x.supportStaff)-Number(y.supportStaff)||
+    x.workload-y.workload||
+    Number(x.week>0)-Number(y.week>0)||
+    Number(y.absenceCount>0)-Number(x.absenceCount>0)||
+    x.week-y.week||
+    x.daily-y.daily||
+    Number(x.diversityUsed)-Number(y.diversityUsed)||
+    x.term-y.term||
+    x.name.localeCompare(y.name,"ar"));
+  return rank.slice(0,Math.max(1,Number(opts.limit||3))).map((x,i)=>({...x,score:i+1}));
 }
 
 function injectStyle(){
@@ -1475,7 +1438,7 @@ function dayAdminHTML(){
       </div>
       <div class="form-actions"><button class="btn btn-primary" id="reserveAddAbsence" type="button">تسجيل جميع الغائبات واستخراج حصصهن</button></div>
       <label class="reserve-admin-manual-toggle"><input type="checkbox" id="reserveAutoAllNames" ${state.autoAllNames!==false?"checked":""}>
-        <span><strong>إتاحة جميع الكادر للتعديل:</strong> إظهار المعلمات جميعًا، بمن فيهن المستثنيات، إضافة إلى الموجهات الطلابيات ومحضرة المختبر. يظهر ترشيح ذكي واحد لكل حصة، ويمكن استبداله من القائمة المنسدلة. عند الإسناد المخالف تظهر التحذيرات.</span>
+        <span><strong>تفعيل الكادر الكامل:</strong> عند تحديده يشمل الترشيح الآلي المعلمات المستثنيات، ويضع الموجهات ومحضرة المختبر أخيرًا. يمكن تغيير المعلمة من القائمة. لا يمنع اتصال الاحتياط بحصة أصلية.</span>
       </label>
       <div id="reserveDayMsg" role="status" aria-live="polite"></div>
       <div class="reserve-admin-list" style="margin-top:12px">${abs.length?abs.map(a=>`<div class="reserve-teacher-row">
@@ -1513,7 +1476,7 @@ function adminAssignmentsHTML(items){
     const all=manualCandidateOptions(a);
     return `<tr data-assignment="${esc(a.id)}">
     <td>${esc(a.period)}</td><td>${esc(a.className||"—")}${a.activity?' <small>(نشاط)</small>':""}</td><td>${esc(a.reason||"غياب")}</td><td>${esc(a.absentTeacherName)}</td>
-    <td>${a.candidates?.[0]?`<div class="reserve-candidate"><strong>${esc(a.candidates[0].name)}</strong></div>`:"لا توجد مرشحة مطابقة، اختاري من القائمة"}</td>
+    <td>${a.candidates?.[0]?`<div class="reserve-candidate"><strong>${esc(a.candidates[0].name)}</strong></div>`:"لا توجد مرشحة متاحة؛ استخدمي التوليد لإعادة الترشيح"}</td>
     <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select><button type="button" class="reserve-mini reserve-auto-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button><small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small></td>
     <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
     <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط نموذج المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button><button class="reserve-mini reserve-send-ack" type="button">إرسال إشعار</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
@@ -1636,6 +1599,7 @@ async function reserveCommitFlexibleAssignee(recordId,teacherId){
     teacherId:String(t.id),period:Number(a.period),className:a.className,existingId:String(a.id)
   }],[String(a.absentTeacherId),...absencesOn(a.date).map(x=>String(x.teacherId))]);
   const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,
+    fullCadreEnabled:a.manual===true?a.fullCadreEnabled===true:state.autoAllNames!==false,
     manualOverride:changed||a.manualOverride===true||warnings.length>0,
     manualOverrideWarnings:warnings};
   // Ensure the former teacher's link cannot continue to act for reassigned work.
@@ -1784,8 +1748,6 @@ function manualConflictMessages(date,selections,absentIds){
     const c=assignmentCounts(date).get(String(t.id))||{week:0,daily:0};
     const missed=currentWeekAbsenceLoad(t.id,date),pending=makeupPending(t,date),effective=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
     if(!pending&&effective>=ceilingFor(t))warnings.push(`${t.name}: بلغت الحد الأسبوعي المفضل (${ceilingFor(t)}).`);
-    if(adjacentOriginalCount(t.id,date,x.period)>0)warnings.push(`${t.name}: الاحتياط متصل بحصة أصلية مباشرة.`);
-    if(previousWeekReserveCount(t.id,date)>0)warnings.push(`${t.name}: لديها احتياط في الأسبوع السابق؛ يفضّل تدوير الإسناد عند توفر بديل.`);
   });
   slotUse.forEach((n,key)=>{
     if(n>1){
@@ -2970,54 +2932,98 @@ function bindDayAdmin(){
   });
   document.querySelectorAll(".reserve-delete-absence").forEach(b=>b.onclick=async()=>{
     if(!confirm("حذف تسجيل الغياب؟"))return;
-    await deleteKind(K.absence,b.dataset.id,token());await loadAll();renderWorkspaceCard("auto");
-    await reserveSyncAdminMutation(state.currentDate);
+    const msg=byId("reserveDayMsg");b.disabled=true;if(msg)msg.textContent="جارٍ الحذف...";
+    try{
+      await ensureAdmin();await deleteKind(K.absence,b.dataset.id,token());
+      await loadAll();renderWorkspaceCard("auto");
+      await reserveSyncAdminMutation(state.currentDate);
+      const done=byId("reserveDayMsg");if(done)done.textContent="تم الحذف";
+    }catch(error){console.error(error);const current=byId("reserveDayMsg")||msg;
+      if(current)current.textContent="تعذر الحذف: "+(error?.message||"خطأ غير معروف");
+    }finally{b.disabled=false;}
   });
   byId("reserveGenerate")?.addEventListener("click",async()=>{
-    const msg=byId("reserveDayMsg"),button=byId("reserveGenerate"),date=state.currentDate;
-    const ids=chosenAbsentIds();
-    if(!dayKey(date)){msg.textContent="اختاري تاريخًا من الأحد إلى الخميس.";return}
-    if(!ids.length&&!absencesOn(date).length){msg.textContent="اختاري أسماء الغائبات أولًا، ثم اضغطي التوليد.";return}
+    const msg=byId("reserveDayMsg"),button=byId("reserveGenerate"),date=state.currentDate,ids=chosenAbsentIds();
+    if(!dayKey(date)){msg.textContent="اختاري تاريخًا من الأحد إلى الخميس.";return;}
+    if(!ids.length&&!absencesOn(date).length){msg.textContent="اختاري أسماء الغائبات أولًا، ثم اضغطي التوليد.";return;}
     state.autoAbsentIds=ids;
-    button.disabled=true;
-    msg.textContent="جارٍ تسجيل الغائبات وتوليد حصة واحدة لكل تكليف...";
+    button.disabled=true;button.textContent="جارٍ التوليد...";
+    msg.textContent="جارٍ التوليد... يجري فحص أهلية كل مرشحة وحفظ المسودات.";
+    let created=0,repaired=0,unfilled=0,processed=0;
     try{
       await ensureAdmin();
       const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
       if(ids.length)await registerSelectedAbsences(date,ids,reason);
       const abs=absencesOn(date).filter(a=>!ids.length||ids.includes(String(a.teacherId)));
-      const known=new Set(assignmentsOn(date).map(a=>[String(a.absentTeacherId),Number(a.period),clean(a.className)].join("|")));
+      const known=new Map(assignmentsOn(date).map(a=>[
+        [String(a.absentTeacherId),Number(a.period),clean(a.className)].join("|"),a]));
       const usedPrimary=new Set(assignmentsOn(date).map(a=>String(a.assignedTeacherId||"")).filter(Boolean));
-      let generated=0,unfilled=0;
-      for(const a of abs){
-        for(const period of (a.periods||[])){
-          const key=[String(a.teacherId),Number(period.period),clean(period.className)].join("|");
-          if(!period.className||known.has(key))continue;
-          const candidates=candidateRanking(date,period.period,a.teacherId,"",{
-            className:period.className,isActivity:period.activity===true,usedPrimary,limit:1
-          }).slice(0,1);
-          const pick=candidates[0]||null;
-          if(pick?.teacherId)usedPrimary.add(String(pick.teacherId));else unfilled++;
-          const record=await insertKind(K.assignment,{
-            date,dayKey:dayKey(date),period:Number(period.period),className:period.className,activity:period.activity===true,
-            reason:a.reason||"غياب",absentTeacherId:String(a.teacherId),absentTeacherName:a.teacherName,
-            candidates,assignedTeacherId:pick?.teacherId||"",assignedTeacherName:pick?.name||"",
-            manual:false,source:"auto",published:false,status:"مسودة",ackToken:uid(),ackAt:"",
-            activationTitle:"",activationAt:"",createdAt:new Date().toISOString()
-          },token(),"مسودة");
-          state.assignments.push(record);
-          known.add(key);generated++;
+      for(const absent of abs){
+        for(const period of (absent.periods||[])){
+          const key=[String(absent.teacherId),Number(period.period),clean(period.className)].join("|");
+          if(!period.className)continue;
+          let record=known.get(key);
+          if(record?.assignedTeacherId){processed++;continue;}
+          // أنشئ مسودة فارغة أولًا؛ لا تنشئ سجلًا ثانيًا عند رفض ترشيح.
+          if(!record){
+            record=await insertKind(K.assignment,{
+              date,dayKey:dayKey(date),period:Number(period.period),className:period.className,
+              activity:period.activity===true,reason:absent.reason||"غياب",
+              absentTeacherId:String(absent.teacherId),absentTeacherName:absent.teacherName,
+              candidates:[],assignedTeacherId:"",assignedTeacherName:"",
+              fullCadreEnabled:state.autoAllNames!==false,manual:false,source:"auto",
+              published:false,status:"مسودة",ackToken:uid(),ackAt:"",
+              activationTitle:"",activationAt:"",createdAt:new Date().toISOString()
+            },token(),"مسودة");
+            if(!record?.id)throw new Error("لم تؤكد قاعدة البيانات إنشاء المسودة");
+            state.assignments.push(record);known.set(key,record);created++;
+          }
+          const choices=candidateRanking(date,period.period,absent.teacherId,String(record.id),{
+            className:period.className,usedPrimary,limit:200
+          });
+          let selected=null,reasonOfFailure="";
+          for(const candidate of choices){
+            try{
+              const data={...plainData(record),assignedTeacherId:String(candidate.teacherId),
+                assignedTeacherName:candidate.name,candidates:[candidate],
+                fullCadreEnabled:state.autoAllNames!==false,
+                manual:false,source:"auto",published:false,status:"مسودة",
+                draftAutoCandidateNote:""};
+              const saved=await patchKind(K.assignment,record.id,data,token(),"مسودة");
+              if(String(saved?.assignedTeacherId)===String(candidate.teacherId)){
+                const n=state.assignments.findIndex(x=>String(x.id)===String(record.id));
+                if(n>=0)state.assignments[n]=saved;
+                record=saved;selected=candidate;usedPrimary.add(String(candidate.teacherId));repaired++;break;
+              }
+              reasonOfFailure=saved?.draftAutoCandidateNote||"رفض الخادم هذه المرشحة";
+              if(saved?.id){const n=state.assignments.findIndex(x=>String(x.id)===String(record.id));if(n>=0)state.assignments[n]=saved;record=saved;}
+            }catch(error){
+              reasonOfFailure=error?.message||"تعذر إسناد المرشحة";
+              if(/401|403|JWT|permission|Failed to fetch/i.test(reasonOfFailure))throw error;
+            }
+          }
+          if(!selected)unfilled++;
+          processed++;
+          const progress=byId("reserveDayMsg");if(progress)progress.textContent=
+            "جارٍ التوليد... تمت معالجة "+processed+" حصة، منها "+unfilled+" تحتاج مراجعة.";
         }
       }
       await loadAll();renderWorkspaceCard("auto");
       await reserveSyncAdminMutation(date);
-      const after=byId("reserveDayMsg");
-      after.textContent=generated
-        ?`تم توليد ${generated} تكليفًا بمرشحة واحدة لكل حصة.${unfilled?` توجد ${unfilled} حصص تحتاج اختيار معلمة من القائمة.`:""} اختاري التعديل عند الحاجة، ثم «حفظ واعتماد».`
-        :"لا توجد حصص جديدة للتوليد؛ التكليفات السابقة محفوظة ويمكن تعديلها واعتمادها من الجدول أدناه.";
-    }catch(err){console.error(err);msg.textContent="تعذر استكمال التوليد، والتكليفات المحفوظة لن تُنشأ مرة أخرى عند المحاولة."}
-    finally{button.disabled=false}
+      const done=byId("reserveDayMsg");
+      if(done)done.textContent="تم التوليد. مسودات جديدة: "+created+"، حصص أُسندت: "+repaired+
+        (unfilled?"، حصص دون مرشحة: "+unfilled+". لا يمكن اعتمادها قبل اختيار معلمة.":"؛ راجعي الجدول ثم اضغطي حفظ واعتماد.");
+    }catch(err){
+      console.error("reserve auto generation",err);
+      await loadAll().catch(()=>{});renderWorkspaceCard("auto");
+      const fail=byId("reserveDayMsg");if(fail)fail.textContent=
+        "تعذر إكمال التوليد: "+(err?.message||"خطأ غير معروف")+
+        ". ما تم حفظه باقٍ كمسودة؛ أعيدي التوليد لإكمال الناقص.";
+    }finally{
+      const next=byId("reserveGenerate");if(next){next.disabled=false;next.textContent="توليد آلي للمعلمات المحددات";}
+    }
   });
+
   document.querySelectorAll(".reserve-save-assignee").forEach(b=>b.onclick=async()=>{
     const tr=b.closest("[data-assignment]");
     const target=tr?.querySelector(".reserve-assignee")?.value||"";
@@ -3039,9 +3045,15 @@ function bindDayAdmin(){
   });
   document.querySelectorAll(".reserve-delete-assignment").forEach(b=>b.onclick=async()=>{
     const tr=b.closest("[data-assignment]"); if(!confirm("حذف هذا التكليف؟"))return;
-    await deleteKind(K.assignment,tr.dataset.assignment,token()); await loadAll();
-    renderWorkspaceCard("auto");
-    await reserveSyncAdminMutation(state.currentDate);
+    const msg=byId("reserveDayMsg");b.disabled=true;if(msg)msg.textContent="جارٍ الحذف...";
+    try{
+      await ensureAdmin();await deleteKind(K.assignment,tr.dataset.assignment,token());
+      await loadAll();renderWorkspaceCard("auto");
+      await reserveSyncAdminMutation(state.currentDate);
+      const done=byId("reserveDayMsg");if(done)done.textContent="تم الحذف";
+    }catch(error){console.error(error);const current=byId("reserveDayMsg")||msg;
+      if(current)current.textContent="تعذر الحذف: "+(error?.message||"خطأ غير معروف");
+    }finally{b.disabled=false;}
   });
   // Links are grouped by teacher and date, even if that teacher has multiple periods.
   const groupedForRow=button=>{
@@ -3081,7 +3093,7 @@ function bindDayAdmin(){
     if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId&&teacherOf(x.teacherId)))){
       msg.textContent="يجب اختيار معلمة لكل حصة من القوائم المنسدلة قبل الاعتماد.";return;
     }
-    button.disabled=true;msg.textContent="جارٍ حفظ التوزيع واعتماد الجدول الآلي...";
+    button.disabled=true;button.textContent="جارٍ الحفظ...";msg.textContent="جارٍ الحفظ والاعتماد...";
     try{
       await ensureAdmin();
       let saved=0;
@@ -3107,7 +3119,7 @@ function bindDayAdmin(){
         const finalWarnings=warnings.length?warnings:allWarnings.filter(w=>w.startsWith(`${t.name}:`));
         const overridden=changed||a.manualOverride===true||finalWarnings.length>0;
         const data={...plainData(a),assignedTeacherId:teacherId,assignedTeacherName:t.name,
-          manual:false,source:"auto",candidates:(a.candidates||[]).slice(0,1),
+          manual:false,source:"auto",fullCadreEnabled:state.autoAllNames!==false,candidates:(a.candidates||[]).slice(0,1),
           manualOverride:overridden,manualOverrideWarnings:finalWarnings,
           published:true,status:"معتمد"};
         if(changed){data.ackAt="";data.activationTitle="";data.activationAt="";data.ackToken=uid()}
@@ -3129,14 +3141,14 @@ function bindDayAdmin(){
         throw new Error("لم يكتمل اعتماد جميع التكليفات الآلية");
       state.lastReserveWarnings={date,source:"auto",warnings:allWarnings};
       renderWorkspaceCard("auto");
-      byId("reserveDayMsg").textContent="تم الحفظ";
+      byId("reserveDayMsg").textContent="تم الحفظ والاعتماد، وأصبح جدول اليوم ظاهرًا في النشر.";
       showReserveWorkspaceWarnings("reserveAutoWarnings",allWarnings);
       try{await reserveSyncAdminMutation(date)}
       catch(syncError){console.error("تعذر تحديث العرض بعد حفظ الجدول الآلي",syncError);
         const current=byId("reserveDayMsg");if(current)current.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات. أعيدي فتح القسم.";}
     }catch(err){console.error(err);const current=byId("reserveDayMsg")||msg;
       if(current)current.textContent=`تعذر اكتمال الاعتماد أو التحقق منه: ${err.message||"خطأ غير معروف"}. قد تكون بعض الحصص محفوظة.`;}
-    finally{button.disabled=false}
+    finally{button.disabled=false;button.textContent="حفظ واعتماد جدول اليوم";}
   });
 }
 
