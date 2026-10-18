@@ -1,0 +1,36 @@
+/* Manjaz v34 — responsive unified review and certificate issuance */
+#view.mj16-admin-only #mj15Dashboard .mj15-panel{
+ background:#fff!important;border:1px solid #d5e5e3!important;border-radius:14px!important;
+ box-shadow:0 3px 14px rgba(8,70,78,.06)!important
+}
+#view.mj16-admin-only #mj15Dashboard .mj15-panel>summary{
+ background:#f2f8f8!important;color:#114953!important;border-bottom:1px solid #d9e8e6!important;
+ border-radius:0!important;font-weight:800!important
+}
+#view.mj16-admin-only #mj15Dashboard .mj15-panel>.mj15-body{
+ background:#fff!important;border:0!important;padding:16px!important
+}
+#mj15CertificatePowers[style*="display: block"]{
+ display:grid!important;grid-template-columns:minmax(220px,.85fr) minmax(340px,1.8fr);gap:15px;align-items:start
+}
+#mj15CertificatePowers>h3,#mj15CertificatePowers>.mj15-actions,
+#mj15CertificatePowers>#mj15ApproveMsg{grid-column:1/-1}
+#mj15CertificatePowers #mj15ApprovalList{grid-column:1;min-width:0}
+#mj15CertificatePowers #mj15ApprovalDetail{grid-column:2;min-width:0}
+#mj15CertificatePowers .mj13-card{display:none!important}
+#mj15CertificatePowers .mj15-record{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#mj15CertificatePowers .mj15-record>span{min-width:0;overflow-wrap:anywhere}
+#mj15CertificatePowers .mj15-record button{white-space:normal}
+@media(max-width:1000px){
+ #mj15CertificatePowers[style*="display: block"]{grid-template-columns:minmax(0,1fr)}
+ #mj15CertificatePowers #mj15ApprovalList,
+ #mj15CertificatePowers #mj15ApprovalDetail{grid-column:1}
+}
+#view:has(#achievementList) .mj18-utility-card{display:none!important}
+#view:has(#partnerList)>.page-intro,
+#view:has(#partnerList)>.stat-grid,
+#view:has(#partnerList)>.section-actions,
+#view:has(#partnerList)>#partnerEmpty{display:none!important}
+#view:has(#partnerList)>#partnerForm{display:none!important}
+#view.mj34-add-partner:has(#partnerList)>#partnerForm{display:block!important}
+#view:has(#partnerList)>#partnerList{margin-top:0}
