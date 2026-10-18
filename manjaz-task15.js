@@ -333,33 +333,102 @@ function getValues(r){return {name:r.name||'',title:r.title||'',description:r.sh
 async function submitPublic(form){if(!form.reportValidity())return;let b=form.querySelector('button[type="submit"]'),m=form.querySelector('[data-mj15-status]');const values=certData(form),rec=ownCurrent(),id=rec?.id||null,k=rec?.editToken||rand();b.disabled=true;m.textContent='جارٍ تسجيل الطلب...';try{const out=await rpc('manjaz_certificate_request_save_v15',{p_category:state.category,p_name:values.name,p_title:values.title,p_description:values.description,p_date_iso:values.date,p_date_display:hijri(values.date),p_duration:values.duration||'',p_edit_token:k,p_request_id:id,p_email:'',p_execution_type:values.executionType||''});const saved=Array.isArray(out)?out[0]:out;if(!saved?.request_id)throw Error('لم تؤكد قاعدة البيانات الحفظ.');const row={id:saved.request_id,category:state.category,editToken:k,fields:values,updatedAt:saved.saved_at};store(row);state.requestId=row.id;const place=document.getElementById('mj15PublicArea');if(place){place.innerHTML=publicMarkup();place.querySelector('[data-mj15-status]').textContent=id?'تم حفظ التعديل.':'تم تسجيل الطلب وإرساله للمراجعة. لن تصدر الشهادة إلا بعد موافقة الإدارة.';window.ManjazHijriPicker?.refresh?.();}}
  catch(e){m.textContent=e.message}finally{if(b.isConnected)b.disabled=false}}
 async function fetchAll(){const auth=await verifiedToken(),all=[];for(let offset=0;offset<100000;offset+=500){const search=new URLSearchParams({select:'id,category,name,title,short_description,date_iso,display_date,duration,recipient_email,execution_type,status,created_at,approved_at,issued_at,email_sent_at,email_error',order:'created_at.desc',limit:'500',offset:String(offset)});const r=await fetch(`${BASE}/rest/v1/manjaz_certificate_requests?${search}`,{headers:{apikey:KEY,Authorization:'Bearer '+auth},cache:'no-store'});if(!r.ok)throw Error(`تعذر تحميل الطلبات (${r.status}).`);const part=await r.json();all.push(...part);if(part.length<500)break}state.adminList=all;return all}
-function adminSummary(rows){return `${rows.length} طلبًا مسجلًا، منها ${rows.filter(x=>x.status==='مستلم').length} بانتظار الاعتماد و${rows.filter(x=>x.status==='معتمد').length} معتمد للإصدار.`}
-function adminListMarkup(mode){
- const rows=state.adminList.filter(x=>mode==='approve'
-  ?x.status==='مستلم'||x.status==='معتمد'
-  :['معتمد','تم الإصدار','تم الإرسال'].includes(x.status));
- return '<p class="mj15-hint">'+H(adminSummary(state.adminList))+'</p>'+
-  (rows.length?rows.map(x=>'<div class="mj15-record"><span><strong>'+H(x.name)+
-    '</strong><small>'+H(T(x.category)[1])+' · '+H(x.status)+' · '+H(x.title)+
-    '</small></span><button type="button" data-mj15-open="'+H(x.id)+'" data-mj15-mode="'+mode+'">'+
-    (mode==='approve'?'مراجعة ومعاينة':'معاينة وتحميل')+'</button></div>').join(''):
-    '<p class="mj15-note">لا توجد طلبات في هذا القسم حاليًا.</p>');
+const MJ36_NEW_STATUS=new Set(['مستلم']);
+const MJ36_APPROVED_STATUS=new Set(['معتمد','تم الإصدار','تم الإرسال']);
+function adminSummary(rows){
+ const active=rows.filter(x=>MJ36_NEW_STATUS.has(x.status)||MJ36_APPROVED_STATUS.has(x.status));
+ return 'الطلبات الجديدة: '+active.filter(x=>MJ36_NEW_STATUS.has(x.status)).length+
+   ' | الشهادات المعتمدة: '+active.filter(x=>MJ36_APPROVED_STATUS.has(x.status)).length;
 }
-function adminSelection(id,mode){const x=state.adminList.find(q=>q.id===id);if(!x)return '';const data=getValues(x);const paper=certHTML(x.category,data,x.status==='مستلم');return `<div class="mj15-hint"><strong>${H(T(x.category)[1])}</strong> — الحالة: ${H(x.status)}</div>
+function adminRequestRow(x,mode){
+ const id=H(x.id),type=H(T(x.category)[1]);
+ const pending=MJ36_NEW_STATUS.has(x.status);
+ const viewer='<button type="button" class="mj36-icon-button" data-mj15-admin-preview="'+id+
+ '" aria-label="معاينة الشهادة دون علامة مائية" title="معاينة الشهادة دون علامة مائية">'+
+ '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">'+
+ '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg> معاينة</button>';
+ return '<article class="mj15-record mj36-request-row">'+
+ '<div class="mj36-request-info"><strong>'+H(x.name)+'</strong><small>'+type+
+ ' · '+H(x.title)+' · '+(pending?'تحت المراجعة':'معتمدة')+'</small></div>'+
+ '<div class="mj36-request-actions">'+viewer+
+ '<button type="button" data-mj15-open="'+id+'" data-mj15-mode="'+mode+'">التفاصيل</button>'+
+ (pending?'<button type="button" class="mj36-approve" data-mj15-admin-approve="'+id+'">اعتماد وإصدار</button>':'')+
+ '<button type="button" class="mj36-delete" data-mj15-admin-delete="'+id+'">حذف</button>'+
+ '</div></article>';
+}
+function adminListMarkup(mode){
+ const pending=state.adminList.filter(x=>MJ36_NEW_STATUS.has(x.status));
+ const approved=state.adminList.filter(x=>MJ36_APPROVED_STATUS.has(x.status));
+ const group=(heading,rows,sectionMode)=>
+   '<section class="mj36-request-group"><h4>'+heading+' <span>('+rows.length+')</span></h4>'+
+   (rows.length?rows.map(x=>adminRequestRow(x,sectionMode)).join(''):
+     '<p class="mj15-note">لا توجد طلبات في هذه المجموعة حاليًا.</p>')+'</section>';
+ return '<div class="mj36-list-summary">'+H(adminSummary(state.adminList))+'</div>'+
+ (mode==='issue'?group('الشهادات المعتمدة',approved,'issue'):
+    group('الطلبات الجديدة',pending,'approve')+group('الشهادات المعتمدة',approved,'issue'));
+}
+
+function adminSelection(id,mode){const x=state.adminList.find(q=>q.id===id);if(!x)return '';const data=getValues(x);const paper=certHTML(x.category,data,false);return `<div class="mj15-hint"><strong>${H(T(x.category)[1])}</strong> — الحالة: ${H(x.status)}</div>
  ${mode==='approve' && ['مستلم','معتمد'].includes(x.status)?`<div class="mj34-review-layout"><div class="mj34-review-fields">${formHTML(x.category,{...data,_status:x.status},true,false)}</div><div class="mj15-preview mj34-side-preview"><div class="mj15-paper-frame">${paper}</div></div></div>`:`<div class="mj15-preview" id="mj15IssuedPreview"><div class="mj15-paper-frame">${paper}</div></div><div class="mj15-actions"><button data-mj15-issue="${H(x.id)}" ${!['معتمد','تم الإصدار'].includes(x.status)?'disabled':''}>${x.status==='معتمد'?'إصدار وتنزيل PDF':x.status==='تم الإصدار'?'تحميل الشهادة PDF':x.status==='تم الإرسال'?'تحميل الشهادة PDF':'بانتظار اعتماد الطلب'}</button></div><p class="mj15-note">الشهادة المعتمدة خالية من العلامة المائية، ومتاحة للتحميل من لوحة الإدارة.</p><div class="mj15-status" data-mj15-status></div>`}`;}
-function printMessages(id,mode){const area=document.getElementById(mode==='approve'?'mj15ApprovalDetail':'mj15IssueDetail');if(!area)return;const x=state.adminList.find(r=>r.id===id);if(!x)return;state.selected=id;area.dataset.mode=mode;area.dataset.id=id;area.innerHTML=adminSelection(id,mode);area.querySelector('[data-mj15-form]')?.setAttribute('data-category',x.category);window.ManjazHijriPicker?.refresh?.();fitPreviews()}
+async function openAdminCertificatePreview(id){
+ await verifiedToken(); // Only authenticated school administration can open a clean preview.
+ const x=state.adminList.find(r=>r.id===id&&(MJ36_NEW_STATUS.has(r.status)||MJ36_APPROVED_STATUS.has(r.status)));
+ if(!x)throw Error('الطلب غير متاح للمعاينة أو تم حذفه.');
+ let dialog=document.getElementById('mj36AdminCertificatePreview');
+ if(!dialog){
+   dialog=document.createElement('dialog');
+   dialog.id='mj36AdminCertificatePreview';
+   dialog.className='mj36-preview-dialog';
+   dialog.setAttribute('aria-label','معاينة الشهادة للإدارة');
+   document.body.appendChild(dialog);
+   dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
+ }
+ dialog.innerHTML='<div class="mj36-dialog-head"><strong>معاينة إدارية — '+H(x.name)+
+ '</strong><button type="button" data-mj36-preview-close aria-label="إغلاق المعاينة">إغلاق ×</button></div>'+
+ '<div class="mj15-preview mj36-admin-preview"><div class="mj15-paper-frame">'+
+ certHTML(x.category,getValues(x),false)+'</div></div>'+
+ '<p class="mj15-note">هذه معاينة إدارية دون علامة مائية؛ إصدار الشهادة النهائية يتطلب الاعتماد.</p>';
+ if(dialog.open)dialog.close();
+ dialog.showModal();
+ requestAnimationFrame(fitPreviews);
+}
+async function archiveAdminCertificate(id){
+ const x=state.adminList.find(r=>r.id===id);
+ if(!x||!(MJ36_NEW_STATUS.has(x.status)||MJ36_APPROVED_STATUS.has(x.status)))
+   throw Error('الطلب غير موجود في قائمة العمل.');
+ const isIssued=MJ36_APPROVED_STATUS.has(x.status);
+ if(!confirm((isIssued?'أرشفة الشهادة المعتمدة':'حذف الطلب الجديد')+
+  ' باسم «'+x.name+'»؟\\nسيُزال من قوائم الاعتماد والإصدار، مع الاحتفاظ بسجل الحذف الإداري.'))return false;
+ const bearer=await verifiedToken();
+ const result=await rpc('manjaz_certificate_archive_v36',{p_request_id:id},bearer);
+ if(!result||String(result.request_id)!==String(id)||result.status!=='محذوف')
+   throw Error('قاعدة البيانات لم تؤكد أرشفة طلب الشهادة.');
+ if(state.requestId===id)state.requestId='';
+ document.getElementById('mj36AdminCertificatePreview')?.close();
+ await refreshAdmin();
+ return true;
+}
+function printMessages(id,mode){const area=document.getElementById(mode==='approve'?'mj15ApprovalDetail':'mj15IssueDetail');if(!area)return;const x=state.adminList.find(r=>r.id===id);if(!x||x.status==='محذوف')return;state.selected=id;area.dataset.mode=mode;area.dataset.id=id;area.innerHTML=adminSelection(id,mode);area.querySelector('[data-mj15-form]')?.setAttribute('data-category',x.category);window.ManjazHijriPicker?.refresh?.();fitPreviews()}
 async function refreshAdmin(){
  await fetchAll();
  const a=document.getElementById('mj15ApprovalList'),b=document.getElementById('mj15IssueList');
  if(a)a.innerHTML=adminListMarkup('approve');
  if(b)b.innerHTML=adminListMarkup('issue');
- const approval=state.adminList.find(x=>x.status==='مستلم'||x.status==='معتمد');
- const issued=state.adminList.find(x=>['تم الإصدار','تم الإرسال'].includes(x.status));
- const detail=document.getElementById('mj15ApprovalDetail');
- const issuedDetail=document.getElementById('mj15IssueDetail');
- if(approval&&detail&&!detail.dataset.id)printMessages(approval.id,'approve');
- if(issued&&issuedDetail&&!issuedDetail.dataset.id)printMessages(issued.id,'issue');
+ for(const [mode,areaId] of [['approve','mj15ApprovalDetail'],['issue','mj15IssueDetail']]){
+  const detail=document.getElementById(areaId);
+  if(!detail)continue;
+  const selected=state.adminList.find(x=>x.id===detail.dataset.id&&
+    (mode==='approve'?(MJ36_NEW_STATUS.has(x.status)||MJ36_APPROVED_STATUS.has(x.status)):
+     MJ36_APPROVED_STATUS.has(x.status)));
+  const first=mode==='approve'
+    ?state.adminList.find(x=>MJ36_NEW_STATUS.has(x.status))||state.adminList.find(x=>MJ36_APPROVED_STATUS.has(x.status))
+    :state.adminList.find(x=>MJ36_APPROVED_STATUS.has(x.status));
+  if(selected)printMessages(selected.id,mode);
+  else if(first)printMessages(first.id,mode);
+  else{detail.innerHTML='';delete detail.dataset.id;}
+ }
 }
+
 async function adminAction(id,action,fields=null,err=''){
  const bearer=await verifiedToken();
  if(action==='edit'){
@@ -442,6 +511,37 @@ function mount(){const view=document.getElementById('view');if((location.hash||'
 let observing=false;
 function boot(){const view=document.getElementById('view');if(!view)return;const ob=new MutationObserver(()=>{if(observing)return;observing=true;try{mount()}finally{observing=false}});ob.observe(view,{childList:true,subtree:true});mount();addEventListener('hashchange',()=>queueMicrotask(mount));addEventListener('resize',fitPreviews,{passive:true});document.addEventListener('toggle',e=>{if(e.target.matches?.('.mj15-panel')&&e.target.open)requestAnimationFrame(fitPreviews)},true)}
 document.addEventListener('click',async e=>{const previewBtn=e.target.closest('[data-mj16-preview-open]');if(previewBtn){openBeneficiaryPreview(previewBtn);return}const cat=e.target.closest('[data-mj15-cat]');if(cat){document.getElementById('mj16CertificatePreviewDialog')?.close();state.category=cat.dataset.mj15Cat;state.requestId='';const z=document.getElementById('mj15PublicArea');if(z){z.innerHTML=publicMarkup();window.ManjazHijriPicker?.refresh?.()}return}
+ const adminClose=e.target.closest('[data-mj36-preview-close]');
+ if(adminClose){document.getElementById('mj36AdminCertificatePreview')?.close();return}
+ const adminPreview=e.target.closest('[data-mj15-admin-preview]');
+ if(adminPreview){
+  adminPreview.disabled=true;
+  try{await openAdminCertificatePreview(adminPreview.dataset.mj15AdminPreview)}
+  catch(err){const m=document.getElementById('mj15ApproveMsg')||document.getElementById('mj15IssueMsg');if(m)m.textContent='تعذرت المعاينة: '+err.message}
+  finally{adminPreview.disabled=false}
+  return;
+ }
+ const adminDelete=e.target.closest('[data-mj15-admin-delete]');
+ if(adminDelete){
+  adminDelete.disabled=true;const orig=adminDelete.textContent;adminDelete.textContent='جارٍ الحذف...';
+  const message=document.getElementById('mj15ApproveMsg')||document.getElementById('mj15IssueMsg');
+  try{const ok=await archiveAdminCertificate(adminDelete.dataset.mj15AdminDelete);if(ok&&message)message.textContent='تم حذف الطلب من قوائم العمل، وحُفظ سجل العملية.'}
+  catch(err){if(message)message.textContent='تعذر الحذف: '+err.message}
+  finally{if(adminDelete.isConnected){adminDelete.disabled=false;adminDelete.textContent=orig}}
+  return;
+ }
+ const quickApproval=e.target.closest('[data-mj15-admin-approve]');
+ if(quickApproval){
+  quickApproval.disabled=true;const original=quickApproval.textContent;quickApproval.textContent='جارٍ الاعتماد...';
+  const message=document.getElementById('mj15ApproveMsg');
+  try{
+   await adminAction(quickApproval.dataset.mj15AdminApprove,'approve');
+   await adminAction(quickApproval.dataset.mj15AdminApprove,'issue');
+   if(message)message.textContent='تم الاعتماد والإصدار، وتظهر الشهادة الآن ضمن المعتمدة.';
+  }catch(err){if(message)message.textContent='تعذر إكمال الاعتماد: '+err.message}
+  finally{if(quickApproval.isConnected){quickApproval.disabled=false;quickApproval.textContent=original}}
+  return;
+ }
  const v=e.target.closest('[data-mj15-own]');if(v){state.requestId=v.dataset.mj15Own;document.getElementById('mj15PublicArea').innerHTML=publicMarkup();window.ManjazHijriPicker?.refresh?.();fitPreviews();return}
  const edit=e.target.closest('[data-mj15-edit]');if(edit){const x=ownCurrent();if(x){document.getElementById('mj15PublicForm').innerHTML=formHTML(state.category,x.fields,false,false)}else{const box=document.getElementById('mj15PublicForm');if(box)box.innerHTML=formHTML(state.category,{},false,false)}window.ManjazHijriPicker?.refresh?.();fitPreviews();return}
  if(e.target.closest('[data-mj15-new]')){state.requestId='';document.getElementById('mj15PublicArea').innerHTML=publicMarkup();window.ManjazHijriPicker?.refresh?.();fitPreviews();return}
