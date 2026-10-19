@@ -78,6 +78,7 @@ function updateIndicatorLabel(){
  byId("ma-preview").hidden=true;
 }
 function cardChanged(){
+ var note=byId("ma-outcome");if(note)note.value="";
  var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
  currentCard();
  byId("ma-preview").hidden=true;byId("ma-answer").hidden=true;
@@ -246,6 +247,7 @@ function render(){
  optionList(byId("ma-hyear"),["1447","1448","1449","1450","1451"],"السنة",hj.y);
  optionList(byId("ma-period"),Array.from({length:7},function(_,i){return [String(i+1),"الحصة "+(i+1)];}),"اختاري الحصة");
  chooseMain();
+ root.addEventListener("input",function(e){if(e.target.matches("textarea,select,input")){var link=byId("ma-pdf-download");if(link)link.hidden=true;}});
  byId("ma-main").addEventListener("change",chooseSub);
  byId("ma-sub").addEventListener("change",chooseCard);
  byId("ma-card").addEventListener("change",cardChanged);
