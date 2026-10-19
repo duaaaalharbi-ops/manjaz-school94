@@ -37,40 +37,46 @@ async function getRecords(kind){
  var r=await fetch(u,{headers:headers(),cache:"no-store"});if(!r.ok)throw Error("READ "+r.status);
  return await r.json();
 }
-function selectedClasses(){return [...document.querySelectorAll(".ma-class-item:checked")].map(function(x){return x.value;});}
-function selectedPeriods(){return [...document.querySelectorAll(".ma-period-item:checked")].map(function(x){return Number(x.value);});}
+// Share the same native multi-select interaction as the absent-teacher list.
+function selectedClasses(){
+ var select=byId("ma-class-choices");
+ return select?[...select.selectedOptions].map(function(option){return option.value;}).filter(Boolean):[];
+}
+function selectedPeriods(){
+ var select=byId("ma-period-choices");
+ return select?[...select.selectedOptions].map(function(option){return Number(option.value);}).filter(function(value){return Number.isInteger(value)&&value>=1;}):[];
+}
 function updateSelectionSummary(){
  var klasses=selectedClasses(),periods=selectedPeriods();
  var c=byId("ma-class-summary"),p=byId("ma-period-summary");
- if(c)c.textContent=klasses.length?"الفصول ("+klasses.length+"): "+klasses.join("، "):"اختاري فصلًا أو أكثر";
- if(p)p.textContent=periods.length?"الحصص ("+periods.length+"): "+periods.map(function(x){return "الحصة "+x;}).join("، "):"اختاري حصة أو أكثر";
+ if(c)c.textContent=klasses.length?"الفصول المحددة ("+klasses.length+"): "+klasses.join("، "):"لم يتم اختيار فصل";
+ if(p)p.textContent=periods.length?"الحصص المحددة ("+periods.length+"): "+periods.map(function(x){return "الحصة "+x;}).join("، "):"لم يتم اختيار حصة";
  var hint=byId("ma-multi-hint");
  if(hint)hint.textContent="تُحفظ الفصول والحصص المختارة في سجل تنفيذ واحد للبطاقة نفسها."+
    (klasses.length&&periods.length?" عدد الفصول: "+klasses.length+" | عدد الحصص: "+periods.length:"");
 }
 function drawClassOptions(){
- var parent=byId("ma-class-choices");if(!parent)return;
+ var select=byId("ma-class-choices");if(!select)return;
  var chosen=selectedClasses();
- parent.replaceChildren();
+ select.replaceChildren();
  classes.forEach(function(klass){
-  var label=document.createElement("label"),check=document.createElement("input");
-  check.type="checkbox";check.className="ma-class-item";check.value=klass;check.checked=chosen.includes(klass);
-  label.appendChild(check);label.appendChild(document.createTextNode(" "+klass));parent.appendChild(label);
+  var option=document.createElement("option");
+  option.value=klass;option.textContent=klass;option.selected=chosen.includes(klass);
+  select.appendChild(option);
  });
  updateSelectionSummary();
 }
 function selectMulti(kind,values){
- var target=kind==="class"?byId("ma-class-choices"):byId("ma-period-choices");
- var selector=kind==="class"?".ma-class-item":".ma-period-item";
- if(!target)return;
- var chosen=(Array.isArray(values)?values:[]).map(String);
- chosen.forEach(function(item){
-  if(!item||[...target.querySelectorAll(selector)].some(function(x){return x.value===item;}))return;
-  var label=document.createElement("label"),check=document.createElement("input");
-  check.type="checkbox";check.className=kind==="class"?"ma-class-item":"ma-period-item";check.value=item;
-  label.appendChild(check);label.appendChild(document.createTextNode(" "+item));target.appendChild(label);
+ var select=byId(kind==="class"?"ma-class-choices":"ma-period-choices");
+ if(!select)return;
+ var chosen=(Array.isArray(values)?values:[]).map(String).filter(Boolean);
+ // Preserve historical entries even after a timetable changes.
+ chosen.forEach(function(value){
+  if([...select.options].some(function(option){return option.value===value;}))return;
+  var option=document.createElement("option");option.value=value;option.textContent=kind==="period"?"الحصة "+value:value;
+  select.appendChild(option);
  });
- target.querySelectorAll(selector).forEach(function(input){input.checked=chosen.includes(input.value);});
+ [...select.options].forEach(function(option){option.selected=chosen.includes(option.value);});
  updateSelectionSummary();
 }
 function rowClasses(row){return Array.isArray(row.class_names)&&row.class_names.length?row.class_names:[row.class_name].filter(Boolean);}
@@ -519,8 +525,10 @@ function initStyle(){
  "#manjazActivation .ma-check-choices{padding:9px 13px;border-top:1px solid #e3eced;display:grid;gap:6px}"+
  "#manjazActivation .ma-check-choices label{font-weight:500;display:flex;align-items:center;gap:8px;padding:5px;cursor:pointer;margin:0}"+
  "#manjazActivation .ma-check-choices input{width:17px;height:17px;accent-color:#0b7975}"+
- "#manjazActivation .ma-choice-scroll{max-height:220px;overflow:auto;overscroll-behavior:contain}"+
- "#manjazActivation .ma-multi-dropdown summary{min-height:20px;line-height:1.8}"+
+ "#manjazActivation select.ma-native-multi{width:100%;height:auto;min-height:150px;box-sizing:border-box;border:1px solid #cfdadd;border-radius:10px;padding:8px;font:inherit;background:#fff;overflow-y:auto}"+
+ "#manjazActivation select.ma-native-multi option{padding:8px 10px;line-height:1.65;white-space:normal}"+
+ "#manjazActivation .ma-multi-summary{font-size:12px;color:#3c6572;line-height:1.8;margin:7px 0 0;overflow-wrap:anywhere}"+
+
  "#manjazActivation .ma-multi-hint{font-size:12px;color:#3c6572;background:#f0f7f7;padding:10px;border-radius:8px;margin:12px 0 0}"+
  "#manjazActivation .ma-admin-top{display:block;margin-top:14px;border:1px solid #b9dbe0!important;background:#f0f7f8!important;color:#114655!important}"+
  "#manjazActivation .ma-selected{padding:12px;background:#f1f6f7;border-radius:9px;border-right:4px solid #0f8b8d;font-size:14px}"+
@@ -529,7 +537,7 @@ function initStyle(){
  "#manjazActivation textarea{display:block;width:100%;min-height:86px;padding:12px;border:1px solid #a9bdc4;border-radius:9px;resize:vertical;font:inherit;line-height:1.8;color:#153b47;background:#fff}"+
  "#manjazActivation .ma-answer{background:#fff6f5;border:1px solid #e8bfbc;border-radius:11px;padding:14px;color:#8b2941;white-space:pre-line;font-size:14px;line-height:1.9}"+
  "#manjazActivation .ma-report-body{max-height:440px;overflow:auto}#manjazActivation table{border-collapse:collapse;width:100%;font-size:12px}#manjazActivation td,#manjazActivation th{border:1px solid #d7e1e4;padding:7px;text-align:right}"+
- "@media(max-width:640px){#manjazActivation .ma-grid,#manjazActivation .ma-admin-fields{grid-template-columns:1fr}#manjazActivation .ma-hero{padding:17px}}";
+ "@media(max-width:640px){#manjazActivation .ma-grid,#manjazActivation .ma-admin-fields{grid-template-columns:1fr}#manjazActivation .ma-hero{padding:17px}#manjazActivation select.ma-native-multi{min-height:190px;font-size:16px;padding:10px}}";
  document.head.appendChild(style);
 }
 function render(){
@@ -543,8 +551,8 @@ function render(){
  '<div><label for="ma-hday">اليوم الهجري</label><select id="ma-hday"></select></div>'+
  '<div><label for="ma-hmonth">الشهر الهجري</label><select id="ma-hmonth"></select></div>'+
  '<div><label for="ma-teacher">اسم المعلمة المنفذة</label><select id="ma-teacher"><option value="">تحميل المعلمات…</option></select></div>'+
- '<div><label>الفصول (يمكن اختيار أكثر من فصل)</label><details id="ma-class-details" class="ma-check-dropdown ma-multi-dropdown"><summary id="ma-class-summary">اختاري فصلًا أو أكثر</summary><div id="ma-class-choices" class="ma-check-choices ma-choice-scroll"><span class="ma-load-notice">جارٍ تحميل الفصول…</span></div></details></div>'+
- '<div><label>الحصص (يمكن اختيار أكثر من حصة)</label><details id="ma-period-details" class="ma-check-dropdown ma-multi-dropdown"><summary id="ma-period-summary">اختاري حصة أو أكثر</summary><div id="ma-period-choices" class="ma-check-choices ma-choice-scroll"></div></details></div></div><p id="ma-multi-hint" class="ma-multi-hint" aria-live="polite">تُحفظ جميع الاختيارات في سجل تفعيل واحد.</p><div class="ma-clear-actions"><button type="button" id="ma-clear" class="secondary">مسح بيانات التعبئة</button></div><div class="ma-edit-bar" id="ma-edit-bar" hidden><p>تعديل سجل محفوظ؛ سيُحدَّث السجل الأصلي دون إضافة سجل جديد.</p><div class="ma-actions"><button type="button" id="ma-save-edit">حفظ التعديلات</button><button type="button" id="ma-cancel-edit" class="secondary">إلغاء التعديل</button></div></div></section>'+
+ '<div><label for="ma-class-choices">الفصول (اختيار متعدد)</label><select id="ma-class-choices" class="ma-native-multi" multiple size="7" aria-describedby="ma-class-summary"><option disabled>جارٍ تحميل الفصول…</option></select><p id="ma-class-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار فصل</p></div>'+
+ '<div><label for="ma-period-choices">الحصص (اختيار متعدد)</label><select id="ma-period-choices" class="ma-native-multi" multiple size="7" aria-describedby="ma-period-summary"></select><p id="ma-period-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار حصة</p></div></div><p id="ma-multi-hint" class="ma-multi-hint" aria-live="polite">تُحفظ جميع الاختيارات في سجل تفعيل واحد.</p><div class="ma-clear-actions"><button type="button" id="ma-clear" class="secondary">مسح بيانات التعبئة</button></div><div class="ma-edit-bar" id="ma-edit-bar" hidden><p>تعديل سجل محفوظ؛ سيُحدَّث السجل الأصلي دون إضافة سجل جديد.</p><div class="ma-actions"><button type="button" id="ma-save-edit">حفظ التعديلات</button><button type="button" id="ma-cancel-edit" class="secondary">إلغاء التعديل</button></div></div></section>'+
  '<section class="ma-panel"><h3>اختيار بطاقة النشاط</h3><div class="ma-grid">'+
  '<div><label for="ma-main">القسم الرئيسي</label><select id="ma-main"></select></div>'+
  '<div><label for="ma-sub">القسم الفرعي</label><select id="ma-sub"></select></div>'+
@@ -563,15 +571,14 @@ function render(){
  optionList(byId("ma-hyear"),["1447","1448","1449","1450","1451"],"السنة",hj.y);
  var choices=byId("ma-period-choices");
  for(var n=1;n<=7;n++){
-  var label=document.createElement("label"),checkbox=document.createElement("input");
-  checkbox.type="checkbox";checkbox.className="ma-period-item";checkbox.value=String(n);
-  label.appendChild(checkbox);label.appendChild(document.createTextNode(" الحصة "+n));choices.appendChild(label);
+  var option=document.createElement("option");
+  option.value=String(n);option.textContent="الحصة "+n;choices.appendChild(option);
  }
  updateSelectionSummary();
  renderExecutors();
  chooseMain();
  root.addEventListener("input",function(e){if(e.target.matches("textarea,select,input")){var link=byId("ma-pdf-download");if(link)link.hidden=true;}});
- root.addEventListener("change",function(e){if(e.target.matches(".ma-class-item,.ma-period-item"))updateSelectionSummary();});
+ root.addEventListener("change",function(e){if(e.target.matches("#ma-class-choices,#ma-period-choices"))updateSelectionSummary();});
  byId("ma-main").addEventListener("change",chooseSub);
  byId("ma-sub").addEventListener("change",chooseCard);
  byId("ma-card").addEventListener("change",cardChanged);
