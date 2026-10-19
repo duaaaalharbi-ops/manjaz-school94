@@ -224,8 +224,8 @@ async function showAnswer(){
  }catch(e){uiMsg(e.message,true);}
 }
 function downloadCsv(rows){
- var heads=["تاريخ الحفظ","المعلمة","الفصل","اليوم","التاريخ الهجري","الحصة","رقم البطاقة","القسم الرئيسي","القسم الفرعي","عنوان البطاقة","مؤشرات التحقق"];
- var lines=[heads].concat(rows.map(function(x){return [x.submitted_at,x.teacher_name,x.class_name,x.weekday,x.hijri_day+"/"+x.hijri_month+"/"+x.hijri_year,x.period,x.card_id,x.main_category,x.sub_category,x.card_title,(x.verification_indicators||[]).join(" | ")];}));
+ var heads=["تاريخ الحفظ","المعلمة","الفصل","اليوم","التاريخ الهجري","الحصة","رقم البطاقة","القسم الرئيسي","القسم الفرعي","عنوان البطاقة","مؤشرات التحقق","وصف نواتج التنفيذ"];
+ var lines=[heads].concat(rows.map(function(x){return [x.submitted_at,x.teacher_name,x.class_name,x.weekday,x.hijri_day+"/"+x.hijri_month+"/"+x.hijri_year,x.period,x.card_id,x.main_category,x.sub_category,x.card_title,(x.verification_indicators||[]).join(" | "),x.outcome_description||""];}));
  var csv="\ufeff"+lines.map(function(row){return row.map(function(v){return '"'+safe(v).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n");
  var url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));var a=document.createElement("a");a.href=url;a.download="تقرير_تفعيل_الاحتياط_اليومي.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2000);
 }
