@@ -44,20 +44,36 @@ function previewStyles(){return styles+".solved-response{background:#fff8f9 !imp
 function adjust(host){
  var root=host.shadowRoot,holder=root&&root.querySelector(".ma-holder"),sec=root&&root.querySelector(".session");
  if(!holder||!sec)return;
- var scale=Math.min(1,Math.max(.2,(host.clientWidth-4)/794));
+ var available=Math.max(260,host.clientWidth||host.getBoundingClientRect().width||794);
+ var scale=Math.min(1,Math.max(.25,(available-4)/794));
  sec.style.transform="scale("+scale+")";
  holder.style.height=Math.ceil(1123*scale+6)+"px";
 }
 async function show(host,id,variant,metadata){
  if(!host)throw Error("مساحة المعاينة غير موجودة.");
- var html=await loadCard(id,variant),node=fill(html,metadata,variant);
  if(!host.shadowRoot)host.attachShadow({mode:"open"});
- var root=host.shadowRoot;root.replaceChildren();
- var st=document.createElement("style");st.textContent=previewStyles();root.appendChild(st);
- var holder=document.createElement("div");holder.className="ma-holder";holder.appendChild(document.importNode(node,true));root.appendChild(holder);
- adjust(host);
- if(!host.__resize){host.__resize=new ResizeObserver(function(){adjust(host);});host.__resize.observe(host);}
- return node;
+ var root=host.shadowRoot;
+ root.replaceChildren();
+ var loading=document.createElement("p");loading.setAttribute("role","status");loading.textContent="جارٍ تحميل البطاقة الأصلية من قاعدة البيانات…";
+ loading.style.cssText="padding:25px;text-align:center;font:700 14px Tahoma,Arial;color:#1b5660;direction:rtl;";
+ root.appendChild(loading);
+ try{
+  var html=await loadCard(id,variant),node=fill(html,metadata,variant);
+  var st=document.createElement("style");st.textContent=previewStyles();
+  var holder=document.createElement("div");holder.className="ma-holder";holder.appendChild(document.importNode(node,true));
+  root.replaceChildren(st,holder);
+  adjust(host);
+  if(!host.__resize){
+   if(typeof ResizeObserver==="function"){host.__resize=new ResizeObserver(function(){adjust(host);});host.__resize.observe(host);}
+   else{host.__resize=true;window.addEventListener("resize",function(){adjust(host);});}
+  }
+  return node;
+ }catch(e){
+  loading.textContent="تعذر عرض البطاقة: "+(e.message||e);
+  loading.style.color="#9c2430";
+  root.replaceChildren(loading);
+  throw e;
+ }
 }
 async function engine(){
  if(window.jspdf&&window.jspdf.jsPDF)return window.jspdf.jsPDF;
