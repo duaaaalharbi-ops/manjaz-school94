@@ -163,17 +163,18 @@ function values(){
  period:periods[0]||0,periods:periods,indicators:selectedIndicators(),
  outcome:byId("ma-outcome")?byId("ma-outcome").value.trim():""};
 }
-function matchHijriWeekday(v){
+function gregorianFromHijri(v){
  try{
   var approx=Math.round((v.year-1)*0.970224+622);
   var from=Date.UTC(approx-1,0,1), f=new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura",{timeZone:"Asia/Riyadh",year:"numeric",month:"numeric",day:"numeric"});
   var w=new Intl.DateTimeFormat("ar-SA",{timeZone:"Asia/Riyadh",weekday:"long"});
   for(var i=0;i<1150;i++){var dt=new Date(from+i*86400000);var p=Object.fromEntries(f.formatToParts(dt).filter(function(x){return x.type!=="literal";}).map(function(x){return [x.type,x.value];}));
-   if(Number(p.year)===v.year&&Number(p.month)===v.month&&Number(p.day)===v.day)return w.format(dt).replace("الاثنين","الإثنين")===v.weekday;
+   if(Number(p.year)===v.year&&Number(p.month)===v.month&&Number(p.day)===v.day)return w.format(dt).replace("الاثنين","الإثنين")===v.weekday?dt.toISOString().slice(0,10):"";
   }
- }catch(e){return false;}
- return false;
+ }catch(e){return "";}
+ return "";
 }
+function matchHijriWeekday(v){return Boolean(gregorianFromHijri(v));}
 function check(v){
  return !!(v&&v.c&&v.teacher&&Array.isArray(v.klasses)&&v.klasses.length&&v.klasses.length<=20&&Array.isArray(v.periods)&&v.periods.length&&v.periods.every(function(p){return Number.isInteger(p)&&p>=1&&p<=7;})&&v.weekday&&Number.isInteger(v.day)&&v.day>=1&&v.day<=30&&Number.isInteger(v.month)&&v.month>=1&&v.month<=12&&Number.isInteger(v.year)&&v.year>=1447);
 }
@@ -348,7 +349,7 @@ function beginEditing(row){
  byId("ma-data-heading").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function rowPayload(v){
- return {teacher_name:v.teacher,class_name:v.klass,class_names:v.klasses,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,periods:v.periods,assignments:[],card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators,outcome_description:v.outcome};
+ return {teacher_name:v.teacher,class_name:v.klass,class_names:v.klasses,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,periods:v.periods,reserve_date:gregorianFromHijri(v),assignments:[],card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators,outcome_description:v.outcome};
 }
 async function getVerifiedAdminToken(){
  var data=null;
