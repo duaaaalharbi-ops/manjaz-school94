@@ -30,6 +30,7 @@ const DEFAULT_WEIGHTS={week:30,term:10,daily:18,workload:0.35,consecutive:9};
 const V6_SOURCE="v6-1448-04-27";
 const COUNT_START="2026-10-18";
 const EMERGENCY_DAILY_DEMAND=20;
+const MAX_AUTO_RESERVE_PER_DAY=3; // Applies to automatic assignment, counting all existing daily reserve duties.
 const CONDITIONAL_EXCLUSION_MIN_DEMAND=13; // More than 12 absent periods on the same school day
 const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البالدي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
 const ADVANCED_RANK=new Set(["دعاء الحربي","سندس الغامدي","عايدة الصاعدي","ريم القحطاني","عوالي السبيعي","بدرية الحربي","حنان المجنوني"]);
@@ -858,6 +859,36 @@ function publicWeeklyRows(referenceDate){
 }
 function absencesOn(date){return state.absences.filter(x=>x.date===date)}
 function assignmentsOn(date){return state.assignments.filter(x=>x.date===date&&x.status!=="ملغي")}
+function reserveDailyAssignedCount(teacherId,date,exceptAssignmentId=""){
+  return assignmentsOn(date).filter(a=>String(a.id)!==String(exceptAssignmentId)&&
+    String(a.assignedTeacherId)===String(teacherId)).length;
+}
+function assertAutoReserveDailyCapacity(teacherId,date,exceptAssignmentId=""){
+  const assigned=reserveDailyAssignedCount(teacherId,date,exceptAssignmentId);
+  if(assigned>=MAX_AUTO_RESERVE_PER_DAY){
+    const name=teacherOf(teacherId)?.name||"المحددة";
+    throw new Error(`لا يمكن إسناد أكثر من ${MAX_AUTO_RESERVE_PER_DAY} حصص احتياط للمعلمة «${name}» في اليوم الواحد. لديها بالفعل ${assigned} حصص.`);
+  }
+}
+function assertAutoReservePlannedCapacity(date,selected){
+  // Include manual assignments (already saved) and every intended automatic assignment.
+  const counts=new Map();
+  for(const a of assignmentsOn(date)){
+    if(a.manual!==true||!a.assignedTeacherId)continue;
+    const id=String(a.assignedTeacherId);
+    counts.set(id,(counts.get(id)||0)+1);
+  }
+  for(const entry of selected){
+    const id=String(entry.teacherId||"");
+    if(!id)continue;
+    const next=(counts.get(id)||0)+1;
+    if(next>MAX_AUTO_RESERVE_PER_DAY){
+      const name=teacherOf(id)?.name||"المحددة";
+      throw new Error(`لا يمكن اعتماد أكثر من ${MAX_AUTO_RESERVE_PER_DAY} حصص احتياط للمعلمة «${name}» في اليوم الواحد (المجموع: ${next}). غيّري المعلمة في الحصص الزائدة.`);
+    }
+    counts.set(id,next);
+  }
+}
 function isAbsent(teacherId,date){return absencesOn(date).some(x=>String(x.teacherId)===String(teacherId))}
 function occupiedByReserve(teacherId,date,period,exceptId=""){
   return assignmentsOn(date).some(x=>String(x.assignedTeacherId)===String(teacherId)&&Number(x.period)===Number(period)&&String(x.id)!==String(exceptId));
@@ -894,13 +925,13 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
     if(!support&&regularCell(t.id,date,period))continue;
     if(occupiedByReserve(t.id,date,period,exceptAssignmentId))continue;
     if(targetClass&&sameClassReserveToday(t.id,date,targetClass,exceptAssignmentId))continue;
+    const currentDraftUse=reserveDailyAssignedCount(t.id,date,exceptAssignmentId);
+    if(currentDraftUse>=MAX_AUTO_RESERVE_PER_DAY)continue;
     const weekly=state.assignments.filter(a=>a.status!=="ملغي"&&String(a.id)!==String(exceptAssignmentId)&&
        String(a.assignedTeacherId)===String(t.id)&&a.date>=week.start&&a.date<=date).length;
     if(weekly>=20)continue;
     const absenceCount=state.absences.filter(a=>String(a.teacherId)===String(t.id)&&a.date>=week.start&&a.date<=date)
        .reduce((n,a)=>n+(a.periods||[]).length,0);
-    const currentDraftUse=assignmentsOn(date).filter(a=>String(a.id)!==String(exceptAssignmentId)&&
-       String(a.assignedTeacherId)===String(t.id)).length;
     const c=counts.get(String(t.id))||{week:0,term:0,daily:0};
     rank.push({teacherId:String(t.id),name:t.name||"",workload:Number(t.workload||0),
       week:weekly,term:Number(c.term||0),daily:currentDraftUse,absenceCount,
@@ -1519,6 +1550,7 @@ function manualCandidateOptions(a){
   // The original full-directory override remains available behind an explicit checkbox.
   const all=(state.autoAllNames!==false?manualAssigneeDirectory():
     (a.candidates||[]).slice(0,1).map(c=>teacherOf(c.teacherId)).filter(Boolean))
+    .filter(t=>reserveDailyAssignedCount(t.id,a.date,a.id)<MAX_AUTO_RESERVE_PER_DAY)
     .map(t=>({teacherId:String(t.id),name:t.name}));
   if(a.assignedTeacherId&&!all.some(t=>String(t.teacherId)===String(a.assignedTeacherId))){
     all.unshift({teacherId:String(a.assignedTeacherId),name:a.assignedTeacherName||"المكلفة سابقًا"});
@@ -1655,9 +1687,13 @@ function reserveSavedManualAssignmentsHTML(date){
 }
 async function reserveCommitFlexibleAssignee(recordId,teacherId){
   await ensureAdmin();
+  const initial=state.assignments.find(x=>String(x.id)===String(recordId)&&x.status!=="ملغي");
+  // Auto changes must consider the latest cloud assignments, including manual ones.
+  if(initial&&initial.manual!==true)await loadAll();
   const a=state.assignments.find(x=>String(x.id)===String(recordId)&&x.status!=="ملغي");
   const t=teacherOf(teacherId);
   if(!a||!t||!a.date)throw new Error("تعذر العثور على التكليف أو المعلمة المسددة.");
+  if(a.manual!==true)assertAutoReserveDailyCapacity(t.id,a.date,a.id);
   const changed=String(a.assignedTeacherId)!==String(t.id);
   const warnings=manualConflictMessages(a.date,[{
     teacherId:String(t.id),period:Number(a.period),className:a.className,existingId:String(a.id)
@@ -3116,6 +3152,7 @@ function bindDayAdmin(){
           let selected=null,reasonOfFailure="";
           for(const candidate of choices){
             try{
+              assertAutoReserveDailyCapacity(candidate.teacherId,date,record.id);
               const data={...plainData(record),assignedTeacherId:String(candidate.teacherId),
                 assignedTeacherName:candidate.name,candidates:[candidate],
                 fullCadreEnabled:state.autoAllNames!==false,
@@ -3172,6 +3209,10 @@ function bindDayAdmin(){
     }catch(error){console.error("تعذر تعديل التكليف الآلي",error);
       const current=byId("reserveDayMsg")||msg;
       if(current)current.textContent=`تعذر حفظ التعديل: ${error.message||"خطأ غير معروف"}`;
+      // Restore the persisted teacher after a rejected automatic reassignment.
+      const persisted=state.assignments.find(a=>String(a.id)===String(tr.dataset.assignment));
+      const select=tr.querySelector(".reserve-assignee");
+      if(select&&persisted)select.value=String(persisted.assignedTeacherId||"");
       b.disabled=false;
     }
   });
@@ -3243,6 +3284,14 @@ function bindDayAdmin(){
     button.disabled=true;button.textContent="جارٍ الحفظ...";msg.textContent="جارٍ الحفظ والاعتماد...";
     try{
       await ensureAdmin();
+      // Fail before any approval write if the new assignments exceed 3 in a day.
+      await loadAll();
+      const fresh=assignmentsOn(date).filter(a=>a.manual!==true);
+      if(fresh.length!==items.length||items.some(a=>!fresh.some(b=>String(a.id)===String(b.id))))
+        throw new Error("تغيّرت تكليفات اليوم؛ أعيدي فتح الجدول قبل الاعتماد.");
+      assertAutoReservePlannedCapacity(date,items.map(a=>({
+        teacherId:entries.find(x=>x.id===String(a.id))?.teacherId||"",id:String(a.id)
+      })));
       let saved=0;
       const selectedAssignments=items.map(a=>({
         teacherId:entries.find(x=>x.id===String(a.id))?.teacherId||"",
@@ -3279,6 +3328,9 @@ function bindDayAdmin(){
       }
       await loadAll();
       const persisted=assignmentsOn(date);
+      assertAutoReservePlannedCapacity(date,persisted.filter(a=>a.manual!==true).map(a=>({
+        teacherId:String(a.assignedTeacherId||""),id:String(a.id)
+      })));
       if(items.some(item=>{
          const selected=entries.find(x=>x.id===String(item.id));
          return !selected||!persisted.some(a=>String(a.id)===String(item.id)&&
