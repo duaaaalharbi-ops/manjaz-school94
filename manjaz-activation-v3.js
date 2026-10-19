@@ -3,7 +3,7 @@
 if(window.manjazActivationV3Loaded)return;window.manjazActivationV3Loaded=true;
 var API="https://idkjuqfxcweqekdkcktk.supabase.co",KEY="sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
 var MONTHS=["محرم","صفر","ربيع الأول","ربيع الآخر","جمادى الأولى","جمادى الآخرة","رجب","شعبان","رمضان","شوال","ذو القعدة","ذو الحجة"];
-var timer=null,busy=false,rendererVersion="3.0";
+var timer=null,busy=false,rendererVersion="3.1";
 function el(id){return document.getElementById(id);}
 function value(id){var x=el(id);return x?x.value:"";}
 function text(id,value){var x=el(id);if(x)x.textContent=value;}
