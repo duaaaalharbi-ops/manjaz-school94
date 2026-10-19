@@ -1981,16 +1981,47 @@
 </section><script>
 (function(){
 "use strict";
-var p=new URLSearchParams(location.search), n=Number(p.get("card"));
-if(!(n>=1&&n<=130&&Number.isInteger(n)))return;
-var all=document.querySelectorAll(".session"),selected=all[n-1];
+var params=new URLSearchParams(location.search),number=Number(params.get("card"));
+if(!Number.isInteger(number)||number<1||number>130)return;
+var all=document.querySelectorAll(".session"),selected=all[number-1];
 document.querySelectorAll(".cover,.front,.session").forEach(function(el){if(el!==selected)el.remove();});
-var f=selected.querySelectorAll(".info-grid>div");
-var values=[p.get("date")||"",p.get("period")||"",p.get("class")||"",p.get("teacher")||""];
-values.forEach(function(v,i){var field=f[i]&&f[i].querySelector(".write-field");if(field){field.textContent=v;field.setAttribute("contenteditable","false");}});
-document.title="تفعيل الاحتياط اليومي | البطاقة "+n;
-var css=document.createElement("style");
-css.textContent="@media screen{body{background:#eef3f4;display:flex;justify-content:center;padding:10px}.session{box-shadow:0 5px 24px #152c3833}} @media print{body{padding:0}.session{box-shadow:none}}";
-document.head.appendChild(css);
+var data=[params.get("date")||"",params.get("period")||"",params.get("class")||"",params.get("teacher")||""];
+var fields=selected.querySelectorAll(".info-grid > div");
+data.forEach(function(v,i){
+ var node=fields[i]&&fields[i].querySelector(".write-field");
+ if(node){
+   node.textContent=v||"—";
+   node.removeAttribute("contenteditable");
+   node.removeAttribute("role");
+   node.removeAttribute("spellcheck");
+   node.classList.add("auto-filled");
+ }
+});
+var allowed=["مشاركة","إجابة مبررة","إنجاز المهمة"];
+var checks=(params.get("checks")||"").split("|").filter(function(x){return allowed.includes(x);});
+var rubric=selected.querySelector(".rubric");
+if(rubric){
+ rubric.querySelectorAll(".notes").forEach(function(node){node.remove();});
+ rubric.querySelectorAll("label").forEach(function(node){
+   var name=node.textContent.replace(/^[□☑✓✔]\s*/,"").trim();
+   if(!checks.includes(name)){node.remove();return;}
+   node.textContent="✓ "+name;
+   node.classList.add("verified");
+ });
+ if(!checks.length)rubric.remove();
+}
+selected.querySelectorAll(".teacher").forEach(function(node){node.remove();});
+var stamp=selected.querySelector(".brand span");if(stamp)stamp.textContent="بطاقة تنفيذ مكتملة البيانات";
+var style=document.createElement("style");
+style.textContent=
+ ".session .write-field.auto-filled{min-height:6.6mm;border-bottom:0;background:#f4f8f9;border-radius:5px;font-weight:800;color:#173847;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"+
+ ".session .rubric{background:#f1f7f6;border-radius:6px;border-right:3px solid var(--accent);padding:2.5mm 3mm;gap:3mm}"+
+ ".session .rubric label.verified{font-weight:800;color:#0e6a5a;padding:2px 6px;background:#fff;border-radius:4px}"+
+ ".session .response{background:#fff!important}.session .response .rules,.session .response .rule{background:#fff!important}"+
+ ".session footer{color:#385968;border-top-color:#b5ccd3;font-weight:650}"+
+ "@media screen{body{background:#eef3f4;display:flex;justify-content:center;padding:10px}.session{box-shadow:0 5px 24px #152c3833}}"+
+ "@media print{body{padding:0;background:white}.session{box-shadow:none}}";
+document.head.appendChild(style);
+document.title="الثانوية الرابعة والتسعون | بطاقة "+number+" | تفعيل الاحتياط اليومي";
 })();
 </script></body></html>
