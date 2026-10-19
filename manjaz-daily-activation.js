@@ -23,9 +23,9 @@ function initialHijri(){
  }catch(e){return {d:"",m:"",y:"1448"};}
 }
 function initialWeekday(){
- try{return new Intl.DateTimeFormat("ar-SA",{timeZone:"Asia/Riyadh",weekday:"long"}).format(new Date());}catch(e){return "";}
+ try{return new Intl.DateTimeFormat("ar-SA",{timeZone:"Asia/Riyadh",weekday:"long"}).format(new Date()).replace("الاثنين","الإثنين");}catch(e){return "";}
 }
-function headers(token){return {"apikey":KEY,"Authorization":"Bearer "+(token||KEY),"Content-Type":"application/json"};}
+function headers(token){var h={"apikey":KEY,"Content-Type":"application/json"};if(token)h.Authorization="Bearer "+token;return h;}
 function session(){
  try{var v=JSON.parse(sessionStorage.getItem("manjaz_admin_auth_session_v1")||"null");return v&&v.access_token?v.access_token:null;}catch(e){return null;}
 }
