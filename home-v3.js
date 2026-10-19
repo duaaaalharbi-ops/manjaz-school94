@@ -13,6 +13,7 @@ const cards=[
   {title:"الحوسبة السحابية | فريق التميز",view:"#cloud-excellence",icon:"☁",viewOnly:true},
   {title:"الحوسبة السحابية | ملفات الإنجاز",view:"#cloud-portfolios",icon:"☁",viewOnly:true},
   {title:"الاحتياط اليومي",view:"#daily-reserve",icon:"▦",viewOnly:true},
+  {title:"تفعيل الاحتياط اليومي",view:"#daily-activation",icon:"▣",viewOnly:true},
   {title:"صلاحيات إدارية",view:"#admin-permissions",icon:"▥",viewOnly:true,singleLine:true}
 ];
 
@@ -142,3 +143,7 @@ addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once
 
 /* MANJAZ: isolated daily reserve section loader */
 (()=>{if(document.querySelector('script[data-manjaz-daily-reserve="2.0"]'))return;const s=document.createElement("script");s.src="daily-reserve.js?v=48.8-repeat-class-allowed";s.dataset.manjazDailyReserve="2.0";document.head.appendChild(s)})();
+
+
+/* Isolated daily activation loader — 130 cards */
+(()=>{if(document.querySelector('script[data-manjaz-daily-activation="1.0"]'))return;const x=document.createElement("script");x.src="manjaz-daily-activation.js?v=1.0-130-cards";x.dataset.manjazDailyActivation="1.0";document.head.appendChild(x)})();
