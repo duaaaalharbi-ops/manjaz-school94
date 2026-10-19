@@ -2015,12 +2015,13 @@ selected.querySelectorAll(".response .kicker small").forEach(function(node){node
 var stamp=selected.querySelector(".brand span");if(stamp)stamp.textContent="بطاقة تنفيذ مكتملة البيانات";
 var style=document.createElement("style");
 style.textContent=
+ ".session{width:210mm!important;min-width:210mm!important;max-width:210mm!important;flex:0 0 210mm!important;flex-shrink:0!important;box-sizing:border-box!important}"+
  ".session .write-field.auto-filled{min-height:6.6mm;border-bottom:0;background:#f4f8f9;border-radius:5px;font-weight:800;color:#173847;padding:2px 5px;white-space:normal;overflow:visible;overflow-wrap:anywhere;font-size:10px;line-height:1.4}"+
  ".session .rubric{background:#f1f7f6;border-radius:6px;border-right:3px solid var(--accent);padding:2.5mm 3mm;gap:3mm}"+
  ".session .rubric label.verified{font-weight:800;color:#0e6a5a;padding:2px 6px;background:#fff;border-radius:4px}"+
  ".session .response{background:#fff!important}.session .response .rules,.session .response .rule{background:#fff!important}"+
  ".session footer{color:#385968;border-top-color:#b5ccd3;font-weight:650}"+
- "@media screen{body{background:#eef3f4;display:flex;justify-content:center;padding:10px}.session{box-shadow:0 5px 24px #152c3833}}"+
+ "@media screen{body{background:#eef3f4;display:flex;justify-content:flex-start;overflow-x:auto;padding:10px}.session{box-shadow:0 5px 24px #152c3833}}"+
  "@media print{html,body{width:210mm!important;height:297mm!important;min-width:210mm!important;max-width:210mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}"+
  ".cover,.front{display:none!important}.session{display:block!important;margin:0!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;overflow:hidden!important;box-shadow:none!important;break-before:auto!important;break-after:auto!important;page-break-before:auto!important;page-break-after:auto!important;page-break-inside:avoid!important}"+
  ".session footer{display:flex!important;position:absolute!important;bottom:7.4mm!important;left:15mm!important;right:15mm!important}}";
