@@ -149,4 +149,4 @@ addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once
 (()=>{if(document.querySelector('script[data-manjaz-daily-activation="1.0"]'))return;const x=document.createElement("script");x.src="manjaz-daily-activation.js?v=3.0-card-database-csv";x.dataset.manjazDailyActivation="1.0";document.head.appendChild(x)})();
 
 /* MANJAZ: original-card preview and export correction v3 */
-(()=>{if(document.querySelector('script[data-manjaz-activation-v3="1"]'))return;const s=document.createElement("script");s.src="manjaz-activation-v3.js?v=3.0-original-cards";s.dataset.manjazActivationV3="1";document.head.appendChild(s)})();
+(()=>{if(document.querySelector('script[data-manjaz-activation-v3="1"]'))return;const s=document.createElement("script");s.src="manjaz-activation-v3.js?v=3.1-original-cards";s.dataset.manjazActivationV3="1";document.head.appendChild(s)})();
