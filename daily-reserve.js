@@ -872,13 +872,37 @@ function reserveOneClassPriorityActive(date){
   const demand=dailyDemand(date);
   return demand>=ONE_CLASS_RESERVE_MIN_DEMAND&&demand<=ONE_CLASS_RESERVE_MAX_DEMAND;
 }
+function reserveLowWorkloadCombinedDailyCap(teacherId,date){
+  const teacher=teacherOf(teacherId);
+  // Applies only to teaching staff with a verified original timetable.
+  // Support staff (e.g. the laboratory/administrative support directory) do
+  // not have an original teaching load and keep their own eligibility rules.
+  if(!teacher||teacher.supportStaff===true||
+     !state.teachers.some(t=>String(t.id)===String(teacherId))||
+     !scheduleOf(teacherId))return Infinity;
+  const workload=Number(teacher.workload);
+  if(!Number.isFinite(workload)||workload<0||workload>11)return Infinity;
+  const day=dayKey(date);
+  if(day==="sun"||day==="mon")return 5;
+  if(day==="tue"||day==="wed"||day==="thu")return 4;
+  return Infinity;
+}
 function autoReserveDailyLimit(teacherId,date){
   const demand=dailyDemand(date),original=dailyOriginalCount(teacherId,date);
-  // Latest rule: one original lesson permits 3 reserve duties when demand exceeds 18.
-  // The prior 25+ exception is included; exactly 18 retains the 2-duty limit.
-  if(original===1)return demand>18?MAX_AUTO_RESERVE_PER_DAY:REDUCED_AUTO_RESERVE_PER_DAY;
-  if(demand>=REDUCED_AUTO_MIN_DEMAND)return REDUCED_AUTO_RESERVE_PER_DAY;
-  return MAX_AUTO_RESERVE_PER_DAY;
+  // Existing demand-dependent reserve quota remains in place.
+  // The new original+reserve total for workloads up to 11 is an additional
+  // hard cap, enforced for every automatic nomination, edit, and approval.
+  const previousLimit=original===1?
+    (demand>18?MAX_AUTO_RESERVE_PER_DAY:REDUCED_AUTO_RESERVE_PER_DAY):
+    (demand>=REDUCED_AUTO_MIN_DEMAND?REDUCED_AUTO_RESERVE_PER_DAY:MAX_AUTO_RESERVE_PER_DAY);
+  const totalCap=reserveLowWorkloadCombinedDailyCap(teacherId,date);
+  return Math.min(previousLimit,Math.max(0,totalCap-original));
+}
+function reserveLowWorkloadCapacityMessage(teacherId,date){
+  const cap=reserveLowWorkloadCombinedDailyCap(teacherId,date);
+  if(!Number.isFinite(cap))return "";
+  const teacher=teacherOf(teacherId),original=dailyOriginalCount(teacherId,date);
+  return ` نصاب ${teacher?.name||"المعلمة"} الأسبوعي ١١ حصة فأقل؛ لا يجوز أن يزيد مجموع الحصص الأصلية والاحتياط عن ${cap} في هذا اليوم (الأصلية: ${original}).`;
 }
 function reservePreviousSchoolDate(date){
   return addDays(date,dayKey(date)==="sun"?-3:-1);
@@ -922,7 +946,8 @@ function assertAutoReserveDailyCapacity(teacherId,date,exceptAssignmentId=""){
   const limit=autoReserveDailyLimit(teacherId,date);
   if(assigned>=limit){
     const name=teacherOf(teacherId)?.name||"المحددة";
-    throw new Error(`لا يمكن إسناد أكثر من ${limit} حصص احتياط للمعلمة «${name}» في اليوم المحدد. لديها بالفعل ${assigned} حصص.`);
+    throw new Error(`لا يمكن إسناد أكثر من ${limit} حصص احتياط للمعلمة «${name}» في اليوم المحدد. لديها بالفعل ${assigned} حصص.`+
+      reserveLowWorkloadCapacityMessage(teacherId,date));
   }
 }
 function assertAutoReservePlannedCapacity(date,selected){
@@ -940,7 +965,8 @@ function assertAutoReservePlannedCapacity(date,selected){
     const limit=autoReserveDailyLimit(id,date);
     if(next>limit){
       const name=teacherOf(id)?.name||"المحددة";
-      throw new Error(`لا يمكن اعتماد أكثر من ${limit} حصص احتياط للمعلمة «${name}» في اليوم الواحد (المجموع: ${next}). غيّري المعلمة في الحصص الزائدة.`);
+      throw new Error(`لا يمكن اعتماد أكثر من ${limit} حصص احتياط للمعلمة «${name}» في اليوم الواحد (المجموع: ${next}). غيّري المعلمة في الحصص الزائدة.`+
+        reserveLowWorkloadCapacityMessage(id,date));
     }
     counts.set(id,next);
   }
@@ -1581,7 +1607,7 @@ function dayAdminHTML(){
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
-      <p class="reserve-public-note">الترشيح الآلي: الأولوية لمعلمة الفصل الأصلي، ثم لمن تغيبت في اليوم الدراسي السابق أو خلال الأسبوع. تُعطى صاحبة الحصة الأصلية الواحدة حصتين احتياط حتى ١٨ حصة مطلوبة، ويمكن إسناد ثلاث لها من ١٩ حصة فأكثر؛ أما بقية المعلمات فيطبق عليهن الحد اليومي السابق. رية الحربي للأول الثانوي فقط وبحد حصتين أسبوعيًا، ونجلاء هوساوي بحد ثلاث حصص أسبوعيًا. يُستبعد نصاب ٢٠ فأكثر قبل بلوغ ٢٥ حصة، وتأتي المكلفات بأعمال إضافية أخيرًا.</p>
+      <p class="reserve-public-note">الترشيح الآلي: الأولوية لمعلمة الفصل الأصلي، ثم لمن تغيبت في اليوم الدراسي السابق أو خلال الأسبوع. تُعطى صاحبة الحصة الأصلية الواحدة حصتين احتياط حتى ١٨ حصة مطلوبة، ويمكن إسناد ثلاث لها من ١٩ حصة فأكثر؛ أما بقية المعلمات فيطبق عليهن الحد اليومي السابق. <strong>للمعلمات ذوات النصاب الأسبوعي ١١ حصة فأقل، لا يتجاوز مجموع الحصص الأصلية والاحتياط ٥ حصص الأحد والاثنين، و٤ حصص الثلاثاء إلى الخميس.</strong> رية الحربي للأول الثانوي فقط وبحد حصتين أسبوعيًا، ونجلاء هوساوي بحد ثلاث حصص أسبوعيًا. يُستبعد نصاب ٢٠ فأكثر قبل بلوغ ٢٥ حصة، وتأتي المكلفات بأعمال إضافية أخيرًا.</p>
       ${reserveWorkspaceSharingHTML()}
       <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
       ${hijriDateControl("reserveAdminDate",date)}
