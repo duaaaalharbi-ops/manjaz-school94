@@ -186,7 +186,7 @@ function init(){
  var selected=el("ma-selected");
  if(!selected)return;
  var wrap=document.createElement("div");wrap.className="ma-v3-outcome";
- wrap.innerHTML='<label for="ma-outcome">مساحة الإنجاز – وصف نواتج التنفيذ <small>(اختياري)</small></label><textarea id="ma-outcome" rows="3" maxlength="800" placeholder="اكتبي وصفًا موجزًا للنواتج إن رغبتِ. يمكن حفظ البطاقة وتصديرها دون كتابة أي وصف."></textarea><p>إذا تُرك الحقل فارغًا فلن يُدرج وصف إضافي في البطاقة المصدّرة.</p>';
+ wrap.innerHTML='<label for="ma-outcome">مساحة الإنجاز – وصف النواتج <small>(اختياري)</small></label><textarea id="ma-outcome" rows="3" maxlength="800" placeholder="اكتبي وصفًا موجزًا للنواتج إن رغبتِ. يمكن حفظ البطاقة وتصديرها دون كتابة أي وصف."></textarea><p>إذا تُرك الحقل فارغًا فلن يُدرج وصف إضافي في البطاقة المصدّرة.</p>';
  selected.insertAdjacentElement("afterend",wrap);
  var previewSection=el("ma-preview"),previewState=document.createElement("p");previewState.id="ma-v3-preview-state";
  previewSection.insertBefore(previewState,el("ma-preview-frame"));
