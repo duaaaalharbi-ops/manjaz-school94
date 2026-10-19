@@ -13,7 +13,6 @@ const cards=[
   {title:"الحوسبة السحابية | فريق التميز",view:"#cloud-excellence",icon:"☁",viewOnly:true},
   {title:"الحوسبة السحابية | ملفات الإنجاز",view:"#cloud-portfolios",icon:"☁",viewOnly:true},
   {title:"الاحتياط اليومي",view:"#daily-reserve",icon:"▦",viewOnly:true},
-  {title:"إصدار الشهادات المعتمدة",view:"#approved-certificates",icon:"▤",viewOnly:true},
   {title:"صلاحيات إدارية",view:"#admin-permissions",icon:"▥",viewOnly:true,singleLine:true}
 ];
 
