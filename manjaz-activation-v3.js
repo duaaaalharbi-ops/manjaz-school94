@@ -32,7 +32,7 @@ function cardLink(v,variant){
  u.searchParams.set("card",v.card);
  u.searchParams.set("variant",variant);
  if(variant==="activity"){
-  u.searchParams.set("date",v.weekday+" | "+v.day+" "+MONTHS[v.month-1]+" "+v.year+" هـ");
+  u.searchParams.set("date",(v.weekday&&v.day&&v.month&&v.year)?(v.weekday+" | "+v.day+" "+MONTHS[v.month-1]+" "+v.year+" هـ"):"");
   u.searchParams.set("teacher",v.teacher||"");u.searchParams.set("class",v.klass||"");
   u.searchParams.set("period",v.period?"الحصة "+v.period:"");
   if(v.indicators.length)u.searchParams.set("checks",v.indicators.join("|"));
@@ -203,6 +203,7 @@ function init(){
  replaceClick("ma-print",function(){exportPDF("activity");});
  replaceClick("ma-solution",function(){preview("solved",false);});
  replaceClick("ma-save",save);
+ el("ma-card").addEventListener("change",function(){var outcome=el("ma-outcome");if(outcome)outcome.value="";var dl=el("ma-pdf-download");if(dl)dl.hidden=true;var sd=el("ma-v3-download-solved");if(sd)sd.hidden=true;});
  exportBtn.addEventListener("click",function(){exportPDF("solved");});
  var btn=el("ma-solution");if(btn)btn.textContent="بطاقة الحل النموذجي";
  var dlAct=el("ma-pdf-download");if(dlAct)dlAct.hidden=true;
