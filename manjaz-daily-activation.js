@@ -420,7 +420,7 @@ async function logoutInlineAdmin(){
   if(token)await fetch(API+"/auth/v1/logout",{method:"POST",headers:{"apikey":KEY,"Authorization":"Bearer "+token}});
  }catch(_){}
  sessionStorage.removeItem("manjaz_admin_auth_session_v1");
- logData=[];finishEditing();
+ logData=[];selectedLogIds.clear();finishEditing();
  byId("ma-report").hidden=true;byId("ma-admin-login").hidden=false;byId("ma-admin-active").hidden=true;byId("ma-admin-pass").value="";
  uiMsg("تم تسجيل خروج الإدارة.",false);
 }
@@ -454,11 +454,46 @@ async function deleteRecord(id){
   if(!r.ok)throw Error("تعذر حذف السجل (HTTP "+r.status+").");
   var removed=await r.json();if(removed.length!==1)throw Error("تعذر التأكد من حذف السجل.");
   if(editingId===id)finishEditing();
+  selectedLogIds.delete(String(id));
   logData=logData.filter(function(x){return x.id!==id;});
   renderReportRows();
   uiMsg("تم حذف سجل التنفيذ المحدد من قاعدة البيانات.",false);
  }catch(e){uiMsg("فشل الحذف: "+(e.message||e),true);}
  finally{adminBusy=false;}
+}
+async function deleteSelectedRecords(){
+ if(adminBusy||!selectedLogIds.size)return;
+ var known=new Set(logData.map(function(row){return String(row.id);}));
+ var ids=[...selectedLogIds].filter(function(id){return known.has(id);});
+ if(!ids.length){selectedLogIds.clear();renderReportRows();return;}
+ if(!window.confirm("هل تريدين حذف "+ids.length+" سجل تنفيذ محددًا نهائيًا؟ لا يمكن التراجع عن الحذف."))return;
+ adminBusy=true;
+ var removedIds=new Set(),error=null;
+ try{
+  var token=await getVerifiedAdminToken();
+  if(!token)throw Error("يجب تسجيل الدخول بصلاحية الإدارة أولًا.");
+  for(var offset=0;offset<ids.length;offset+=40){
+   var chunk=ids.slice(offset,offset+40);
+   var query="id=in.("+chunk.map(encodeURIComponent).join(",")+")";
+   var response=await fetch(API+"/rest/v1/manjaz_activation_logs?"+query,{method:"DELETE",headers:Object.assign(headers(token),{"Prefer":"return=representation"})});
+   if(!response.ok)throw Error("تعذر حذف السجلات (HTTP "+response.status+").");
+   var confirmed=await response.json();
+   var chunkSet=new Set(chunk);
+   confirmed.forEach(function(row){if(chunkSet.has(String(row.id)))removedIds.add(String(row.id));});
+   if(chunk.some(function(id){return !removedIds.has(id);}))throw Error("لم يؤكد الخادم حذف جميع السجلات المحددة.");
+  }
+ }catch(e){error=e.message||String(e);}
+ finally{
+  adminBusy=false;
+  if(removedIds.size){
+   logData=logData.filter(function(row){return !removedIds.has(String(row.id));});
+   removedIds.forEach(function(id){selectedLogIds.delete(id);});
+   if(editingId&&removedIds.has(String(editingId)))finishEditing();
+  }
+  renderReportRows();
+  if(error)uiMsg((removedIds.size?"تم حذف "+removedIds.size+" سجلًا، لكن العملية لم تكتمل: ":"تعذر الحذف المتعدد: ")+error,true);
+  else uiMsg("تم حذف "+removedIds.size+" سجل تنفيذ محددًا من قاعدة البيانات.",false);
+ }
 }
 function renderReportRows(){
  var target=byId("ma-report-body");if(!target)return;
@@ -472,13 +507,41 @@ function renderReportRows(){
  summary.textContent="عدد السجلات: "+logData.length+(q?" | المطابقة: "+entries.length:"");
  target.appendChild(summary);
  if(!entries.length){var none=document.createElement("p");none.textContent="لا توجد سجلات مطابقة.";target.appendChild(none);return;}
+ var visible=entries.slice(0,500);
+ var toolbar=document.createElement("div");toolbar.className="ma-bulk-tools";
+ var selectLabel=document.createElement("label");selectLabel.className="ma-bulk-label";
+ var selectAll=document.createElement("input");selectAll.type="checkbox";selectAll.setAttribute("aria-label","تحديد جميع السجلات المعروضة");
+ selectLabel.appendChild(selectAll);selectLabel.appendChild(document.createTextNode(" تحديد جميع السجلات المعروضة"));
+ var deleteButton=document.createElement("button");deleteButton.type="button";deleteButton.className="ma-delete";
+ deleteButton.onclick=deleteSelectedRecords;
+ var counter=document.createElement("span");counter.className="ma-selected-count";
+ toolbar.appendChild(selectLabel);toolbar.appendChild(deleteButton);toolbar.appendChild(counter);target.appendChild(toolbar);
+ function updateBulkControls(){
+  var selectedVisible=visible.filter(function(row){return selectedLogIds.has(String(row.id));}).length;
+  selectAll.checked=visible.length>0&&selectedVisible===visible.length;
+  selectAll.indeterminate=selectedVisible>0&&selectedVisible<visible.length;
+  deleteButton.disabled=adminBusy||selectedLogIds.size===0;
+  deleteButton.textContent="حذف المحدد ("+selectedLogIds.size+")";
+  counter.textContent="عدد السجلات المحددة: "+selectedLogIds.size;
+ }
+ selectAll.onchange=function(){
+  visible.forEach(function(row){var rowId=String(row.id);if(selectAll.checked)selectedLogIds.add(rowId);else selectedLogIds.delete(rowId);});
+  target.querySelectorAll(".ma-log-checkbox").forEach(function(el){el.checked=selectedLogIds.has(el.value);});
+  updateBulkControls();
+ };
  var holder=document.createElement("div");holder.className="ma-table-wrap";
  var table=document.createElement("table"),thead=document.createElement("thead");
- thead.innerHTML="<tr><th>التاريخ الهجري</th><th>المنفذة</th><th>الفصول</th><th>الحصص</th><th>عنوان البطاقة</th><th>الإجراءات</th></tr>";
+ thead.innerHTML="<tr><th>تحديد</th><th>التاريخ الهجري</th><th>المنفذة</th><th>الفصول</th><th>الحصص</th><th>عنوان البطاقة</th><th>الإجراءات</th></tr>";
  table.appendChild(thead);
  var tbody=document.createElement("tbody");
- entries.slice(0,500).forEach(function(row){
+ visible.forEach(function(row){
   var tr=document.createElement("tr");
+  var cell=document.createElement("td");cell.className="ma-check-cell";
+  var check=document.createElement("input");check.type="checkbox";check.className="ma-log-checkbox";
+  check.value=String(row.id);check.checked=selectedLogIds.has(check.value);
+  check.setAttribute("aria-label","تحديد سجل "+safe(row.teacher_name)+" — "+safe(row.card_title));
+  check.onchange=function(){if(check.checked)selectedLogIds.add(check.value);else selectedLogIds.delete(check.value);updateBulkControls();};
+  cell.appendChild(check);tr.appendChild(cell);
   [row.hijri_day+"/"+row.hijri_month+"/"+row.hijri_year,row.teacher_name,rowClasses(row).join("، "),rowPeriods(row).join("، "),row.card_id+" - "+row.card_title].forEach(function(value){
    var td=document.createElement("td");td.textContent=safe(value);tr.appendChild(td);
   });
@@ -490,6 +553,7 @@ function renderReportRows(){
   tr.appendChild(actions);tbody.appendChild(tr);
  });
  table.appendChild(tbody);holder.appendChild(table);target.appendChild(holder);
+ updateBulkControls();
  if(entries.length>500){var more=document.createElement("p");more.textContent="تُعرض أول ٥٠٠ نتيجة؛ استخدمي البحث للوصول إلى سجل محدد.";target.appendChild(more);}
 }
 async function reports(){
@@ -501,6 +565,8 @@ async function reports(){
   var r=await fetch(u,{headers:headers(token),cache:"no-store"});
   if(!r.ok)throw Error("لا توجد صلاحية لقراءة السجلات (HTTP "+r.status+").");
   logData=await r.json();
+  var availableIds=new Set(logData.map(function(row){return String(row.id);}));
+  selectedLogIds.forEach(function(id){if(!availableIds.has(id))selectedLogIds.delete(id);});
   byId("ma-report").hidden=false;
   renderReportRows();
   uiMsg("تم تحميل سجلات التفعيل ويمكن تعديلها وحذفها.",false);
@@ -524,6 +590,12 @@ function initStyle(){
  "#manjazActivation input[type=email],#manjazActivation input[type=password],#manjazActivation input[type=search]{width:100%;min-height:42px;background:#fff;border:1px solid #a9bdc4;border-radius:8px;padding:9px 12px;font:inherit;box-sizing:border-box}"+
  "#manjazActivation .ma-table-wrap{max-height:500px;overflow:auto;max-width:100%;border:1px solid #d7e1e4;border-radius:9px}"+
  "#manjazActivation .ma-row-actions{white-space:nowrap}#manjazActivation .ma-row-actions button{padding:7px 10px;margin:2px;font-size:12px}"+
+ "#manjazActivation .ma-bulk-tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:10px 0}"+
+ "#manjazActivation .ma-bulk-label{display:inline-flex;align-items:center;gap:7px;margin:0;font-weight:600}"+
+ "#manjazActivation .ma-bulk-label input,#manjazActivation .ma-check-cell input{width:19px;height:19px;accent-color:#0b7975;cursor:pointer}"+
+ "#manjazActivation .ma-check-cell{text-align:center!important;min-width:50px}"+
+ "#manjazActivation .ma-selected-count{color:#536c77;font-size:12px}"+
+ "#manjazActivation .ma-bulk-tools button:disabled{opacity:.48;cursor:not-allowed}"+
  "#manjazActivation button.ma-delete{background:#a52c36;color:#fff}"+
  "#manjazActivation .ma-edit-bar{background:#eaf5f5;border:1px solid #a0c9cd;border-radius:10px;padding:12px;margin-top:12px}"+
  "#manjazActivation .ma-clear-actions{display:flex;justify-content:flex-end;margin-top:8px}"+
@@ -616,7 +688,7 @@ function render(){
  byId("ma-admin-sign-in").addEventListener("click",signInInlineAdmin);
  byId("ma-admin-pass").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();signInInlineAdmin();}});
  byId("ma-admin-logout").addEventListener("click",logoutInlineAdmin);
- byId("ma-report-search").addEventListener("input",renderReportRows);
+ byId("ma-report-search").addEventListener("input",function(){selectedLogIds.clear();renderReportRows();});
  byId("ma-export-solved").addEventListener("click",exportSolved);
  byId("ma-load-reports").addEventListener("click",reports);
  byId("ma-csv").addEventListener("click",function(){if(!logData.length){uiMsg("حمّلي التقرير الإداري أولًا.",true);return;}downloadCsv(logData);});
