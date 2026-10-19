@@ -1,53 +1,37 @@
-/* MANJAZ v45 — place certificate review in Requests, keep export permissions compact. */
+/* MANJAZ v48 — certificate approval queue in Section 5, public requests remain in Section 2. */
 (()=>{"use strict";
-const STYLE_ID="mj45CertificateQueueStyle";
-function injectCSS(){
- if(document.getElementById(STYLE_ID))return;
- const style=document.createElement("style");style.id=STYLE_ID;
- style.textContent=`
- #view.mj16-admin-only #mj15Requests>.mj15-body{display:grid;gap:14px}
- #view.mj16-admin-only #mj15Requests #mj15CertificatePowers{
-   display:grid!important;grid-template-columns:minmax(0,1fr);gap:10px;
-   width:100%;max-width:100%;margin:0;padding:0;background:transparent!important;
-   border:0!important;box-shadow:none!important
- }
- #view.mj16-admin-only #mj15Requests #mj15CertificatePowers>.mj13-card,
- #view.mj16-admin-only #mj15Requests #mj15CertificatePowers #mj13ExportCards{display:none!important}
- #view.mj16-admin-only #mj15Requests #mj15CertificatePowers>h3{display:none!important}
- #view.mj16-admin-only #mj15Requests #mj15CertificatePowers>.mj15-actions{grid-column:1;margin:0!important}
- #view.mj16-admin-only #mj15Requests #mj15ApprovalList,
- #view.mj16-admin-only #mj15Requests #mj15ApprovalDetail{grid-column:1;min-width:0}
- #view.mj16-admin-only #mj15Requests #mj15ApprovalDetail{display:none}
- #view.mj16-admin-only #mj15Requests.mj45-detail-open #mj15ApprovalDetail{display:block}
- #view.mj16-admin-only #mj15Requests.mj45-guest #mj15CertificatePowers{display:none!important}
- #view.mj16-admin-only #mj15Requests .mj36-request-group{margin:0}
- #view.mj16-admin-only #mj15Requests[data-mj45-group="pending"] .mj36-request-group:nth-of-type(2),
- #view.mj16-admin-only #mj15Requests[data-mj45-group="approved"] .mj36-request-group:nth-of-type(1){display:none!important}
- #view.mj16-admin-only #mj15Requests .mj45-filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
- #view.mj16-admin-only #mj15Requests .mj45-filter>button{
-  border:1px solid #cbdedb;border-radius:9px;background:#f3f9f8;color:#14515c;
-  font:700 13px Tahoma,Arial,sans-serif;padding:10px 13px;cursor:pointer
- }
- #view.mj16-admin-only #mj15Requests .mj45-filter>button[aria-pressed="true"]{
-  background:#0f5f59;color:#fff;border-color:#0f5f59
- }
- #view.mj16-admin-only #mj15Requests .mj45-beneficiary-details{
-  margin-top:4px;border:1px solid #d7e6e4;border-radius:10px;background:#fbfdfc
- }
- #view.mj16-admin-only #mj15Requests .mj45-beneficiary-details>summary{
-  cursor:pointer;font-size:13px;color:#39666a;padding:12px 14px;font-weight:700
- }
- #view.mj16-admin-only #mj15Requests .mj45-beneficiary-details>.mj45-public-slot{padding:12px}
- #view.mj16-admin-only #mj15Requests .mj45-message{
-  margin:6px 0;padding:12px;background:#f6faf9;border:1px solid #d8e8e6;
-  border-radius:9px;color:#285c64;font-size:13px
- }
- #view.mj16-admin-only #mj15Requests .mj36-request-actions{display:flex;flex-wrap:wrap;gap:6px}
- @media(max-width:700px){#view.mj16-admin-only #mj15Requests .mj45-filter>button{flex:1}}
- `;
- document.head.appendChild(style);
-}
+const STYLE_ID="mj48AdminCertificateQueueStyle";
 let busy=false;
+function style(){
+ if(document.getElementById(STYLE_ID))return;
+ const el=document.createElement("style");el.id=STYLE_ID;
+ el.textContent=[
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers{width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:14px 0 0;padding:0;gap:12px;background:transparent;border:0;box-shadow:none}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers>h3{margin:0;color:#104a55;font-size:17px}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers #mj13ExportCards,#view.mj16-admin-only #mj15Powers #mj15CertificatePowers>.mj13-card{display:none!important}',
+ '#view.mj16-admin-only #mj15Powers #mj15ApprovalList,#view.mj16-admin-only #mj15Powers #mj15ApprovalDetail{width:100%;min-width:0}',
+ '#view.mj16-admin-only #mj15Powers #mj15ApprovalDetail{display:none}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers.mj48-detail-open #mj15ApprovalDetail{display:block}',
+ '#view.mj16-admin-only #mj15Powers .mj48-cert-filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap}',
+ '#view.mj16-admin-only #mj15Powers .mj48-cert-filter button{border:1px solid #cbdedb;border-radius:9px;background:#f3f9f8;color:#14515c;padding:10px 13px;font:700 13px Tahoma,Arial,sans-serif;cursor:pointer}',
+ '#view.mj16-admin-only #mj15Powers .mj48-cert-filter button[aria-pressed="true"]{background:#0f5f59;color:#fff;border-color:#0f5f59}',
+ '#view.mj16-admin-only #mj15Powers #mj15ApprovalList .mj36-request-group{margin:0}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers[data-mj45-group="pending"] .mj36-request-group:not([data-mj45-kind="pending"]),#view.mj16-admin-only #mj15Powers #mj15CertificatePowers[data-mj45-group="approved"] .mj36-request-group:not([data-mj45-kind="approved"]),#view.mj16-admin-only #mj15Powers #mj15CertificatePowers[data-mj45-group="rejected"] .mj36-request-group:not([data-mj45-kind="rejected"]){display:none!important}',
+ '#view.mj16-admin-only #mj15Powers .mj48-table-scroll{overflow-x:auto;max-width:100%;border:1px solid #d9e6e5;border-radius:11px;background:#fff;-webkit-overflow-scrolling:touch}',
+ '#view.mj16-admin-only #mj15Powers .mj48-certificate-table{width:100%;min-width:800px;border-collapse:collapse;direction:rtl;font:normal 13px/1.6 Tahoma,Arial,sans-serif;color:#244c53}',
+ '#view.mj16-admin-only #mj15Powers .mj48-certificate-table th{background:#eff6f5;color:#114957;padding:11px 10px;border-bottom:1px solid #d7e6e3;white-space:nowrap;text-align:right;font-weight:800}',
+ '#view.mj16-admin-only #mj15Powers .mj48-certificate-table td{background:#fff;padding:11px 10px;vertical-align:middle;border-bottom:1px solid #e7efee;overflow-wrap:anywhere;text-align:right}',
+ '#view.mj16-admin-only #mj15Powers .mj48-certificate-table tbody tr:last-child td{border-bottom:0}',
+ '#view.mj16-admin-only #mj15Powers .mj48-row-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap}',
+ '#view.mj16-admin-only #mj15Powers .mj48-certificate-table button{display:inline-flex;justify-content:center;align-items:center;white-space:nowrap;padding:7px 9px;border-radius:8px;border:1px solid #bfd5d2;color:#13565c;background:#f6faf9;font:700 12px Tahoma,Arial,sans-serif;cursor:pointer}',
+ '#view.mj16-admin-only #mj15Powers .mj48-certificate-table .mj48-approve{background:#0f5f59;color:#fff;border-color:#0f5f59}',
+ '#view.mj16-admin-only #mj15Powers .mj48-certificate-table .mj48-reject{color:#933a37;border-color:#e8caca;background:#fff9f8}',
+ '#view.mj16-admin-only #mj15Powers .mj48-certificate-table button:disabled{opacity:.55;cursor:wait}',
+ '#view.mj16-admin-only #mj15Powers .mj48-status{font-weight:700;color:#4e6b70}',
+ '@media(max-width:600px){#view.mj16-admin-only #mj15Powers .mj48-cert-filter button{flex:1 1 28%}}'
+ ].join("\n");
+ document.head.appendChild(el);
+}
 function organize(){
  if(busy)return;
  busy=true;
@@ -55,87 +39,55 @@ function organize(){
   if((location.hash||"").split("?")[0]!=="#admin")return;
   const requests=document.getElementById("mj15Requests");
   const powers=document.getElementById("mj15Powers");
-  const area=requests?.querySelector(".mj15-body");
-  if(!requests||!powers||!area)return;
-  injectCSS();
-  requests.dataset.mj45Group=requests.dataset.mj45Group||"pending";
-  const heading=requests.querySelector("summary");
-  if(heading&&!heading.textContent.includes("طلبات الشهادات")){
-   heading.innerHTML='<span class="mj15-number">٢</span>طلبات الشهادات';
+  const body=powers?.querySelector(".mj15-body");
+  const queue=document.getElementById("mj15CertificatePowers");
+  if(!requests||!powers||!body||!queue)return;
+  style();
+  // Keep the existing queue node and all of its request, preview and approval listeners.
+  // The public application form never moves from #mj15Requests.
+  if(queue.parentElement!==body)body.appendChild(queue);
+  const title=queue.querySelector("h3");
+  if(title)title.textContent="طلبات اعتمادات الشهادات";
+  const sel=document.getElementById("mj34PowersSelect");
+  if(sel&&!sel.querySelector('option[value="certificates"]')){
+   const opt=document.createElement("option");
+   opt.value="certificates";opt.textContent="طلبات اعتمادات الشهادات";
+   sel.appendChild(opt);
   }
-  const nav=document.getElementById("mj34PowersSelect");
-  if(nav){
-   const old=nav.querySelector('option[value="certificates"]');
-   if(old)old.remove();
-   if(nav.value==="certificates")nav.value="";
+  const opt=sel?.querySelector('option[value="certificates"]');
+  if(opt)opt.textContent="طلبات اعتمادات الشهادات";
+  if(!queue.dataset.mj45Group)queue.dataset.mj45Group="pending";
+  if(!queue.querySelector(".mj48-cert-filter")){
+   const filter=document.createElement("div");filter.className="mj48-cert-filter";
+   filter.innerHTML='<button type="button" data-mj48-group="pending">الطلبات الجديدة</button>'+
+    '<button type="button" data-mj48-group="approved">الشهادات المعتمدة</button>'+
+    '<button type="button" data-mj48-group="rejected">الطلبات المرفوضة</button>';
+   const actions=queue.querySelector(".mj15-actions");
+   if(actions)actions.after(filter);
+   else queue.insertBefore(filter,queue.querySelector("#mj15ApprovalList"));
   }
-  // Reuse the live beneficiary form and deduplicate stale accordion wrappers.
-  // A previous remount could move the form, leaving empty wrappers behind.
-  const publicArea=document.getElementById("mj15PublicArea");
-  const wrappers=[...area.querySelectorAll(".mj45-beneficiary-details")];
-  let beneficiary=wrappers.find(item=>publicArea&&item.contains(publicArea))||wrappers[0];
-  if(!beneficiary&&publicArea){
-    beneficiary=document.createElement("details");
-    beneficiary.className="mj45-beneficiary-details";
-    beneficiary.innerHTML='<summary>نموذج تقديم طلب شهادة للمستفيدات</summary><div class="mj45-public-slot"></div>';
-    area.appendChild(beneficiary);
-  }
-  if(beneficiary){
-    beneficiary.id="mj45BeneficiaryForm";
-    let slot=beneficiary.querySelector(".mj45-public-slot");
-    if(!slot){slot=document.createElement("div");slot.className="mj45-public-slot";beneficiary.appendChild(slot);}
-    if(publicArea&&publicArea.parentElement!==slot)slot.appendChild(publicArea);
-    for(const duplicate of wrappers){
-      if(duplicate!==beneficiary){
-        const form=duplicate.querySelector("#mj15PublicArea");
-        if(form&&form!==publicArea&&!beneficiary.contains(form))slot.appendChild(form);
-        duplicate.remove();
-      }
-    }
-  }
-  const certificate=document.getElementById("mj15CertificatePowers");
-  if(certificate&&certificate.parentElement!==area){
-   area.insertBefore(certificate,area.firstChild);
-   certificate.style.display="grid";
-  }
-  if(certificate){
-   const oldExport=certificate.querySelector("#mj13CertificateDownload")?.closest(".mj13-card");
-   if(oldExport)oldExport.style.display="none";
-  }
-  if(!area.querySelector(".mj45-filter")){
-    const filter=document.createElement("div");
-    filter.className="mj45-filter";
-    filter.innerHTML='<button type="button" data-mj45-tab="pending" aria-pressed="true">الطلبات الجديدة</button>'+
-      '<button type="button" data-mj45-tab="approved" aria-pressed="false">الشهادات المعتمدة</button>';
-    area.insertBefore(filter,certificate||area.firstChild);
-  }
-  for(const button of area.querySelectorAll("[data-mj45-tab]"))
-   button.setAttribute("aria-pressed",String(button.dataset.mj45Tab===requests.dataset.mj45Group));
-  const feedback=area.querySelector(".mj45-message");
-  let token=null;try{token=JSON.parse(sessionStorage.getItem("manjaz_admin_auth_session_v1")||"null")}catch(_){}
-  requests.classList.toggle('mj45-guest',!token?.access_token);
-  if(!token?.access_token){
-   if(!feedback){
-    const prompt=document.createElement("div");prompt.className="mj45-message";
-    prompt.textContent="لعرض الطلبات أو اعتمادها، سجّلي الدخول أولًا من بطاقة «الصلاحيات الإدارية» بالأسفل.";
-    area.insertBefore(prompt,certificate||area.firstChild);
-   }
-  }else if(feedback)feedback.remove();
+  for(const btn of queue.querySelectorAll("[data-mj48-group]"))
+   btn.setAttribute("aria-pressed",String(btn.dataset.mj48Group===queue.dataset.mj45Group));
+  const protectedUI=document.getElementById("mj34PowersProtected");
+  const permitted=sel?.value==="certificates"&&protectedUI?.hidden===false;
+  queue.style.display=permitted?"grid":"none";
  }finally{busy=false}
 }
-document.addEventListener("click",event=>{
- const tab=event.target.closest("[data-mj45-tab]");
+document.addEventListener("click",e=>{
+ const tab=e.target.closest("#mj15CertificatePowers [data-mj48-group]");
  if(tab){
-  const box=document.getElementById("mj15Requests");
-  if(!box)return;
-  box.dataset.mj45Group=tab.dataset.mj45Tab;
-  box.classList.remove("mj45-detail-open");
-  organize();
-  return;
+  const queue=document.getElementById("mj15CertificatePowers");
+  if(!queue)return;
+  queue.dataset.mj45Group=tab.dataset.mj48Group;
+  queue.classList.remove("mj48-detail-open");
+  organize();return;
  }
- const open=event.target.closest("#mj15Requests [data-mj15-open]");
- if(open)document.getElementById("mj15Requests")?.classList.add("mj45-detail-open");
+ if(e.target.closest("#mj15CertificatePowers [data-mj15-open]"))
+  document.getElementById("mj15CertificatePowers")?.classList.add("mj48-detail-open");
 },true);
+document.addEventListener("change",e=>{
+ if(e.target.id==="mj34PowersSelect")queueMicrotask(organize);
+});
 document.addEventListener("manjaz:admin-session-changed",()=>queueMicrotask(organize));
 function boot(){
  const view=document.getElementById("view");
@@ -149,6 +101,5 @@ function boot(){
  organize();
  addEventListener("hashchange",()=>queueMicrotask(organize));
 }
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});
-else boot();
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
 })();
