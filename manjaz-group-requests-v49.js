@@ -174,6 +174,7 @@ function fitPreview(){
  paper.style.setProperty("transform","scale("+scale+")","important");
 }
 function openPreview(row,watermark=false,index=0){
+ injectCSS();
  if(!window.ManjazTask15?.certHTML)throw Error("لم يكتمل تحميل القالب الرسمي للشهادة");
  const list=row.recipient_names||names;
  if(!Array.isArray(list)||!list.length)throw Error("أضيفي أسماء المستفيدات أولًا");
@@ -442,6 +443,7 @@ document.addEventListener("submit",e=>{
 document.addEventListener("manjaz:admin-session-changed",()=>queueMicrotask(maybeLoadAdmin));
 window.addEventListener("resize",fitPreview,{passive:true});
 function boot(){
+ injectCSS(); // Public approved certificates need styled previews without visiting administration.
  const view=document.getElementById("view");
  if(view){
   let queued=false;
