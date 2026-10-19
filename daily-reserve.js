@@ -900,6 +900,7 @@ function reserveIndividualWeeklyLimit(teacherId,date){
 function reserveAutoIneligibility(teacherId,date,className="",exceptId=""){
   const teacher=teacherOf(teacherId);
   if(!teacher)return "المعلمة غير موجودة في سجلات الاحتياط.";
+  if(teacherFlags(teacher).absolute)return "المعلمة مستثناة استثناءً إلزاميًا من الاحتياط.";
   const name=normName(teacher.name||""),demand=dailyDemand(date);
   if(name===normName("رية الحربي")&&!normName(className).startsWith("اول"))
     return "رية الحربي تُرشح فقط لفصول الأول الثانوي.";
@@ -1580,7 +1581,7 @@ function dayAdminHTML(){
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
-      <p class="reserve-public-note">الترشيح الآلي: الأولوية لمعلمة الفصل الأصلي، ثم لمن تغيبت في اليوم الدراسي السابق أو خلال الأسبوع. تُعطى صاحبة الحصة الأصلية الواحدة حصتين احتياط حتى ١٨ حصة مطلوبة، ويمكن إسناد ثلاث لها من ١٩ حصة فأكثر؛ أما بقية المعلمات فيطبق عليهن الحد اليومي السابق. رية الحربي للأول الثانوي فقط وبحد حصتين أسبوعيًا، ونجلاء هوساوي بحد ثلاث حصص أسبوعيًا. يُستبعد نصاب ٢٠ فأكثر قبل بلوغ ٢٥ حصة، وتأتي المكلفات بأعمال إضافية أخيرًا. لا يستخدم تخفيف العبء معيارًا مستقلًا للمفاضلة.</p>
+      <p class="reserve-public-note">الترشيح الآلي: الأولوية لمعلمة الفصل الأصلي، ثم لمن تغيبت في اليوم الدراسي السابق أو خلال الأسبوع. تُعطى صاحبة الحصة الأصلية الواحدة حصتين احتياط حتى ١٨ حصة مطلوبة، ويمكن إسناد ثلاث لها من ١٩ حصة فأكثر؛ أما بقية المعلمات فيطبق عليهن الحد اليومي السابق. رية الحربي للأول الثانوي فقط وبحد حصتين أسبوعيًا، ونجلاء هوساوي بحد ثلاث حصص أسبوعيًا. يُستبعد نصاب ٢٠ فأكثر قبل بلوغ ٢٥ حصة، وتأتي المكلفات بأعمال إضافية أخيرًا.</p>
       ${reserveWorkspaceSharingHTML()}
       <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
       ${hijriDateControl("reserveAdminDate",date)}
@@ -2537,7 +2538,7 @@ function scheduleEditorHTML(t){
 function settingsHTML(){
   return `<section class="surface form-card">
     <div class="form-section-title">إعدادات وسياسة الاحتياط</div>
-    <p class="reserve-public-note">المفاضلة الآلية وفق أهلية التكليف وأولوية الفصل الأصلي وتعويض الغياب السابق والاستثناءات الفردية والحدود اليومية والأسبوعية، دون تطبيق ضابط تخفيف العبء.</p>
+    <p class="reserve-public-note">المفاضلة الآلية وفق أهلية التكليف وأولوية الفصل الأصلي وتعويض الغياب السابق والاستثناءات الفردية والحدود اليومية والأسبوعية.</p>
     <div class="form-grid">
       <label>بداية الفصل للتراكمي<strong>${esc(fmtDate(state.settings?.termStart||COUNT_START))}</strong><input id="rwTermStart" type="hidden" value="${esc(state.settings?.termStart||COUNT_START)}"></label>
       <label>بداية احتساب النظام<strong>${esc(fmtDate(state.settings?.countStart||COUNT_START))}</strong><input id="rwCountStart" type="hidden" value="${esc(state.settings?.countStart||COUNT_START)}"></label>
