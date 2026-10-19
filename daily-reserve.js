@@ -684,10 +684,6 @@ function dailyDemand(date){
 function conditionalReserveAllowed(date,plannedDemand=0){
   return Math.max(dailyDemand(date),Number(plannedDemand)||0)>=CONDITIONAL_EXCLUSION_MIN_DEMAND;
 }
-function sameClassReserveToday(teacherId,date,className,exceptId=""){
-  const target=clean(className);
-  return assignmentsOn(date).some(a=>String(a.id)!==String(exceptId)&&String(a.assignedTeacherId)===String(teacherId)&&clean(a.className)===target);
-}
 function adjacentOriginalCount(teacherId,date,period){
   // الاتصال بين احتياط وحصة أصلية مسموح، ولا يخصم من المفاضلة.
   return 0;
@@ -1009,7 +1005,6 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
     if(!support&&!scheduleOf(t.id))continue; // تعذر تأكيد التفرغ في الجدول
     if(!support&&regularCell(t.id,date,period))continue;
     if(occupiedByReserve(t.id,date,period,exceptAssignmentId))continue;
-    if(targetClass&&sameClassReserveToday(t.id,date,targetClass,exceptAssignmentId))continue;
     const currentDraftUse=reserveDailyAssignedCount(t.id,date,exceptAssignmentId);
     const originalToday=dailyOriginalCount(t.id,date);
     if(currentDraftUse>=autoReserveDailyLimit(t.id,date))continue;
@@ -1607,7 +1602,7 @@ function dayAdminHTML(){
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
-      <p class="reserve-public-note">الترشيح الآلي: الأولوية لمعلمة الفصل الأصلي، ثم لمن تغيبت في اليوم الدراسي السابق أو خلال الأسبوع. تُعطى صاحبة الحصة الأصلية الواحدة حصتين احتياط حتى ١٨ حصة مطلوبة، ويمكن إسناد ثلاث لها من ١٩ حصة فأكثر؛ أما بقية المعلمات فيطبق عليهن الحد اليومي السابق. <strong>للمعلمات ذوات النصاب الأسبوعي ١١ حصة فأقل، لا يتجاوز مجموع الحصص الأصلية والاحتياط ٥ حصص الأحد والاثنين، و٤ حصص الثلاثاء إلى الخميس.</strong> رية الحربي للأول الثانوي فقط وبحد حصتين أسبوعيًا، ونجلاء هوساوي بحد ثلاث حصص أسبوعيًا. يُستبعد نصاب ٢٠ فأكثر قبل بلوغ ٢٥ حصة، وتأتي المكلفات بأعمال إضافية أخيرًا.</p>
+      <p class="reserve-public-note">الترشيح الآلي: الأولوية لمعلمة الفصل الأصلي، ثم لمن تغيبت في اليوم الدراسي السابق أو خلال الأسبوع. تُعطى صاحبة الحصة الأصلية الواحدة حصتين احتياط حتى ١٨ حصة مطلوبة، ويمكن إسناد ثلاث لها من ١٩ حصة فأكثر؛ أما بقية المعلمات فيطبق عليهن الحد اليومي السابق. <strong>للمعلمات ذوات النصاب الأسبوعي ١١ حصة فأقل، لا يتجاوز مجموع الحصص الأصلية والاحتياط ٥ حصص الأحد والاثنين، و٤ حصص الثلاثاء إلى الخميس.</strong> يُسمح بإسناد حصص احتياط متعددة للفصل نفسه خلال اليوم، مع عدم تعارض أوقات الحصص والالتزام بالحدود المعتمدة. رية الحربي للأول الثانوي فقط وبحد حصتين أسبوعيًا، ونجلاء هوساوي بحد ثلاث حصص أسبوعيًا. يُستبعد نصاب ٢٠ فأكثر قبل بلوغ ٢٥ حصة، وتأتي المكلفات بأعمال إضافية أخيرًا.</p>
       ${reserveWorkspaceSharingHTML()}
       <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
       ${hijriDateControl("reserveAdminDate",date)}
@@ -1942,7 +1937,6 @@ function manualConflictMessages(date,selections,absentIds){
     slotUse.set(slot,(slotUse.get(slot)||0)+1);
     if(isAbsent(t.id,date)||absentIds.map(String).includes(String(t.id)))warnings.push(`${t.name}: مسجلة ضمن الغائبات.`);
     if(occupiedByReserve(t.id,date,x.period,x.existingId||""))warnings.push(`${t.name}: مسندة لاحتياط آخر في الحصة ${x.period}.`);
-    if(sameClassReserveToday(t.id,date,x.className,x.existingId||""))warnings.push(`${t.name}: سبق إسنادها لنفس الفصل اليوم.`);
     if(t.supportStaff){
       warnings.push(`${t.name}: من الكادر المساند؛ لا يوجد جدول للحصص ضمن الإصدار السادس للتحقق من تفرغها. يرجى التأكد إداريًا.`);
       return;
