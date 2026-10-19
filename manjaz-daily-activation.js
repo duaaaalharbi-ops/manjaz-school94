@@ -64,20 +64,32 @@ function chooseCard(){
  var options=CATALOG.filter(function(x){return x[1]===main&&x[2]===sub;}).map(function(x){return [String(x[0]),String(x[0]).padStart(3,"0")+" | "+x[3]];});
  optionList(byId("ma-card"),options,"اختاري عنوان البطاقة");
  if(options.length)byId("ma-card").value=options[0][0];
- currentCard();
+ cardChanged();
 }
 function currentCard(){
  var c=CATALOG.find(function(x){return String(x[0])===byId("ma-card").value;});
  byId("ma-selected").textContent=c?String(c[0]).padStart(3,"0")+" / ١٣٠ — "+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
- byId("ma-preview").hidden=true;byId("ma-answer").hidden=true;
  return c;
 }
+function selectedIndicators(){return [...document.querySelectorAll(".ma-check-item:checked")].map(function(x){return x.value;});}
+function updateIndicatorLabel(){
+ var items=selectedIndicators(),summary=byId("ma-check-summary");
+ if(summary)summary.textContent=items.length?"المؤشرات المختارة ("+items.length+"/٣): "+items.join("، "):"اختاري مؤشرًا أو أكثر من القائمة";
+ byId("ma-preview").hidden=true;
+}
+function cardChanged(){
+ currentCard();
+ byId("ma-preview").hidden=true;byId("ma-answer").hidden=true;
+ document.querySelectorAll(".ma-check-item").forEach(function(x){x.checked=false;});
+ var details=byId("ma-check-details");if(details)details.open=false;
+ updateIndicatorLabel();
+}
 function values(){
- var c=CATALOG.find(function(x){return String(x[0])===byId("ma-card").value;}); if(!c)return null;
+ var c=CATALOG.find(function(x){return String(x[0])===byId("ma-card").value;});if(!c)return null;
  return {c:c,teacher:byId("ma-teacher").value,klass:byId("ma-class").value,
-  weekday:byId("ma-weekday").value,day:Number(byId("ma-hday").value),
-  month:Number(byId("ma-hmonth").value),year:Number(byId("ma-hyear").value),
-  period:Number(byId("ma-period").value)};
+ weekday:byId("ma-weekday").value,day:Number(byId("ma-hday").value),
+ month:Number(byId("ma-hmonth").value),year:Number(byId("ma-hyear").value),
+ period:Number(byId("ma-period").value),indicators:selectedIndicators()};
 }
 function matchHijriWeekday(v){
  try{
@@ -92,24 +104,64 @@ function matchHijriWeekday(v){
 }
 function check(v){return v&&v.teacher&&v.klass&&v.weekday&&v.day&&v.month&&v.year&&v.period;}
 function cardUrl(v){
- var p=new URLSearchParams({card:String(v.c[0]),date:(v.day&&v.month&&v.year?String(v.day)+" "+MONTHS[v.month-1]+" "+String(v.year)+" هـ":""),teacher:v.teacher||"","class":v.klass||"",period:(v.period?"الحصة "+v.period:"")});
+ var p=new URLSearchParams({card:String(v.c[0]),
+ date:v.weekday+" | "+v.day+" "+MONTHS[v.month-1]+" "+v.year+" هـ",
+ teacher:v.teacher,"class":v.klass,period:"الحصة "+v.period,checks:v.indicators.join("|")});
  return "manjaz-activation-cards.html?"+p.toString();
 }
-function openPreview(){
- var v=values();if(!v){uiMsg("اختاري بطاقة النشاط أولًا.",true);return;}
- var wrap=byId("ma-preview"),iframe=byId("ma-preview-frame");iframe.src=cardUrl(v);wrap.hidden=false;uiMsg("يمكن معاينة البطاقة أو طباعتها مباشرة.","");wrap.scrollIntoView({behavior:"smooth",block:"start"});
+function completeForm(v){
+ if(!check(v)){uiMsg("أكملي بيانات التنفيذ من القوائم المنسدلة أولًا.",true);return false;}
+ if(!v.indicators.length){uiMsg("اختاري مؤشرًا واحدًا على الأقل من مؤشرات التحقق السريع.",true);return false;}
+ return true;
 }
-function printCard(){
- var v=values();if(!v){uiMsg("اختاري بطاقة النشاط أولًا.",true);return;}
- var frame=byId("ma-preview-frame"),wrap=byId("ma-preview");
- if(!wrap.hidden&&frame.contentWindow){try{frame.contentWindow.focus();frame.contentWindow.print();return;}catch(e){}}
- var w=window.open(cardUrl(v),"_blank","noopener,noreferrer");if(!w)uiMsg("اسمحي بفتح نافذة البطاقة ثم استخدمي الطباعة / حفظ PDF.",true);
+function openPreview(){
+ var v=values();if(!completeForm(v))return;
+ var wrap=byId("ma-preview"),frame=byId("ma-preview-frame");
+ wrap.hidden=false;frame.src=cardUrl(v);
+ uiMsg("معاينة البطاقة بالبيانات والمؤشرات المختارة، جاهزة للتصدير.",false);
+ wrap.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function loadPdfScript(win,url,ready){
+ if(ready())return Promise.resolve();
+ return new Promise(function(resolve,reject){
+  var tag=win.document.createElement("script");tag.src=url;tag.async=true;
+  tag.onload=function(){ready()?resolve():reject(new Error("تعذر تهيئة محرك PDF."));};
+  tag.onerror=function(){reject(new Error("تعذر تحميل مكونات PDF؛ يرجى التحقق من الاتصال."));};
+  win.document.head.appendChild(tag);
+ });
+}
+async function exportCard(){
+ var v=values();if(!completeForm(v))return;
+ var button=byId("ma-print");if(button.disabled)return;
+ button.disabled=true;var label=button.textContent;button.textContent="جارٍ تجهيز PDF…";
+ try{
+  var frame=byId("ma-preview-frame"),url=cardUrl(v);
+  byId("ma-preview").hidden=false;
+  await new Promise(function(resolve,reject){
+   var pending=true,timer=setTimeout(function(){if(pending){pending=false;reject(new Error("انتهت مهلة تحميل البطاقة."));}},25000);
+   function ready(){if(!pending)return;pending=false;clearTimeout(timer);resolve();}
+   frame.addEventListener("load",ready,{once:true});frame.src=url;
+  });
+  var w=frame.contentWindow,doc=w.document;
+  await Promise.all([
+   loadPdfScript(w,"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",function(){return !!w.html2canvas;}),
+   loadPdfScript(w,"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js",function(){return !!(w.jspdf&&w.jspdf.jsPDF);})
+  ]);
+  if(doc.fonts&&doc.fonts.ready)await doc.fonts.ready;
+  var node=doc.querySelector(".session");if(!node)throw Error("لم تُحمّل صفحة البطاقة.");
+  var canvas=await w.html2canvas(node,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false,scrollX:0,scrollY:0});
+  var pdf=new w.jspdf.jsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
+  pdf.addImage(canvas.toDataURL("image/jpeg",0.96),"JPEG",0,0,210,297);
+  pdf.save("بطاقة_تفعيل_الاحتياط_"+String(v.c[0]).padStart(3,"0")+".pdf");
+  uiMsg("تم إنشاء ملف PDF المعبأ وتنزيله.",false);
+ }catch(e){uiMsg("تعذر تصدير PDF: "+e.message,true);}
+ finally{button.disabled=false;button.textContent=label;}
 }
 async function saveExecution(){
- var v=values();if(!check(v)){uiMsg("جميع القوائم المنسدلة مطلوبة قبل الحفظ.",true);return;}
+ var v=values();if(!completeForm(v))return;
  if(!matchHijriWeekday(v)){uiMsg("اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى؛ راجعي الاختيار.",true);return;}
  if(busy)return;busy=true;var b=byId("ma-save");b.disabled=true;
- var row={teacher_name:v.teacher,class_name:v.klass,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3]};
+ var row={teacher_name:v.teacher,class_name:v.klass,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators};
  try{
   var r=await fetch(API+"/rest/v1/manjaz_activation_logs",{method:"POST",headers:Object.assign(headers(),{"Prefer":"return=minimal"}),body:JSON.stringify(row)});
   if(!r.ok)throw Error("HTTP "+r.status+" "+(await r.text()).slice(0,120));
@@ -118,20 +170,19 @@ async function saveExecution(){
  finally{busy=false;b.disabled=false;}
 }
 async function showAnswer(){
- var c=currentCard(),token=session();if(!token){uiMsg("الحل النموذجي متاح للحساب الإداري الموثق فقط.",true);return;}
+ var c=currentCard();if(!c){uiMsg("اختاري بطاقة النشاط أولًا.",true);return;}
  try{
-  var user=await fetch(API+"/auth/v1/user",{headers:headers(token),cache:"no-store"});
-  if(!user.ok)throw Error("انتهت جلسة الدخول الإداري");
   var url=API+"/rest/v1/manjaz_activation_answers?card_id=eq."+c[0]+"&select=answer&limit=1";
-  var r=await fetch(url,{headers:headers(token),cache:"no-store"});
-  if(!r.ok)throw Error("الصلاحية غير متاحة");
-  var a=await r.json();if(!a.length)throw Error("الحل غير متاح لهذا الحساب");
-  byId("ma-answer-text").textContent=a[0].answer;byId("ma-answer").hidden=false;uiMsg("تم عرض الحل النموذجي بصلاحية الإدارة.",false);
+  var r=await fetch(url,{headers:headers(),cache:"no-store"});
+  if(!r.ok)throw Error("تعذر جلب نموذج الإجابة ("+r.status+")");
+  var a=await r.json();if(!a.length)throw Error("لا توجد إجابة نموذجية لهذه البطاقة.");
+  byId("ma-answer-text").textContent=a[0].answer;byId("ma-answer").hidden=false;
+  uiMsg("نموذج الإجابة متاح لجميع المستخدمين.",false);
  }catch(e){uiMsg(e.message,true);}
 }
 function downloadCsv(rows){
- var heads=["تاريخ الحفظ","المعلمة","الفصل","اليوم","التاريخ الهجري","الحصة","رقم البطاقة","القسم الرئيسي","القسم الفرعي","عنوان البطاقة"];
- var lines=[heads].concat(rows.map(function(x){return [x.submitted_at,x.teacher_name,x.class_name,x.weekday,x.hijri_day+"/"+x.hijri_month+"/"+x.hijri_year,x.period,x.card_id,x.main_category,x.sub_category,x.card_title];}));
+ var heads=["تاريخ الحفظ","المعلمة","الفصل","اليوم","التاريخ الهجري","الحصة","رقم البطاقة","القسم الرئيسي","القسم الفرعي","عنوان البطاقة","مؤشرات التحقق"];
+ var lines=[heads].concat(rows.map(function(x){return [x.submitted_at,x.teacher_name,x.class_name,x.weekday,x.hijri_day+"/"+x.hijri_month+"/"+x.hijri_year,x.period,x.card_id,x.main_category,x.sub_category,x.card_title,(x.verification_indicators||[]).join(" | ")];}));
  var csv="\ufeff"+lines.map(function(row){return row.map(function(v){return '"'+safe(v).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n");
  var url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));var a=document.createElement("a");a.href=url;a.download="تقرير_تفعيل_الاحتياط_اليومي.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2000);
 }
