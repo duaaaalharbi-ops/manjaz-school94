@@ -73,29 +73,41 @@ function currentCard(){
  return c;
 }
 function values(){
- var c=currentCard(); if(!c)return null;
+ var c=CATALOG.find(function(x){return String(x[0])===byId("ma-card").value;}); if(!c)return null;
  return {c:c,teacher:byId("ma-teacher").value,klass:byId("ma-class").value,
   weekday:byId("ma-weekday").value,day:Number(byId("ma-hday").value),
   month:Number(byId("ma-hmonth").value),year:Number(byId("ma-hyear").value),
   period:Number(byId("ma-period").value)};
 }
+function matchHijriWeekday(v){
+ try{
+  var approx=Math.round((v.year-1)*0.970224+622);
+  var from=Date.UTC(approx-1,0,1), f=new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura",{timeZone:"Asia/Riyadh",year:"numeric",month:"numeric",day:"numeric"});
+  var w=new Intl.DateTimeFormat("ar-SA",{timeZone:"Asia/Riyadh",weekday:"long"});
+  for(var i=0;i<1150;i++){var dt=new Date(from+i*86400000);var p=Object.fromEntries(f.formatToParts(dt).filter(function(x){return x.type!=="literal";}).map(function(x){return [x.type,x.value];}));
+   if(Number(p.year)===v.year&&Number(p.month)===v.month&&Number(p.day)===v.day)return w.format(dt).replace("الاثنين","الإثنين")===v.weekday;
+  }
+ }catch(e){return false;}
+ return false;
+}
 function check(v){return v&&v.teacher&&v.klass&&v.weekday&&v.day&&v.month&&v.year&&v.period;}
 function cardUrl(v){
- var p=new URLSearchParams({card:String(v.c[0]),date:String(v.day)+" "+MONTHS[v.month-1]+" "+String(v.year)+" هـ",teacher:v.teacher,"class":v.klass,period:"الحصة "+v.period});
+ var p=new URLSearchParams({card:String(v.c[0]),date:(v.day&&v.month&&v.year?String(v.day)+" "+MONTHS[v.month-1]+" "+String(v.year)+" هـ":""),teacher:v.teacher||"","class":v.klass||"",period:(v.period?"الحصة "+v.period:"")});
  return "manjaz-activation-cards.html?"+p.toString();
 }
 function openPreview(){
- var v=values();if(!check(v)){uiMsg("أكملي بيانات التنفيذ من القوائم أولًا.",true);return;}
+ var v=values();if(!v){uiMsg("اختاري بطاقة النشاط أولًا.",true);return;}
  var wrap=byId("ma-preview"),iframe=byId("ma-preview-frame");iframe.src=cardUrl(v);wrap.hidden=false;uiMsg("يمكن معاينة البطاقة أو طباعتها مباشرة.","");wrap.scrollIntoView({behavior:"smooth",block:"start"});
 }
 function printCard(){
- var v=values();if(!check(v)){uiMsg("أكملي بيانات التنفيذ أولًا.",true);return;}
+ var v=values();if(!v){uiMsg("اختاري بطاقة النشاط أولًا.",true);return;}
  var frame=byId("ma-preview-frame"),wrap=byId("ma-preview");
  if(!wrap.hidden&&frame.contentWindow){try{frame.contentWindow.focus();frame.contentWindow.print();return;}catch(e){}}
  var w=window.open(cardUrl(v),"_blank","noopener,noreferrer");if(!w)uiMsg("اسمحي بفتح نافذة البطاقة ثم استخدمي الطباعة / حفظ PDF.",true);
 }
 async function saveExecution(){
  var v=values();if(!check(v)){uiMsg("جميع القوائم المنسدلة مطلوبة قبل الحفظ.",true);return;}
+ if(!matchHijriWeekday(v)){uiMsg("اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى؛ راجعي الاختيار.",true);return;}
  if(busy)return;busy=true;var b=byId("ma-save");b.disabled=true;
  var row={teacher_name:v.teacher,class_name:v.klass,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3]};
  try{
