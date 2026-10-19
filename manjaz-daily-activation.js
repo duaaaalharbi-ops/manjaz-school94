@@ -104,7 +104,7 @@ function matchHijriWeekday(v){
 }
 function check(v){return v&&v.teacher&&v.klass&&v.weekday&&v.day&&v.month&&v.year&&v.period;}
 function cardUrl(v){
- var p=new URLSearchParams({card:String(v.c[0]),v:"2",
+ var p=new URLSearchParams({card:String(v.c[0]),v:"3-single-a4-footer",
  date:v.weekday+" | "+v.day+" "+MONTHS[v.month-1]+" "+v.year+" هـ",
  teacher:v.teacher,"class":v.klass,period:"الحصة "+v.period,checks:v.indicators.join("|")});
  return "manjaz-activation-cards.html?"+p.toString();
@@ -149,11 +149,14 @@ async function exportCard(){
   ]);
   if(doc.fonts&&doc.fonts.ready)await doc.fonts.ready;
   var node=doc.querySelector(".session");if(!node)throw Error("لم تُحمّل صفحة البطاقة.");
+  if(doc.querySelectorAll(".session").length!==1||!node.querySelector("footer"))throw Error("يجب أن تتضمن المعاينة بطاقة واحدة وتذييلها الرسمي.");
   var canvas=await w.html2canvas(node,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false,scrollX:0,scrollY:0});
   var pdf=new w.jspdf.jsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
+  // Export only the card content, not the browser print UI (URL or printing date).
   pdf.addImage(canvas.toDataURL("image/jpeg",0.96),"JPEG",0,0,210,297);
+  if(pdf.internal.getNumberOfPages()!==1)throw Error("تعذر إخراج البطاقة في صفحة واحدة.");
   pdf.save("بطاقة_تفعيل_الاحتياط_"+String(v.c[0]).padStart(3,"0")+".pdf");
-  uiMsg("تم إنشاء ملف PDF المعبأ وتنزيله.",false);
+  uiMsg("تم تصدير البطاقة في صفحة A4 واحدة بالتذييل الرسمي فقط.",false);
  }catch(e){uiMsg("تعذر تصدير PDF: "+e.message,true);}
  finally{button.disabled=false;button.textContent=label;}
 }
