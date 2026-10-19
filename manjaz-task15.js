@@ -367,39 +367,49 @@ async function submitPublic(form){if(!form.reportValidity())return;let b=form.qu
 async function fetchAll(){const auth=await verifiedToken(),all=[];for(let offset=0;offset<100000;offset+=500){const search=new URLSearchParams({select:'id,category,name,title,short_description,date_iso,display_date,duration,recipient_email,execution_type,status,created_at,approved_at,issued_at,email_sent_at,email_error',order:'created_at.desc',limit:'500',offset:String(offset)});const r=await fetch(`${BASE}/rest/v1/manjaz_certificate_requests?${search}`,{headers:{apikey:KEY,Authorization:'Bearer '+auth},cache:'no-store'});if(!r.ok)throw Error(`تعذر تحميل الطلبات (${r.status}).`);const part=await r.json();all.push(...part);if(part.length<500)break}state.adminList=all;return all}
 const MJ36_NEW_STATUS=new Set(['مستلم']);
 const MJ36_APPROVED_STATUS=new Set(['معتمد','تم الإصدار','تم الإرسال']);
+const MJ48_REJECTED_STATUS=new Set(['مرفوض']);
+function adminRequestDate(createdAt){
+ try{return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{
+  day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Riyadh'
+ }).format(new Date(createdAt));}catch(_){return String(createdAt||'').slice(0,10)||'—'}
+}
 function adminSummary(rows){
- const active=rows.filter(x=>MJ36_NEW_STATUS.has(x.status)||MJ36_APPROVED_STATUS.has(x.status));
- return 'الطلبات الجديدة: '+active.filter(x=>MJ36_NEW_STATUS.has(x.status)).length+
-   ' | الشهادات المعتمدة: '+active.filter(x=>MJ36_APPROVED_STATUS.has(x.status)).length;
+ return 'الطلبات الجديدة: '+rows.filter(x=>MJ36_NEW_STATUS.has(x.status)).length+
+   ' | الشهادات المعتمدة: '+rows.filter(x=>MJ36_APPROVED_STATUS.has(x.status)).length+
+   ' | الطلبات المرفوضة: '+rows.filter(x=>MJ48_REJECTED_STATUS.has(x.status)).length;
 }
 function adminRequestRow(x,mode){
- const id=H(x.id),type=H(T(x.category)[1]);
- const pending=MJ36_NEW_STATUS.has(x.status);
- const viewer='<button type="button" class="mj36-icon-button" data-mj15-admin-preview="'+id+
- '" aria-label="معاينة الشهادة دون علامة مائية" title="معاينة الشهادة دون علامة مائية">'+
- '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">'+
- '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg> معاينة</button>';
- return '<article class="mj15-record mj36-request-row">'+
- '<div class="mj36-request-info"><strong>'+H(x.name)+'</strong><small>'+type+
- ' · '+H(x.title)+' · '+(pending?'تحت المراجعة':'معتمدة')+'</small></div>'+
- '<div class="mj36-request-actions">'+viewer+
- '<button type="button" data-mj15-open="'+id+'" data-mj15-mode="'+mode+'">التفاصيل</button>'+
- (pending?'<button type="button" class="mj36-approve" data-mj15-admin-approve="'+id+'">اعتماد وإصدار</button>':'')+
- '<button type="button" class="mj36-delete" data-mj15-admin-delete="'+id+'">حذف</button>'+
- '</div></article>';
+ const id=H(x.id),pending=MJ36_NEW_STATUS.has(x.status),
+   allowedPreview=pending||MJ36_APPROVED_STATUS.has(x.status)||MJ48_REJECTED_STATUS.has(x.status);
+ return '<tr class="mj48-certificate-row" data-certificate-request="'+id+'">'+
+ '<td data-label="اسم المعلمة / المستفيدة"><strong>'+H(x.name||'—')+'</strong></td>'+
+ '<td data-label="نوع الشهادة">'+H(T(x.category)[1])+'</td>'+
+ '<td data-label="تاريخ الطلب">'+H(adminRequestDate(x.created_at))+'</td>'+
+ '<td data-label="معاينة الشهادة"><div class="mj48-row-actions">'+
+ (allowedPreview?'<button type="button" class="mj36-icon-button" data-mj15-admin-preview="'+id+'">معاينة</button>':'—')+
+ '<button type="button" class="mj48-detail-button" data-mj15-open="'+id+'" data-mj15-mode="'+mode+'">التفاصيل</button>'+
+ '</div></td>'+
+ '<td data-label="اعتماد">'+(pending?'<button type="button" class="mj48-approve" data-mj15-admin-approve="'+id+'">اعتماد</button>':'<span class="mj48-status">'+H(x.status)+'</span>')+'</td>'+
+ '<td data-label="رفض">'+(pending?'<button type="button" class="mj48-reject" data-mj15-admin-reject="'+id+'">رفض</button>':'—')+'</td>'+
+ '</tr>';
 }
 function adminListMarkup(mode){
- const pending=state.adminList.filter(x=>MJ36_NEW_STATUS.has(x.status));
- const approved=state.adminList.filter(x=>MJ36_APPROVED_STATUS.has(x.status));
- const group=(heading,rows,sectionMode)=>
-   '<section class="mj36-request-group"><h4>'+heading+' <span>('+rows.length+')</span></h4>'+
-   (rows.length?rows.map(x=>adminRequestRow(x,sectionMode)).join(''):
-     '<p class="mj15-note">لا توجد طلبات في هذه المجموعة حاليًا.</p>')+'</section>';
+ const groups=[
+  ['pending','الطلبات الجديدة',state.adminList.filter(x=>MJ36_NEW_STATUS.has(x.status))],
+  ['approved','الشهادات المعتمدة',state.adminList.filter(x=>MJ36_APPROVED_STATUS.has(x.status))],
+  ['rejected','الطلبات المرفوضة',state.adminList.filter(x=>MJ48_REJECTED_STATUS.has(x.status))]
+ ];
+ const group=([kind,title,rows])=>
+  '<section class="mj36-request-group mj48-request-group" data-mj45-kind="'+kind+'"><h4>'+title+' <span>('+rows.length+')</span></h4>'+
+  (rows.length?'<div class="mj48-table-scroll"><table class="mj48-certificate-table" dir="rtl">'+
+   '<thead><tr><th scope="col">اسم المعلمة / المستفيدة</th><th scope="col">نوع الشهادة</th>'+
+   '<th scope="col">تاريخ الطلب</th><th scope="col">معاينة الشهادة</th>'+
+   '<th scope="col">اعتماد</th><th scope="col">رفض</th></tr></thead><tbody>'+
+   rows.map(x=>adminRequestRow(x,kind==='approved'?'issue':'approve')).join('')+
+   '</tbody></table></div>':'<p class="mj15-note">لا توجد طلبات في هذه المجموعة حاليًا.</p>')+'</section>';
  return '<div class="mj36-list-summary">'+H(adminSummary(state.adminList))+'</div>'+
- (mode==='issue'?group('الشهادات المعتمدة',approved,'issue'):
-    group('الطلبات الجديدة',pending,'approve')+group('الشهادات المعتمدة',approved,'approve'));
+  (mode==='issue'?group(groups[1]):groups.map(group).join(''));
 }
-
 function adminSelection(id,mode){const x=state.adminList.find(q=>q.id===id);if(!x)return '';const data=getValues(x);const paper=certHTML(x.category,data,false);return `<div class="mj15-hint"><strong>${H(T(x.category)[1])}</strong> — الحالة: ${H(x.status)}</div>
  ${mode==='approve' && ['مستلم','معتمد'].includes(x.status)?`<div class="mj34-review-layout"><div class="mj34-review-fields">${formHTML(x.category,{...data,_status:x.status},true,false)}</div><div class="mj15-preview mj34-side-preview"><div class="mj15-paper-frame">${paper}</div></div></div>`:`<div class="mj15-preview" id="mj15IssuedPreview"><div class="mj15-paper-frame">${paper}</div></div><div class="mj15-actions"><button data-mj15-issue="${H(x.id)}" ${!['معتمد','تم الإصدار','تم الإرسال'].includes(x.status)?'disabled':''}>${x.status==='معتمد'?'إصدار وتنزيل PDF':x.status==='تم الإصدار'?'تحميل الشهادة PDF':x.status==='تم الإرسال'?'تحميل الشهادة PDF':'بانتظار اعتماد الطلب'}</button></div><p class="mj15-note">الشهادة المعتمدة خالية من العلامة المائية، ومتاحة للتحميل من لوحة الإدارة.</p><div class="mj15-status" data-mj15-status></div>`}`;}
 // A self-contained, landscape certificate renderer isolates official CSS from
@@ -453,7 +463,7 @@ function renderIsolatedAdminCertificate(host,record){
 }
 async function openAdminCertificatePreview(id){
  await verifiedToken();
- const x=state.adminList.find(r=>r.id===id&&(MJ36_NEW_STATUS.has(r.status)||MJ36_APPROVED_STATUS.has(r.status)));
+ const x=state.adminList.find(r=>r.id===id&&(MJ36_NEW_STATUS.has(r.status)||MJ36_APPROVED_STATUS.has(r.status)||MJ48_REJECTED_STATUS.has(r.status)));
  if(!x)throw Error('الطلب غير متاح للمعاينة أو تم حذفه.');
  let dialog=document.getElementById('mj36AdminCertificatePreview');
  if(!dialog){
@@ -624,6 +634,25 @@ document.addEventListener('click',async e=>{
   try{const ok=await archiveAdminCertificate(adminDelete.dataset.mj15AdminDelete);if(ok&&message)message.textContent='تم حذف الطلب من قوائم العمل، وحُفظ سجل العملية.'}
   catch(err){if(message)message.textContent='تعذر الحذف: '+err.message}
   finally{if(adminDelete.isConnected){adminDelete.disabled=false;adminDelete.textContent=orig}}
+  return;
+ }
+ const quickReject=e.target.closest('[data-mj15-admin-reject]');
+ if(quickReject){
+  const request=state.adminList.find(r=>r.id===quickReject.dataset.mj15AdminReject);
+  if(!request||request.status!=='مستلم')return;
+  if(!confirm('رفض طلب الشهادة باسم «'+request.name+'»؟\\nسيُحفظ الطلب بحالة مرفوض دون حذفه.'))return;
+  quickReject.disabled=true;
+  const label=quickReject.textContent;quickReject.textContent='جارٍ الرفض...';
+  const message=document.getElementById('mj15ApproveMsg');
+  try{
+   const bearer=await verifiedToken();
+   const result=await rpc('manjaz_certificate_reject_v48',{p_request_id:request.id},bearer);
+   if(!result||String(result.request_id)!==String(request.id)||result.status!=='مرفوض')
+    throw Error('لم تؤكد قاعدة البيانات رفض الطلب.');
+   await refreshAdmin();
+   if(message)message.textContent='تم رفض طلب الشهادة وتحديث حالته دون حذفه.';
+  }catch(err){if(message)message.textContent='تعذر رفض الطلب: '+(err?.message||'خطأ غير معروف')}
+  finally{if(quickReject.isConnected){quickReject.disabled=false;quickReject.textContent=label}}
   return;
  }
  const quickApproval=e.target.closest('[data-mj15-admin-approve]');
