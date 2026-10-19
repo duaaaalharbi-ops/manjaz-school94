@@ -105,7 +105,21 @@ function matchHijriWeekday(v){
  }catch(e){return false;}
  return false;
 }
-function check(v){return v&&v.teacher&&v.klass&&v.weekday&&v.day&&v.month&&v.year&&v.period;}
+function check(v){
+ return !!(v&&v.c&&v.teacher&&v.klass&&v.weekday&&Number.isInteger(v.day)&&v.day>=1&&v.day<=30&&Number.isInteger(v.month)&&v.month>=1&&v.month<=12&&Number.isInteger(v.year)&&v.year>=1447&&Number.isInteger(v.period)&&v.period>=1&&v.period<=7);
+}
+function completeForm(v){
+ if(!check(v)){
+  uiMsg("لا يمكن التصدير أو الحفظ قبل تحديد اليوم والتاريخ الهجري والمعلمة والفصل والحصة والبطاقة.",true);
+  return false;
+ }
+ // Quick verification indicators and achievement description are optional.
+ if(v.outcome&&v.outcome.length>600){
+  uiMsg("وصف نواتج الإنجاز يتجاوز الحد المسموح (٦٠٠ حرف).",true);
+  return false;
+ }
+ return true;
+}
 function meta(v){
  return {teacher:v.teacher,klass:v.klass,weekday:v.weekday,day:v.day,
  monthLabel:MONTHS[v.month-1]||"",year:v.year,period:v.period,
@@ -121,21 +135,36 @@ async function openPreview(){
  }catch(e){uiMsg("تعذر عرض المعاينة: "+e.message,true);}
 }
 async function exportVersion(variant){
- var v=values();if(!v)return;
- if(variant==="activity"&&!completeForm(v))return;
  var btn=byId(variant==="solved"?"ma-export-solved":"ma-print");
- if(btn.disabled)return;
- btn.disabled=true;var old=btn.textContent;btn.textContent="جارٍ تجهيز PDF…";
+ if(!btn||btn.disabled)return;
+ btn.disabled=true;
+ var original=btn.textContent;
+ btn.textContent=variant==="solved"?"جارٍ تصدير بطاقة الحل النموذجي…":"جارٍ تصدير بطاقة التفعيل…";
  try{
+  var v=values();
+  // Validate both flows before invoking PDF engine. Avoid uncaught errors outside try/catch.
+  if(!completeForm(v))return;
+  if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
+   throw new Error("محرك تصدير البطاقات لم يكتمل تحميله. أعيدي فتح القسم ثم حاولي مجددًا.");
   var result=await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v));
+  if(!result||!(result.blob instanceof Blob)||!result.blob.size)
+   throw new Error("لم يُنشأ ملف PDF صالح للتنزيل.");
   if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
   pdfObjectUrl=URL.createObjectURL(result.blob);
-  var link=byId("ma-pdf-download");link.href=pdfObjectUrl;link.download=result.filename;link.hidden=false;
-  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-  if(!ios)link.click();
-  uiMsg("تم تجهيز ملف PDF عربي من صفحة A4 واحدة. افتحي «فتح / حفظ PDF» لتنزيله.",false);
- }catch(e){uiMsg("تعذر تصدير PDF: "+(e.message||e),true);}
- finally{btn.disabled=false;btn.textContent=old;}
+  var link=byId("ma-pdf-download");
+  if(!link)throw new Error("رابط حفظ PDF غير موجود في الواجهة.");
+  link.href=pdfObjectUrl;link.download=result.filename;link.hidden=false;
+  link.textContent="فتح / حفظ "+(variant==="solved"?"بطاقة الحل النموذجي":"بطاقة تفعيل الاحتياط")+" PDF";
+  // Attempt download on all devices. iPhone users retain a visible manual link when
+  // WebKit blocks downloads initiated after async work.
+  try{link.click();}catch(_){}
+  uiMsg("تم تجهيز "+(variant==="solved"?"بطاقة الحل النموذجي":"بطاقة تفعيل الاحتياط")+" في ملف PDF من صفحة واحدة. إن لم يُنزل تلقائيًا، اضغطي رابط «فتح / حفظ PDF» الظاهر بجانب الأزرار.",false);
+ }catch(e){
+  uiMsg("فشل تصدير "+(variant==="solved"?"بطاقة الحل النموذجي":"بطاقة التفعيل")+": "+(e&&e.message?e.message:String(e)),true);
+ }finally{
+  btn.disabled=false;
+  btn.textContent=original;
+ }
 }
 async function exportCard(){await exportVersion("activity");}
 async function exportSolved(){await exportVersion("solved");}
@@ -234,10 +263,10 @@ function render(){
  '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
  '<div class="ma-verify-box"><label for="ma-outcome">مساحة الإنجاز – وصف نواتج الإنجاز (اختياري)</label><textarea id="ma-outcome" maxlength="600" rows="3" placeholder="يمكن كتابة وصف مختصر للنواتج، أو ترك الحقل فارغًا"></textarea></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
- '<div class="ma-actions"><button id="ma-open" type="button">معاينة البطاقة</button><button id="ma-print" type="button" class="secondary">تصدير PDF</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a><button id="ma-solution" type="button" class="secondary">الحل النموذجي</button><button id="ma-save" type="button">حفظ التنفيذ</button></div>'+
+ '<div class="ma-actions"><button id="ma-open" type="button">معاينة البطاقة</button><button id="ma-print" type="button" class="secondary">تصدير بطاقة تفعيل الاحتياط</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a><button id="ma-solution" type="button" class="secondary">الحل النموذجي</button><button id="ma-save" type="button">حفظ التنفيذ</button></div>'+
  '<div id="ma-message" class="ma-message" role="status" aria-live="polite"></div></section>'+
  '<section class="ma-panel" id="ma-preview" hidden><h3>معاينة بطاقة النشاط</h3><div id="ma-preview-host" class="ma-card-host" role="region" aria-label="معاينة النشاط"></div></section>'+
- '<section class="ma-panel" id="ma-answer" hidden><h3>نموذج الإجابة – البطاقة المحلولة الأصلية</h3><div id="ma-answer-host" class="ma-card-host" role="region" aria-label="بطاقة الإجابة النموذجية"></div><div class="ma-actions"><button type="button" id="ma-export-solved" class="secondary">تصدير بطاقة الحل PDF</button></div></section>'+
+ '<section class="ma-panel" id="ma-answer" hidden><h3>نموذج الإجابة – البطاقة المحلولة الأصلية</h3><div id="ma-answer-host" class="ma-card-host" role="region" aria-label="بطاقة الإجابة النموذجية"></div><div class="ma-actions"><button type="button" id="ma-export-solved" class="secondary">تصدير بطاقة الحل النموذجي</button></div></section>'+
  '<section class="ma-panel"><h3>تقارير تفعيل الاحتياط اليومي</h3><p>استعراض سجل التنفيذ مخصص لصلاحية إدارة منجز.</p><div class="ma-actions"><button type="button" class="secondary" id="ma-load-reports">استعراض سجل التنفيذ</button><button type="button" class="secondary" id="ma-csv">تصدير Excel (CSV)</button><button type="button" class="secondary" id="ma-report-print">طباعة التقرير</button></div><div id="ma-report" hidden><div id="ma-report-body" class="ma-report-body"></div></div></section>';
  view.replaceChildren(root);
  var hj=initialHijri();
