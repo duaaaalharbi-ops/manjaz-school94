@@ -111,7 +111,7 @@ function cardUrl(v){
 }
 function completeForm(v){
  if(!check(v)){uiMsg("أكملي بيانات التنفيذ من القوائم المنسدلة أولًا.",true);return false;}
- if(!v.indicators.length){uiMsg("اختاري مؤشرًا واحدًا على الأقل من مؤشرات التحقق السريع.",true);return false;}
+ 
  return true;
 }
 function openPreview(){
@@ -121,45 +121,77 @@ function openPreview(){
  uiMsg("معاينة البطاقة بالبيانات والمؤشرات المختارة، جاهزة للتصدير.",false);
  wrap.scrollIntoView({behavior:"smooth",block:"start"});
 }
-function loadPdfScript(win,url,ready){
- if(ready())return Promise.resolve();
+/* Local, bundled exporter avoids two remote CDN dependencies inside the preview. */
+function loadLocalPdfEngine(win){
+ if(typeof win.html2pdf==="function")return Promise.resolve();
+ if(win.__activationPdfEnginePromise)return win.__activationPdfEnginePromise;
+ win.__activationPdfEnginePromise=new Promise(function(resolve,reject){
+  var script=win.document.createElement("script"),done=false;
+  var timer=setTimeout(function(){if(!done){done=true;reject(new Error("انتهت مهلة تحميل محرك PDF المحلي."));}},16000);
+  script.src="vendor/html2pdf.bundle.min.js?v=0.14.0";
+  script.async=true;
+  script.onload=function(){if(done)return;done=true;clearTimeout(timer);
+   typeof win.html2pdf==="function"?resolve():reject(new Error("تعذر تهيئة محرك PDF المحلي."));};
+  script.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("لم يُحمّل محرك PDF من ملفات منجز."));};
+  win.document.head.appendChild(script);
+ }).catch(function(err){win.__activationPdfEnginePromise=null;throw err;});
+ return win.__activationPdfEnginePromise;
+}
+function frameLoaded(frame,url){
  return new Promise(function(resolve,reject){
-  var tag=win.document.createElement("script");tag.src=url;tag.async=true;
-  tag.onload=function(){ready()?resolve():reject(new Error("تعذر تهيئة محرك PDF."));};
-  tag.onerror=function(){reject(new Error("تعذر تحميل مكونات PDF؛ يرجى التحقق من الاتصال."));};
-  win.document.head.appendChild(tag);
+  var finished=false;
+  var timer=setTimeout(function(){finish(new Error("لم تكتمل معاينة البطاقة قبل التصدير."));},16000);
+  function finish(error){if(finished)return;finished=true;clearTimeout(timer);frame.removeEventListener("load",loaded);frame.removeEventListener("error",broken);error?reject(error):resolve();}
+  function loaded(){try{
+   var documentFrame=frame.contentDocument;
+   if(documentFrame&&documentFrame.querySelectorAll(".session").length===1&&documentFrame.querySelector(".session footer"))finish();
+   else finish(new Error("تعذر تجهيز البطاقة الفردية أو تذييلها الرسمي."));
+  }catch(e){finish(new Error("تعذر الوصول إلى محتوى البطاقة."));}}
+  function broken(){finish(new Error("تعذر فتح ملف بطاقة الاحتياط."));}
+  frame.addEventListener("load",loaded);frame.addEventListener("error",broken);
+  frame.src=url;
  });
 }
 async function exportCard(){
  var v=values();if(!completeForm(v))return;
  var button=byId("ma-print");if(button.disabled)return;
- button.disabled=true;var label=button.textContent;button.textContent="جارٍ تجهيز PDF…";
+ button.disabled=true;var oldLabel=button.textContent;button.textContent="جارٍ إنشاء ملف PDF…";
+ var frame=byId("ma-preview-frame"),node=null,oldHeight="",oldBreak="";
  try{
-  var frame=byId("ma-preview-frame"),url=cardUrl(v);
   byId("ma-preview").hidden=false;
-  await new Promise(function(resolve,reject){
-   var pending=true,timer=setTimeout(function(){if(pending){pending=false;reject(new Error("انتهت مهلة تحميل البطاقة."));}},25000);
-   function ready(){if(!pending)return;pending=false;clearTimeout(timer);resolve();}
-   frame.addEventListener("load",ready,{once:true});frame.src=url;
-  });
-  var w=frame.contentWindow,doc=w.document;
-  await Promise.all([
-   loadPdfScript(w,"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",function(){return !!w.html2canvas;}),
-   loadPdfScript(w,"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js",function(){return !!(w.jspdf&&w.jspdf.jsPDF);})
-  ]);
+  await frameLoaded(frame,cardUrl(v));
+  var frameWindow=frame.contentWindow, doc=frame.contentDocument;
+  node=doc.querySelector(".session");
+  if(!node||doc.querySelectorAll(".session").length!==1||!node.querySelector("footer"))throw Error("ملف البطاقة غير مكتمل.");
+  await loadLocalPdfEngine(frameWindow);
   if(doc.fonts&&doc.fonts.ready)await doc.fonts.ready;
-  var node=doc.querySelector(".session");if(!node)throw Error("لم تُحمّل صفحة البطاقة.");
-  if(doc.querySelectorAll(".session").length!==1||!node.querySelector("footer"))throw Error("يجب أن تتضمن المعاينة بطاقة واحدة وتذييلها الرسمي.");
-  var canvas=await w.html2canvas(node,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false,scrollX:0,scrollY:0});
-  var pdf=new w.jspdf.jsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
-  // Export only the card content, not the browser print UI (URL or printing date).
-  pdf.addImage(canvas.toDataURL("image/jpeg",0.96),"JPEG",0,0,210,297);
-  if(pdf.internal.getNumberOfPages()!==1)throw Error("تعذر إخراج البطاقة في صفحة واحدة.");
-  pdf.save("بطاقة_تفعيل_الاحتياط_"+String(v.c[0]).padStart(3,"0")+".pdf");
-  uiMsg("تم تصدير البطاقة في صفحة A4 واحدة بالتذييل الرسمي فقط.",false);
- }catch(e){uiMsg("تعذر تصدير PDF: "+e.message,true);}
- finally{button.disabled=false;button.textContent=label;}
+  oldHeight=node.style.height;oldBreak=node.style.breakAfter;
+  // Reserve a few millimeters for renderer rounding; the official footer stays inside the card.
+  node.style.height="294mm";node.style.breakAfter="auto";
+  var filename="بطاقة_تفعيل_الاحتياط_"+String(v.c[0]).padStart(3,"0")+".pdf";
+  var worker=frameWindow.html2pdf().set({
+   filename:filename,margin:0,
+   image:{type:"jpeg",quality:0.97},
+   html2canvas:{scale:1.5,useCORS:true,backgroundColor:"#ffffff",logging:false,scrollX:0,scrollY:0},
+   jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},
+   pagebreak:{mode:[]},
+   enableLinks:false
+  }).from(node).toPdf();
+  var pdf=await worker.get("pdf");
+  if(!pdf||!pdf.internal)throw Error("لم يكتمل إنشاء مستند PDF.");
+  var pages=pdf.internal.getNumberOfPages();
+  if(pages!==1)throw Error("حجم المحتوى يتجاوز صفحة A4 واحدة ("+pages+" صفحات).");
+  // PDF generated directly from one card: no browser URL or print timestamp.
+  pdf.save(filename);
+  uiMsg("تم إنشاء بطاقة PDF من صفحة A4 واحدة، بالتذييل الرسمي فقط.",false);
+ }catch(e){
+  uiMsg("تعذر تصدير PDF: "+(e&&e.message?e.message:"حدث خطأ أثناء الإنشاء")+". يمكن إعادة المحاولة أو استخدام رابط المعاينة.",true);
+ }finally{
+  if(node){node.style.height=oldHeight;node.style.breakAfter=oldBreak;}
+  button.disabled=false;button.textContent=oldLabel;
+ }
 }
+
 async function saveExecution(){
  var v=values();if(!completeForm(v))return;
  if(!matchHijriWeekday(v)){uiMsg("اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى؛ راجعي الاختيار.",true);return;}
