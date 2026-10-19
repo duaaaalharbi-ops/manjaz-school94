@@ -40,13 +40,20 @@ async function getRecords(kind){
 async function loadSchoolLists(){
  try{
   var a=await Promise.all([getRecords("reserve_teacher"),getRecords("reserve_schedule")]);
-  names=[...new Set(a[0].filter(function(x){return x.data&&x.data.active!==false;}).map(function(x){return x.data.name||x.data.teacherName;}).filter(Boolean).concat(EXTRA_EXECUTORS))].sort(function(a,b){return a.localeCompare(b,"ar");});
+  names=[...new Set(a[0].filter(function(x){return x.data&&x.data.active!==false;}).map(function(x){return x.data.name||x.data.teacherName;}).filter(Boolean))].sort(function(a,b){return a.localeCompare(b,"ar");});
   var set=new Set();
   a[1].forEach(function(x){var t=x.data&&x.data.timetable||{};Object.keys(t).forEach(function(k){(Array.isArray(t[k])?t[k]:[]).forEach(function(v){
    var c=safe(v).split("|")[0].trim();if(/^(أول|أولى|ثاني|ثانية|ثالث|ثالثة)\s*[-–]?\s*[0-9٠-٩]+$/.test(c))set.add(c);
   });});});
   classes=[...set].sort(function(a,b){return a.localeCompare(b,"ar",{numeric:true});});
-  optionList(byId("ma-teacher"),names,"اختاري المعلمة");
+  optionList(byId("ma-teacher"),names,"اختاري المنفذة");
+  // Verified names from the school roster, grouped without altering teacher records.
+  var specialists=document.createElement("optgroup");specialists.label="الموجهات ومحضرة المختبر";
+  EXTRA_EXECUTORS.forEach(function(name){
+   if(names.includes(name))return;
+   var option=document.createElement("option");option.value=name;option.textContent=name;specialists.appendChild(option);
+  });
+  if(specialists.children.length)byId("ma-teacher").appendChild(specialists);
   optionList(byId("ma-class"),classes,"اختاري الفصل");
   if(!names.length||!classes.length)uiMsg("تعذر تحميل بعض القوائم من قاعدة الاحتياط؛ يرجى مراجعة الإدارة.",true);
  }catch(e){uiMsg("تعذر الاتصال بقاعدة بيانات المعلمات والفصول: "+e.message,true);}
