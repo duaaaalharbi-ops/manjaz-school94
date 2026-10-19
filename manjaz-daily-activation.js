@@ -105,7 +105,7 @@ function matchHijriWeekday(v){
 }
 function check(v){return v&&v.teacher&&v.klass&&v.weekday&&v.day&&v.month&&v.year&&v.period;}
 function cardUrl(v){
- var p=new URLSearchParams({card:String(v.c[0]),v:"3-single-a4-footer",
+ var p=new URLSearchParams({card:String(v.c[0]),v:"4-export-mobile-fix",
  date:v.weekday+" | "+v.day+" "+MONTHS[v.month-1]+" "+v.year+" هـ",
  teacher:v.teacher,"class":v.klass,period:"الحصة "+v.period,checks:v.indicators.join("|")});
  return "manjaz-activation-cards.html?"+p.toString();
