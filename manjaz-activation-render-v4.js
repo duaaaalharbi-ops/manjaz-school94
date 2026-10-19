@@ -51,7 +51,7 @@ function fill(html,metadata,variant){
  var rubric=section.querySelector(".rubric"),checks=metadata.indicators||[];
  if(rubric){
   rubric.querySelectorAll("label").forEach(function(x){
-   var label=compact(x.textContent).replace(/^[□✓☑✔]\\s*/,"");
+   var label=compact(x.textContent).replace(/^[□✓☑✔]\s*/,"").trim();
    if(!checks.includes(label))x.remove();
    else{x.textContent="✓ "+label;x.classList.add("ma-verified");}
   });
