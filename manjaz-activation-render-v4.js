@@ -119,7 +119,7 @@ async function captureOriginalPage(section,html2pdf){
  var paper=document.createElement("div");
  paper.style.cssText="box-sizing:border-box;width:210mm;height:297mm;min-height:297mm;max-height:297mm;overflow:hidden;direction:rtl;background:#fff;";
  var stylesheet=document.createElement("style");
- stylesheet.textContent=previewStyles()+"\\n.session{width:210mm!important;height:297mm!important;max-height:297mm!important;min-height:297mm!important;margin:0!important;box-shadow:none!important;transform:none!important;page-break-after:auto!important;break-after:auto!important;background:#fff!important} .ma-holder{width:210mm!important}";
+ stylesheet.textContent=previewStyles()+" .session{width:210mm!important;height:297mm!important;max-height:297mm!important;min-height:297mm!important;margin:0!important;box-shadow:none!important;transform:none!important;page-break-after:auto!important;break-after:auto!important;background:#fff!important} .ma-holder{width:210mm!important}";
  paper.appendChild(stylesheet);
  paper.appendChild(document.importNode(section,true));
  paper.style.cssText+="position:fixed;top:0;left:0;z-index:-2147483647;visibility:hidden;";
