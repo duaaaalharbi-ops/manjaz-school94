@@ -387,7 +387,7 @@ function adminRequestRow(x,mode){
  '<td data-label="تاريخ الطلب">'+H(adminRequestDate(x.created_at))+'</td>'+
  '<td data-label="معاينة الشهادة"><div class="mj48-row-actions">'+
  (allowedPreview?'<button type="button" class="mj36-icon-button" data-mj15-admin-preview="'+id+'">معاينة</button>':'—')+
- '<button type="button" class="mj48-detail-button" data-mj15-open="'+id+'" data-mj15-mode="'+mode+'">التفاصيل</button>'+
+ (pending?'<button type="button" class="mj48-detail-button" data-mj15-open="'+id+'" data-mj15-mode="approve">التفاصيل</button>':'')+
  '</div></td>'+
  '<td data-label="اعتماد">'+(pending?'<button type="button" class="mj48-approve" data-mj15-admin-approve="'+id+'">اعتماد</button>':'<span class="mj48-status">'+H(x.status)+'</span>')+'</td>'+
  '<td data-label="رفض">'+(pending?'<button type="button" class="mj48-reject" data-mj15-admin-reject="'+id+'">رفض</button>':'—')+'</td>'+
