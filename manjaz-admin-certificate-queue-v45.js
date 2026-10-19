@@ -28,7 +28,23 @@ function style(){
  '#view.mj16-admin-only #mj15Powers .mj48-certificate-table .mj48-reject{color:#933a37;border-color:#e8caca;background:#fff9f8}',
  '#view.mj16-admin-only #mj15Powers .mj48-certificate-table button:disabled{opacity:.55;cursor:wait}',
  '#view.mj16-admin-only #mj15Powers .mj48-status{font-weight:700;color:#4e6b70}',
- '@media(max-width:600px){#view.mj16-admin-only #mj15Powers .mj48-cert-filter button{flex:1 1 28%}}'
+ '@media(max-width:600px){#view.mj16-admin-only #mj15Powers .mj48-cert-filter button{flex:1 1 28%}}',
+ '@media(max-width:640px){',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]){width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) #mj15ApprovalList,#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-request-group,#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj36-list-summary{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-wrap:anywhere}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-table-scroll{display:block;width:100%;max-width:100%;min-width:0;overflow:visible;border:0;background:transparent}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-certificate-table{display:block;width:100%;max-width:100%;min-width:0;table-layout:auto}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-certificate-table thead{display:none}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-certificate-table tbody{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;width:100%;min-width:0;max-width:100%}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-certificate-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr);width:100%;max-width:100%;min-width:0;border:1px solid #d9e6e5;border-radius:10px;overflow:hidden}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-certificate-table tbody td{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;min-width:0;max-width:100%;width:100%;box-sizing:border-box;padding:10px;white-space:normal;overflow-wrap:anywhere}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-certificate-table tbody td::before{content:attr(data-label);flex:0 0 40%;max-width:40%;min-width:0;color:#174e59;font-weight:800;white-space:normal;overflow-wrap:anywhere}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-certificate-table .mj48-row-actions{display:flex;flex:1 1 auto;justify-content:flex-start;flex-wrap:wrap;min-width:0;max-width:100%}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-cert-filter{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:7px;min-width:0;max-width:100%}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-cert-filter button{width:100%;min-width:0;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) #mj49GroupAdmin,#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj49-admin-scroll{width:100%;max-width:100%;min-width:0;box-sizing:border-box}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj49-admin-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}',
+ '}'
  ].join("\n");
  document.head.appendChild(el);
 }
