@@ -589,9 +589,22 @@ function bindReserveNotificationPanel(){
   reserveHydrateNotificationPanel();
 }
 
+// Read-only link: the original published reserve assignments and manual topics are never altered.
+async function fetchApprovedReserveTopics(){
+  try{
+    const url=SUPABASE_URL+"/rest/v1/manjaz_reserve_auto_topics?select=assignment_id,topic,approved_at&limit=5000";
+    const response=await fetch(url,{headers:baseHeaders(),cache:"no-store"});
+    if(!response.ok)throw new Error("HTTP "+response.status);
+    const data=await response.json();
+    return Array.isArray(data)?data:[];
+  }catch(error){
+    console.warn("تعذر تحميل عناوين التفعيل المعتمدة؛ تبقى الموضوعات اليدوية متاحة.",error);
+    return [];
+  }
+}
 async function loadAll(){
-  const [teachers,schedules,absences,assignments,settings,adjustments,monthlyCertificates]=await Promise.all([
-    fetchKind(K.teacher),fetchKind(K.schedule),fetchKind(K.absence),fetchKind(K.assignment),fetchKind(K.settings),fetchKind(K.adjustment),fetchKind(K.monthlyCertificate)
+  const [teachers,schedules,absences,assignments,settings,adjustments,monthlyCertificates,approvedTopics]=await Promise.all([
+    fetchKind(K.teacher),fetchKind(K.schedule),fetchKind(K.absence),fetchKind(K.assignment),fetchKind(K.settings),fetchKind(K.adjustment),fetchKind(K.monthlyCertificate),fetchApprovedReserveTopics()
   ]);
   // Edition Six is the only authorized teacher source. Preserve the oldest ID
   // for each name, so existing schedules / assignment references are not changed.
@@ -609,7 +622,13 @@ async function loadAll(){
   const validIds=new Set(state.teachers.map(t=>String(t.id)));
   state.schedules=schedules.filter(s=>validIds.has(String(s.teacherId)));
   state.absences=absences;
-  state.assignments=assignments;
+  const approvedTopicMap=new Map(approvedTopics.map(row=>[String(row.assignment_id),row]));
+  state.assignments=assignments.map(assignment=>{
+    const matched=approvedTopicMap.get(String(assignment.id));
+    if(!matched||clean(assignment.activationTitle)||!clean(matched.topic))return assignment;
+    return {...assignment,activationTitle:matched.topic,
+      activationAt:assignment.activationAt||matched.approved_at,manjazAutoSource:true};
+  });
   state.adjustments=adjustments;
   state.monthlyCertificates=monthlyCertificates;
   state.settings=settings.find(s=>s.sourceVersion===V6_SOURCE)||settings[0]||null;
@@ -3113,7 +3132,11 @@ function renderAdminTab(tab){
 }
 
 function plainData(x){
-  const y={...x}; delete y.id;delete y.createdAt;delete y.updatedAt; return y;
+  const y={...x};
+  // A reflected title is virtual: never persist it during unrelated reserve edits.
+  if(y.manjazAutoSource===true){y.activationTitle="";y.activationAt="";}
+  delete y.manjazAutoSource;delete y.id;delete y.createdAt;delete y.updatedAt;
+  return y;
 }
 async function ensureAdmin(){if(!token())throw new Error("يلزم تسجيل الدخول الإداري")}
 async function refreshDayCandidates(date){
