@@ -6,7 +6,7 @@ var MONTHS=["محرم","صفر","ربيع الأول","ربيع الآخر","ج�
 var WEEKDAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس"];
 var isPage=function(){return location.hash==="#daily-activation";};
 var byId=function(x){return document.getElementById(x);};
-var names=[],classes=[],logData=[],busy=false,pdfObjectUrl=null,editingId=null,adminBusy=false;
+var names=[],classes=[],logData=[],busy=false,pdfObjectUrl=null,editingId=null,adminBusy=false,selectedLogIds=new Set();
 var ADMIN_EMAIL="munjz.s94@hotmail.com";
 // Verified abbreviated names from the existing school contacts roster.
 var EXTRA_EXECUTORS=["دخيلة المالكي","مها العتيبي","نجلاء هوساوي"];
@@ -233,11 +233,7 @@ async function exportVersion(variant){
    try{link.click();}catch(e){link.hidden=false;}
    if(ios)link.hidden=false;
   }
-  var message="تم إعداد "+(variant==="solved"?"بطاقة الحل المقترحة":"بطاقة تفعيل الاحتياط")+" بصيغة PDF من صفحة A4 واحدة.";
-  if(variant==="activity"){
-   var logged=await saveExecution(v);
-   message+=logged.ok?(logged.already?" التنفيذ محفوظ مسبقًا.":" تم حفظ التنفيذ في السجل تلقائيًا."):(" تعذر حفظ سجل التنفيذ: "+logged.error);
-  }
+  var message="تم إعداد "+(variant==="solved"?"بطاقة الحل المقترحة":"بطاقة تفعيل الاحتياط")+" بصيغة PDF من صفحة A4 واحدة. لا يُحفظ التفعيل إلا عند الضغط على «اعتماد الإرسال».";
   if(ios&&!previewTab)message+=" إن لم يُفتح الملف، استخدمي رابط فتح / حفظ PDF الظاهر.";
   uiMsg(message,false);
  }catch(e){
@@ -250,7 +246,24 @@ async function exportVersion(variant){
 }
 async function exportCard(){await exportVersion("activity");}
 async function exportSolved(){await exportVersion("solved");}
-
+function resetSubmissionStatus(){
+ var line=byId("ma-submit-status");if(line)line.textContent="لم يتم اعتماد الإرسال للبيانات الحالية.";
+}
+async function approveSubmission(){
+ var button=byId("ma-approve-send");if(!button||button.disabled)return;
+ if(editingId){uiMsg("أكملي تعديل السجل الحالي أو ألغيه قبل اعتماد إرسال جديد.",true);return;}
+ var v=values();if(!completeForm(v))return;
+ if(!matchHijriWeekday(v)){uiMsg("اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى.",true);return;}
+ button.disabled=true;var original=button.textContent;button.textContent="جارٍ اعتماد الإرسال…";
+ try{
+  var result=await saveExecution(v);
+  if(!result.ok)throw Error(result.error||"لم يتم حفظ التفعيل.");
+  var message=result.already?"هذا التفعيل معتمد ومحفوظ مسبقًا؛ لن يُكرر السجل.":"تم اعتماد الإرسال وحفظ التفعيل في سجل التنفيذ بنجاح.";
+  var status=byId("ma-submit-status");if(status)status.textContent=message;
+  uiMsg(message,false);
+ }catch(e){uiMsg("تعذر اعتماد الإرسال: "+(e.message||e),true);}
+ finally{button.disabled=false;button.textContent=original;}
+}
 var lastSavedExecutionKey=null;
 async function saveExecution(v){
  v=v||values();
@@ -301,6 +314,7 @@ function clearFields(){
  document.querySelectorAll(".ma-check-item").forEach(function(x){x.checked=false;});
  updateIndicatorLabel();
  var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
+ resetSubmissionStatus();
  uiMsg("تم تفريغ بيانات التعبئة دون حذف أي سجل محفوظ.",false);
 }
 function finishEditing(){
@@ -515,6 +529,9 @@ function initStyle(){
  "#manjazActivation .ma-clear-actions{display:flex;justify-content:flex-end;margin-top:8px}"+
  "#manjazActivation [hidden]{display:none!important}"+
  "#manjazActivation .ma-export-actions>button{flex:1 1 270px;min-height:48px;font-size:14px}"+
+ "#manjazActivation .ma-submit-actions{display:grid;gap:7px;margin-top:12px;padding-top:11px;border-top:1px solid #e1ebec}"+
+ "#manjazActivation .ma-submit-actions button{min-height:48px;background:#0b706a;color:#fff;font-size:14px}"+
+ "#manjazActivation .ma-submit-actions p{margin:0;color:#466875;font-size:12px;line-height:1.8}"+
  "#manjazActivation button{background:#0c6871;color:white;border:0;border-radius:9px;padding:11px 15px;font:700 13px Tahoma,Arial;cursor:pointer}"+
  "#manjazActivation button.secondary{background:#ecf3f4;color:#0b3047;border:1px solid #cddfe2}"+
  "#manjazActivation button:disabled{opacity:.6;cursor:wait}"+
@@ -560,7 +577,7 @@ function render(){
  '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
  '<div class="ma-verify-box"><label for="ma-outcome">مساحة الإنجاز – وصف نواتج الإنجاز (اختياري)</label><textarea id="ma-outcome" maxlength="600" rows="3" placeholder="يمكن كتابة وصف مختصر للنواتج، أو ترك الحقل فارغًا"></textarea></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
- '<div class="ma-actions ma-export-actions"><button id="ma-print" type="button">تصدير بطاقة تفعيل الاحتياط</button><button id="ma-export-solved" type="button" class="secondary">تصدير بطاقة الحل المقترحة</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a></div><p class="ma-save-hint">يُسجّل التنفيذ تلقائيًا عند تصدير بطاقة التفعيل.</p>'+
+ '<div class="ma-actions ma-export-actions"><button id="ma-print" type="button">تصدير بطاقة تفعيل الاحتياط</button><button id="ma-export-solved" type="button" class="secondary">تصدير بطاقة الحل المقترحة</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a></div><div class="ma-submit-actions"><button id="ma-approve-send" type="button">اعتماد الإرسال</button><p>التصدير يحمّل البطاقة فقط. يتم تسجيل التفعيل عند اعتماد الإرسال.</p><p id="ma-submit-status" role="status" aria-live="polite">لم يتم اعتماد الإرسال للبيانات الحالية.</p></div>'+
  '<div id="ma-message" class="ma-message" role="status" aria-live="polite"></div></section>'+
  '<section class="ma-panel"><h3>سجل تنفيذ تفعيل الاحتياط</h3><p>لتعديل السجلات وحذفها، سجّلي دخول الإدارة من هنا.</p><div class="ma-actions"><button type="button" id="ma-admin-entry" class="secondary">دخول الإدارة | إدارة السجل</button></div><div id="ma-admin-auth" class="ma-inline-admin" hidden><div id="ma-admin-login"><div class="ma-admin-fields"><div><label for="ma-admin-email">البريد الإلكتروني للإدارة</label><input id="ma-admin-email" type="email" autocomplete="username" value="munjz.s94@hotmail.com"></div><div><label for="ma-admin-pass">كلمة المرور</label><input id="ma-admin-pass" type="password" autocomplete="current-password"></div></div><div class="ma-actions"><button id="ma-admin-sign-in" type="button">تسجيل الدخول</button></div></div><div id="ma-admin-active" hidden><p>صلاحية الإدارة مفعّلة لإدارة سجلات الاحتياط.</p><div class="ma-actions"><button type="button" id="ma-load-reports" class="secondary">تحديث سجل التنفيذ</button><button type="button" id="ma-csv" class="secondary">تصدير Excel (CSV)</button><button type="button" id="ma-report-print" class="secondary">طباعة التقرير</button><button type="button" id="ma-admin-logout" class="secondary">خروج الإدارة</button></div></div><div id="ma-report" hidden><label for="ma-report-search">بحث داخل سجلات التنفيذ</label><input id="ma-report-search" type="search" placeholder="اسم المنفذة أو الفصل أو البطاقة أو التاريخ"><div id="ma-report-body" class="ma-report-body"></div></div></div></section>';
  view.replaceChildren(root);
@@ -577,13 +594,20 @@ function render(){
  updateSelectionSummary();
  renderExecutors();
  chooseMain();
- root.addEventListener("input",function(e){if(e.target.matches("textarea,select,input")){var link=byId("ma-pdf-download");if(link)link.hidden=true;}});
- root.addEventListener("change",function(e){if(e.target.matches("#ma-class-choices,#ma-period-choices"))updateSelectionSummary();});
+ root.addEventListener("input",function(e){
+  if(e.target.matches("textarea,select,input")){var link=byId("ma-pdf-download");if(link)link.hidden=true;}
+  if(e.target.matches("#ma-weekday,#ma-hyear,#ma-hday,#ma-hmonth,#ma-teacher,#ma-class-choices,#ma-period-choices,#ma-main,#ma-sub,#ma-card,#ma-outcome,.ma-check-item"))resetSubmissionStatus();
+ });
+ root.addEventListener("change",function(e){
+  if(e.target.matches("#ma-class-choices,#ma-period-choices"))updateSelectionSummary();
+  if(e.target.matches("#ma-weekday,#ma-hyear,#ma-hday,#ma-hmonth,#ma-teacher,#ma-class-choices,#ma-period-choices,#ma-main,#ma-sub,#ma-card,#ma-outcome,.ma-check-item"))resetSubmissionStatus();
+ });
  byId("ma-main").addEventListener("change",chooseSub);
  byId("ma-sub").addEventListener("change",chooseCard);
  byId("ma-card").addEventListener("change",cardChanged);
  document.querySelectorAll(".ma-check-item").forEach(function(input){input.addEventListener("change",updateIndicatorLabel);});
  byId("ma-print").addEventListener("click",exportCard);
+ byId("ma-approve-send").addEventListener("click",approveSubmission);
  byId("ma-clear").addEventListener("click",clearFields);
  byId("ma-save-edit").addEventListener("click",saveEditedRecord);
  byId("ma-cancel-edit").addEventListener("click",function(){clearFields();uiMsg("تم إلغاء تعديل السجل دون حفظ.",false);});
