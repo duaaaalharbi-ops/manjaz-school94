@@ -31,9 +31,11 @@ const V6_SOURCE="v6-1448-04-27";
 const COUNT_START="2026-10-18";
 const EMERGENCY_DAILY_DEMAND=20;
 const MAX_AUTO_RESERVE_PER_DAY=3; // Applies to automatic assignment, counting all existing daily reserve duties.
+const REDUCED_AUTO_RESERVE_PER_DAY=2;
+const REDUCED_AUTO_MIN_DEMAND=15;
+const ONE_CLASS_EXTRA_MIN_DEMAND=25;
 const ONE_CLASS_RESERVE_MIN_DEMAND=15;
 const ONE_CLASS_RESERVE_MAX_DEMAND=20;
-const ONE_CLASS_AUTO_RESERVE_QUOTA=2;
 const CONDITIONAL_EXCLUSION_MIN_DEMAND=13; // More than 12 absent periods on the same school day
 const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البالدي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
 const ADVANCED_RANK=new Set(["دعاء الحربي","سندس الغامدي","عايدة الصاعدي","ريم القحطاني","عوالي السبيعي","بدرية الحربي","حنان المجنوني"]);
@@ -871,10 +873,12 @@ function reserveOneClassPriorityActive(date){
   return demand>=ONE_CLASS_RESERVE_MIN_DEMAND&&demand<=ONE_CLASS_RESERVE_MAX_DEMAND;
 }
 function autoReserveDailyLimit(teacherId,date){
-  // On busy 15–20-duty days, teachers with only one original class get
-  // two reserve duties before nomination moves to other daily schedules.
-  if(reserveOneClassPriorityActive(date)&&dailyOriginalCount(teacherId,date)===1)
-    return ONE_CLASS_AUTO_RESERVE_QUOTA;
+  const demand=dailyDemand(date);
+  // At exactly 25 duties the specific one-original-class exception takes precedence.
+  // For all other teachers, the reduced daily cap remains in effect at 25+.
+  if(demand>=ONE_CLASS_EXTRA_MIN_DEMAND&&dailyOriginalCount(teacherId,date)===1)
+    return MAX_AUTO_RESERVE_PER_DAY;
+  if(demand>=REDUCED_AUTO_MIN_DEMAND)return REDUCED_AUTO_RESERVE_PER_DAY;
   return MAX_AUTO_RESERVE_PER_DAY;
 }
 function assertAutoReserveDailyCapacity(teacherId,date,exceptAssignmentId=""){
@@ -1534,7 +1538,7 @@ function dayAdminHTML(){
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
-      <p class="reserve-public-note">الضابط الآلي: عند وجود ١٥–٢٠ حصة احتياط مطلوبة، تُعطى الأولوية للمعلمة التي لديها حصة أصلية واحدة في ذلك اليوم حتى تبلغ حصتين احتياط (بما فيها احتياطها اليدوي)، ثم ينتقل الترشيح إلى بقية المعلمات. الحد العام للإسناد الآلي ٣ حصص يوميًا، وتبقى شروط التفرغ والتعارض سارية.</p>
+      <p class="reserve-public-note">الضابط الآلي: من ١٥ إلى ٢٤ حصة احتياط مطلوبة يكون الحد الأعلى حصتين لكل معلمة. عند بلوغ ٢٥ حصة أو أكثر، يُسمح بثلاث حصص احتياط فقط للمعلمة التي لديها حصة أصلية واحدة في ذلك اليوم؛ وتبقى بقية المعلمات بحد حصتين. عند أقل من ١٥ حصة يبقى السقف السابق ثلاث حصص. تُعطى أولوية الترشيح للمعلمة صاحبة الحصة الأصلية الواحدة عند ١٥–٢٠ حصة حتى تبلغ حصتين، مع احتساب التكليفات اليدوية واستمرار ضوابط التعارض والتفرغ.</p>
       ${reserveWorkspaceSharingHTML()}
       <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
       ${hijriDateControl("reserveAdminDate",date)}
@@ -3305,7 +3309,7 @@ function bindDayAdmin(){
     button.disabled=true;button.textContent="جارٍ الحفظ...";msg.textContent="جارٍ الحفظ والاعتماد...";
     try{
       await ensureAdmin();
-      // Fail before any approval write if the new assignments exceed 3 in a day.
+      // Enforce the demand-dependent 2-duty cap and the 25+ one-original-class exception before any approval write.
       await loadAll();
       const fresh=assignmentsOn(date).filter(a=>a.manual!==true);
       if(fresh.length!==items.length||items.some(a=>!fresh.some(b=>String(a.id)===String(b.id))))
