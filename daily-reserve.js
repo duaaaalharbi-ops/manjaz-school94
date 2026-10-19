@@ -1514,6 +1514,7 @@ function dayAdminHTML(){
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
+      <p class="reserve-public-note">الحد الأعلى للإسناد الآلي: ٣ حصص احتياط للمعلمة في اليوم، بما فيها أي تكليفات يدوية مسجلة لها. عند بلوغ الحد تُستبعد من الترشيح ويُمنع اعتماد إسناد زائد.</p>
       ${reserveWorkspaceSharingHTML()}
       <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
       ${hijriDateControl("reserveAdminDate",date)}
