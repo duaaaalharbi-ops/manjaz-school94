@@ -145,6 +145,5 @@ addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once
 (()=>{if(document.querySelector('script[data-manjaz-daily-reserve="2.0"]'))return;const s=document.createElement("script");s.src="daily-reserve.js?v=48.8-repeat-class-allowed";s.dataset.manjazDailyReserve="2.0";document.head.appendChild(s)})();
 
 
-/* Isolated daily activation loader — 130 cards */
-(()=>{if(document.querySelector('script[data-manjaz-daily-activation="1.0"]'))return;const x=document.createElement("script");x.src="manjaz-daily-activation.js?v=4.7-inline-admin-logs";x.dataset.manjazDailyActivation="1.0";document.head.appendChild(x)})();
+/* Daily activation now loaded directly in index.html, in a predictable order. */
 
