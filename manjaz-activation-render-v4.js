@@ -115,21 +115,21 @@ function generateCanvas(section,m,variant){
   if(draw){t("البطاقة رقم "+m.id+" / ١٣٠",right,239,17,accent,true,span,1.3,true);}
   if(draw){t(headline,right,271,36,ink,true,span,1.1,true);}
   var attrs=[
-   ["اسم المعلمة المنفذة",m.teacher],
-   ["الفصل",m.klass],
-   ["الحصة","الحصة "+m.period],
-   ["التاريخ الهجري",m.weekday+"، "+m.day+" "+m.monthLabel+" "+m.year+" هـ"]
+   ["اسم المعلمة المنفذة",m.teacher||"—"],
+   ["الفصل",m.klass||"—"],
+   ["الحصة",m.period?"الحصة "+m.period:"—"],
+   ["التاريخ الهجري",m.day&&m.monthLabel&&m.year?m.weekday+"، "+m.day+" "+m.monthLabel+" "+m.year+" هـ":"—"]
   ];
   var g=8,w=(span-3*g)/4;
   attrs.forEach(function(v,i){
    var x=margin+(3-i)*(w+g);rect(x,329,w,94,"#f6fafb",line,draw);
-   if(draw){t(v[0],x+w-9,341,15,muted,true,w-17,1.2,true);t(v[1],x+w-9,374,17,ink,true,w-17,1.25,true);}
+   if(draw){t(v[0],x+w-9,341,15,muted,true,w-17,1.2,true);ctx.font=font(17,true);ctx.fillStyle=ink;ctx.textAlign="right";ctx.direction="rtl";ctx.fillText(v[1],x+w-9,376,w-19);}
   });
   rect(margin,440,span,108,pale,null,draw);
   if(draw){
    t("نواتج التعلم",right-13,449,18,accent,true,span-26,1.2,true);
    t(txt(section,".outcomes > div:first-child p"),right-13,476,18,ink,false,span-25,1.3,true);
-   t("الاستراتيجية: "+txt(section,".outcomes > div:nth-child(2) p"),right-13,514,15,muted,false,span-25,1.3,true);
+   ctx.font=font(15);ctx.fillStyle=muted;ctx.textAlign="right";ctx.direction="rtl";ctx.fillText("الاستراتيجية: "+txt(section,".outcomes > div:nth-child(2) p"),right-13,527,span-25);
   }
   rect(margin,562,span,47,pale,null,draw);
   if(draw)t("الزمن: ٤٥ دقيقة | التهيئة ٥ د | التطبيق ٢٥ د | المشاركة ١٠ د | التقويم ٥ د",right-12,573,17,accent,false,span-25,1.3,true);
