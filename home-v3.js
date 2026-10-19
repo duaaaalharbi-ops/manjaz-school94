@@ -146,7 +146,5 @@ addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once
 
 
 /* Isolated daily activation loader — 130 cards */
-(()=>{if(document.querySelector('script[data-manjaz-daily-activation="1.0"]'))return;const x=document.createElement("script");x.src="manjaz-daily-activation.js?v=3.0-card-database-csv";x.dataset.manjazDailyActivation="1.0";document.head.appendChild(x)})();
+(()=>{if(document.querySelector('script[data-manjaz-daily-activation="1.0"]'))return;const x=document.createElement("script");x.src="manjaz-daily-activation.js?v=4.0-db-original-canvas";x.dataset.manjazDailyActivation="1.0";document.head.appendChild(x)})();
 
-/* MANJAZ: original-card preview and export correction v3 */
-(()=>{if(document.querySelector('script[data-manjaz-activation-v3="1"]'))return;const s=document.createElement("script");s.src="manjaz-activation-v3.js?v=3.2-original-cards";s.dataset.manjazActivationV3="1";document.head.appendChild(s)})();
