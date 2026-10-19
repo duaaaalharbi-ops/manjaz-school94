@@ -217,6 +217,11 @@ function initStyle(){
  "#manjazActivation button{background:#0c6871;color:white;border:0;border-radius:9px;padding:11px 15px;font:700 13px Tahoma,Arial;cursor:pointer}"+
  "#manjazActivation button.secondary{background:#ecf3f4;color:#0b3047;border:1px solid #cddfe2}"+
  "#manjazActivation button:disabled{opacity:.6;cursor:wait}"+
+ "#manjazActivation .ma-verify-box{grid-column:1/-1}#manjazActivation .ma-check-dropdown{border:1px solid #a9bdc4;border-radius:8px;background:#fff}"+
+ "#manjazActivation .ma-check-dropdown summary{padding:12px;cursor:pointer;color:#1b4350;font-size:13px}"+
+ "#manjazActivation .ma-check-choices{padding:9px 13px;border-top:1px solid #e3eced;display:grid;gap:6px}"+
+ "#manjazActivation .ma-check-choices label{font-weight:500;display:flex;align-items:center;gap:8px;padding:5px;cursor:pointer;margin:0}"+
+ "#manjazActivation .ma-check-choices input{width:17px;height:17px;accent-color:#0b7975}"+
  "#manjazActivation .ma-selected{padding:12px;background:#f1f6f7;border-radius:9px;border-right:4px solid #0f8b8d;font-size:14px}"+
  "#manjazActivation .ma-message{font-size:13px;min-height:23px;margin-top:9px}"+
  "#manjazActivation iframe{width:100%;height:min(75vh,750px);border:1px solid #d1dfe3;border-radius:10px;background:white}"+
@@ -242,11 +247,12 @@ function render(){
  '<div><label for="ma-main">القسم الرئيسي</label><select id="ma-main"></select></div>'+
  '<div><label for="ma-sub">القسم الفرعي</label><select id="ma-sub"></select></div>'+
  '<div style="grid-column:1/-1"><label for="ma-card">عنوان البطاقة</label><select id="ma-card"></select></div>'+
+ '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
- '<div class="ma-actions"><button id="ma-open" type="button">معاينة البطاقة</button><button id="ma-print" type="button" class="secondary">طباعة / حفظ PDF</button><button id="ma-solution" type="button" class="secondary">الحل النموذجي</button><button id="ma-save" type="button">حفظ التنفيذ</button></div>'+
+ '<div class="ma-actions"><button id="ma-open" type="button">معاينة البطاقة</button><button id="ma-print" type="button" class="secondary">تصدير PDF</button><button id="ma-solution" type="button" class="secondary">الحل النموذجي</button><button id="ma-save" type="button">حفظ التنفيذ</button></div>'+
  '<div id="ma-message" class="ma-message" role="status" aria-live="polite"></div></section>'+
  '<section class="ma-panel" id="ma-preview" hidden><h3>معاينة بطاقة النشاط</h3><iframe id="ma-preview-frame" title="معاينة البطاقة الأصلية"></iframe></section>'+
- '<section class="ma-panel" id="ma-answer" hidden><h3>الحل النموذجي – للإدارة فقط</h3><div class="ma-answer" id="ma-answer-text"></div></section>'+
+ '<section class="ma-panel" id="ma-answer" hidden><h3>نموذج الإجابة</h3><div class="ma-answer" id="ma-answer-text"></div></section>'+
  '<section class="ma-panel"><h3>تقارير تفعيل الاحتياط اليومي</h3><p>استعراض سجل التنفيذ مخصص لصلاحية إدارة منجز.</p><div class="ma-actions"><button type="button" class="secondary" id="ma-load-reports">استعراض سجل التنفيذ</button><button type="button" class="secondary" id="ma-csv">تصدير Excel (CSV)</button><button type="button" class="secondary" id="ma-report-print">طباعة التقرير</button></div><div id="ma-report" hidden><div id="ma-report-body" class="ma-report-body"></div></div></section>';
  view.replaceChildren(root);
  var hj=initialHijri();
@@ -258,9 +264,10 @@ function render(){
  chooseMain();
  byId("ma-main").addEventListener("change",chooseSub);
  byId("ma-sub").addEventListener("change",chooseCard);
- byId("ma-card").addEventListener("change",currentCard);
+ byId("ma-card").addEventListener("change",cardChanged);
+ document.querySelectorAll(".ma-check-item").forEach(function(input){input.addEventListener("change",updateIndicatorLabel);});
  byId("ma-open").addEventListener("click",openPreview);
- byId("ma-print").addEventListener("click",printCard);
+ byId("ma-print").addEventListener("click",exportCard);
  byId("ma-save").addEventListener("click",saveExecution);
  byId("ma-solution").addEventListener("click",showAnswer);
  byId("ma-load-reports").addEventListener("click",reports);
