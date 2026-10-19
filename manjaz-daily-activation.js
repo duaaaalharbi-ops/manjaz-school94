@@ -6,7 +6,7 @@ var MONTHS=["محرم","صفر","ربيع الأول","ربيع الآخر","ج�
 var WEEKDAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس"];
 var isPage=function(){return location.hash==="#daily-activation";};
 var byId=function(x){return document.getElementById(x);};
-var names=[],classes=[],logData=[],busy=false;
+var names=[],classes=[],logData=[],busy=false,pdfObjectUrl=null;
 function safe(v){return String(v==null?"":v);}
 function uiMsg(s,bad){var el=byId("ma-message");if(el){el.textContent=s;el.style.color=bad?"#b42318":"#08716d";}}
 function optionList(el,arr,placeholder,current){
@@ -78,6 +78,7 @@ function updateIndicatorLabel(){
  byId("ma-preview").hidden=true;
 }
 function cardChanged(){
+ var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
  currentCard();
  byId("ma-preview").hidden=true;byId("ma-answer").hidden=true;
  document.querySelectorAll(".ma-check-item").forEach(function(x){x.checked=false;});
@@ -181,9 +182,16 @@ async function exportCard(){
   if(!pdf||!pdf.internal)throw Error("لم يكتمل إنشاء مستند PDF.");
   var pages=pdf.internal.getNumberOfPages();
   if(pages!==1)throw Error("حجم المحتوى يتجاوز صفحة A4 واحدة ("+pages+" صفحات).");
-  // PDF generated directly from one card: no browser URL or print timestamp.
-  pdf.save(filename);
-  uiMsg("تم إنشاء بطاقة PDF من صفحة A4 واحدة، بالتذييل الرسمي فقط.",false);
+  // A real, reusable Blob URL gives iPhone users an explicit tap-to-open fallback.
+  var fileBlob=pdf.output("blob");
+  if(!fileBlob||!fileBlob.size)throw Error("نتج ملف PDF فارغ.");
+  if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
+  pdfObjectUrl=URL.createObjectURL(fileBlob);
+  var link=byId("ma-pdf-download");
+  link.href=pdfObjectUrl;link.download=filename;link.hidden=false;
+  var mobileApple=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  if(!mobileApple){link.click();uiMsg("تم إنشاء بطاقة A4 واحدة. إذا لم يبدأ التنزيل، اضغطي «فتح / حفظ PDF».",false);}
+  else uiMsg("أُنشئ PDF من صفحة واحدة. اضغطي «فتح / حفظ PDF» لعرضه وحفظه على جهازك.",false);
  }catch(e){
   uiMsg("تعذر تصدير PDF: "+(e&&e.message?e.message:"حدث خطأ أثناء الإنشاء")+". يمكن إعادة المحاولة أو استخدام رابط المعاينة.",true);
  }finally{
@@ -252,6 +260,8 @@ function initStyle(){
  "#manjazActivation button{background:#0c6871;color:white;border:0;border-radius:9px;padding:11px 15px;font:700 13px Tahoma,Arial;cursor:pointer}"+
  "#manjazActivation button.secondary{background:#ecf3f4;color:#0b3047;border:1px solid #cddfe2}"+
  "#manjazActivation button:disabled{opacity:.6;cursor:wait}"+
+ "#manjazActivation .ma-direct-download{display:inline-block;background:#0c6871;color:#fff;border-radius:9px;padding:11px 15px;font:700 13px Tahoma,Arial;text-decoration:none}"+
+ "#manjazActivation .ma-direct-download[hidden]{display:none!important}"+
  "#manjazActivation .ma-verify-box{grid-column:1/-1}#manjazActivation .ma-check-dropdown{border:1px solid #a9bdc4;border-radius:8px;background:#fff}"+
  "#manjazActivation .ma-check-dropdown summary{padding:12px;cursor:pointer;color:#1b4350;font-size:13px}"+
  "#manjazActivation .ma-check-choices{padding:9px 13px;border-top:1px solid #e3eced;display:grid;gap:6px}"+
@@ -284,7 +294,7 @@ function render(){
  '<div style="grid-column:1/-1"><label for="ma-card">عنوان البطاقة</label><select id="ma-card"></select></div>'+
  '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
- '<div class="ma-actions"><button id="ma-open" type="button">معاينة البطاقة</button><button id="ma-print" type="button" class="secondary">تصدير PDF</button><button id="ma-solution" type="button" class="secondary">الحل النموذجي</button><button id="ma-save" type="button">حفظ التنفيذ</button></div>'+
+ '<div class="ma-actions"><button id="ma-open" type="button">معاينة البطاقة</button><button id="ma-print" type="button" class="secondary">تصدير PDF</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a><button id="ma-solution" type="button" class="secondary">الحل النموذجي</button><button id="ma-save" type="button">حفظ التنفيذ</button></div>'+
  '<div id="ma-message" class="ma-message" role="status" aria-live="polite"></div></section>'+
  '<section class="ma-panel" id="ma-preview" hidden><h3>معاينة بطاقة النشاط</h3><iframe id="ma-preview-frame" title="معاينة البطاقة الأصلية"></iframe></section>'+
  '<section class="ma-panel" id="ma-answer" hidden><h3>نموذج الإجابة</h3><div class="ma-answer" id="ma-answer-text"></div></section>'+
