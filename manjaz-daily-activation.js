@@ -344,10 +344,10 @@ async function logoutInlineAdmin(){
  uiMsg("تم تسجيل خروج الإدارة.",false);
 }
 async function saveEditedRecord(){
- if(!editingId)return;
+ if(!editingId||adminBusy)return;
  var v=values();if(!completeForm(v))return;
  if(!matchHijriWeekday(v)){uiMsg("اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى.",true);return;}
- var btn=byId("ma-save-edit");btn.disabled=true;
+ var btn=byId("ma-save-edit");btn.disabled=true;adminBusy=true;
  try{
   var token=await getVerifiedAdminToken();
   if(!token)throw Error("انتهت صلاحية الإدارة؛ سجّلي الدخول مجددًا.");
@@ -355,15 +355,17 @@ async function saveEditedRecord(){
   if(!r.ok)throw Error("تعذر حفظ تعديل السجل (HTTP "+r.status+").");
   var changed=await r.json();if(changed.length!==1)throw Error("تعذر التأكد من تحديث السجل.");
   finishEditing();lastSavedExecutionKey=null;
-  uiMsg("تم حفظ التعديلات في السجل نفسه دون إنشاء نسخة مكررة.",false);
   await reports();
+  clearFields();
+  uiMsg("تم حفظ التعديلات في السجل نفسه دون إنشاء نسخة مكررة.",false);
  }catch(e){uiMsg("فشل تعديل السجل: "+(e.message||e),true);}
- finally{btn.disabled=false;}
+ finally{btn.disabled=false;adminBusy=false;}
 }
 async function deleteRecord(id){
  var row=logData.find(function(x){return x.id===id;});if(!row)return;
  var name=row.teacher_name||"",title=row.card_title||"";
  if(!window.confirm("حذف سجل تنفيذ «"+title+"» للمنفذة «"+name+"»؟ لا يمكن التراجع عن الحذف."))return;
+ if(adminBusy)return;adminBusy=true;
  try{
   var token=await getVerifiedAdminToken();
   if(!token)throw Error("يجب الدخول بصلاحيات الإدارة أولًا.");
@@ -375,6 +377,7 @@ async function deleteRecord(id){
   renderReportRows();
   uiMsg("تم حذف سجل التنفيذ المحدد من قاعدة البيانات.",false);
  }catch(e){uiMsg("فشل الحذف: "+(e.message||e),true);}
+ finally{adminBusy=false;}
 }
 function renderReportRows(){
  var target=byId("ma-report-body");if(!target)return;
@@ -503,7 +506,7 @@ function render(){
  byId("ma-print").addEventListener("click",exportCard);
  byId("ma-clear").addEventListener("click",clearFields);
  byId("ma-save-edit").addEventListener("click",saveEditedRecord);
- byId("ma-cancel-edit").addEventListener("click",function(){finishEditing();uiMsg("تم إلغاء تعديل السجل دون حفظ.",false);});
+ byId("ma-cancel-edit").addEventListener("click",function(){clearFields();uiMsg("تم إلغاء تعديل السجل دون حفظ.",false);});
  byId("ma-admin-entry").addEventListener("click",enterAdmin);
  byId("ma-admin-sign-in").addEventListener("click",signInInlineAdmin);
  byId("ma-admin-pass").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();signInInlineAdmin();}});
