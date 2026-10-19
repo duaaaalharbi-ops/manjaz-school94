@@ -31,6 +31,9 @@ const V6_SOURCE="v6-1448-04-27";
 const COUNT_START="2026-10-18";
 const EMERGENCY_DAILY_DEMAND=20;
 const MAX_AUTO_RESERVE_PER_DAY=3; // Applies to automatic assignment, counting all existing daily reserve duties.
+const ONE_CLASS_RESERVE_MIN_DEMAND=15;
+const ONE_CLASS_RESERVE_MAX_DEMAND=20;
+const ONE_CLASS_AUTO_RESERVE_QUOTA=2;
 const CONDITIONAL_EXCLUSION_MIN_DEMAND=13; // More than 12 absent periods on the same school day
 const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البالدي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
 const ADVANCED_RANK=new Set(["دعاء الحربي","سندس الغامدي","عايدة الصاعدي","ريم القحطاني","عوالي السبيعي","بدرية الحربي","حنان المجنوني"]);
@@ -863,11 +866,23 @@ function reserveDailyAssignedCount(teacherId,date,exceptAssignmentId=""){
   return assignmentsOn(date).filter(a=>String(a.id)!==String(exceptAssignmentId)&&
     String(a.assignedTeacherId)===String(teacherId)).length;
 }
+function reserveOneClassPriorityActive(date){
+  const demand=dailyDemand(date);
+  return demand>=ONE_CLASS_RESERVE_MIN_DEMAND&&demand<=ONE_CLASS_RESERVE_MAX_DEMAND;
+}
+function autoReserveDailyLimit(teacherId,date){
+  // On busy 15–20-duty days, teachers with only one original class get
+  // two reserve duties before nomination moves to other daily schedules.
+  if(reserveOneClassPriorityActive(date)&&dailyOriginalCount(teacherId,date)===1)
+    return ONE_CLASS_AUTO_RESERVE_QUOTA;
+  return MAX_AUTO_RESERVE_PER_DAY;
+}
 function assertAutoReserveDailyCapacity(teacherId,date,exceptAssignmentId=""){
   const assigned=reserveDailyAssignedCount(teacherId,date,exceptAssignmentId);
-  if(assigned>=MAX_AUTO_RESERVE_PER_DAY){
+  const limit=autoReserveDailyLimit(teacherId,date);
+  if(assigned>=limit){
     const name=teacherOf(teacherId)?.name||"المحددة";
-    throw new Error(`لا يمكن إسناد أكثر من ${MAX_AUTO_RESERVE_PER_DAY} حصص احتياط للمعلمة «${name}» في اليوم الواحد. لديها بالفعل ${assigned} حصص.`);
+    throw new Error(`لا يمكن إسناد أكثر من ${limit} حصص احتياط للمعلمة «${name}» في اليوم المحدد. لديها بالفعل ${assigned} حصص.`);
   }
 }
 function assertAutoReservePlannedCapacity(date,selected){
@@ -882,9 +897,10 @@ function assertAutoReservePlannedCapacity(date,selected){
     const id=String(entry.teacherId||"");
     if(!id)continue;
     const next=(counts.get(id)||0)+1;
-    if(next>MAX_AUTO_RESERVE_PER_DAY){
+    const limit=autoReserveDailyLimit(id,date);
+    if(next>limit){
       const name=teacherOf(id)?.name||"المحددة";
-      throw new Error(`لا يمكن اعتماد أكثر من ${MAX_AUTO_RESERVE_PER_DAY} حصص احتياط للمعلمة «${name}» في اليوم الواحد (المجموع: ${next}). غيّري المعلمة في الحصص الزائدة.`);
+      throw new Error(`لا يمكن اعتماد أكثر من ${limit} حصص احتياط للمعلمة «${name}» في اليوم الواحد (المجموع: ${next}). غيّري المعلمة في الحصص الزائدة.`);
     }
     counts.set(id,next);
   }
@@ -909,6 +925,7 @@ function consecutivePenalty(teacherId,date,period){
 function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts={}){
   const fullCadre=state.autoAllNames!==false;
   const counts=assignmentCounts(date),week=weekRange(date);
+  const oneClassPriority=reserveOneClassPriorityActive(date);
   const targetClass=clean(opts.className||"");
   const usedPrimary=opts.usedPrimary||new Set();
   const restrictedNames=new Set(["عبير المولد","عايدة الصاعدي","نجوى الغامدي","عواطف الحربي","لمياء البلادي","لمياء البالدي","نورة العنزي","أفراح الجدعاني","بدرية الحربي","بدريه الحربي"]);
@@ -926,7 +943,8 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
     if(occupiedByReserve(t.id,date,period,exceptAssignmentId))continue;
     if(targetClass&&sameClassReserveToday(t.id,date,targetClass,exceptAssignmentId))continue;
     const currentDraftUse=reserveDailyAssignedCount(t.id,date,exceptAssignmentId);
-    if(currentDraftUse>=MAX_AUTO_RESERVE_PER_DAY)continue;
+    const originalToday=dailyOriginalCount(t.id,date);
+    if(currentDraftUse>=autoReserveDailyLimit(t.id,date))continue;
     const weekly=state.assignments.filter(a=>a.status!=="ملغي"&&String(a.id)!==String(exceptAssignmentId)&&
        String(a.assignedTeacherId)===String(t.id)&&a.date>=week.start&&a.date<=date).length;
     if(weekly>=20)continue;
@@ -935,10 +953,12 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
     const c=counts.get(String(t.id))||{week:0,term:0,daily:0};
     rank.push({teacherId:String(t.id),name:t.name||"",workload:Number(t.workload||0),
       week:weekly,term:Number(c.term||0),daily:currentDraftUse,absenceCount,
+      originalToday,oneClassPriority:oneClassPriority&&originalToday===1,
       effectiveLoad:Number(t.workload||0)+weekly,supportStaff:support,
       diversityUsed:usedPrimary.has(String(t.id))});
   }
   rank.sort((x,y)=>
+    Number(y.oneClassPriority)-Number(x.oneClassPriority)||
     Number(x.supportStaff)-Number(y.supportStaff)||
     x.workload-y.workload||
     Number(x.week>0)-Number(y.week>0)||
@@ -1514,7 +1534,7 @@ function dayAdminHTML(){
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
-      <p class="reserve-public-note">الحد الأعلى للإسناد الآلي: ٣ حصص احتياط للمعلمة في اليوم، بما فيها أي تكليفات يدوية مسجلة لها. عند بلوغ الحد تُستبعد من الترشيح ويُمنع اعتماد إسناد زائد.</p>
+      <p class="reserve-public-note">الضابط الآلي: عند وجود ١٥–٢٠ حصة احتياط مطلوبة، تُعطى الأولوية للمعلمة التي لديها حصة أصلية واحدة في ذلك اليوم حتى تبلغ حصتين احتياط (بما فيها احتياطها اليدوي)، ثم ينتقل الترشيح إلى بقية المعلمات. الحد العام للإسناد الآلي ٣ حصص يوميًا، وتبقى شروط التفرغ والتعارض سارية.</p>
       ${reserveWorkspaceSharingHTML()}
       <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
       ${hijriDateControl("reserveAdminDate",date)}
@@ -1551,7 +1571,7 @@ function manualCandidateOptions(a){
   // The original full-directory override remains available behind an explicit checkbox.
   const all=(state.autoAllNames!==false?manualAssigneeDirectory():
     (a.candidates||[]).slice(0,1).map(c=>teacherOf(c.teacherId)).filter(Boolean))
-    .filter(t=>reserveDailyAssignedCount(t.id,a.date,a.id)<MAX_AUTO_RESERVE_PER_DAY)
+    .filter(t=>reserveDailyAssignedCount(t.id,a.date,a.id)<autoReserveDailyLimit(t.id,a.date))
     .map(t=>({teacherId:String(t.id),name:t.name}));
   if(a.assignedTeacherId&&!all.some(t=>String(t.teacherId)===String(a.assignedTeacherId))){
     all.unshift({teacherId:String(a.assignedTeacherId),name:a.assignedTeacherName||"المكلفة سابقًا"});
