@@ -90,7 +90,8 @@ function values(){
  return {c:c,teacher:byId("ma-teacher").value,klass:byId("ma-class").value,
  weekday:byId("ma-weekday").value,day:Number(byId("ma-hday").value),
  month:Number(byId("ma-hmonth").value),year:Number(byId("ma-hyear").value),
- period:Number(byId("ma-period").value),indicators:selectedIndicators()};
+ period:Number(byId("ma-period").value),indicators:selectedIndicators(),
+ outcome:byId("ma-outcome")?byId("ma-outcome").value.trim():""};
 }
 function matchHijriWeekday(v){
  try{
@@ -104,107 +105,45 @@ function matchHijriWeekday(v){
  return false;
 }
 function check(v){return v&&v.teacher&&v.klass&&v.weekday&&v.day&&v.month&&v.year&&v.period;}
-function cardUrl(v){
- var p=new URLSearchParams({card:String(v.c[0]),v:"4-export-mobile-fix",
- date:v.weekday+" | "+v.day+" "+MONTHS[v.month-1]+" "+v.year+" هـ",
- teacher:v.teacher,"class":v.klass,period:"الحصة "+v.period,checks:v.indicators.join("|")});
- return "manjaz-activation-cards.html?"+p.toString();
+function meta(v){
+ return {teacher:v.teacher,klass:v.klass,weekday:v.weekday,day:v.day,
+ monthLabel:MONTHS[v.month-1]||"",year:v.year,period:v.period,
+ indicators:v.indicators,outcome:v.outcome};
 }
-function completeForm(v){
- if(!check(v)){uiMsg("أكملي بيانات التنفيذ من القوائم المنسدلة أولًا.",true);return false;}
- 
- return true;
-}
-function openPreview(){
- var v=values();if(!completeForm(v))return;
- var wrap=byId("ma-preview"),frame=byId("ma-preview-frame");
- wrap.hidden=false;frame.src=cardUrl(v);
- uiMsg("معاينة البطاقة بالبيانات والمؤشرات المختارة، جاهزة للتصدير.",false);
- wrap.scrollIntoView({behavior:"smooth",block:"start"});
-}
-/* Local, bundled exporter avoids two remote CDN dependencies inside the preview. */
-function loadLocalPdfEngine(win){
- if(typeof win.html2pdf==="function")return Promise.resolve();
- if(win.__activationPdfEnginePromise)return win.__activationPdfEnginePromise;
- win.__activationPdfEnginePromise=new Promise(function(resolve,reject){
-  var script=win.document.createElement("script"),done=false;
-  var timer=setTimeout(function(){if(!done){done=true;reject(new Error("انتهت مهلة تحميل محرك PDF المحلي."));}},16000);
-  script.src="vendor/html2pdf.bundle.min.js?v=0.14.0";
-  script.async=true;
-  script.onload=function(){if(done)return;done=true;clearTimeout(timer);
-   typeof win.html2pdf==="function"?resolve():reject(new Error("تعذر تهيئة محرك PDF المحلي."));};
-  script.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("لم يُحمّل محرك PDF من ملفات منجز."));};
-  win.document.head.appendChild(script);
- }).catch(function(err){win.__activationPdfEnginePromise=null;throw err;});
- return win.__activationPdfEnginePromise;
-}
-function frameLoaded(frame,url){
- return new Promise(function(resolve,reject){
-  var finished=false;
-  var timer=setTimeout(function(){finish(new Error("لم تكتمل معاينة البطاقة قبل التصدير."));},16000);
-  function finish(error){if(finished)return;finished=true;clearTimeout(timer);frame.removeEventListener("load",loaded);frame.removeEventListener("error",broken);error?reject(error):resolve();}
-  function loaded(){try{
-   var documentFrame=frame.contentDocument;
-   if(documentFrame&&documentFrame.querySelectorAll(".session").length===1&&documentFrame.querySelector(".session footer"))finish();
-   else finish(new Error("تعذر تجهيز البطاقة الفردية أو تذييلها الرسمي."));
-  }catch(e){finish(new Error("تعذر الوصول إلى محتوى البطاقة."));}}
-  function broken(){finish(new Error("تعذر فتح ملف بطاقة الاحتياط."));}
-  frame.addEventListener("load",loaded);frame.addEventListener("error",broken);
-  frame.src=url;
- });
-}
-async function exportCard(){
- var v=values();if(!completeForm(v))return;
- var button=byId("ma-print");if(button.disabled)return;
- button.disabled=true;var oldLabel=button.textContent;button.textContent="جارٍ إنشاء ملف PDF…";
- var frame=byId("ma-preview-frame"),node=null,oldHeight="",oldBreak="";
+async function openPreview(){
+ var v=values();if(!v)return;
  try{
-  byId("ma-preview").hidden=false;
-  await frameLoaded(frame,cardUrl(v));
-  var frameWindow=frame.contentWindow, doc=frame.contentDocument;
-  node=doc.querySelector(".session");
-  if(!node||doc.querySelectorAll(".session").length!==1||!node.querySelector("footer"))throw Error("ملف البطاقة غير مكتمل.");
-  await loadLocalPdfEngine(frameWindow);
-  if(doc.fonts&&doc.fonts.ready)await doc.fonts.ready;
-  oldHeight=node.style.height;oldBreak=node.style.breakAfter;
-  // Reserve a few millimeters for renderer rounding; the official footer stays inside the card.
-  node.style.height="294mm";node.style.breakAfter="auto";
-  var filename="بطاقة_تفعيل_الاحتياط_"+String(v.c[0]).padStart(3,"0")+".pdf";
-  var worker=frameWindow.html2pdf().set({
-   filename:filename,margin:0,
-   image:{type:"jpeg",quality:0.97},
-   html2canvas:{scale:1.5,useCORS:true,backgroundColor:"#ffffff",logging:false,scrollX:0,scrollY:0},
-   jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},
-   pagebreak:{mode:[]},
-   enableLinks:false
-  }).from(node).toPdf();
-  var pdf=await worker.get("pdf");
-  if(!pdf||!pdf.internal)throw Error("لم يكتمل إنشاء مستند PDF.");
-  var pages=pdf.internal.getNumberOfPages();
-  if(pages!==1)throw Error("حجم المحتوى يتجاوز صفحة A4 واحدة ("+pages+" صفحات).");
-  // A real, reusable Blob URL gives iPhone users an explicit tap-to-open fallback.
-  var fileBlob=pdf.output("blob");
-  if(!fileBlob||!fileBlob.size)throw Error("نتج ملف PDF فارغ.");
-  if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
-  pdfObjectUrl=URL.createObjectURL(fileBlob);
-  var link=byId("ma-pdf-download");
-  link.href=pdfObjectUrl;link.download=filename;link.hidden=false;
-  var mobileApple=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-  if(!mobileApple){link.click();uiMsg("تم إنشاء بطاقة A4 واحدة. إذا لم يبدأ التنزيل، اضغطي «فتح / حفظ PDF».",false);}
-  else uiMsg("أُنشئ PDF من صفحة واحدة. اضغطي «فتح / حفظ PDF» لعرضه وحفظه على جهازك.",false);
- }catch(e){
-  uiMsg("تعذر تصدير PDF: "+(e&&e.message?e.message:"حدث خطأ أثناء الإنشاء")+". يمكن إعادة المحاولة أو استخدام رابط المعاينة.",true);
- }finally{
-  if(node){node.style.height=oldHeight;node.style.breakAfter=oldBreak;}
-  button.disabled=false;button.textContent=oldLabel;
- }
+  var panel=byId("ma-preview");panel.hidden=false;
+  await window.ManjazActivityCardV4.show(byId("ma-preview-host"),v.c[0],"activity",meta(v));
+  uiMsg("تم فتح البطاقة الأصلية من قاعدة البيانات.",false);
+  panel.scrollIntoView({behavior:"smooth",block:"start"});
+ }catch(e){uiMsg("تعذر عرض المعاينة: "+e.message,true);}
 }
+async function exportVersion(variant){
+ var v=values();if(!v)return;
+ if(variant==="activity"&&!completeForm(v))return;
+ var btn=byId(variant==="solved"?"ma-export-solved":"ma-print");
+ if(btn.disabled)return;
+ btn.disabled=true;var old=btn.textContent;btn.textContent="جارٍ تجهيز PDF…";
+ try{
+  var result=await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v));
+  if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
+  pdfObjectUrl=URL.createObjectURL(result.blob);
+  var link=byId("ma-pdf-download");link.href=pdfObjectUrl;link.download=result.filename;link.hidden=false;
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  if(!ios)link.click();
+  uiMsg("تم تجهيز ملف PDF عربي من صفحة A4 واحدة. افتحي «فتح / حفظ PDF» لتنزيله.",false);
+ }catch(e){uiMsg("تعذر تصدير PDF: "+(e.message||e),true);}
+ finally{btn.disabled=false;btn.textContent=old;}
+}
+async function exportCard(){await exportVersion("activity");}
+async function exportSolved(){await exportVersion("solved");}
 
 async function saveExecution(){
  var v=values();if(!completeForm(v))return;
  if(!matchHijriWeekday(v)){uiMsg("اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى؛ راجعي الاختيار.",true);return;}
  if(busy)return;busy=true;var b=byId("ma-save");b.disabled=true;
- var row={teacher_name:v.teacher,class_name:v.klass,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators};
+ var row={teacher_name:v.teacher,class_name:v.klass,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators,outcome_description:v.outcome};
  try{
   var r=await fetch(API+"/rest/v1/manjaz_activation_logs",{method:"POST",headers:Object.assign(headers(),{"Prefer":"return=minimal"}),body:JSON.stringify(row)});
   if(!r.ok)throw Error("HTTP "+r.status+" "+(await r.text()).slice(0,120));
@@ -213,15 +152,13 @@ async function saveExecution(){
  finally{busy=false;b.disabled=false;}
 }
 async function showAnswer(){
- var c=currentCard();if(!c){uiMsg("اختاري بطاقة النشاط أولًا.",true);return;}
+ var v=values();if(!v)return;
  try{
-  var url=API+"/rest/v1/manjaz_activation_answers?card_id=eq."+c[0]+"&select=answer&limit=1";
-  var r=await fetch(url,{headers:headers(),cache:"no-store"});
-  if(!r.ok)throw Error("تعذر جلب نموذج الإجابة ("+r.status+")");
-  var a=await r.json();if(!a.length)throw Error("لا توجد إجابة نموذجية لهذه البطاقة.");
-  byId("ma-answer-text").textContent=a[0].answer;byId("ma-answer").hidden=false;
-  uiMsg("نموذج الإجابة متاح لجميع المستخدمين.",false);
- }catch(e){uiMsg(e.message,true);}
+  var panel=byId("ma-answer");panel.hidden=false;
+  await window.ManjazActivityCardV4.show(byId("ma-answer-host"),v.c[0],"solved",meta(v));
+  uiMsg("تم فتح بطاقة الحل النموذجي الأصلية من قاعدة البيانات.",false);
+  panel.scrollIntoView({behavior:"smooth",block:"start"});
+ }catch(e){uiMsg("تعذر تحميل بطاقة الحل النموذجي: "+e.message,true);}
 }
 function downloadCsv(rows){
  var heads=["تاريخ الحفظ","المعلمة","الفصل","اليوم","التاريخ الهجري","الحصة","رقم البطاقة","القسم الرئيسي","القسم الفرعي","عنوان البطاقة","مؤشرات التحقق","وصف نواتج التنفيذ"];
@@ -269,7 +206,8 @@ function initStyle(){
  "#manjazActivation .ma-check-choices input{width:17px;height:17px;accent-color:#0b7975}"+
  "#manjazActivation .ma-selected{padding:12px;background:#f1f6f7;border-radius:9px;border-right:4px solid #0f8b8d;font-size:14px}"+
  "#manjazActivation .ma-message{font-size:13px;min-height:23px;margin-top:9px}"+
- "#manjazActivation iframe{width:100%;height:min(75vh,750px);border:1px solid #d1dfe3;border-radius:10px;background:white}"+
+ "#manjazActivation .ma-card-host{width:100%;min-height:30px;overflow:hidden;background:#f2f6f7;border:1px solid #d1dfe3;border-radius:10px;padding:5px}"+
+ "#manjazActivation textarea{display:block;width:100%;min-height:86px;padding:12px;border:1px solid #a9bdc4;border-radius:9px;resize:vertical;font:inherit;line-height:1.8;color:#153b47;background:#fff}"+
  "#manjazActivation .ma-answer{background:#fff6f5;border:1px solid #e8bfbc;border-radius:11px;padding:14px;color:#8b2941;white-space:pre-line;font-size:14px;line-height:1.9}"+
  "#manjazActivation .ma-report-body{max-height:440px;overflow:auto}#manjazActivation table{border-collapse:collapse;width:100%;font-size:12px}#manjazActivation td,#manjazActivation th{border:1px solid #d7e1e4;padding:7px;text-align:right}"+
  "@media(max-width:640px){#manjazActivation .ma-grid{grid-template-columns:1fr}#manjazActivation .ma-hero{padding:17px}}";
@@ -293,11 +231,12 @@ function render(){
  '<div><label for="ma-sub">القسم الفرعي</label><select id="ma-sub"></select></div>'+
  '<div style="grid-column:1/-1"><label for="ma-card">عنوان البطاقة</label><select id="ma-card"></select></div>'+
  '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
+ '<div class="ma-verify-box"><label for="ma-outcome">مساحة الإنجاز – وصف نواتج الإنجاز (اختياري)</label><textarea id="ma-outcome" maxlength="600" rows="3" placeholder="يمكن كتابة وصف مختصر للنواتج، أو ترك الحقل فارغًا"></textarea></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
  '<div class="ma-actions"><button id="ma-open" type="button">معاينة البطاقة</button><button id="ma-print" type="button" class="secondary">تصدير PDF</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a><button id="ma-solution" type="button" class="secondary">الحل النموذجي</button><button id="ma-save" type="button">حفظ التنفيذ</button></div>'+
  '<div id="ma-message" class="ma-message" role="status" aria-live="polite"></div></section>'+
- '<section class="ma-panel" id="ma-preview" hidden><h3>معاينة بطاقة النشاط</h3><iframe id="ma-preview-frame" title="معاينة البطاقة الأصلية"></iframe></section>'+
- '<section class="ma-panel" id="ma-answer" hidden><h3>نموذج الإجابة</h3><div class="ma-answer" id="ma-answer-text"></div></section>'+
+ '<section class="ma-panel" id="ma-preview" hidden><h3>معاينة بطاقة النشاط</h3><div id="ma-preview-host" class="ma-card-host" role="region" aria-label="معاينة النشاط"></div></section>'+
+ '<section class="ma-panel" id="ma-answer" hidden><h3>نموذج الإجابة – البطاقة المحلولة الأصلية</h3><div id="ma-answer-host" class="ma-card-host" role="region" aria-label="بطاقة الإجابة النموذجية"></div><div class="ma-actions"><button type="button" id="ma-export-solved" class="secondary">تصدير بطاقة الحل PDF</button></div></section>'+
  '<section class="ma-panel"><h3>تقارير تفعيل الاحتياط اليومي</h3><p>استعراض سجل التنفيذ مخصص لصلاحية إدارة منجز.</p><div class="ma-actions"><button type="button" class="secondary" id="ma-load-reports">استعراض سجل التنفيذ</button><button type="button" class="secondary" id="ma-csv">تصدير Excel (CSV)</button><button type="button" class="secondary" id="ma-report-print">طباعة التقرير</button></div><div id="ma-report" hidden><div id="ma-report-body" class="ma-report-body"></div></div></section>';
  view.replaceChildren(root);
  var hj=initialHijri();
@@ -315,6 +254,7 @@ function render(){
  byId("ma-print").addEventListener("click",exportCard);
  byId("ma-save").addEventListener("click",saveExecution);
  byId("ma-solution").addEventListener("click",showAnswer);
+ byId("ma-export-solved").addEventListener("click",exportSolved);
  byId("ma-load-reports").addEventListener("click",reports);
  byId("ma-csv").addEventListener("click",function(){if(!logData.length){uiMsg("حمّلي التقرير الإداري أولًا.",true);return;}downloadCsv(logData);});
  byId("ma-report-print").addEventListener("click",function(){if(!logData.length){uiMsg("حمّلي التقرير الإداري أولًا.",true);return;}var w=window.open("","_blank");if(!w){uiMsg("اسمحي بفتح نافذة الطباعة.",true);return;}w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>تقرير التفعيل</title></head><body><h2>تقرير تفعيل الاحتياط اليومي</h2>'+byId("ma-report-body").innerHTML+'</body></html>');w.document.close();w.print();});
