@@ -1,4 +1,4 @@
-/* Manjaz Daily Activation | 130 original lesson cards | 2026-10-19 */
+/* Manjaz Daily Activation | two PDF exports, original A4 templates | 2026-10-19 */
 (function(){"use strict";
 if(window.manjazDailyActivationLoaded)return;window.manjazDailyActivationLoaded=true;
 var CATALOG=[[1,"الفهم القرائي","استخراج الفكرة والمعلومات","المبادرة الصغيرة"],[2,"الفهم القرائي","استخراج الفكرة والمعلومات","الماء مسؤولية مشتركة"],[3,"الفهم القرائي","استخراج الفكرة والمعلومات","ساعة بلا هاتف"],[4,"الفهم القرائي","استخراج الفكرة والمعلومات","التعلم من التجربة"],[5,"الفهم القرائي","استخراج الفكرة والمعلومات","حكاية المكتبة المتنقلة"],[6,"الفهم القرائي","استخراج الفكرة والمعلومات","قرار شراء واعٍ"],[7,"الفهم القرائي","استخراج الفكرة والمعلومات","الرياضة خطوة يومية"],[8,"الفهم القرائي","استخراج الفكرة والمعلومات","الطاقة في المدرسة"],[9,"الفهم القرائي","استخراج الفكرة والمعلومات","صديقة جديدة"],[10,"الفهم القرائي","استخراج الفكرة والمعلومات","خبر يحتاج تحققًا"],[11,"الفهم القرائي","الاستنتاج والتقييم والنقد","التطوع والأثر"],[12,"الفهم القرائي","الاستنتاج والتقييم والنقد","التعلم المتباعد"],[13,"الفهم القرائي","الاستنتاج والتقييم والنقد","تجربة علمية منصفة"],[14,"الفهم القرائي","الاستنتاج والتقييم والنقد","التواصل وقت الخلاف"],[15,"الفهم القرائي","الاستنتاج والتقييم والنقد","النقل المستدام"],[16,"الفهم القرائي","الاستنتاج والتقييم والنقد","الذكاء الاصطناعي أداة"],[17,"الفهم القرائي","الاستنتاج والتقييم والنقد","حين تتغير الخطة"],[18,"الفهم القرائي","الاستنتاج والتقييم والنقد","قراءة رسم بياني"],[19,"الفهم القرائي","الاستنتاج والتقييم والنقد","إعلان جذاب أم دليل؟"],[20,"الفهم القرائي","الاستنتاج والتقييم والنقد","نجاح له أكثر من مؤشر"],[21,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","القيمة المكانية"],[22,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","التقدير قبل الحساب"],[23,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","عمليات بترتيب صحيح"],[24,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","مضاعفات وقواسم"],[25,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","تبسيط الكسور"],[26,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","جمع كسور مختلفة"],[27,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","العدد الكسري والعشري"],[28,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","العمليات على العشريات"],[29,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","الأعداد السالبة"],[30,"المهارات الكمية الأساسية","الأعداد والعمليات والكسور","المعدل الحسابي"],[31,"المهارات الكمية الأساسية","النسب والقياس والبيانات","النسبة المئوية عمليًا"],[32,"المهارات الكمية الأساسية","النسب والقياس والبيانات","التناسب الطردي"],[33,"المهارات الكمية الأساسية","النسب والقياس والبيانات","النسبة والمعدل"],[34,"المهارات الكمية الأساسية","النسب والقياس والبيانات","التحويل المتري"],[35,"المهارات الكمية الأساسية","النسب والقياس والبيانات","المحيط والمساحة"],[36,"المهارات الكمية الأساسية","النسب والقياس والبيانات","الزمن والمسافة"],[37,"المهارات الكمية الأساسية","النسب والقياس والبيانات","قراءة جدول بيانات"],[38,"المهارات الكمية الأساسية","النسب والقياس والبيانات","المتوسط والوسيط والمنوال"],[39,"المهارات الكمية الأساسية","النسب والقياس والبيانات","الاحتمال البسيط"],[40,"المهارات الكمية الأساسية","النسب والقياس والبيانات","ميزانية مصغرة"],[41,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","رأي أم حقيقة؟"],[42,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","افتراضي أم دليل؟"],[43,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","السبب والارتباط"],[44,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","اكتشفي التحيز"],[45,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","الحجة والأدلة"],[46,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","ترتيب الأولويات"],[47,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","قلب المشكلة"],[48,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","فكري في العواقب"],[49,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","كشف التعميم"],[50,"التفكير الناقد وحل المشكلات","التحليل والاستدلال","حل بخيارات"],[51,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","كلمة مرور قوية"],[52,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","رابط قبل النقر"],[53,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","بصمة رقمية"],[54,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","خبر أم إشاعة؟"],[55,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","مصدر يمكن الوثوق به"],[56,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","الخصوصية في التطبيقات"],[57,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","سلوك الحوار الرقمي"],[58,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","حق النشر والإسناد"],[59,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","الذكاء الاصطناعي بوعي"],[60,"المهارات الرقمية والمواطنة","السلامة والوعي المعلوماتي","إدارة وقت الشاشة"],[61,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","هدف قابل للقياس"],[62,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","خطة حصة مذاكرة"],[63,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","الاستدعاء النشط"],[64,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","المراجعة المتباعدة"],[65,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","فن تدوين الملاحظات"],[66,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","التعلم من الخطأ"],[67,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","مواجهة التسويف"],[68,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","إدارة ضغط المهام"],[69,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","سؤال بحث جيد"],[70,"التعلم الذاتي وإدارة الوقت","استراتيجيات الدراسة","تقييم تقدمي"],[71,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","الاستماع الفعال"],[72,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","اختلاف بلا خصام"],[73,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","رسالة واضحة"],[74,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","تقسيم الأدوار"],[75,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","إدارة نقاش قصير"],[76,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","تغذية راجعة بناءة"],[77,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","التفاوض على حل"],[78,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","عرض في ٦٠ ثانية"],[79,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","التعاطف العملي"],[80,"التواصل والقيادة والعمل الجماعي","الحوار والمسؤولية","قيادة موقف طارئ بسيط"],[81,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","استخدامات غير مألوفة"],[82,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","تصميم حافظة أوراق"],[83,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","فرضية قابلة للاختبار"],[84,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","مادة تحت الاختبار"],[85,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","فكرة لخدمة المدرسة"],[86,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","تفسير ظاهرة يومية"],[87,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","تحدي برج الورق"],[88,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","إعادة توظيف بذكاء"],[89,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","خريطة حلول مبتكرة"],[90,"الإبداع والعلوم والتصميم","الابتكار والاستقصاء","عرض ابتكار في دقيقة"],[91,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","احتياج أم رغبة؟"],[92,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","قرار بثلاثة معايير"],[93,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","العادات الصغيرة"],[94,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","المرونة عند التغيير"],[95,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","مسارات مهنية"],[96,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","سيرة مهارية قصيرة"],[97,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","مقابلة تعارف"],[98,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","مبادرة تطوعية قابلة للقياس"],[99,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","السلامة أولًا"],[100,"المهارات الحياتية والمهنية","الاختيارات والمسؤولية","رسالة للمستقبل"],[101,"حياة في رحاب القرآن","التسميع والتدبر","تسميع سورة الفاتحة"],[102,"حياة في رحاب القرآن","التسميع والتدبر","سورة الإخلاص: أسمّع وأفهم"],[103,"حياة في رحاب القرآن","التسميع والتدبر","تسميع المعوذتين"],[104,"حياة في رحاب القرآن","التسميع والتدبر","العصر والكوثر: حفظ وقيمة"],[105,"حياة في رحاب القرآن","خلق من القرآن","الصدق يبني الثقة"],[106,"حياة في رحاب القرآن","خلق من القرآن","بر الوالدين في المواقف اليومية"],[107,"حياة في رحاب القرآن","خلق من القرآن","احترام الآخرين بلا سخرية"],[108,"حياة في رحاب القرآن","قصة آية","أصحاب الكهف: موقف وثبات"],[109,"حياة في رحاب القرآن","قصة آية","النملة: تنبيه مسؤول"],[110,"حياة في رحاب القرآن","قصة آية","موسى عليه السلام: مبادرة وأمانة"],[111,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","نبرة الصوت تغيّر المعنى"],[112,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","إشارات الجسد في الحوار"],[113,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","سؤال يفتح الحوار"],[114,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","لخّصي الرسالة في ١٥ كلمة"],[115,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","الإصغاء بلا مقاطعة"],[116,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","رسالة كتابية واضحة"],[117,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","الرفض المهذب الواضح"],[118,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","رسالة «أنا» بدل اللوم"],[119,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","طلب التوضيح قبل الحكم"],[120,"مهارات التواصل الفعّال","تواصل لفظي وغير لفظي","التواصل المسؤول في مجموعة رقمية"],[121,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","بوصلة الميول المهنية"],[122,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","مهارات تنتقل بين المهن"],[123,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","أي بيئة عمل تناسب المهمة؟"],[124,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","من التخصص إلى الفرص"],[125,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","مهنة تحل مشكلة"],[126,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","دليل على مهارتي"],[127,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","قيمي المهنية"],[128,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","مقابلة استكشاف مهني"],[129,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","مهنة تتغير مع التقنية"],[130,"التوجيه المهني – مسار المستقبل","الاستكشاف والتخطيط المهني","خارطة ٩٠ يومًا للمستقبل"]], API="https://idkjuqfxcweqekdkcktk.supabase.co", KEY="sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
@@ -75,13 +75,12 @@ function selectedIndicators(){return [...document.querySelectorAll(".ma-check-it
 function updateIndicatorLabel(){
  var items=selectedIndicators(),summary=byId("ma-check-summary");
  if(summary)summary.textContent=items.length?"المؤشرات المختارة ("+items.length+"/٣): "+items.join("، "):"اختاري مؤشرًا أو أكثر من القائمة";
- byId("ma-preview").hidden=true;
 }
+
 function cardChanged(){
  var note=byId("ma-outcome");if(note)note.value="";
  var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
  currentCard();
- byId("ma-preview").hidden=true;byId("ma-answer").hidden=true;
  document.querySelectorAll(".ma-check-item").forEach(function(x){x.checked=false;});
  var details=byId("ma-check-details");if(details)details.open=false;
  updateIndicatorLabel();
@@ -137,13 +136,15 @@ async function openPreview(){
 async function exportVersion(variant){
  var btn=byId(variant==="solved"?"ma-export-solved":"ma-print");
  if(!btn||btn.disabled)return;
+ // Reserve an iOS document tab synchronously while the click is still trusted.
+ var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+ var previewTab=ios?window.open("about:blank","_blank"):null;
  btn.disabled=true;
  var original=btn.textContent;
- btn.textContent=variant==="solved"?"جارٍ تصدير بطاقة الحل النموذجي…":"جارٍ تصدير بطاقة التفعيل…";
+ btn.textContent=variant==="solved"?"جارٍ تصدير بطاقة الحل المقترحة…":"جارٍ تصدير بطاقة تفعيل الاحتياط…";
  try{
   var v=values();
-  // Validate both flows before invoking PDF engine. Avoid uncaught errors outside try/catch.
-  if(!completeForm(v))return;
+  if(!completeForm(v)){if(previewTab)previewTab.close();return;}
   if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
    throw new Error("محرك تصدير البطاقات لم يكتمل تحميله. أعيدي فتح القسم ثم حاولي مجددًا.");
   var result=await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v));
@@ -152,15 +153,25 @@ async function exportVersion(variant){
   if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
   pdfObjectUrl=URL.createObjectURL(result.blob);
   var link=byId("ma-pdf-download");
-  if(!link)throw new Error("رابط حفظ PDF غير موجود في الواجهة.");
-  link.href=pdfObjectUrl;link.download=result.filename;link.hidden=false;
-  link.textContent="فتح / حفظ "+(variant==="solved"?"بطاقة الحل النموذجي":"بطاقة تفعيل الاحتياط")+" PDF";
-  // Attempt download on all devices. iPhone users retain a visible manual link when
-  // WebKit blocks downloads initiated after async work.
-  try{link.click();}catch(_){}
-  uiMsg("تم تجهيز "+(variant==="solved"?"بطاقة الحل النموذجي":"بطاقة تفعيل الاحتياط")+" في ملف PDF من صفحة واحدة. إن لم يُنزل تلقائيًا، اضغطي رابط «فتح / حفظ PDF» الظاهر بجانب الأزرار.",false);
+  if(!link)throw new Error("رابط تنزيل PDF غير موجود.");
+  link.href=pdfObjectUrl;link.download=result.filename;link.hidden=true;
+  if(previewTab){
+   previewTab.location.replace(pdfObjectUrl);
+  }else{
+   // Desktop: initiate download. iOS with blocked pop-ups gets an explicit fallback.
+   try{link.click();}catch(e){link.hidden=false;}
+   if(ios)link.hidden=false;
+  }
+  var message="تم إعداد "+(variant==="solved"?"بطاقة الحل المقترحة":"بطاقة تفعيل الاحتياط")+" بصيغة PDF من صفحة A4 واحدة.";
+  if(variant==="activity"){
+   var logged=await saveExecution(v);
+   message+=logged.ok?(logged.already?" التنفيذ محفوظ مسبقًا.":" تم حفظ التنفيذ في السجل تلقائيًا."):(" تعذر حفظ سجل التنفيذ: "+logged.error);
+  }
+  if(ios&&!previewTab)message+=" إن لم يُفتح الملف، استخدمي رابط فتح / حفظ PDF الظاهر.";
+  uiMsg(message,false);
  }catch(e){
-  uiMsg("فشل تصدير "+(variant==="solved"?"بطاقة الحل النموذجي":"بطاقة التفعيل")+": "+(e&&e.message?e.message:String(e)),true);
+  if(previewTab)try{previewTab.close();}catch(_){}
+  uiMsg("فشل تصدير "+(variant==="solved"?"بطاقة الحل المقترحة":"بطاقة تفعيل الاحتياط")+": "+(e&&e.message?e.message:String(e)),true);
  }finally{
   btn.disabled=false;
   btn.textContent=original;
@@ -169,17 +180,23 @@ async function exportVersion(variant){
 async function exportCard(){await exportVersion("activity");}
 async function exportSolved(){await exportVersion("solved");}
 
-async function saveExecution(){
- var v=values();if(!completeForm(v))return;
- if(!matchHijriWeekday(v)){uiMsg("اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى؛ راجعي الاختيار.",true);return;}
- if(busy)return;busy=true;var b=byId("ma-save");b.disabled=true;
+var lastSavedExecutionKey=null;
+async function saveExecution(v){
+ v=v||values();
+ if(!check(v))return {ok:false,error:"بيانات البطاقة غير مكتملة"};
+ if(!matchHijriWeekday(v))return {ok:false,error:"اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى"};
  var row={teacher_name:v.teacher,class_name:v.klass,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators,outcome_description:v.outcome};
+ var signature=JSON.stringify(row);
+ if(lastSavedExecutionKey===signature)return {ok:true,already:true};
+ if(busy)return {ok:false,error:"تجري عملية حفظ أخرى حاليًا"};
+ busy=true;
  try{
-  var r=await fetch(API+"/rest/v1/manjaz_activation_logs",{method:"POST",headers:Object.assign(headers(),{"Prefer":"return=minimal"}),body:JSON.stringify(row)});
-  if(!r.ok)throw Error("HTTP "+r.status+" "+(await r.text()).slice(0,120));
-  uiMsg("تم حفظ تنفيذ البطاقة في سجل منجز بنجاح.",false);
- }catch(e){uiMsg("لم يُحفظ السجل: "+e.message,true);}
- finally{busy=false;b.disabled=false;}
+  var result=await fetch(API+"/rest/v1/manjaz_activation_logs",{method:"POST",headers:Object.assign(headers(),{"Prefer":"return=minimal"}),body:JSON.stringify(row)});
+  if(!result.ok)throw Error("HTTP "+result.status+" "+(await result.text()).slice(0,120));
+  lastSavedExecutionKey=signature;
+  return {ok:true,already:false};
+ }catch(e){return {ok:false,error:e.message||String(e)};}
+ finally{busy=false;}
 }
 async function showAnswer(){
  var v=values();if(!v)return;
@@ -224,6 +241,7 @@ function initStyle(){
  "#manjazActivation label{display:block;font-size:13px;font-weight:700;color:#284b57;margin:0 0 6px}"+
  "#manjazActivation select{width:100%;background:#fff;border:1px solid #a9bdc4;border-radius:8px;padding:10px;color:#153b47;font:inherit;min-height:44px}"+
  "#manjazActivation .ma-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}"+
+ "#manjazActivation .ma-export-actions>button{flex:1 1 270px;min-height:48px;font-size:14px}"+
  "#manjazActivation button{background:#0c6871;color:white;border:0;border-radius:9px;padding:11px 15px;font:700 13px Tahoma,Arial;cursor:pointer}"+
  "#manjazActivation button.secondary{background:#ecf3f4;color:#0b3047;border:1px solid #cddfe2}"+
  "#manjazActivation button:disabled{opacity:.6;cursor:wait}"+
@@ -263,10 +281,8 @@ function render(){
  '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
  '<div class="ma-verify-box"><label for="ma-outcome">مساحة الإنجاز – وصف نواتج الإنجاز (اختياري)</label><textarea id="ma-outcome" maxlength="600" rows="3" placeholder="يمكن كتابة وصف مختصر للنواتج، أو ترك الحقل فارغًا"></textarea></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
- '<div class="ma-actions"><button id="ma-open" type="button">معاينة البطاقة</button><button id="ma-print" type="button" class="secondary">تصدير بطاقة تفعيل الاحتياط</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a><button id="ma-solution" type="button" class="secondary">الحل النموذجي</button><button id="ma-save" type="button">حفظ التنفيذ</button></div>'+
+ '<div class="ma-actions ma-export-actions"><button id="ma-print" type="button">تصدير بطاقة تفعيل الاحتياط</button><button id="ma-export-solved" type="button" class="secondary">تصدير بطاقة الحل المقترحة</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a></div><p class="ma-save-hint">يُسجّل التنفيذ تلقائيًا عند تصدير بطاقة التفعيل.</p>'+
  '<div id="ma-message" class="ma-message" role="status" aria-live="polite"></div></section>'+
- '<section class="ma-panel" id="ma-preview" hidden><h3>معاينة بطاقة النشاط</h3><div id="ma-preview-host" class="ma-card-host" role="region" aria-label="معاينة النشاط"></div></section>'+
- '<section class="ma-panel" id="ma-answer" hidden><h3>نموذج الإجابة – البطاقة المحلولة الأصلية</h3><div id="ma-answer-host" class="ma-card-host" role="region" aria-label="بطاقة الإجابة النموذجية"></div><div class="ma-actions"><button type="button" id="ma-export-solved" class="secondary">تصدير بطاقة الحل النموذجي</button></div></section>'+
  '<section class="ma-panel"><h3>تقارير تفعيل الاحتياط اليومي</h3><p>استعراض سجل التنفيذ مخصص لصلاحية إدارة منجز.</p><div class="ma-actions"><button type="button" class="secondary" id="ma-load-reports">استعراض سجل التنفيذ</button><button type="button" class="secondary" id="ma-csv">تصدير Excel (CSV)</button><button type="button" class="secondary" id="ma-report-print">طباعة التقرير</button></div><div id="ma-report" hidden><div id="ma-report-body" class="ma-report-body"></div></div></section>';
  view.replaceChildren(root);
  var hj=initialHijri();
@@ -281,10 +297,7 @@ function render(){
  byId("ma-sub").addEventListener("change",chooseCard);
  byId("ma-card").addEventListener("change",cardChanged);
  document.querySelectorAll(".ma-check-item").forEach(function(input){input.addEventListener("change",updateIndicatorLabel);});
- byId("ma-open").addEventListener("click",openPreview);
  byId("ma-print").addEventListener("click",exportCard);
- byId("ma-save").addEventListener("click",saveExecution);
- byId("ma-solution").addEventListener("click",showAnswer);
  byId("ma-export-solved").addEventListener("click",exportSolved);
  byId("ma-load-reports").addEventListener("click",reports);
  byId("ma-csv").addEventListener("click",function(){if(!logData.length){uiMsg("حمّلي التقرير الإداري أولًا.",true);return;}downloadCsv(logData);});
