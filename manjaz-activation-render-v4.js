@@ -141,7 +141,7 @@ async function captureOriginalPage(section,html2pdf){
   pagebreak:{mode:[]},enableLinks:false
  }).from(paper).toCanvas();
  var canvas=await worker.get("canvas");
- if(!canvas||canvas.width<750||canvas.height<1050)throw new Error("تعذر تصوير البطاقة الأصلية بجودة مناسبة.");
+ if(!canvas||canvas.width<750||canvas.height<1050||Math.abs(canvas.width/canvas.height-210/297)>0.03)throw new Error("تعذر تصدير البطاقة بالمقاس الصحيح A4.");
  return canvas;
 }
 async function exportPdf(id,variant,m){
