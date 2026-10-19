@@ -66,7 +66,8 @@ function fill(html,metadata,variant){
  }
  return section;
 }
-function previewStyles(){return styles+".solved-response{background:#fff8f9 !important;border:1.25px solid #d8a6ae !important;}\n.solved-response .kicker{color:#962546;font-weight:800;margin-bottom:2mm;font-size:12px;}\n.solved-response .kicker small{color:#9a6d7a;font-size:8.6px;}\n.solved-response .solved-text{color:#922442;font-size:11px;font-weight:700;line-height:1.75;text-align:right;direction:rtl;unicode-bidi:plaintext;max-height:25.4mm;overflow:hidden;}\n.solved-response .output{background:#fcecef!important;border-top-color:#e8cbd2;color:#7b5360;}\n.solved-response .output strong{color:#962546;}\n.cover-pills .solved-flag{background:#fff;color:#7a2140;border-color:#fff;}\n@media print {.solved-response{-webkit-print-color-adjust:exact;print-color-adjust:exact}}\n"+
+var SAFE_LAYOUT_CSS="\n.session .topline .org,.session .topline .brand{min-width:0;overflow-wrap:anywhere}\n.session .stripe>span{min-width:0;flex:1 1 0;width:auto!important;overflow-wrap:anywhere}\n.session .info-grid>div{min-width:0;overflow-wrap:anywhere}\n.session .info-grid .write-field.ma-autofill{min-height:0!important;overflow-wrap:anywhere!important;white-space:normal!important}\n.session .response.ma-activity-response,.session .response.solved-response{\n display:flex!important;flex-direction:column!important;align-items:stretch!important;\n height:auto!important;min-height:34mm!important;max-height:none!important;\n overflow:visible!important;gap:0!important\n}\n.session .response .output{\n position:static!important;inset:auto!important;\n flex-shrink:0!important;margin:2mm -3.8mm -2.8mm!important;\n width:auto!important;line-height:1.55!important;\n white-space:normal!important;overflow-wrap:anywhere!important\n}\n.session .response .solved-text,.session .response .ma-user-outcome{\n display:block!important;flex-shrink:0!important;height:auto!important;\n min-height:0!important;max-height:none!important;overflow:visible!important;\n white-space:pre-wrap!important;overflow-wrap:anywhere!important;\n word-break:normal!important;line-height:1.65!important\n}\n.session .response.ma-activity-response .ma-user-outcome{\n font-size:10.2px!important;padding:1mm!important;margin:1mm 0 0!important\n}\n.session .response.solved-response .solved-text{\n font-size:11px!important;padding:0 1mm!important;margin:1mm 0 0!important\n}\n.session.ma-density-1{padding-top:12mm!important}\n.session.ma-density-1 h1{margin:2mm 0 2.6mm!important;font-size:21px!important}\n.session.ma-density-1 .stripe{margin-top:2.6mm!important;padding:2.2mm 3mm!important}\n.session.ma-density-1 .number{margin-top:2.8mm!important}\n.session.ma-density-1 .info-grid{margin-bottom:2.6mm!important}\n.session.ma-density-1 .outcomes{margin-bottom:2.4mm!important}\n.session.ma-density-1 .content-box,.session.ma-density-1 .activity-box{margin-bottom:2.2mm!important;padding:2.4mm 3.3mm!important}\n.session.ma-density-1 .passage{font-size:11px!important;line-height:1.75!important}\n.session.ma-density-1 .question,.session.ma-density-1 .step{font-size:10.6px!important;line-height:1.6!important}\n.session.ma-density-1 .questions{gap:1mm!important}\n.session.ma-density-1 .response{min-height:30mm!important}\n.session.ma-density-1 .exit{margin-top:2mm!important}\n.session.ma-density-2{padding-top:10.5mm!important}\n.session.ma-density-2 h1{margin:1.5mm 0 2mm!important;font-size:19px!important}\n.session.ma-density-2 .topline{padding-bottom:2mm!important}\n.session.ma-density-2 .stripe{margin-top:1.8mm!important;padding:1.7mm 2.5mm!important}\n.session.ma-density-2 .number{margin-top:2mm!important}\n.session.ma-density-2 .info-grid{margin-bottom:1.8mm!important}\n.session.ma-density-2 .info-grid>div{padding:1.3mm 2mm!important}\n.session.ma-density-2 .outcomes{margin-bottom:1.7mm!important}\n.session.ma-density-2 .outcomes>div{min-height:13mm!important;padding:1.7mm 2.4mm!important}\n.session.ma-density-2 .timing{margin-bottom:2mm!important}\n.session.ma-density-2 .content-box,.session.ma-density-2 .activity-box{margin-bottom:1.5mm!important;padding:2mm 3mm!important}\n.session.ma-density-2 .passage{font-size:10.3px!important;line-height:1.6!important}\n.session.ma-density-2 .lead{font-size:10.5px!important;line-height:1.6!important}\n.session.ma-density-2 .question,.session.ma-density-2 .step{font-size:10px!important;line-height:1.5!important}\n.session.ma-density-2 .questions{gap:.8mm!important}\n.session.ma-density-2 .response{min-height:27mm!important;padding:2.2mm 3.8mm!important}\n.session.ma-density-2 .response .solved-text{font-size:10px!important;line-height:1.55!important}\n.session.ma-density-2 .response .ma-user-outcome{font-size:9.8px!important;line-height:1.5!important}\n.session.ma-density-2 .exit{margin-top:1.4mm!important;padding:1.8mm 2.5mm!important}\n.session.ma-density-2 .rubric{margin-top:1.5mm!important}\n";
+function previewStyles(){return styles+SAFE_LAYOUT_CSS+".solved-response{background:#fff8f9 !important;border:1.25px solid #d8a6ae !important;}\n.solved-response .kicker{color:#962546;font-weight:800;margin-bottom:2mm;font-size:12px;}\n.solved-response .kicker small{color:#9a6d7a;font-size:8.6px;}\n.solved-response .solved-text{color:#922442;font-size:11px;font-weight:700;line-height:1.75;text-align:right;direction:rtl;unicode-bidi:plaintext;max-height:25.4mm;overflow:hidden;}\n.solved-response .output{background:#fcecef!important;border-top-color:#e8cbd2;color:#7b5360;}\n.solved-response .output strong{color:#962546;}\n.cover-pills .solved-flag{background:#fff;color:#7a2140;border-color:#fff;}\n@media print {.solved-response{-webkit-print-color-adjust:exact;print-color-adjust:exact}}\n"+
  "\n:host{display:block;direction:rtl;max-width:100%;width:100%;} .ma-holder{position:relative;width:100%;overflow:hidden;} .session{width:210mm!important;min-width:210mm!important;max-width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;box-sizing:border-box!important;overflow:hidden!important;transform-origin:top right!important;margin:0!important;background:#fff!important;box-shadow:0 4px 16px #0b304726!important;} .ma-autofill{display:block!important;min-height:7mm!important;border-bottom:0!important;background:#f1f7f8;padding:3px 5px;color:#184653;font-weight:700;border-radius:4px;white-space:normal;overflow-wrap:anywhere;line-height:1.5;} .ma-verified{color:#126b59;background:#ecf5f3;border-radius:3px;padding:2px 5px;} .ma-user-outcome{font-size:10px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;color:#254554;margin:0;padding:1.5mm 2mm;} .response.ma-with-outcome{max-height:58mm;height:auto;overflow:hidden;} .response.ma-with-outcome .output{position:relative;margin-top:1mm;} .teacher,.notes{display:none!important;} ";
 }
 function adjust(host){
@@ -128,6 +129,33 @@ function loadCaptureEngine(){
  }).catch(function(err){captureEngine=null;throw err;});
  return captureEngine;
 }
+function layoutProblem(paper){
+ var page=paper.querySelector(".session"),footer=page&&page.querySelector("footer");
+ if(!page||!footer)return "مكونات الصفحة الرسمية غير مكتملة";
+ var bounds=page.getBoundingClientRect(),foot=footer.getBoundingClientRect();
+ var selectors=[".topline",".stripe",".number","h1",".info-grid",".outcomes",".timing",".content-box",".activity-box",".response",".exit",".rubric"],last=null;
+ for(var i=0;i<selectors.length;i++){
+  var node=page.querySelector(selectors[i]);if(!node)continue;
+  var rect=node.getBoundingClientRect();if(rect.width<=0||rect.height<=0)continue;
+  if(last&&rect.top<last.bottom-1)return "تداخل بين عناصر البطاقة: "+selectors[i];
+  if(rect.right>bounds.right+2||rect.left<bounds.left-2)return "تجاوز نصوص حدود عرض البطاقة: "+selectors[i];
+  last=rect;
+ }
+ if(last&&last.bottom>foot.top-3)return "المحتوى يصل إلى تذييل صفحة A4";
+ if(page.scrollHeight>page.clientHeight+4)return "المحتوى يتجاوز ارتفاع صفحة A4";
+ var fields=page.querySelectorAll(".info-grid>div");
+ for(var j=0;j<fields.length;j++){
+  var value=fields[j].querySelector(".ma-autofill");
+  if(value&&value.getBoundingClientRect().bottom>fields[j].getBoundingClientRect().bottom+2)return "الفصول أو الحصص تتجاوز حقل البيانات";
+ }
+ var response=page.querySelector(".response");
+ if(response){
+  var output=response.querySelector(".output"),body=response.querySelector(".solved-text,.ma-user-outcome");
+  if(output&&body&&body.getBoundingClientRect().bottom>output.getBoundingClientRect().top-1)return "الناتج المتوقع يتداخل مع نص الحل أو الإنجاز";
+  if(output&&output.getBoundingClientRect().bottom>response.getBoundingClientRect().bottom+2)return "شريط الناتج المتوقع يتجاوز مساحة الإجابة";
+ }
+ return "";
+}
 async function captureOriginalPage(section,html2pdf){
  // The same source template, content and print stylesheet serve both the PDF and preview.
  var paper=document.createElement("div");
@@ -140,13 +168,12 @@ async function captureOriginalPage(section,html2pdf){
  document.body.appendChild(paper);
  try{
   if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-  var outcome=paper.querySelector(".ma-user-outcome");
-  if(outcome&&outcome.scrollHeight>outcome.clientHeight+3)
-   throw new Error("وصف نواتج الإنجاز أطول من المساحة المتاحة بالبطاقة؛ يرجى اختصاره.");
-  var page=paper.querySelector(".session"),footer=paper.querySelector("footer");
-  if(!page||!footer)throw new Error("التصميم الأصلي للبطاقة أو التذييل غير مكتمل.");
-  if(page.scrollHeight>page.clientHeight+4)
-   throw new Error("محتوى البطاقة يتجاوز صفحة A4 واحدة.");
+  var page=paper.querySelector(".session");
+  if(!page||!paper.querySelector("footer"))throw new Error("التصميم الأصلي للبطاقة أو التذييل غير مكتمل.");
+  var problem=layoutProblem(paper);
+  if(problem){page.classList.add("ma-density-1");problem=layoutProblem(paper);}
+  if(problem){page.classList.remove("ma-density-1");page.classList.add("ma-density-2");problem=layoutProblem(paper);}
+  if(problem)throw new Error("لا يمكن تصدير البطاقة دون تداخل نصوص: "+problem+". قللي الفصول المختارة أو اختصري وصف الإنجاز.");
  }finally{paper.remove();paper.style.position="";paper.style.top="";paper.style.left="";paper.style.zIndex="";paper.style.visibility="";}
  var worker=html2pdf().set({
   margin:0,
