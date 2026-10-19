@@ -42,6 +42,8 @@ function style(){
  '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-certificate-table .mj48-row-actions{display:flex;flex:1 1 auto;justify-content:flex-start;flex-wrap:wrap;min-width:0;max-width:100%}',
  '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-cert-filter{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:7px;min-width:0;max-width:100%}',
  '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj48-cert-filter button{width:100%;min-width:0;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) #mj49GroupAdmin,#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj49-admin-scroll{width:100%;max-width:100%;min-width:0;box-sizing:border-box}',
+ '#view.mj16-admin-only #mj15Powers #mj15CertificatePowers:is([data-mj45-group="approved"],[data-mj45-group="rejected"]) .mj49-admin-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}',
  '}'
  ].join("\n");
  document.head.appendChild(el);
