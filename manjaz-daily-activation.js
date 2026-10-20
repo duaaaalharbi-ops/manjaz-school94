@@ -331,7 +331,7 @@ function clearFields(){
  byId("ma-teacher").value="";selectMulti("class",[]);selectMulti("period",[]);
  byId("ma-weekday").value=initialWeekday();
  var d=initialHijri();setSelectValue("ma-hday",d.d);setSelectValue("ma-hmonth",d.m);setSelectValue("ma-hyear",d.y);
- chooseMain();byId("ma-outcome").value="";
+ byId("ma-bag").value="general";byId("ma-custom-title").value="";byId("ma-custom-url").value="";updateBag();byId("ma-outcome").value="";
  document.querySelectorAll(".ma-check-item").forEach(function(x){x.checked=false;});
  updateIndicatorLabel();
  var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
@@ -353,12 +353,9 @@ function beginEditing(row){
  setSelectValue("ma-teacher",row.teacher_name);
  selectMulti("class",rowClasses(row));
  selectMulti("period",rowPeriods(row));
- setSelectValue("ma-main",row.main_category);
- chooseSub();
- setSelectValue("ma-sub",row.sub_category);
- chooseCard();
- setSelectValue("ma-card",row.card_id);
- currentCard();
+ setSelectValue("ma-bag",row.bag_key||"general");updateBag();
+ if(selectedBag()==="other"){byId("ma-custom-title").value=row.card_title||"";byId("ma-custom-url").value=row.reference_url||"";currentCard();}
+ else{setSelectValue("ma-main",row.main_category);chooseSub();setSelectValue("ma-sub",row.sub_category);chooseCard();setSelectValue("ma-card",row.card_id);currentCard();}
  var chosen=Array.isArray(row.verification_indicators)?row.verification_indicators:[];
  document.querySelectorAll(".ma-check-item").forEach(function(x){x.checked=chosen.includes(x.value);});
  updateIndicatorLabel();
@@ -661,12 +658,15 @@ function render(){
  '<div><label for="ma-hday">اليوم الهجري</label><select id="ma-hday"></select></div>'+
  '<div><label for="ma-hmonth">الشهر الهجري</label><select id="ma-hmonth"></select></div>'+
  '<div><label for="ma-teacher">اسم المعلمة المنفذة</label><select id="ma-teacher"><option value="">تحميل المعلمات…</option></select></div>'+
- '<div><label for="ma-class-choices">الفصول (اختيار متعدد)</label><select id="ma-class-choices" class="ma-native-multi" multiple size="7" aria-describedby="ma-class-summary"><option disabled>جارٍ تحميل الفصول…</option></select><p id="ma-class-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار فصل</p></div>'+
- '<div><label for="ma-period-choices">الحصص (اختيار متعدد)</label><select id="ma-period-choices" class="ma-native-multi" multiple size="7" aria-describedby="ma-period-summary"></select><p id="ma-period-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار حصة</p></div></div><p id="ma-multi-hint" class="ma-multi-hint" aria-live="polite">تُحفظ جميع الاختيارات في سجل تفعيل واحد.</p><div class="ma-clear-actions"><button type="button" id="ma-clear" class="secondary">مسح بيانات التعبئة</button></div><div class="ma-edit-bar" id="ma-edit-bar" hidden><p>تعديل سجل محفوظ؛ سيُحدَّث السجل الأصلي دون إضافة سجل جديد.</p><div class="ma-actions"><button type="button" id="ma-save-edit">حفظ التعديلات</button><button type="button" id="ma-cancel-edit" class="secondary">إلغاء التعديل</button></div></div></section>'+
+ '<div><label>الفصول (اختيار متعدد)</label><details class="ma-picker" id="ma-class-dropdown"><summary id="ma-class-trigger">اختاري الفصول (اختيار متعدد)</summary><div class="ma-picker-options" id="ma-class-checks"></div></details><select id="ma-class-choices" multiple hidden aria-hidden="true"></select><p id="ma-class-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار فصل</p></div>'+
+ '<div><label>الحصص (اختيار متعدد)</label><details class="ma-picker" id="ma-period-dropdown"><summary id="ma-period-trigger">اختاري الحصص (اختيار متعدد)</summary><div class="ma-picker-options" id="ma-period-checks"></div></details><select id="ma-period-choices" multiple hidden aria-hidden="true"></select><p id="ma-period-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار حصة</p></div></div><p id="ma-multi-hint" class="ma-multi-hint" aria-live="polite">تُحفظ جميع الاختيارات في سجل تفعيل واحد.</p><div class="ma-clear-actions"><button type="button" id="ma-clear" class="secondary">مسح بيانات التعبئة</button></div><div class="ma-edit-bar" id="ma-edit-bar" hidden><p>تعديل سجل محفوظ؛ سيُحدَّث السجل الأصلي دون إضافة سجل جديد.</p><div class="ma-actions"><button type="button" id="ma-save-edit">حفظ التعديلات</button><button type="button" id="ma-cancel-edit" class="secondary">إلغاء التعديل</button></div></div></section>'+
  '<section class="ma-panel"><h3>اختيار بطاقة النشاط</h3><div class="ma-grid">'+
+ '<div class="ma-verify-box"><label for="ma-bag">حقيبة التفعيل</label><select id="ma-bag"></select></div>'+ 
+ '<div id="ma-standard-fields" class="ma-standard-fields">'+
  '<div><label for="ma-main">القسم الرئيسي</label><select id="ma-main"></select></div>'+
  '<div><label for="ma-sub">القسم الفرعي</label><select id="ma-sub"></select></div>'+
- '<div style="grid-column:1/-1"><label for="ma-card">عنوان البطاقة</label><select id="ma-card"></select></div>'+
+ '<div style="grid-column:1/-1"><label for="ma-card">رقم البطاقة وعنوانها</label><select id="ma-card"></select></div></div>'+ 
+ '<div id="ma-other-fields" class="ma-verify-box" hidden><label for="ma-custom-title">عنوان التفعيل (إجباري)</label><input id="ma-custom-title" type="text" maxlength="160" placeholder="اكتبي عنوان التفعيل"><label for="ma-custom-url">إرفاق رابط إلكتروني فقط (اختياري)</label><input id="ma-custom-url" type="url" maxlength="1200" placeholder="https://"></div>'+
  '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
  '<div class="ma-verify-box"><label for="ma-outcome">مساحة الإنجاز – وصف نواتج الإنجاز (اختياري)</label><textarea id="ma-outcome" maxlength="600" rows="3" placeholder="يمكن كتابة وصف مختصر للنواتج، أو ترك الحقل فارغًا"></textarea></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
@@ -684,9 +684,10 @@ function render(){
   var option=document.createElement("option");
   option.value=String(n);option.textContent="الحصة "+n;choices.appendChild(option);
  }
- updateSelectionSummary();
+ renderMultiDropdown("period");updateSelectionSummary();
  renderExecutors();
- chooseMain();
+ optionList(byId("ma-bag"),[["general","الحقيبة العامة"],["positive_behavior","حقيبة تعزيز السلوك الإيجابي"],["other","أخرى"]],"اختاري حقيبة التفعيل","general");
+ updateBag();
  root.addEventListener("input",function(e){
   if(e.target.matches("textarea,select,input")){var link=byId("ma-pdf-download");if(link)link.hidden=true;}
   if(e.target.matches("#ma-weekday,#ma-hyear,#ma-hday,#ma-hmonth,#ma-teacher,#ma-class-choices,#ma-period-choices,#ma-main,#ma-sub,#ma-card,#ma-outcome,.ma-check-item"))resetSubmissionStatus();
@@ -695,6 +696,9 @@ function render(){
   if(e.target.matches("#ma-class-choices,#ma-period-choices"))updateSelectionSummary();
   if(e.target.matches("#ma-weekday,#ma-hyear,#ma-hday,#ma-hmonth,#ma-teacher,#ma-class-choices,#ma-period-choices,#ma-main,#ma-sub,#ma-card,#ma-outcome,.ma-check-item"))resetSubmissionStatus();
  });
+ byId("ma-bag").addEventListener("change",updateBag);
+ byId("ma-custom-title").addEventListener("input",function(){currentCard();resetSubmissionStatus();var a=byId("ma-pdf-download");if(a)a.hidden=true;});
+ byId("ma-custom-url").addEventListener("input",function(){resetSubmissionStatus();var a=byId("ma-pdf-download");if(a)a.hidden=true;});
  byId("ma-main").addEventListener("change",chooseSub);
  byId("ma-sub").addEventListener("change",chooseCard);
  byId("ma-card").addEventListener("change",cardChanged);
