@@ -487,7 +487,7 @@ function reserveRenderNotificationPanel(){
   const phoneList=byId("reservePhonebookList");
   if(phoneList)phoneList.innerHTML=`<p class="reserve-public-note">${state.reserveContactBook.size} رقمًا محفوظًا من ${manualAssigneeDirectory().length} اسمًا معتمدًا.</p>`;
 }
-async function reserveHydrateNotificationPanel(){
+async function reserveHydrateNotificationPanel(preserveOnError=false){
   const panel=byId("reserveNotifyPanel");if(!panel)return;
   const date=state.currentDate,sequence=state.reserveNoticeHydrateSeq=(state.reserveNoticeHydrateSeq||0)+1;
   const stillCurrent=()=>state.admin&&state.currentDate===date&&byId("reserveNotifyPanel")===panel&&sequence===state.reserveNoticeHydrateSeq;
@@ -500,7 +500,7 @@ async function reserveHydrateNotificationPanel(){
     if(!stillCurrent())return;
     console.error(error);
     const el=byId("reserveNotifyContent");
-    if(el)el.textContent="تعذر تحميل بيانات الجوالات المحمية. تأكدي من صلاحيات الدخول الإداري واتصال Supabase.";
+    if(el&&!preserveOnError)el.textContent="تعذر تحميل بيانات الجوالات المحمية. تأكدي من صلاحيات الدخول الإداري واتصال Supabase.";
   }
 }
 function reserveParsePhoneCsv(raw){
@@ -2076,15 +2076,53 @@ async function reserveDeleteTableForDate(mode,date){
   await loadAll();
   if(obsoleteAbsences.some(a=>absencesOn(date).some(x=>String(x.id)===String(a.id))))
     throw new Error("تعذر التحقق من حذف الغياب المرتبط بالجدول");
-  let syncWarning=false;
-  try{await reserveSyncAdminMutation(date)}
-  catch(error){
-    // Persistence and read-back checks succeeded; a secondary panel refresh
-    // must not turn an actual deletion into a false deletion failure.
-    console.error("تعذر تحديث اللوحات بعد التحقق من الحذف",error);
-    syncWarning=true;
+  // Deletion is already confirmed by cloud readback. The caller refreshes the
+  // visible page independently so a mobile display error never repeats DELETE.
+  return {deleted:original.length+removedAbsences,empty:false};
+}
+// Mobile-safe refresh after CONFIRMED deletion. This is intentionally independent
+// from DELETE: a retry only re-reads cloud data and redraws mounted views.
+// Preserve the selected date, logged-in admin, open workspace and share controls.
+async function reserveSyncDeletedTableViews(mode,date){
+  const current=()=>state.currentDate===date&&!!byId("dailyReserveRoot");
+  if(!current())return {syncWarning:false,skipped:true};
+  const indicator=byId("reserveAdminSyncStatus");
+  if(indicator){indicator.dataset.state="busy";indicator.textContent="تم تأكيد الحذف؛ جارٍ مزامنة الجدول والبطاقات...";}
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      // reserveDeleteTableForDate has already read the authoritative response
+      // twice. On a view failure, fetch again without repeating the deletion.
+      if(attempt>0)await loadAll();
+      if(!current())return {syncWarning:false,skipped:true};
+      const remaining=assignmentsOn(date).filter(a=>mode==="manual"?a.manual===true:a.manual!==true);
+      if(remaining.length)throw new Error("لم تتطابق بيانات الجدول بعد تحديث العرض.");
+      // First redraw all visible local views synchronously. Mobile Safari
+      // must not wait for contact/notification network requests before redraw.
+      renderWorkspaceCard(mode);
+      refreshReserveStatisticsViews();
+      reserveRenderNotificationPanel();
+      if(byId("reservePublishOverlay"))openReservePublication(date);
+      if(indicator){
+        indicator.dataset.state="ready";
+        indicator.textContent="تم تحديث جدول الاحتياط والنشر والإحصاءات بعد الحذف — "+fmtDateTimeHijri(new Date().toISOString());
+      }
+      // The notification recipient list already reflects the new local
+      // records; refreshing phone metadata is supplementary, not a blocker.
+      if(byId("reserveNotifyPanel"))await reserveHydrateNotificationPanel(true);
+      return {syncWarning:false};
+    }catch(error){
+      console.error("تعذر مزامنة العرض بعد حذف الجدول (محاولة "+(attempt+1)+")",error);
+      if(attempt===0){
+        const progress=byId("reserveAdminSyncStatus");
+        if(progress){progress.dataset.state="busy";progress.textContent="جارٍ إعادة محاولة تحديث العرض تلقائيًا...";}
+        continue;
+      }
+      const warning=byId("reserveAdminSyncStatus");
+      if(warning){warning.dataset.state="error";warning.textContent="تم تأكيد حذف السجلات، لكن تعذر تحديث بعض البطاقات. يمكن إعادة فتح القسم دون حذف جديد.";}
+      return {syncWarning:true};
+    }
   }
-  return {deleted:original.length+removedAbsences,empty:false,syncWarning};
+  return {syncWarning:true};
 }
 async function saveManualAssignments(){
   const msg=byId("reserveManualMsg"),date=byId("reserveManualDate")?.value||state.currentDate;
@@ -2183,8 +2221,8 @@ function bindManualAdmin(){
         state.manualRows=[];
         if(state.lastReserveWarnings?.date===date&&state.lastReserveWarnings.source==="manual")state.lastReserveWarnings=null;
       }
-      renderWorkspaceCard("manual");
-      reserveTableDeleteNotice("manual","success",result.syncWarning?
+      const sync=await reserveSyncDeletedTableViews("manual",date);
+      reserveTableDeleteNotice("manual","success",sync.syncWarning?
         "حُذف الجدول وتأكد حفظ التغيير، لكن تعذر تحديث بعض البطاقات.":
         "جدول الإنشاء اليدوي — "+fmtDate(date));
     }catch(err){
@@ -3455,8 +3493,9 @@ function bindDayAdmin(){
         state.autoAbsentSelectionResetDate=date;
         if(state.lastReserveWarnings?.date===date&&state.lastReserveWarnings.source==="auto")state.lastReserveWarnings=null;
       }
-      renderWorkspaceCard("auto");
-      reserveTableDeleteNotice("auto","success",result.syncWarning?
+      state.autoExtractedSummary=null;
+      const sync=await reserveSyncDeletedTableViews("auto",date);
+      reserveTableDeleteNotice("auto","success",sync.syncWarning?
         "حُذف الجدول وتأكد حفظ التغيير، لكن تعذر تحديث بعض البطاقات.":
         "جدول الإنشاء الآلي — "+fmtDate(date));
     }catch(err){
