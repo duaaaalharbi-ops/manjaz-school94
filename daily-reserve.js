@@ -652,6 +652,8 @@ function teacherFlags(t){
   };
 }
 function ceilingFor(t){return teacherFlags(t).advanced?22:20}
+// The eight rank-advanced teachers explicitly approved for automatic reserve duty.
+function reserveAutoWeeklyCeiling(t){return nameSetContains(ADVANCED_RANK,editionSixName(t?.name)||clean(t?.name))?22:24}
 function parseScheduleValue(v){
   const s=clean(v),activity=s.includes("|نشاط");
   return {className:clean(s.split("|")[0]),activity};
@@ -917,7 +919,7 @@ function reserveIndividualWeeklyLimit(teacherId,date){
   const t=teacherOf(teacherId),name=normName(t?.name||"");
   if(name===normName("رية الحربي"))return 2;
   if(t?.supportStaff===true||MANUAL_SUPPORT_STAFF.some(s=>String(s.id)===String(teacherId)))return 3;
-  return Math.max(0,ceilingFor(t)-Number(t?.workload||0));
+  return Math.max(0,reserveAutoWeeklyCeiling(t)-Number(t?.workload||0));
 }
 function reserveAutoIneligibility(teacherId,date,className="",exceptId="",skipWeekly=false){
   const t=teacherOf(teacherId);
@@ -938,7 +940,7 @@ function reserveAutoIneligibility(teacherId,date,className="",exceptId="",skipWe
   if(!skipWeekly&&reserveWeeklyDutyCount(teacherId,date,exceptId)>=reserveIndividualWeeklyLimit(teacherId,date))
     return name===normName("رية الحربي")?"رية الحربي: الحد الأسبوعي حصتا احتياط.":
       support?"الكادر المساند: الحد الأسبوعي ثلاث حصص احتياط.":
-      `اكتمل سقف الرتبة الأسبوعي: ${ceilingFor(t)} حصة أصلية واحتياط.`;
+      `اكتمل سقف الرتبة الأسبوعي: ${reserveAutoWeeklyCeiling(t)} حصة أصلية واحتياط.`;
   return "";
 }
 function assertAutoReservePhysicalAvailability(teacherId,date,period,className,exceptId=""){
