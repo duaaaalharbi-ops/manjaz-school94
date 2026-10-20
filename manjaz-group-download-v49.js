@@ -229,7 +229,9 @@ async function exportCertificates(row,mode,recipientIndex,report,shareButton=nul
   });
   saveBlob(blob,"منجز_شهادات_جماعية_"+fileSafe(row.title)+".zip");
  }
- report("اكتمل إصدار "+selected.length+" شهادة دون علامة مائية.");
+ if(shareButton&&window.ManjazCertificateShareV50?.isReady(shareButton))
+  report("ملف PDF جاهز. اضغطي «مشاركة PDF الآن» ثم اختاري واتساب.");
+ else report("اكتمل إصدار "+selected.length+" شهادة دون علامة مائية.");
 }
 async function actionDownload(row,kind,button,forSharing=false){
  if(downloading)return;
