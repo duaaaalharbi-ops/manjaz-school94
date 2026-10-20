@@ -88,7 +88,7 @@ function groupForm(){
  const execTypes=["ورشة تدريبية","درس تطبيقي","برنامج","مبادرة","دورة","لقاء","فعالية"];
  const savedType=cache?.fields?.executionType||"";
  const isOther=!!savedType&&!execTypes.includes(savedType);
- return '<details id="mj49GroupRequest" class="mj49-group-details" dir="rtl"><summary>طلب إصدار شهادة جماعية – حتى ١٠٠ مستفيدة</summary>'+
+ return '<section id="mj49GroupRequest" class="mj49-group-details" dir="rtl">'+
  '<div class="mj49-content"><p class="mj49-muted">طلب جماعي واحد، شهادة مستقلة باسم كل مستفيدة. لا تُصدر الشهادات إلا بعد اعتماد الإدارة للطلب كاملًا.</p>'+
  '<form id="mj49GroupForm">'+
  '<div class="mj49-fields">'+
@@ -113,12 +113,17 @@ function groupForm(){
  '<div class="mj49-form-actions"><button type="button" data-mj49-preview>معاينة الشهادات والتنقل بين الأسماء</button>'+
  '<button type="submit" id="mj49Submit">'+(requestId?"حفظ تعديل الطلب الجماعي":"إرسال طلب الشهادة الجماعية")+'</button>'+
  '<button type="button" class="mj49-secondary" data-mj49-reset>طلب جماعي جديد</button></div>'+
- '<div id="mj49Message" role="status" aria-live="polite"></div></form></div></details>';
+ '<div id="mj49Message" role="status" aria-live="polite"></div></form></div></section>';
 }
 function injectCSS(){
  if(document.getElementById("mj49GroupStyles"))return;
  const e=document.createElement("style");e.id="mj49GroupStyles";
  e.textContent=[
+ '.mj49-main-panel>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap}',
+ '.mj49-main-panel .mj49-main-pill{display:inline-flex;align-items:center;justify-content:center;border-radius:20px;background:#0f5f59;color:#fff;font:800 12px Tahoma,Arial,sans-serif;padding:5px 12px}',
+ '.mj49-main-panel .mj49-main-panel-body{padding:14px!important}',
+ '.mj49-main-panel .mj49-group-details{margin:0;border:0;border-radius:0}',
+ '.mj49-main-panel .mj49-group-details .mj49-content{padding:0}',
  '.mj49-group-details{border:1px solid #cddfdd;border-radius:12px;background:#fff;margin:12px 0;overflow:hidden;color:#164d55}',
  '.mj49-group-details>summary{font:800 15px Tahoma,Arial,sans-serif;background:#f0f7f6;cursor:pointer;padding:16px}',
  '.mj49-group-details .mj49-content{padding:16px;display:grid;gap:12px}',
@@ -360,9 +365,21 @@ function mount(){
  try{
   const requests=document.getElementById("mj15Requests");
   if(!requests)return;injectCSS();
-  const body=requests.querySelector(".mj15-body");
-  if(body&&!document.getElementById("mj49GroupRequest")){
-   body.insertAdjacentHTML("beforeend",groupForm());
+  // This independent card must not live inside #mj15PublicArea: the
+  // individual-certificate controls replace that area's HTML on every change.
+  // Keep existing certificate workflows and records completely untouched.
+  const dashboard=requests.parentElement;
+  if(dashboard&&!document.getElementById("mj49GroupPanel")){
+   const panel=document.createElement("details");
+   panel.id="mj49GroupPanel";
+   panel.className="mj15-panel mj49-main-panel";
+   panel.innerHTML='<summary><span class="mj49-main-pill">جماعي</span><span>إصدار شهادة جماعية – حتى ١٠٠ مستفيدة</span></summary>'+
+     '<div class="mj15-body mj49-main-panel-body"></div>';
+   requests.insertAdjacentElement("afterend",panel);
+  }
+  const groupHost=document.querySelector("#mj49GroupPanel .mj49-main-panel-body");
+  if(groupHost&&!document.getElementById("mj49GroupRequest")){
+   groupHost.innerHTML=groupForm();
    renderNames();updateExecFields();window.ManjazHijriPicker?.refresh?.();
   }
   const powers=document.getElementById("mj15CertificatePowers");
