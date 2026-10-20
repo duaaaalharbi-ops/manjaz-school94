@@ -32,7 +32,8 @@ const COUNT_START="2026-10-18";
 const EMERGENCY_DAILY_DEMAND=20;
 const CONDITIONAL_EXCLUSION_MIN_DEMAND=13; // More than 12 absent periods on the same school day
 const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البالدي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
-const ADVANCED_RANK=new Set(["دعاء الحربي","عوالي السبيعي","حصة المنتشري","عايدة الصاعدي","عواطف الحربي","ريم القحطاني","بدرية الحربي","حنان المجنوني"]);
+const ADVANCED_RANK=new Set(["دعاء الحربي","سندس الغامدي","عايدة الصاعدي","ريم القحطاني","عوالي السبيعي","بدرية الحربي","حنان المجنوني"]); // Legacy ranking and manual reports: unchanged
+const AUTO_ADVANCED_RANK=new Set(["دعاء الحربي","عوالي السبيعي","حصة المنتشري","عايدة الصاعدي","عواطف الحربي","ريم القحطاني","بدرية الحربي","حنان المجنوني"]);
 const ABSOLUTE_EXCLUDED=new Set(["نورة الهودان"]);
 // Additional personnel authorized for manual assignment, not in the official sixth-edition teacher timetable.
 const MANUAL_SUPPORT_STAFF=[
@@ -647,7 +648,7 @@ function teacherFlags(t){
 }
 function ceilingFor(t){return teacherFlags(t).advanced?22:20}
 // The eight rank-advanced teachers explicitly approved for automatic reserve duty.
-function reserveAutoWeeklyCeiling(t){return nameSetContains(ADVANCED_RANK,editionSixName(t?.name)||clean(t?.name))?22:24}
+function reserveAutoWeeklyCeiling(t){return nameSetContains(AUTO_ADVANCED_RANK,editionSixName(t?.name)||clean(t?.name))?22:24}
 function parseScheduleValue(v){
   const s=clean(v),activity=s.includes("|نشاط");
   return {className:clean(s.split("|")[0]),activity};
