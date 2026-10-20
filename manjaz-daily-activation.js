@@ -676,7 +676,7 @@ function render(){
  if(!isPage())return;var view=byId("view");if(!view||byId("manjazActivation"))return;
  initStyle();var root=document.createElement("main");root.id="manjazActivation";
  root.innerHTML=
- '<header class="ma-hero"><h2>تفعيل الاحتياط اليومي</h2><p>حقيبة الأنشطة الإثرائية | الثانوية الرابعة والتسعون – مسارات</p><div class="ma-stats"><span class="ma-stat">١٣٠ بطاقة</span><span class="ma-stat">١١ قسمًا رئيسيًا</span><span class="ma-stat">١٥ قسمًا فرعيًا</span></div><button id="ma-admin-entry-top" type="button" class="secondary ma-admin-top">دخول الإدارة | استعراض سجل التنفيذ</button></header>'+
+ '<header class="ma-hero"><h2>تفعيل حصص الاحتياط</h2><p>حقائب التفعيل | الثانوية الرابعة والتسعون – مسارات</p><div class="ma-stats"><span class="ma-stat">الحقيبة العامة: ١٣٠ بطاقة</span><span class="ma-stat">تعزيز السلوك الإيجابي: ٩٠ بطاقة</span><span class="ma-stat">أخرى: تفعيل حر</span></div><button id="ma-admin-entry-top" type="button" class="secondary ma-admin-top">دخول الإدارة | استعراض سجل التنفيذ</button></header>'+
  '<section class="ma-panel"><h3 id="ma-data-heading">بيانات التنفيذ اليومي</h3><div class="ma-grid">'+
  '<div><label for="ma-weekday">اليوم</label><select id="ma-weekday"></select></div>'+
  '<div><label for="ma-hyear">السنة الهجرية</label><select id="ma-hyear"></select></div>'+
