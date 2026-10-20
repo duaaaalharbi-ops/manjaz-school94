@@ -30,12 +30,6 @@ const DEFAULT_WEIGHTS={week:30,term:10,daily:18,workload:0.35,consecutive:9};
 const V6_SOURCE="v6-1448-04-27";
 const COUNT_START="2026-10-18";
 const EMERGENCY_DAILY_DEMAND=20;
-const MAX_AUTO_RESERVE_PER_DAY=3; // Applies to automatic assignment, counting all existing daily reserve duties.
-const REDUCED_AUTO_RESERVE_PER_DAY=2;
-const REDUCED_AUTO_MIN_DEMAND=15;
-const ONE_CLASS_EXTRA_MIN_DEMAND=25;
-const ONE_CLASS_RESERVE_MIN_DEMAND=15;
-const ONE_CLASS_RESERVE_MAX_DEMAND=20;
 const CONDITIONAL_EXCLUSION_MIN_DEMAND=13; // More than 12 absent periods on the same school day
 const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البالدي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
 const ADVANCED_RANK=new Set(["دعاء الحربي","عوالي السبيعي","حصة المنتشري","عايدة الصاعدي","عواطف الحربي","ريم القحطاني","بدرية الحربي","حنان المجنوني"]);
@@ -884,10 +878,6 @@ function assignmentsOn(date){return state.assignments.filter(x=>x.date===date&&x
 function reserveDailyAssignedCount(teacherId,date,exceptAssignmentId=""){
   return assignmentsOn(date).filter(a=>String(a.id)!==String(exceptAssignmentId)&&
     String(a.assignedTeacherId)===String(teacherId)).length;
-}
-function reserveOneClassPriorityActive(date){
-  const demand=dailyDemand(date);
-  return demand>=ONE_CLASS_RESERVE_MIN_DEMAND&&demand<=ONE_CLASS_RESERVE_MAX_DEMAND;
 }
 // Mandatory combined original + reserve ceiling for every teacher in both auto modes.
 function reserveAutoCombinedDailyCap(date){
