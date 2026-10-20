@@ -48,7 +48,7 @@ function renderRows(){
  box.innerHTML='<div class="mj41-table-scroll"><table class="mj41-cert-table">'+
    '<thead><tr><th scope="col">الاسم</th><th scope="col">نوع الشهادة</th>'+
    '<th scope="col">تاريخ الاعتماد</th><th scope="col">مشاهدة</th>'+
-   '<th scope="col">تحميل</th></tr></thead><tbody>'+
+   '<th scope="col">تحميل</th><th scope="col">مشاركة PDF</th></tr></thead><tbody>'+
    sorted.map(r=>'<tr>'+
     '<td data-label="الاسم"><strong>'+esc(r.name)+'</strong></td>'+
     '<td data-label="نوع الشهادة">'+esc(CATEGORIES[r.category]||"شهادة معتمدة")+'</td>'+
@@ -57,6 +57,7 @@ function renderRows(){
       'data-mj37-preview="'+esc(r.id)+'" aria-label="مشاهدة شهادة '+esc(r.name)+'" title="مشاهدة الشهادة">'+actionIcon("preview")+'</button></td>'+
     '<td data-label="تحميل PDF" class="mj41-action-cell"><button type="button" class="mj41-icon-button" '+
       'data-mj37-download="'+esc(r.id)+'" aria-label="تحميل شهادة '+esc(r.name)+'" title="تحميل PDF">'+actionIcon("download")+'</button></td>'+
+    '<td data-label="مشاركة PDF" class="mj41-action-cell"><button type="button" class="mj41-icon-button" data-mj37-share="'+esc(r.id)+'" aria-label="مشاركة شهادة PDF '+esc(r.name)+' عبر واتساب" title="مشاركة ملف PDF في واتساب">مشاركة PDF</button></td>'+
    '</tr>').join('')+'</tbody></table></div>';
 }
 function fitDialog(dialog){
@@ -76,7 +77,8 @@ function preview(row){
  dialog.innerHTML='<div class="mj37-dialog-head"><strong>شهادة معتمدة – '+esc(row.name)+'</strong>'+
   '<button type="button" data-mj37-close>إغلاق</button></div>'+
   '<div class="mj37-preview"><div class="mj37-frame">'+template(row)+'</div></div>'+
-  '<div class="mj37-dialog-bottom"><button type="button" class="primary" data-mj37-download="'+esc(row.id)+'">إصدار وتحميل PDF</button></div>';
+  '<div class="mj37-dialog-bottom"><button type="button" class="primary" data-mj37-download="'+esc(row.id)+'">إصدار وتحميل PDF</button>'+
+  '<button type="button" data-mj37-share="'+esc(row.id)+'">مشاركة PDF عبر واتساب</button></div>';
  if(dialog.open)dialog.close();
  dialog.showModal();
  requestAnimationFrame(()=>{fitDialog(dialog);requestAnimationFrame(()=>fitDialog(dialog))});
@@ -99,7 +101,9 @@ async function awaitImages(paper){
   img.addEventListener("error",resolve,{once:true});
  })));
 }
-async function download(row,button){
+async function download(row,button,forSharing=false){
+ const bridge=window.ManjazCertificateShareV50;
+ if(forSharing&&bridge?.isReady(button)){bridge.share(button,status);return}
  if(downloading)return;downloading=true;
  const original=button?.textContent||"";
  if(button){button.disabled=true;button.textContent="جارٍ تجهيز PDF..."}
@@ -128,10 +132,15 @@ async function download(row,button){
   const w=canvas.width*ratio,h=canvas.height*ratio;
   pdf.addImage(canvas.toDataURL("image/png"),"PNG",(297-w)/2,(210-h)/2,w,h);
   const safe=String(row.name||"شهادة").replace(/[^\u0600-\u06FF\w -]/g,"").slice(0,75);
-  pdf.save("منجز_شهادة_معتمدة_"+safe+".pdf");
-  status("تم إصدار الشهادة المعتمدة وتحميل PDF دون علامة مائية.");
+  if(forSharing){
+   if(!bridge)throw Error("أداة مشاركة ملفات PDF غير محملة");
+   bridge.prepare(button,pdf,"شهادة معتمدة: "+(row.title||row.name)+" – "+row.name,"منجز_شهادة_معتمدة_"+safe+".pdf",status);
+  }else{
+   pdf.save("منجز_شهادة_معتمدة_"+safe+".pdf");
+   status("تم إصدار الشهادة المعتمدة وتحميل PDF دون علامة مائية.");
+  }
  }catch(error){console.error("manjaz public certificate",error);status("تعذر إصدار الشهادة: "+(error?.message||error),true)}
- finally{stage?.remove();downloading=false;if(button?.isConnected){button.disabled=false;button.textContent=original}}
+ finally{stage?.remove();downloading=false;if(button?.isConnected){button.disabled=false;if(!bridge?.isReady(button))button.textContent=original}}
 }
 async function mountInto(host){
  if(!host||!host.isConnected)return;
@@ -174,6 +183,7 @@ document.addEventListener("click",e=>{
   return;
  }
  const down=e.target.closest("[data-mj37-download]");if(down){const item=getItem(down.dataset.mj37Download);void download(item,down);return}
+ const share=e.target.closest("[data-mj37-share]");if(share){const item=getItem(share.dataset.mj37Share);if(item)void download(item,share,true);return}
 });
 window.addEventListener("resize",()=>fitDialog(document.getElementById("mj37Dialog")),{passive:true});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("mj37Dialog")?.close()});
