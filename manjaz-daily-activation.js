@@ -117,27 +117,42 @@ async function loadSchoolLists(){
   uiMsg("تعذر تحميل بعض قوائم المدرسة؛ أسماء الموجهات ومحضرة المختبر متاحة. أعيدي فتح القسم إذا كانت قائمة الفصول فارغة.",true);
  }
 }
+function selectedBag(){return byId("ma-bag")?byId("ma-bag").value:"general";}
+function activeCatalog(){return selectedBag()==="positive_behavior"?(window.ManjazBehaviorCards||[]).map(x=>[x.id,x.main,x.sub,x.title]):CATALOG;}
+function updateBag(){
+ var mode=selectedBag();
+ byId("ma-standard-fields").hidden=mode==="other";byId("ma-other-fields").hidden=mode!=="other";
+ byId("ma-export-solved").hidden=mode!=="general";
+ chooseMain();resetSubmissionStatus();
+ var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
+}
 function chooseMain(){
- var mains=[...new Set(CATALOG.map(function(x){return x[1];}))];
- optionList(byId("ma-main"),mains,"اختاري القسم الرئيسي");
- byId("ma-main").value=mains[0]||"";chooseSub();
+ var mains=[...new Set(activeCatalog().map(x=>x[1]))];
+ optionList(byId("ma-main"),selectedBag()==="other"?[]:mains,"اختاري القسم الرئيسي");
+ if(selectedBag()!=="other")byId("ma-main").value=mains[0]||"";
+ chooseSub();
 }
 function chooseSub(){
- var m=byId("ma-main").value;
- var sub=[...new Set(CATALOG.filter(function(x){return x[1]===m;}).map(function(x){return x[2];}))];
- optionList(byId("ma-sub"),sub,"اختاري القسم الفرعي");
- if(sub.length)byId("ma-sub").value=sub[0];chooseCard();
+ var subs=[...new Set(activeCatalog().filter(x=>x[1]===byId("ma-main").value).map(x=>x[2]))];
+ optionList(byId("ma-sub"),selectedBag()==="other"?[]:subs,"اختاري القسم الفرعي");
+ if(subs.length&&selectedBag()!=="other")byId("ma-sub").value=subs[0];
+ chooseCard();
 }
 function chooseCard(){
  var main=byId("ma-main").value,sub=byId("ma-sub").value;
- var options=CATALOG.filter(function(x){return x[1]===main&&x[2]===sub;}).map(function(x){return [String(x[0]),String(x[0]).padStart(3,"0")+" | "+x[3]];});
- optionList(byId("ma-card"),options,"اختاري عنوان البطاقة");
- if(options.length)byId("ma-card").value=options[0][0];
+ var cards=activeCatalog().filter(x=>x[1]===main&&x[2]===sub).map(x=>[String(x[0]),String(x[0]).padStart(3,"0")+" | "+x[3]]);
+ optionList(byId("ma-card"),selectedBag()==="other"?[]:cards,"اختاري رقم البطاقة وعنوانها");
+ if(cards.length&&selectedBag()!=="other")byId("ma-card").value=cards[0][0];
  cardChanged();
 }
 function currentCard(){
- var c=CATALOG.find(function(x){return String(x[0])===byId("ma-card").value;});
- byId("ma-selected").textContent=c?String(c[0]).padStart(3,"0")+" / ١٣٠ — "+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
+ if(selectedBag()==="other"){
+  var t=byId("ma-custom-title").value.trim();
+  byId("ma-selected").textContent=t?"عنوان التفعيل: "+t:"عنوان التفعيل مطلوب قبل التصدير والاعتماد";
+  return t?[1,"أخرى","تفعيل حر",t]:null;
+ }
+ var c=activeCatalog().find(x=>String(x[0])===byId("ma-card").value);
+ byId("ma-selected").textContent=c?String(c[0]).padStart(3,"0")+(selectedBag()==="positive_behavior"?" / ٩٠ — ":" / ١٣٠ — ")+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
  return c;
 }
 function selectedIndicators(){return [...document.querySelectorAll(".ma-check-item:checked")].map(function(x){return x.value;});}
@@ -155,12 +170,14 @@ function cardChanged(){
  updateIndicatorLabel();
 }
 function values(){
- var c=CATALOG.find(function(x){return String(x[0])===byId("ma-card").value;});if(!c)return null;
+ var bag=selectedBag(),title=bag==="other"?byId("ma-custom-title").value.trim():"";
+ var c=bag==="other"?[1,"أخرى","تفعيل حر",title]:activeCatalog().find(x=>String(x[0])===byId("ma-card").value);
+ if(!c)return null;
  var klasses=selectedClasses(),periods=selectedPeriods();
- return {c:c,teacher:byId("ma-teacher").value,klass:klasses[0]||"",klasses:klasses,
- weekday:byId("ma-weekday").value,day:Number(byId("ma-hday").value),
- month:Number(byId("ma-hmonth").value),year:Number(byId("ma-hyear").value),
- period:periods[0]||0,periods:periods,indicators:selectedIndicators(),
+ return {c:c,bag:bag,title:c[3],url:bag==="other"?byId("ma-custom-url").value.trim():"",
+ teacher:byId("ma-teacher").value,klass:klasses[0]||"",klasses:klasses,
+ weekday:byId("ma-weekday").value,day:Number(byId("ma-hday").value),month:Number(byId("ma-hmonth").value),
+ year:Number(byId("ma-hyear").value),period:periods[0]||0,periods:periods,indicators:selectedIndicators(),
  outcome:byId("ma-outcome")?byId("ma-outcome").value.trim():""};
 }
 function gregorianFromHijri(v){
@@ -183,6 +200,8 @@ function completeForm(v){
   uiMsg("لا يمكن التصدير أو الحفظ قبل تحديد اليوم والتاريخ الهجري والمعلمة والفصل والحصة والبطاقة.",true);
   return false;
  }
+ if(v.bag==="other"&&(v.title.length<2||v.title.length>160)){uiMsg("عنوان التفعيل إلزامي (٢–١٦٠ حرفًا).",true);return false;}
+ if(v.bag==="other"&&v.url&&!/^https?:\/\/[^\s]+$/i.test(v.url)){uiMsg("اكتبي رابطًا يبدأ بـ https:// أو http://",true);return false;}
  // Quick verification indicators and achievement description are optional.
  if(v.outcome&&v.outcome.length>600){
   uiMsg("وصف نواتج الإنجاز يتجاوز الحد المسموح (٦٠٠ حرف).",true);
@@ -219,7 +238,8 @@ async function exportVersion(variant){
   if(!completeForm(v)){if(previewTab)previewTab.close();return;}
   if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
    throw new Error("محرك تصدير البطاقات لم يكتمل تحميله. أعيدي فتح القسم ثم حاولي مجددًا.");
-  var result=await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v));
+  if(variant==="solved"&&v.bag!=="general")throw new Error("هذه الحقيبة لا تحتوي على حل نموذجي.");
+  var result=v.bag==="general"?await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v)):await window.ManjazExtraActivityV57.exportPdf(v);
   if(!result||!(result.blob instanceof Blob)||!result.blob.size)
    throw new Error("لم يُنشأ ملف PDF صالح للتنزيل.");
   if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
@@ -349,7 +369,7 @@ function beginEditing(row){
  byId("ma-data-heading").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function rowPayload(v){
- return {teacher_name:v.teacher,class_name:v.klass,class_names:v.klasses,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,periods:v.periods,reserve_date:gregorianFromHijri(v),assignments:[],card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators,outcome_description:v.outcome};
+ return {teacher_name:v.teacher,class_name:v.klass,class_names:v.klasses,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,periods:v.periods,reserve_date:gregorianFromHijri(v),assignments:[],card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators,outcome_description:v.outcome,bag_key:v.bag,reference_url:v.url};
 }
 async function getVerifiedAdminToken(){
  var data=null;
