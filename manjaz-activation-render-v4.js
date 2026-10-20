@@ -169,13 +169,17 @@ async function captureOriginalPage(section,html2pdf){
  // Capture must finish while the fully-visible A4 source is attached to the DOM.
  // Old code removed the paper in a finally block *before* html2canvas read it,
  // and made it visibility:hidden, yielding empty/failed PDFs.
+ var staging=document.createElement("div");
+ staging.style.cssText="position:fixed;top:0;left:-20000px;z-index:-1;pointer-events:none;visibility:visible;";
  var paper=document.createElement("div");
- paper.style.cssText="box-sizing:border-box;width:210mm;height:297mm;min-height:297mm;max-height:297mm;overflow:hidden;direction:rtl;background:#fff;position:fixed;top:0;left:0;z-index:-2147483000;pointer-events:none;visibility:visible;";
+ // Pass a naturally positioned A4 paper to html2pdf; keep only its parent off-screen.
+ paper.style.cssText="box-sizing:border-box;width:210mm;height:297mm;min-height:297mm;max-height:297mm;overflow:hidden;direction:rtl;background:#fff;position:relative;visibility:visible;";
  var stylesheet=document.createElement("style");
  stylesheet.textContent=previewStyles()+" .session{width:210mm!important;height:297mm!important;max-height:297mm!important;min-height:297mm!important;margin:0!important;box-shadow:none!important;transform:none!important;page-break-after:auto!important;break-after:auto!important;background:#fff!important} .ma-holder{width:210mm!important}";
  paper.appendChild(stylesheet);
  paper.appendChild(document.importNode(section,true));
- document.body.appendChild(paper);
+ staging.appendChild(paper);
+ document.body.appendChild(staging);
  try{
   if(document.fonts&&document.fonts.ready)await document.fonts.ready;
   var page=paper.querySelector(".session");
@@ -195,7 +199,7 @@ async function captureOriginalPage(section,html2pdf){
   return canvas;
  }finally{
   // Remove the temporary source only after the canvas has been captured.
-  paper.remove();
+  staging.remove();
  }
 }
 async function exportPdf(id,variant,m){
