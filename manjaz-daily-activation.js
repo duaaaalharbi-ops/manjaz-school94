@@ -51,6 +51,9 @@ function updateSelectionSummary(){
  var c=byId("ma-class-summary"),p=byId("ma-period-summary");
  if(c)c.textContent=klasses.length?"الفصول المحددة ("+klasses.length+"): "+klasses.join("، "):"لم يتم اختيار فصل";
  if(p)p.textContent=periods.length?"الحصص المحددة ("+periods.length+"): "+periods.map(function(x){return "الحصة "+x;}).join("، "):"لم يتم اختيار حصة";
+ var ct=byId("ma-class-trigger"),pt=byId("ma-period-trigger");
+ if(ct)ct.textContent=klasses.length?"الفصول المحددة ("+klasses.length+"): "+klasses.join("، "):"اختاري الفصول (اختيار متعدد)";
+ if(pt)pt.textContent=periods.length?"الحصص المحددة ("+periods.length+"): "+periods.map(String).join("، "):"اختاري الحصص (اختيار متعدد)";
  var hint=byId("ma-multi-hint");
  if(hint)hint.textContent="تُحفظ الفصول والحصص المختارة في سجل تنفيذ واحد للبطاقة نفسها."+
    (klasses.length&&periods.length?" عدد الفصول: "+klasses.length+" | عدد الحصص: "+periods.length:"");
@@ -64,7 +67,7 @@ function drawClassOptions(){
   option.value=klass;option.textContent=klass;option.selected=chosen.includes(klass);
   select.appendChild(option);
  });
- updateSelectionSummary();
+ renderMultiDropdown('class');updateSelectionSummary();
 }
 function selectMulti(kind,values){
  var select=byId(kind==="class"?"ma-class-choices":"ma-period-choices");
@@ -77,7 +80,22 @@ function selectMulti(kind,values){
   select.appendChild(option);
  });
  [...select.options].forEach(function(option){option.selected=chosen.includes(option.value);});
- updateSelectionSummary();
+ renderMultiDropdown(kind);updateSelectionSummary();
+}
+function renderMultiDropdown(kind){
+ var cls=kind==="class",sel=byId(cls?"ma-class-choices":"ma-period-choices"),host=byId(cls?"ma-class-checks":"ma-period-checks");
+ if(!sel||!host)return;
+ host.replaceChildren();
+ [...sel.options].filter(function(o){return !o.disabled;}).forEach(function(opt){
+  var label=document.createElement("label");label.className="ma-picker-option";
+  var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!opt.selected;cb.value=opt.value;
+  cb.setAttribute("aria-label",(cls?"اختيار الفصل ":"اختيار الحصة ")+opt.textContent);
+  cb.onchange=function(){
+   opt.selected=cb.checked;updateSelectionSummary();resetSubmissionStatus();
+   var download=byId("ma-pdf-download");if(download)download.hidden=true;
+  };
+  label.appendChild(cb);label.appendChild(document.createTextNode(" "+opt.textContent));host.appendChild(label);
+ });
 }
 function rowClasses(row){return Array.isArray(row.class_names)&&row.class_names.length?row.class_names:[row.class_name].filter(Boolean);}
 function rowPeriods(row){return Array.isArray(row.periods)&&row.periods.length?row.periods:[row.period].filter(function(x){return Number(x)>=1;});}
@@ -117,27 +135,42 @@ async function loadSchoolLists(){
   uiMsg("تعذر تحميل بعض قوائم المدرسة؛ أسماء الموجهات ومحضرة المختبر متاحة. أعيدي فتح القسم إذا كانت قائمة الفصول فارغة.",true);
  }
 }
+function selectedBag(){return byId("ma-bag")?byId("ma-bag").value:"general";}
+function activeCatalog(){return selectedBag()==="positive_behavior"?(window.ManjazBehaviorCards||[]).map(x=>[x.id,x.main,x.sub,x.title]):CATALOG;}
+function updateBag(){
+ var mode=selectedBag();
+ byId("ma-standard-fields").hidden=mode==="other";byId("ma-other-fields").hidden=mode!=="other";
+ byId("ma-export-solved").hidden=mode!=="general";
+ chooseMain();resetSubmissionStatus();
+ var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
+}
 function chooseMain(){
- var mains=[...new Set(CATALOG.map(function(x){return x[1];}))];
- optionList(byId("ma-main"),mains,"اختاري القسم الرئيسي");
- byId("ma-main").value=mains[0]||"";chooseSub();
+ var mains=[...new Set(activeCatalog().map(x=>x[1]))];
+ optionList(byId("ma-main"),selectedBag()==="other"?[]:mains,"اختاري القسم الرئيسي");
+ if(selectedBag()!=="other")byId("ma-main").value=mains[0]||"";
+ chooseSub();
 }
 function chooseSub(){
- var m=byId("ma-main").value;
- var sub=[...new Set(CATALOG.filter(function(x){return x[1]===m;}).map(function(x){return x[2];}))];
- optionList(byId("ma-sub"),sub,"اختاري القسم الفرعي");
- if(sub.length)byId("ma-sub").value=sub[0];chooseCard();
+ var subs=[...new Set(activeCatalog().filter(x=>x[1]===byId("ma-main").value).map(x=>x[2]))];
+ optionList(byId("ma-sub"),selectedBag()==="other"?[]:subs,"اختاري القسم الفرعي");
+ if(subs.length&&selectedBag()!=="other")byId("ma-sub").value=subs[0];
+ chooseCard();
 }
 function chooseCard(){
  var main=byId("ma-main").value,sub=byId("ma-sub").value;
- var options=CATALOG.filter(function(x){return x[1]===main&&x[2]===sub;}).map(function(x){return [String(x[0]),String(x[0]).padStart(3,"0")+" | "+x[3]];});
- optionList(byId("ma-card"),options,"اختاري عنوان البطاقة");
- if(options.length)byId("ma-card").value=options[0][0];
+ var cards=activeCatalog().filter(x=>x[1]===main&&x[2]===sub).map(x=>[String(x[0]),String(x[0]).padStart(3,"0")+" | "+x[3]]);
+ optionList(byId("ma-card"),selectedBag()==="other"?[]:cards,"اختاري رقم البطاقة وعنوانها");
+ if(cards.length&&selectedBag()!=="other")byId("ma-card").value=cards[0][0];
  cardChanged();
 }
 function currentCard(){
- var c=CATALOG.find(function(x){return String(x[0])===byId("ma-card").value;});
- byId("ma-selected").textContent=c?String(c[0]).padStart(3,"0")+" / ١٣٠ — "+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
+ if(selectedBag()==="other"){
+  var t=byId("ma-custom-title").value.trim();
+  byId("ma-selected").textContent=t?"عنوان التفعيل: "+t:"عنوان التفعيل مطلوب قبل التصدير والاعتماد";
+  return t?[1,"أخرى","تفعيل حر",t]:null;
+ }
+ var c=activeCatalog().find(x=>String(x[0])===byId("ma-card").value);
+ byId("ma-selected").textContent=c?String(c[0]).padStart(3,"0")+(selectedBag()==="positive_behavior"?" / ٩٠ — ":" / ١٣٠ — ")+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
  return c;
 }
 function selectedIndicators(){return [...document.querySelectorAll(".ma-check-item:checked")].map(function(x){return x.value;});}
@@ -155,12 +188,14 @@ function cardChanged(){
  updateIndicatorLabel();
 }
 function values(){
- var c=CATALOG.find(function(x){return String(x[0])===byId("ma-card").value;});if(!c)return null;
+ var bag=selectedBag(),title=bag==="other"?byId("ma-custom-title").value.trim():"";
+ var c=bag==="other"?[1,"أخرى","تفعيل حر",title]:activeCatalog().find(x=>String(x[0])===byId("ma-card").value);
+ if(!c)return null;
  var klasses=selectedClasses(),periods=selectedPeriods();
- return {c:c,teacher:byId("ma-teacher").value,klass:klasses[0]||"",klasses:klasses,
- weekday:byId("ma-weekday").value,day:Number(byId("ma-hday").value),
- month:Number(byId("ma-hmonth").value),year:Number(byId("ma-hyear").value),
- period:periods[0]||0,periods:periods,indicators:selectedIndicators(),
+ return {c:c,bag:bag,title:c[3],url:bag==="other"?byId("ma-custom-url").value.trim():"",
+ teacher:byId("ma-teacher").value,klass:klasses[0]||"",klasses:klasses,
+ weekday:byId("ma-weekday").value,day:Number(byId("ma-hday").value),month:Number(byId("ma-hmonth").value),
+ year:Number(byId("ma-hyear").value),period:periods[0]||0,periods:periods,indicators:selectedIndicators(),
  outcome:byId("ma-outcome")?byId("ma-outcome").value.trim():""};
 }
 function gregorianFromHijri(v){
@@ -183,6 +218,8 @@ function completeForm(v){
   uiMsg("لا يمكن التصدير أو الحفظ قبل تحديد اليوم والتاريخ الهجري والمعلمة والفصل والحصة والبطاقة.",true);
   return false;
  }
+ if(v.bag==="other"&&(v.title.length<2||v.title.length>160)){uiMsg("عنوان التفعيل إلزامي (٢–١٦٠ حرفًا).",true);return false;}
+ if(v.bag==="other"&&v.url&&!/^https?:\/\/[^\s]+$/i.test(v.url)){uiMsg("اكتبي رابطًا يبدأ بـ https:// أو http://",true);return false;}
  // Quick verification indicators and achievement description are optional.
  if(v.outcome&&v.outcome.length>600){
   uiMsg("وصف نواتج الإنجاز يتجاوز الحد المسموح (٦٠٠ حرف).",true);
@@ -219,7 +256,8 @@ async function exportVersion(variant){
   if(!completeForm(v)){if(previewTab)previewTab.close();return;}
   if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
    throw new Error("محرك تصدير البطاقات لم يكتمل تحميله. أعيدي فتح القسم ثم حاولي مجددًا.");
-  var result=await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v));
+  if(variant==="solved"&&v.bag!=="general")throw new Error("هذه الحقيبة لا تحتوي على حل نموذجي.");
+  var result=v.bag==="general"?await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v)):await window.ManjazExtraActivityV57.exportPdf(v);
   if(!result||!(result.blob instanceof Blob)||!result.blob.size)
    throw new Error("لم يُنشأ ملف PDF صالح للتنزيل.");
   if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
@@ -311,7 +349,7 @@ function clearFields(){
  byId("ma-teacher").value="";selectMulti("class",[]);selectMulti("period",[]);
  byId("ma-weekday").value=initialWeekday();
  var d=initialHijri();setSelectValue("ma-hday",d.d);setSelectValue("ma-hmonth",d.m);setSelectValue("ma-hyear",d.y);
- chooseMain();byId("ma-outcome").value="";
+ byId("ma-bag").value="general";byId("ma-custom-title").value="";byId("ma-custom-url").value="";updateBag();byId("ma-outcome").value="";
  document.querySelectorAll(".ma-check-item").forEach(function(x){x.checked=false;});
  updateIndicatorLabel();
  var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
@@ -333,12 +371,9 @@ function beginEditing(row){
  setSelectValue("ma-teacher",row.teacher_name);
  selectMulti("class",rowClasses(row));
  selectMulti("period",rowPeriods(row));
- setSelectValue("ma-main",row.main_category);
- chooseSub();
- setSelectValue("ma-sub",row.sub_category);
- chooseCard();
- setSelectValue("ma-card",row.card_id);
- currentCard();
+ setSelectValue("ma-bag",row.bag_key||"general");updateBag();
+ if(selectedBag()==="other"){byId("ma-custom-title").value=row.card_title||"";byId("ma-custom-url").value=row.reference_url||"";currentCard();}
+ else{setSelectValue("ma-main",row.main_category);chooseSub();setSelectValue("ma-sub",row.sub_category);chooseCard();setSelectValue("ma-card",row.card_id);currentCard();}
  var chosen=Array.isArray(row.verification_indicators)?row.verification_indicators:[];
  document.querySelectorAll(".ma-check-item").forEach(function(x){x.checked=chosen.includes(x.value);});
  updateIndicatorLabel();
@@ -349,7 +384,7 @@ function beginEditing(row){
  byId("ma-data-heading").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function rowPayload(v){
- return {teacher_name:v.teacher,class_name:v.klass,class_names:v.klasses,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,periods:v.periods,reserve_date:gregorianFromHijri(v),assignments:[],card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators,outcome_description:v.outcome};
+ return {teacher_name:v.teacher,class_name:v.klass,class_names:v.klasses,weekday:v.weekday,hijri_day:v.day,hijri_month:v.month,hijri_year:v.year,period:v.period,periods:v.periods,reserve_date:gregorianFromHijri(v),assignments:[],card_id:v.c[0],main_category:v.c[1],sub_category:v.c[2],card_title:v.c[3],verification_indicators:v.indicators,outcome_description:v.outcome,bag_key:v.bag,reference_url:v.url};
 }
 async function getVerifiedAdminToken(){
  var data=null;
@@ -617,6 +652,13 @@ function initStyle(){
  "#manjazActivation .ma-check-choices input{width:17px;height:17px;accent-color:#0b7975}"+
  "#manjazActivation select.ma-native-multi{width:100%;height:auto;min-height:150px;box-sizing:border-box;border:1px solid #cfdadd;border-radius:10px;padding:8px;font:inherit;background:#fff;overflow-y:auto}"+
  "#manjazActivation select.ma-native-multi option{padding:8px 10px;line-height:1.65;white-space:normal}"+
+ "#manjazActivation .ma-standard-fields{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}"+
+ "#manjazActivation .ma-picker{position:relative;background:#fff;border:1px solid #a9bdc4;border-radius:8px;min-width:0}"+
+ "#manjazActivation .ma-picker>summary{padding:12px;color:#164f5b;cursor:pointer;font-size:13px;overflow-wrap:anywhere}"+
+ "#manjazActivation .ma-picker-options{display:grid;position:absolute;top:100%;right:0;left:0;z-index:200;max-height:250px;overflow-y:auto;background:#fff;border:1px solid #a9bdc4;border-radius:0 0 10px 10px;box-shadow:0 6px 17px #0002;padding:6px}"+
+ "#manjazActivation .ma-picker-option{display:flex;gap:8px;align-items:center;padding:8px 7px;font-size:14px;margin:0;cursor:pointer;font-weight:500}"+
+ "#manjazActivation .ma-picker-option input{width:18px;height:18px;accent-color:#0b7975;flex-shrink:0}"+
+ "#manjazActivation #ma-other-fields input{width:100%;padding:11px;min-height:43px;box-sizing:border-box;margin:3px 0 10px;border:1px solid #a9bdc4;border-radius:8px;font:inherit}"+
  "#manjazActivation .ma-multi-summary{font-size:12px;color:#3c6572;line-height:1.8;margin:7px 0 0;overflow-wrap:anywhere}"+
 
  "#manjazActivation .ma-multi-hint{font-size:12px;color:#3c6572;background:#f0f7f7;padding:10px;border-radius:8px;margin:12px 0 0}"+
@@ -627,26 +669,29 @@ function initStyle(){
  "#manjazActivation textarea{display:block;width:100%;min-height:86px;padding:12px;border:1px solid #a9bdc4;border-radius:9px;resize:vertical;font:inherit;line-height:1.8;color:#153b47;background:#fff}"+
  "#manjazActivation .ma-answer{background:#fff6f5;border:1px solid #e8bfbc;border-radius:11px;padding:14px;color:#8b2941;white-space:pre-line;font-size:14px;line-height:1.9}"+
  "#manjazActivation .ma-report-body{max-height:440px;overflow:auto}#manjazActivation table{border-collapse:collapse;width:100%;font-size:12px}#manjazActivation td,#manjazActivation th{border:1px solid #d7e1e4;padding:7px;text-align:right}"+
- "@media(max-width:640px){#manjazActivation .ma-grid,#manjazActivation .ma-admin-fields{grid-template-columns:1fr}#manjazActivation .ma-hero{padding:17px}#manjazActivation select.ma-native-multi{min-height:190px;font-size:16px;padding:10px}}";
+ "@media(max-width:640px){#manjazActivation .ma-grid,#manjazActivation .ma-admin-fields{grid-template-columns:1fr}#manjazActivation .ma-hero{padding:17px}#manjazActivation .ma-standard-fields{grid-template-columns:1fr}#manjazActivation select.ma-native-multi{min-height:190px;font-size:16px;padding:10px}}";
  document.head.appendChild(style);
 }
 function render(){
  if(!isPage())return;var view=byId("view");if(!view||byId("manjazActivation"))return;
  initStyle();var root=document.createElement("main");root.id="manjazActivation";
  root.innerHTML=
- '<header class="ma-hero"><h2>تفعيل الاحتياط اليومي</h2><p>حقيبة الأنشطة الإثرائية | الثانوية الرابعة والتسعون – مسارات</p><div class="ma-stats"><span class="ma-stat">١٣٠ بطاقة</span><span class="ma-stat">١١ قسمًا رئيسيًا</span><span class="ma-stat">١٥ قسمًا فرعيًا</span></div><button id="ma-admin-entry-top" type="button" class="secondary ma-admin-top">دخول الإدارة | استعراض سجل التنفيذ</button></header>'+
+ '<header class="ma-hero"><h2>تفعيل حصص الاحتياط</h2><p>حقائب التفعيل | الثانوية الرابعة والتسعون – مسارات</p><div class="ma-stats"><span class="ma-stat">الحقيبة العامة: ١٣٠ بطاقة</span><span class="ma-stat">تعزيز السلوك الإيجابي: ٩٠ بطاقة</span><span class="ma-stat">أخرى: تفعيل حر</span></div><button id="ma-admin-entry-top" type="button" class="secondary ma-admin-top">دخول الإدارة | استعراض سجل التنفيذ</button></header>'+
  '<section class="ma-panel"><h3 id="ma-data-heading">بيانات التنفيذ اليومي</h3><div class="ma-grid">'+
  '<div><label for="ma-weekday">اليوم</label><select id="ma-weekday"></select></div>'+
  '<div><label for="ma-hyear">السنة الهجرية</label><select id="ma-hyear"></select></div>'+
  '<div><label for="ma-hday">اليوم الهجري</label><select id="ma-hday"></select></div>'+
  '<div><label for="ma-hmonth">الشهر الهجري</label><select id="ma-hmonth"></select></div>'+
  '<div><label for="ma-teacher">اسم المعلمة المنفذة</label><select id="ma-teacher"><option value="">تحميل المعلمات…</option></select></div>'+
- '<div><label for="ma-class-choices">الفصول (اختيار متعدد)</label><select id="ma-class-choices" class="ma-native-multi" multiple size="7" aria-describedby="ma-class-summary"><option disabled>جارٍ تحميل الفصول…</option></select><p id="ma-class-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار فصل</p></div>'+
- '<div><label for="ma-period-choices">الحصص (اختيار متعدد)</label><select id="ma-period-choices" class="ma-native-multi" multiple size="7" aria-describedby="ma-period-summary"></select><p id="ma-period-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار حصة</p></div></div><p id="ma-multi-hint" class="ma-multi-hint" aria-live="polite">تُحفظ جميع الاختيارات في سجل تفعيل واحد.</p><div class="ma-clear-actions"><button type="button" id="ma-clear" class="secondary">مسح بيانات التعبئة</button></div><div class="ma-edit-bar" id="ma-edit-bar" hidden><p>تعديل سجل محفوظ؛ سيُحدَّث السجل الأصلي دون إضافة سجل جديد.</p><div class="ma-actions"><button type="button" id="ma-save-edit">حفظ التعديلات</button><button type="button" id="ma-cancel-edit" class="secondary">إلغاء التعديل</button></div></div></section>'+
+ '<div><label>الفصول (اختيار متعدد)</label><details class="ma-picker" id="ma-class-dropdown"><summary id="ma-class-trigger">اختاري الفصول (اختيار متعدد)</summary><div class="ma-picker-options" id="ma-class-checks"></div></details><select id="ma-class-choices" multiple hidden aria-hidden="true"></select><p id="ma-class-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار فصل</p></div>'+
+ '<div><label>الحصص (اختيار متعدد)</label><details class="ma-picker" id="ma-period-dropdown"><summary id="ma-period-trigger">اختاري الحصص (اختيار متعدد)</summary><div class="ma-picker-options" id="ma-period-checks"></div></details><select id="ma-period-choices" multiple hidden aria-hidden="true"></select><p id="ma-period-summary" class="ma-multi-summary" aria-live="polite">لم يتم اختيار حصة</p></div></div><p id="ma-multi-hint" class="ma-multi-hint" aria-live="polite">تُحفظ جميع الاختيارات في سجل تفعيل واحد.</p><div class="ma-clear-actions"><button type="button" id="ma-clear" class="secondary">مسح بيانات التعبئة</button></div><div class="ma-edit-bar" id="ma-edit-bar" hidden><p>تعديل سجل محفوظ؛ سيُحدَّث السجل الأصلي دون إضافة سجل جديد.</p><div class="ma-actions"><button type="button" id="ma-save-edit">حفظ التعديلات</button><button type="button" id="ma-cancel-edit" class="secondary">إلغاء التعديل</button></div></div></section>'+
  '<section class="ma-panel"><h3>اختيار بطاقة النشاط</h3><div class="ma-grid">'+
+ '<div class="ma-verify-box"><label for="ma-bag">حقيبة التفعيل</label><select id="ma-bag"></select></div>'+ 
+ '<div id="ma-standard-fields" class="ma-standard-fields">'+
  '<div><label for="ma-main">القسم الرئيسي</label><select id="ma-main"></select></div>'+
  '<div><label for="ma-sub">القسم الفرعي</label><select id="ma-sub"></select></div>'+
- '<div style="grid-column:1/-1"><label for="ma-card">عنوان البطاقة</label><select id="ma-card"></select></div>'+
+ '<div style="grid-column:1/-1"><label for="ma-card">رقم البطاقة وعنوانها</label><select id="ma-card"></select></div></div>'+ 
+ '<div id="ma-other-fields" class="ma-verify-box" hidden><label for="ma-custom-title">عنوان التفعيل (إجباري)</label><input id="ma-custom-title" type="text" maxlength="160" placeholder="اكتبي عنوان التفعيل"><label for="ma-custom-url">إرفاق رابط إلكتروني فقط (اختياري)</label><input id="ma-custom-url" type="url" maxlength="1200" placeholder="https://"></div>'+
  '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
  '<div class="ma-verify-box"><label for="ma-outcome">مساحة الإنجاز – وصف نواتج الإنجاز (اختياري)</label><textarea id="ma-outcome" maxlength="600" rows="3" placeholder="يمكن كتابة وصف مختصر للنواتج، أو ترك الحقل فارغًا"></textarea></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
@@ -664,9 +709,10 @@ function render(){
   var option=document.createElement("option");
   option.value=String(n);option.textContent="الحصة "+n;choices.appendChild(option);
  }
- updateSelectionSummary();
+ renderMultiDropdown("period");updateSelectionSummary();
  renderExecutors();
- chooseMain();
+ optionList(byId("ma-bag"),[["general","الحقيبة العامة"],["positive_behavior","حقيبة تعزيز السلوك الإيجابي"],["other","أخرى"]],"اختاري حقيبة التفعيل","general");
+ updateBag();
  root.addEventListener("input",function(e){
   if(e.target.matches("textarea,select,input")){var link=byId("ma-pdf-download");if(link)link.hidden=true;}
   if(e.target.matches("#ma-weekday,#ma-hyear,#ma-hday,#ma-hmonth,#ma-teacher,#ma-class-choices,#ma-period-choices,#ma-main,#ma-sub,#ma-card,#ma-outcome,.ma-check-item"))resetSubmissionStatus();
@@ -675,6 +721,9 @@ function render(){
   if(e.target.matches("#ma-class-choices,#ma-period-choices"))updateSelectionSummary();
   if(e.target.matches("#ma-weekday,#ma-hyear,#ma-hday,#ma-hmonth,#ma-teacher,#ma-class-choices,#ma-period-choices,#ma-main,#ma-sub,#ma-card,#ma-outcome,.ma-check-item"))resetSubmissionStatus();
  });
+ byId("ma-bag").addEventListener("change",updateBag);
+ byId("ma-custom-title").addEventListener("input",function(){currentCard();resetSubmissionStatus();var a=byId("ma-pdf-download");if(a)a.hidden=true;});
+ byId("ma-custom-url").addEventListener("input",function(){resetSubmissionStatus();var a=byId("ma-pdf-download");if(a)a.hidden=true;});
  byId("ma-main").addEventListener("change",chooseSub);
  byId("ma-sub").addEventListener("change",chooseCard);
  byId("ma-card").addEventListener("change",cardChanged);
