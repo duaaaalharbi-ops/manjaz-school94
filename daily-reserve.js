@@ -699,6 +699,21 @@ function dailyDemand(date){
   });
   return [...byTeacher.values()].reduce((n,periods)=>n+periods.size,0);
 }
+function reserveExtractedPeriodCount(date,selectedTeacherIds){
+  const selected=new Set((selectedTeacherIds||[]).map(String));
+  const unique=new Set();
+  if(!selected.size)return 0;
+  for(const a of absencesOn(date)){
+    const id=String(a.teacherId||"");
+    if(!selected.has(id))continue;
+    for(const p of (a.periods||[])){
+      const period=Number(p.period);
+      if(Number.isInteger(period)&&period>=1&&period<=7&&clean(p.className))
+        unique.add(id+"|"+period);
+    }
+  }
+  return unique.size;
+}
 function conditionalReserveAllowed(date,plannedDemand=0){
   return Math.max(dailyDemand(date),Number(plannedDemand)||0)>=CONDITIONAL_EXCLUSION_MIN_DEMAND;
 }
@@ -1098,6 +1113,10 @@ function injectStyle(){
   .schedule-day input{min-width:0;border:1px solid #d3dde1;border-radius:8px;padding:8px;font:inherit}
   .reserve-score{font-size:11px;color:#687a83}
   .reserve-public-note{font-size:13px;color:#687a83}
+  #dailyReserveRoot .reserve-extracted-box{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:10px 0 14px;padding:12px 14px;border:1px solid #b7d9d1;border-radius:10px;background:#f5fbf9;direction:rtl}
+  #dailyReserveRoot .reserve-extracted-label{font-weight:800;font-size:13px;color:#214c50}
+  #dailyReserveRoot .reserve-extracted-number{min-width:86px;text-align:center;font-size:19px;color:#0c6357;font-weight:900;background:#fff;border:1px solid #c9dedb;border-radius:8px;padding:5px 12px}
+  #dailyReserveRoot .reserve-extracted-hint{flex-basis:100%;font-size:12px;color:#667e80}
   .reserve-highlight{background:#f8fbfb}
   .reserve-ack{border:1px solid #cfe2dd;background:#f8fcfb;border-radius:14px;padding:14px;display:grid;gap:8px}
   .reserve-teacher-action{display:grid;gap:8px;padding:10px;border-radius:10px;background:#eef7f4}
@@ -1618,6 +1637,11 @@ function dayAdminHTML(){
   const selectedAutoIds=state.autoAbsentIds?.length?state.autoAbsentIds:
     state.autoAbsentSelectionResetDate===date?[]:abs.filter(a=>a.source==="auto").map(a=>a.teacherId);
   const autoSelected=new Set(selectedAutoIds.map(String));
+  const extracted=state.autoExtractedSummary;
+  const extractedIds=new Set((extracted?.teacherIds||[]).map(String));
+  const counted=extracted?.date===date&&autoSelected.size>0&&autoSelected.size===extractedIds.size&&
+    [...autoSelected].every(id=>extractedIds.has(id));
+  const extractedCount=counted?reserveExtractedPeriodCount(date,selectedAutoIds):null;
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
@@ -1632,6 +1656,11 @@ function dayAdminHTML(){
         <label>سبب الاحتياط<select id="reserveAbsenceReason"><option>غياب</option><option>دورة</option><option>اجتماع</option><option>انتداب</option><option>تكليف خارجي</option><option>أخرى</option></select></label>
       </div>
       <div class="form-actions"><button class="btn btn-primary" id="reserveAddAbsence" type="button">تسجيل جميع الغائبات واستخراج حصصهن</button></div>
+      <output class="reserve-extracted-box" id="reserveExtractedCount" role="status" aria-live="polite">
+        <span class="reserve-extracted-label">إجمالي الحصص المستخرجة للغائبات المحددات</span>
+        <strong class="reserve-extracted-number" id="reserveExtractedNumber">${extractedCount===null?"—":Number(extractedCount).toLocaleString("ar-SA")+" حصة"}</strong>
+        <small class="reserve-extracted-hint" id="reserveExtractedHint">${extractedCount===null?"يظهر العدد بعد الضغط على تسجيل الغائبات واستخراج حصصهن.":"يشمل حصص النشاط، ولا يحتسب الحصة المكررة للمعلمة نفسها."}</small>
+      </output>
 
       <label class="reserve-admin-manual-toggle"><input type="checkbox" id="reserveAutoAllNames" ${state.autoAllNames!==false?"checked":""}>
         <span><strong>تفعيل الكادر الكامل:</strong> تطبيق مراحل المفاضلة الخمس وإدخال الكادر المساند أخيرًا، مع الالتزام بالحدود اليومية والأسبوعية والقيود الفردية.</span>
@@ -3162,6 +3191,13 @@ function bindDayAdmin(){
     const button=event.target.closest(".reserve-auto-unlock");
     if(button)reserveUnlockAssigneeSelector(button.closest("[data-assignment]")?.querySelector(".reserve-assignee"));
   });
+  byId("reserveAbsentTeacher")?.addEventListener("change",()=>{
+    // A different selection requires a fresh extraction before displaying its total.
+    state.autoExtractedSummary=null;
+    const number=byId("reserveExtractedNumber"),hint=byId("reserveExtractedHint");
+    if(number)number.textContent="—";
+    if(hint)hint.textContent="يظهر العدد بعد الضغط على تسجيل الغائبات واستخراج حصصهن.";
+  });
   byId("reserveAutoAllNames")?.addEventListener("change",event=>{
     state.autoAllNames=event.target.checked;
     state.autoAbsentIds=[...(byId("reserveAbsentTeacher")?.selectedOptions||[])].map(o=>String(o.value));
@@ -3202,9 +3238,11 @@ function bindDayAdmin(){
     try{
       await ensureAdmin();
       const n=await registerSelectedAbsences(date,ids,reason);
-      await loadAll();renderWorkspaceCard("auto");
+      await loadAll();
+      state.autoExtractedSummary={date,teacherIds:[...new Set(ids.map(String))]};
+      renderWorkspaceCard("auto");
       await reserveSyncAdminMutation(date);
-      byId("reserveDayMsg").textContent=`تم تسجيل الغائبات (${n} جديدات). اضغطي «توليد آلي» لإنشاء التكليفات.`;
+      byId("reserveDayMsg").textContent=`تم تسجيل الغائبات (${n} جديدات). عدد الحصص المستخرجة: ${reserveExtractedPeriodCount(date,ids)}. حددي حالة الكادر الكامل، ثم اضغطي «توليد آلي».`;
     }catch(err){console.error(err);msg.textContent="تعذر استكمال تسجيل الغياب. الأسماء المحفوظة لن تتكرر عند إعادة المحاولة."}
   });
   document.querySelectorAll(".reserve-delete-absence").forEach(b=>b.onclick=async()=>{
