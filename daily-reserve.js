@@ -1025,13 +1025,31 @@ function consecutivePenalty(teacherId,date,period){
   return n;
 }
 
+// Automatic nomination: compare teachers by approved workload and duty criteria ONLY.
+// Same-class teaching is NEVER an input to candidate priority.
+function compareAutoReservePriority(a,b,fullCadre){
+  if(fullCadre)return a.phase-b.phase||
+    (a.phase===3?a.specialIndex-b.specialIndex:0)||
+    (a.phase===2?Number(b.prev)-Number(a.prev):0)||
+    (a.phase===4?Number(b.under20)-Number(a.under20):0)||
+    (a.phase===4?Number(a.duty)-Number(b.duty):0)||
+    a.workload-b.workload||Number(a.used)-Number(b.used);
+  return Number(b.under20)-Number(a.under20)||
+    Number(a.duty)-Number(b.duty)||
+    a.workload-b.workload||
+    Number(b.prev)-Number(a.prev)||
+    Number(b.absentWeek)-Number(a.absentWeek)||
+    Number(a.used)-Number(b.used);
+}
 // Five-stage full-cadre and protected below-20 normal-mode nomination.
 function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts={}){
   const fullCadre=state.autoAllNames!==false,targetClass=clean(opts.className||"");
   const usedPrimary=opts.usedPrimary||new Set(),wr=weekRange(date);
   const specialNames=["أفراح الجدعاني","نجوى الغامدي","عايدة الصاعدي","بدرية الحربي","عواطف الحربي","عبير المولد"];
   const candidates=[],seen=new Set();
+  let directoryIndex=0;
   for(const t of [...state.teachers,...MANUAL_SUPPORT_STAFF]){
+    const currentDirectoryIndex=directoryIndex++;
     const id=String(t.id),name=normName(t.name);
     if(t.active===false||seen.has(name)||id===String(absentTeacherId))continue;
     seen.add(name);
@@ -1053,25 +1071,41 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
     const phase=support?5:specialIndex>=0?3:
       original<20&&!duty?1:original===20&&(prev||absentWeek)?2:4;
     candidates.push({teacherId:id,name:t.name,workload:original,week:reserved,under20:original+reserved<20,
-      phase,specialIndex,duty,prev,absentWeek,matchDay,matchWeek,used:usedPrimary.has(id),supportStaff:support});
+      phase,specialIndex,duty,prev,absentWeek,matchDay,matchWeek,used:usedPrimary.has(id),supportStaff:support,
+      directoryIndex:currentDirectoryIndex});
   }
-  candidates.sort((a,b)=>{
-    if(fullCadre)return a.phase-b.phase||
-      (a.phase===3?a.specialIndex-b.specialIndex:0)||
-      (a.phase===2?Number(b.prev)-Number(a.prev):0)||
-      (a.phase===4?Number(b.under20)-Number(a.under20):0)||
-      (a.phase===4?Number(a.duty)-Number(b.duty):0)||
-      a.workload-b.workload||Number(a.used)-Number(b.used);
-    return Number(b.under20)-Number(a.under20)||
-      Number(a.duty)-Number(b.duty)||
-      Number(b.matchDay)-Number(a.matchDay)||
-      Number(b.matchWeek)-Number(a.matchWeek)||
-      a.workload-b.workload||
-      Number(b.prev)-Number(a.prev)||
-      Number(b.absentWeek)-Number(a.absentWeek)||
-      Number(a.used)-Number(b.used);
-  });
+  candidates.sort((a,b)=>compareAutoReservePriority(a,b,fullCadre));
   return candidates.slice(0,Math.max(1,Number(opts.limit||200))).map((x,i)=>({...x,score:i+1}));
+}
+// First select the entitled teacher using ONLY the approved ranking. Then,
+// and only then, select a compatible uncovered slot, favoring one of her classes.
+// Class match never competes against a different teacher's workload or priority.
+function reserveAutoSelectNext(date,pending,usedPrimary,blockedPairs=new Set()){
+  const preferredByTeacher=new Map(),fullCadre=state.autoAllNames!==false;
+  for(let i=0;i<pending.length;i++){
+    const entry=pending[i],a=entry.record;
+    const choices=candidateRanking(date,Number(a.period),a.absentTeacherId,String(a.id),{
+      className:a.className,usedPrimary,limit:200
+    });
+    for(const candidate of choices){
+      const pairKey=String(a.id)+"|"+candidate.teacherId;
+      if(blockedPairs.has(pairKey))continue;
+      // This preference scores the SLOT for this ALREADY eligible teacher.
+      // It is deliberately not part of compareAutoReservePriority.
+      const slotMatch=candidate.matchDay?2:candidate.matchWeek?1:0;
+      const earlier=preferredByTeacher.get(candidate.teacherId);
+      if(!earlier||slotMatch>earlier.slotMatch||
+          (slotMatch===earlier.slotMatch&&Number(a.period)<Number(earlier.entry.record.period))||
+          (slotMatch===earlier.slotMatch&&Number(a.period)===Number(earlier.entry.record.period)&&i<earlier.index)){
+        preferredByTeacher.set(candidate.teacherId,{candidate,entry,index:i,slotMatch,pairKey});
+      }
+    }
+  }
+  const eligible=[...preferredByTeacher.values()];
+  // Stable roster order breaks exact ties; a matching class cannot influence nomination.
+  eligible.sort((a,b)=>compareAutoReservePriority(a.candidate,b.candidate,fullCadre)||
+    a.candidate.directoryIndex-b.candidate.directoryIndex);
+  return eligible[0]||null;
 }
 function injectStyle(){
   if(byId("dailyReserveStyle"))return;
@@ -3274,13 +3308,15 @@ function bindDayAdmin(){
       const usedPrimary=new Set(assignmentsOn(date).map(a=>String(a.assignedTeacherId||"")).filter(Boolean));
       const known=new Map(assignmentsOn(date).map(a=>[
         [String(a.absentTeacherId),Number(a.period),clean(a.className)].join("|"),a]));
+      const pending=[];
+      // Collect every free period before nominating anybody. Existing published,
+      // manually assigned and previously saved duties are never reassigned.
       for(const absent of abs){
         for(const period of (absent.periods||[])){
           const key=[String(absent.teacherId),Number(period.period),clean(period.className)].join("|");
           if(!period.className)continue;
           let record=known.get(key);
           if(record?.assignedTeacherId){processed++;continue;}
-          // أنشئ مسودة فارغة أولًا؛ لا تنشئ سجلًا ثانيًا عند رفض ترشيح.
           if(!record){
             record=await insertKind(K.assignment,{
               date,dayKey:dayKey(date),period:Number(period.period),className:period.className,
@@ -3294,39 +3330,49 @@ function bindDayAdmin(){
             if(!record?.id)throw new Error("لم تؤكد قاعدة البيانات إنشاء المسودة");
             state.assignments.push(record);known.set(key,record);created++;
           }
-          const choices=candidateRanking(date,period.period,absent.teacherId,String(record.id),{
-            className:period.className,usedPrimary,limit:200
-          });
-          let selected=null;
-          for(const candidate of choices){
-            try{
-              assertAutoAssignmentIntegrity(candidate.teacherId,date,record.period,
-                record.id,record.className,state.autoAllNames!==false);
-              const data={...plainData(record),assignedTeacherId:String(candidate.teacherId),
-                assignedTeacherName:candidate.name,candidates:[candidate],
-                fullCadreEnabled:state.autoAllNames!==false,
-                manual:false,source:"auto",published:false,status:"مسودة",
-                draftAutoCandidateNote:""};
-              const saved=await patchKind(K.assignment,record.id,data,token(),"مسودة");
-              if(saved?.id){
-                const idx=state.assignments.findIndex(x=>String(x.id)===String(record.id));
-                if(idx>=0)state.assignments[idx]=saved;
-                record=saved;
-              }
-              if(String(saved?.assignedTeacherId)===String(candidate.teacherId)){
-                selected=candidate;usedPrimary.add(String(candidate.teacherId));repaired++;break;
-              }
-            }catch(error){
-              if(/401|403|JWT|permission|Failed to fetch/i.test(error?.message||""))throw error;
-            }
-          }
-          if(!selected)unfilled++;
-
-          processed++;
-          const progress=byId("reserveDayMsg");if(progress)progress.textContent=
-            "جارٍ التوليد... "+processed+" حصة، أُسندت "+repaired+"، وتحتاج مراجعة "+unfilled+".";
+          if(!pending.some(e=>String(e.record.id)===String(record.id)))
+            pending.push({record});
         }
       }
+      // Pick the highest-priority teacher who can cover ANY pending slot;
+      // match one of her classes only when distributing that teacher's slot.
+      // If a pairing is rejected by cloud integrity checks, try the next
+      // eligible pairing without changing the approved teacher priority.
+      const blockedPairs=new Set();
+      while(pending.length){
+        const picked=reserveAutoSelectNext(date,pending,usedPrimary,blockedPairs);
+        if(!picked)break;
+        const {entry,candidate,pairKey}=picked,record=entry.record;
+        try{
+          assertAutoAssignmentIntegrity(candidate.teacherId,date,record.period,
+            record.id,record.className,state.autoAllNames!==false);
+          const data={...plainData(record),assignedTeacherId:String(candidate.teacherId),
+            assignedTeacherName:candidate.name,candidates:[candidate],
+            fullCadreEnabled:state.autoAllNames!==false,
+            manual:false,source:"auto",published:false,status:"مسودة",
+            draftAutoCandidateNote:""};
+          const saved=await patchKind(K.assignment,record.id,data,token(),"مسودة");
+          if(saved?.id){
+            const idx=state.assignments.findIndex(x=>String(x.id)===String(record.id));
+            if(idx>=0)state.assignments[idx]=saved;
+          }
+          if(String(saved?.assignedTeacherId)!==String(candidate.teacherId)){
+            blockedPairs.add(pairKey);
+            continue;
+          }
+          usedPrimary.add(String(candidate.teacherId));
+          const i=pending.findIndex(e=>String(e.record.id)===String(record.id));
+          if(i>=0)pending.splice(i,1);
+          repaired++;processed++;
+          const progress=byId("reserveDayMsg");if(progress)progress.textContent=
+            "جارٍ التوليد... "+processed+" حصة، أُسندت "+repaired+"، والمتبقية "+pending.length+".";
+        }catch(error){
+          if(/401|403|JWT|permission|Failed to fetch/i.test(error?.message||""))throw error;
+          blockedPairs.add(pairKey);
+        }
+      }
+      unfilled=pending.length;
+      processed+=unfilled;
       await loadAll();renderWorkspaceCard("auto");
       await reserveSyncAdminMutation(date);
       const done=byId("reserveDayMsg");
