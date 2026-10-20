@@ -222,6 +222,19 @@ async function deleteKind(kind,id,token){
   const r=await fetch(`${RECORDS}?${p}`,{method:"DELETE",headers:baseHeaders(token)});
   if(!r.ok)throw new Error(`تعذر الحذف (${r.status})`);
 }
+// Snapshot a table's revision ONCE at the start of every generation/save.
+// A deletion rotates the server-side revision, rejecting older requests.
+async function reserveGetTableRevision(date,mode){
+  await ensureAdmin();
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/manjaz_reserve_table_revision_get`,{
+    method:"POST",headers:baseHeaders(token()),cache:"no-store",
+    body:JSON.stringify({p_date:date,p_mode:mode})
+  });
+  if(!r.ok)throw new Error("تعذر التحقق من نسخة جدول الاحتياط ("+r.status+").");
+  const value=await r.json();
+  if(typeof value!=="string"||!value)throw new Error("لم تُرجع قاعدة البيانات معرف الجدول الحالي.");
+  return value;
+}
 
 function loadSession(){
   try{
@@ -2060,25 +2073,30 @@ function reserveTableDeleteNotice(mode,phase,detail=""){
 async function reserveDeleteTableForDate(mode,date){
   if(mode!=="auto"&&mode!=="manual")throw new Error("نوع الجدول غير صحيح");
   await ensureAdmin();
-  const isTarget=a=>mode==="manual"?a.manual===true:a.manual!==true;
-  const original=assignmentsOn(date).filter(isTarget);
-  const absentCandidates=absencesOn(date).filter(a=>a.source===mode);
-  if(!original.length&&!absentCandidates.length)return {deleted:0,empty:true};
-  for(const record of original)await deleteKind(K.assignment,record.id,token());
-  await loadAll();
-  if(assignmentsOn(date).some(isTarget))throw new Error("لم يكتمل حذف التكليفات؛ أعيدي المحاولة");
-  let removedAbsences=0;
-  const obsoleteAbsences=absencesOn(date).filter(a=>a.source===mode&&
-    !assignmentsOn(date).some(x=>String(x.absentTeacherId)===String(a.teacherId)));
-  for(const absence of obsoleteAbsences){
-    await deleteKind(K.absence,absence.id,token());removedAbsences++;
+  // One PostgreSQL transaction deletes all drafts, approved assignments and
+  // mode-specific absences, and invalidates in-flight old generation writes.
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/manjaz_reserve_delete_table_atomic`,{
+    method:"POST",headers:baseHeaders(token()),cache:"no-store",
+    body:JSON.stringify({p_date:date,p_mode:mode})
+  });
+  if(!r.ok){
+    const detail=await r.json().catch(()=>null);
+    throw new Error(detail?.message||"تعذر حذف الجدول من قاعدة البيانات ("+r.status+").");
   }
-  await loadAll();
-  if(obsoleteAbsences.some(a=>absencesOn(date).some(x=>String(x.id)===String(a.id))))
-    throw new Error("تعذر التحقق من حذف الغياب المرتبط بالجدول");
-  // Deletion is already confirmed by cloud readback. The caller refreshes the
-  // visible page independently so a mobile display error never repeats DELETE.
-  return {deleted:original.length+removedAbsences,empty:false};
+  const result=await r.json();
+  if(result?.ok!==true||result.mode!==mode||result.date!==date||
+     Number(result.remainingAssignments)!==0||Number(result.remainingAbsences)!==0){
+    throw new Error("لم تؤكد قاعدة البيانات اكتمال حذف جميع سجلات الجدول.");
+  }
+  await loadAll(); // Fresh no-store cloud readback, also synchronizes mobile state.
+  const obsoleteAssignments=assignmentsOn(date).filter(a=>
+    mode==="manual"?a.manual===true:a.manual!==true);
+  const obsoleteAbsences=absencesOn(date).filter(a=>
+    mode==="manual"?a.source==="manual":a.source!=="manual");
+  if(obsoleteAssignments.length||obsoleteAbsences.length)
+    throw new Error("أكد الخادم الحذف، لكن قراءة المتصفح لا تزال قديمة. افتحي القسم مجددًا دون إعادة الحذف.");
+  return {deleted:Number(result.deletedAssignments||0)+Number(result.deletedAbsences||0),
+    shared:Number(result.retainedSharedAbsences||0),empty:false,syncWarning:false};
 }
 // Mobile-safe refresh after CONFIRMED deletion. This is intentionally independent
 // from DELETE: a retry only re-reads cloud data and redraws mounted views.
@@ -2147,11 +2165,15 @@ async function saveManualAssignments(){
   msg.textContent="جارٍ الحفظ... يتم حفظ واعتماد الجدول اليدوي.";
   try{
     await ensureAdmin();
+    const [revisionManual,revisionAuto]=await Promise.all([
+      reserveGetTableRevision(date,"manual"),reserveGetTableRevision(date,"auto")
+    ]);
     for(const id of absentIds){
       const t=teacherOf(id),s=scheduleOf(id),cells=s?.timetable?.[dayKey(date)]||[];
       const periods=cells.map((v,i)=>{const p=parseScheduleValue(v);return {period:i+1,className:p.className,activity:p.activity}}).filter(x=>x.className);
       let abs=absencesOn(date).find(a=>String(a.teacherId)===String(id));
-      if(!abs)await insertKind(K.absence,{date,dayKey:dayKey(date),teacherId:String(id),teacherName:t?.name||"",reason:"غياب",periods,source:"manual",createdAt:new Date().toISOString()},token());
+      if(!abs)await insertKind(K.absence,{date,dayKey:dayKey(date),teacherId:String(id),teacherName:t?.name||"",reason:"غياب",periods,source:"manual",reserveRevision:revisionManual,
+        createdAt:new Date().toISOString()},token());
     }
     await loadAll();
     const savedAssignments=[];
@@ -2163,6 +2185,7 @@ async function saveManualAssignments(){
         absentTeacherId:String(x.absent.id),absentTeacherName:x.absent.name,
         candidates:[],assignedTeacherId:String(t.id),assignedTeacherName:t.name,
         published:true,status:"معتمد",manual:existing?existing.manual===true:true,
+        reserveRevision:existing?.manual===false?revisionAuto:revisionManual,
         source:existing?.source||(existing?.manual===false?"auto":"manual"),
         manualOverride:warnings.length>0||existing?.manualOverride===true,
         manualOverrideWarnings:warnings.slice(0,70),
@@ -2209,8 +2232,9 @@ function bindManualAdmin(){
     if(button.disabled)return;
     const count=assignmentsOn(date).filter(a=>a.manual===true).length;
     const absences=absencesOn(date).filter(a=>a.source==="manual").length;
-    if(!count&&!absences){msg.textContent="لا يوجد جدول يدوي لحذفه.";return;}
-    if(!confirm(`هل تريدين حذف جدول الإنشاء اليدوي ليوم ${dayName(date)} الموافق ${fmtDate(date)}؟\nسيُحذف ${count} تكليف يدوي مع سجلات الغياب اليدوية غير المستخدمة.\nستبقى التكليفات الآلية والجداول الأخرى محفوظة.`))return;
+    // Do not trust a cached zero count: a fast generation can still be writing
+    // to Supabase. Always let the database invalidate and delete this date.
+    if(!confirm(`هل تريدين حذف جدول الإنشاء اليدوي ليوم ${dayName(date)} الموافق ${fmtDate(date)}؟\nسيُحذف الجدول اليدوي بالكامل في معاملة واحدة بقاعدة البيانات، بما فيه المسودات والتكليفات المعتمدة وسجلات الغياب غير المشتركة.\nستبقى التكليفات الآلية والجداول الأخرى محفوظة.`))return;
     button.disabled=true;button.textContent="جارٍ الحذف...";button.setAttribute("aria-busy","true");
     reserveTableDeleteNotice("manual","busy","جدول الإنشاء اليدوي — "+fmtDate(date));
     try{
@@ -3277,7 +3301,7 @@ function bindDayAdmin(){
   });
   // Both actions consume the selected absent teachers directly. Register once,
   // generate once, and leave manual assignments unmodified.
-  async function registerSelectedAbsences(date,ids,reason){
+  async function registerSelectedAbsences(date,ids,reason,revision){
     const existingIds=new Set(absencesOn(date).map(a=>String(a.teacherId)));
     let created=0;
     for(const teacherId of ids){
@@ -3290,7 +3314,7 @@ function bindDayAdmin(){
       }).filter(x=>x.className);
       const saved=await insertKind(K.absence,{
         date,dayKey:dayKey(date),teacherId:String(teacherId),teacherName:t.name,
-        reason,periods,source:"auto",createdAt:new Date().toISOString()
+        reason,periods,source:"auto",reserveRevision:revision,createdAt:new Date().toISOString()
       },token());
       state.absences.push(saved);
       existingIds.add(String(teacherId));created++;
@@ -3309,7 +3333,8 @@ function bindDayAdmin(){
     msg.textContent="جارٍ حفظ أسماء الغائبات...";
     try{
       await ensureAdmin();
-      const n=await registerSelectedAbsences(date,ids,reason);
+      const revision=await reserveGetTableRevision(date,"auto");
+      const n=await registerSelectedAbsences(date,ids,reason,revision);
       await loadAll();
       state.autoExtractedSummary={date,teacherIds:[...new Set(ids.map(String))]};
       renderWorkspaceCard("auto");
@@ -3340,8 +3365,9 @@ function bindDayAdmin(){
     let created=0,repaired=0,unfilled=0,processed=0;
     try{
       await ensureAdmin();
+      const revision=await reserveGetTableRevision(date,"auto");
       const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
-      if(ids.length)await registerSelectedAbsences(date,ids,reason);
+      if(ids.length)await registerSelectedAbsences(date,ids,reason,revision);
       const abs=absencesOn(date).filter(a=>!ids.length||ids.includes(String(a.teacherId)));
       const usedPrimary=new Set(assignmentsOn(date).map(a=>String(a.assignedTeacherId||"")).filter(Boolean));
       const known=new Map(assignmentsOn(date).map(a=>[
@@ -3362,7 +3388,7 @@ function bindDayAdmin(){
               absentTeacherId:String(absent.teacherId),absentTeacherName:absent.teacherName,
               candidates:[],assignedTeacherId:"",assignedTeacherName:"",
               fullCadreEnabled:state.autoAllNames!==false,manual:false,source:"auto",
-              published:false,status:"مسودة",ackToken:uid(),ackAt:"",
+              reserveRevision:revision,published:false,status:"مسودة",ackToken:uid(),ackAt:"",
               activationTitle:"",activationAt:"",createdAt:new Date().toISOString()
             },token(),"مسودة");
             if(!record?.id)throw new Error("لم تؤكد قاعدة البيانات إنشاء المسودة");
@@ -3387,7 +3413,7 @@ function bindDayAdmin(){
           const data={...plainData(record),assignedTeacherId:String(candidate.teacherId),
             assignedTeacherName:candidate.name,candidates:[candidate],
             fullCadreEnabled:state.autoAllNames!==false,
-            manual:false,source:"auto",published:false,status:"مسودة",
+            manual:false,source:"auto",reserveRevision:revision,published:false,status:"مسودة",
             draftAutoCandidateNote:""};
           const saved=await patchKind(K.assignment,record.id,data,token(),"مسودة");
           if(saved?.id){
@@ -3481,8 +3507,9 @@ function bindDayAdmin(){
     if(button.disabled)return;
     const count=assignmentsOn(date).filter(a=>a.manual!==true).length;
     const absences=absencesOn(date).filter(a=>a.source==="auto").length;
-    if(!count&&!absences){msg.textContent="لا يوجد جدول آلي لحذفه.";return;}
-    if(!confirm(`هل تريدين حذف جدول الإنشاء الآلي ليوم ${dayName(date)} الموافق ${fmtDate(date)}؟\nسيُحذف ${count} تكليف آلي مع سجلات الغياب الآلية غير المستخدمة.\nستبقى التكليفات اليدوية والجداول الأخرى محفوظة.`))return;
+    // A zero count in the browser can be stale during rapid generation.
+    // The atomic cloud operation will remove every matching server record.
+    if(!confirm(`هل تريدين حذف جدول الإنشاء الآلي ليوم ${dayName(date)} الموافق ${fmtDate(date)}؟\nسيُحذف الجدول الآلي بالكامل في معاملة واحدة بقاعدة البيانات، بما فيه المسودات والتكليفات المعتمدة وسجلات الغياب غير المشتركة.\nستبقى التكليفات اليدوية والجداول الأخرى محفوظة.`))return;
     button.disabled=true;button.textContent="جارٍ الحذف...";button.setAttribute("aria-busy","true");
     reserveTableDeleteNotice("auto","busy","جدول الإنشاء الآلي — "+fmtDate(date));
     try{
