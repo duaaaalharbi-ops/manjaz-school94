@@ -125,6 +125,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
           <button type="button" class="cert-btn primary" id="certPreviewBtn">إنشاء الشهادة</button>
           <button type="button" class="cert-btn secondary" id="certEditNameBtn" disabled>تعديل الاسم</button>
           <button type="button" class="cert-btn gold" id="certDownloadBtn" disabled>تحميل الشهادة PDF</button>
+           <button type="button" class="cert-btn secondary" id="certShareBtn" disabled>مشاركة شهادة PDF عبر واتساب</button>
           <button type="button" class="cert-btn secondary" id="certBackBtn">رجوع</button>
         </div>
         <div id="certMsg" class="cert-message" aria-live="polite"></div>
@@ -297,8 +298,8 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
     });
   }
 
-  async function downloadPDF(w,name){
-    const msg=document.getElementById("certMsg"),btn=document.getElementById("certDownloadBtn");
+  async function downloadPDF(w,name,share=false){
+    const msg=document.getElementById("certMsg"),btn=document.getElementById("certDownloadBtn"),shareBtn=document.getElementById("certShareBtn");
     try{
       btn.disabled=true;msg.className="cert-message info";msg.textContent="جارٍ تجهيز نفس الشهادة الظاهرة بصيغة PDF عالية الجودة...";
       await injectLibraries();
@@ -314,6 +315,12 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
       const imgW=canvas.width*ratio,imgH=canvas.height*ratio;
       const x=(pageW-imgW)/2,y=(pageH-imgH)/2;
       pdf.addImage(img,"PNG",x,y,imgW,imgH,undefined,"NONE");
+      if(share){
+        const bridge=window.ManjazCertificateShareV50;
+        if(!bridge)throw Error("أداة مشاركة PDF غير محمّلة");
+        bridge.prepare(shareBtn,pdf,"شهادة ورشة تدريبية: "+(w.title||"")+" – "+name,fileName(w,name),text=>{msg.className="cert-message info";msg.textContent=text});
+        return;
+      }
       pdf.save(fileName(w,name));
 
       msg.className="cert-message success";
@@ -334,7 +341,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
  document.querySelectorAll(".cert-delete-workshop").forEach(b=>b.onclick=()=>{const w=getWorkshop(b.dataset.id);if(!w||!confirm(`حذف ورشة «${w.title||""}»؟`))return;const m=managedWorkshops(),i=m.findIndex(x=>String(x.id)===String(w.id));if(i>=0)m.splice(i,1);else m.push({...w,available:false,availability:"hidden"});saveManagedWorkshops(m);renderPage(true)});
 }
   function wirePage(){
-    const hiddenId=document.getElementById("certWorkshopId"),name=document.getElementById("certTeacherName"),panel=document.getElementById("certIssuePanel"),msg=document.getElementById("certMsg"),preview=document.getElementById("certPreviewWrap"),previewBtn=document.getElementById("certPreviewBtn"),editBtn=document.getElementById("certEditNameBtn"),downloadBtn=document.getElementById("certDownloadBtn"),selected=document.getElementById("certSelectedWorkshop");
+    const hiddenId=document.getElementById("certWorkshopId"),name=document.getElementById("certTeacherName"),panel=document.getElementById("certIssuePanel"),msg=document.getElementById("certMsg"),preview=document.getElementById("certPreviewWrap"),previewBtn=document.getElementById("certPreviewBtn"),editBtn=document.getElementById("certEditNameBtn"),downloadBtn=document.getElementById("certDownloadBtn"),shareBtn=document.getElementById("certShareBtn"),selected=document.getElementById("certSelectedWorkshop");
 
     wireWorkshopManagement();
 
@@ -353,7 +360,7 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
     });
 
     editBtn?.addEventListener("click",()=>{
-      name.disabled=false;name.focus();downloadBtn.disabled=true;msg.className="cert-message info";msg.textContent="عدّلي الاسم ثم اضغطي إنشاء الشهادة مرة أخرى";
+      name.disabled=false;name.focus();downloadBtn.disabled=true;shareBtn.disabled=true;window.ManjazCertificateShareV50?.clear(shareBtn);msg.className="cert-message info";msg.textContent="عدّلي الاسم ثم اضغطي إنشاء الشهادة مرة أخرى";
     });
 
     previewBtn?.addEventListener("click",()=>{
@@ -361,13 +368,20 @@ window.MANJAZ_CERTIFICATES_RUNTIME_VERSION = "13.5-stable-certificate";
       if(!w){msg.className="cert-message error";msg.textContent="اختاري ورشة من البطاقات أعلاه";return;}
       if(!n){msg.className="cert-message error";msg.textContent="اكتبي الاسم كما ترغبين في ظهوره في الشهادة";name.focus();return;}
       if(n.length<3){msg.className="cert-message error";msg.textContent="يرجى كتابة الاسم بشكل كامل";name.focus();return;}
-      renderCertificate(w,n);preview.classList.add("is-visible");name.disabled=true;editBtn.disabled=false;downloadBtn.disabled=false;msg.className="cert-message info";msg.textContent="تم إنشاء الشهادة النهائية. يمكنك الآن تحميل نفس الشهادة بصيغة PDF";preview.scrollIntoView({behavior:"smooth",block:"start"});
+      renderCertificate(w,n);preview.classList.add("is-visible");name.disabled=true;editBtn.disabled=false;downloadBtn.disabled=false;shareBtn.disabled=false;window.ManjazCertificateShareV50?.clear(shareBtn);msg.className="cert-message info";msg.textContent="تم إنشاء الشهادة النهائية. يمكنك الآن تحميل نفس الشهادة بصيغة PDF";preview.scrollIntoView({behavior:"smooth",block:"start"});
     });
 
     downloadBtn?.addEventListener("click",()=>{
       const w=getWorkshop(hiddenId.value),n=cleanName(name.value);
       if(!w||!n||!preview.classList.contains("is-visible")){msg.className="cert-message error";msg.textContent="أنشئي الشهادة أولًا";return;}
       downloadPDF(w,n);
+    });
+    shareBtn?.addEventListener("click",()=>{
+      const bridge=window.ManjazCertificateShareV50;
+      if(bridge?.isReady(shareBtn)){bridge.share(shareBtn,text=>{msg.className="cert-message info";msg.textContent=text});return}
+      const w=getWorkshop(hiddenId.value),n=cleanName(name.value);
+      if(!w||!n||!preview.classList.contains("is-visible")){msg.className="cert-message error";msg.textContent="أنشئي الشهادة أولًا";return}
+      downloadPDF(w,n,true);
     });
   }
 
