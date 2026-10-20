@@ -389,6 +389,8 @@ function adminRequestRow(x,mode){
  (allowedPreview?'<button type="button" class="mj36-icon-button" data-mj15-admin-preview="'+id+'">معاينة</button>':'—')+
  (pending?'<button type="button" class="mj48-detail-button" data-mj15-open="'+id+'" data-mj15-mode="approve">التفاصيل</button>':'')+
  '</div></td>'+
+ '<td data-label="تحميل PDF">'+(MJ36_APPROVED_STATUS.has(x.status)?
+ '<div class="mj48-row-actions"><button type="button" class="mj36-icon-button" data-mj15-admin-download="'+id+'" aria-label="تحميل شهادة '+H(x.name||'')+'" title="تحميل PDF">⬇ تحميل</button></div><span data-mj15-status role="status" aria-live="polite"></span>':'—')+'</td>'+
  '<td data-label="اعتماد">'+(pending?'<button type="button" class="mj48-approve" data-mj15-admin-approve="'+id+'">اعتماد</button>':'<span class="mj48-status">'+H(x.status)+'</span>')+'</td>'+
  '<td data-label="رفض">'+(pending?'<button type="button" class="mj48-reject" data-mj15-admin-reject="'+id+'">رفض</button>':'—')+'</td>'+
  '</tr>';
@@ -404,7 +406,7 @@ function adminListMarkup(mode){
   (rows.length?'<div class="mj48-table-scroll"><table class="mj48-certificate-table" dir="rtl">'+
    '<thead><tr><th scope="col">اسم المعلمة / المستفيدة</th><th scope="col">نوع الشهادة</th>'+
    '<th scope="col">تاريخ الطلب</th><th scope="col">معاينة الشهادة</th>'+
-   '<th scope="col">اعتماد</th><th scope="col">رفض</th></tr></thead><tbody>'+
+   '<th scope="col">تحميل PDF</th><th scope="col">اعتماد</th><th scope="col">رفض</th></tr></thead><tbody>'+
    rows.map(x=>adminRequestRow(x,kind==='approved'?'issue':'approve')).join('')+
    '</tbody></table></div>':'<p class="mj15-note">لا توجد طلبات في هذه المجموعة حاليًا.</p>')+'</section>';
  return '<div class="mj36-list-summary">'+H(adminSummary(state.adminList))+'</div>'+
@@ -675,6 +677,15 @@ document.addEventListener('click',async e=>{
  const approve=e.target.closest('[data-mj15-approve]');if(approve){const host=approve.closest('[data-mode="approve"]');if(!host)return;approve.disabled=true;const msg=host.querySelector('[data-mj15-status]');try{await adminAction(host.dataset.id,'approve');await adminAction(host.dataset.id,'issue');msg.textContent='تم اعتماد الشهادة وإصدارها تلقائيًا، وستظهر في قسم الشهادات المعتمدة.';host.innerHTML='<p class="mj15-hint">تم الاعتماد والإصدار، والشهادة متاحة للمعاينة والتحميل دون علامة مائية.</p>'}catch(err){msg.textContent=err.message}finally{if(approve.isConnected)approve.disabled=false}return}
  const issuePending=e.target.closest('[data-mj15-autoissue]');
  if(issuePending){const host=issuePending.closest('[data-mode="approve"]');if(host){issuePending.disabled=true;try{await adminAction(host.dataset.id,'issue');host.innerHTML='<p class="mj15-hint">تم إصدار الشهادة، وهي متاحة الآن في قسم الشهادات المعتمدة.</p>'}catch(err){const m=host.querySelector('[data-mj15-status]');if(m)m.textContent=err.message}finally{issuePending.disabled=false}}return}
+ const adminDownload=e.target.closest('[data-mj15-admin-download]');
+ if(adminDownload){
+  const row=adminDownload.closest('tr');
+  if(!row)return;
+  adminDownload.disabled=true;
+  try{await issue(adminDownload.dataset.mj15AdminDownload,row)}
+  finally{if(adminDownload.isConnected)adminDownload.disabled=false}
+  return;
+ }
  const issueBtn=e.target.closest('[data-mj15-issue]');if(issueBtn){const host=issueBtn.closest('[data-mode="issue"]');if(host)issue(issueBtn.dataset.mj15Issue,host);return}
 });
 function syncOtherField(select){
