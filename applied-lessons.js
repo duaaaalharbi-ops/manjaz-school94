@@ -24,13 +24,46 @@ function certificateHTML(x,name){
 window.openAppliedLessonCertificate=function(x){
  document.getElementById("lessonCertDialog")?.remove();
  const d=document.createElement("dialog");d.id="lessonCertDialog";d.className="v43-cert-dialog";
- d.innerHTML=`<div class="v43-cert-shell"><div class="v43-cert-controls"><input id="lessonCertName" maxlength="80" placeholder="اسم المستفيدة"><button class="cert-btn primary" id="lessonCertPreview">معاينة</button><button class="cert-btn gold" id="lessonCertDownload" disabled>تحميل PDF</button><button class="cert-btn secondary" id="lessonCertClose">إغلاق</button></div><div id="lessonCertPreviewArea"></div></div>`;
+ d.innerHTML=`<div class="v43-cert-shell"><div class="v43-cert-controls"><input id="lessonCertName" maxlength="80" placeholder="اسم المستفيدة"><button class="cert-btn primary" id="lessonCertPreview">معاينة</button><button class="cert-btn gold" id="lessonCertDownload" disabled>تحميل PDF</button><button class="cert-btn secondary" id="lessonCertShare" disabled>مشاركة شهادة PDF عبر واتساب</button><button class="cert-btn secondary" id="lessonCertClose">إغلاق</button></div><div id="lessonCertPreviewArea"></div></div>`;
  document.body.appendChild(d);
  if(typeof d.showModal==="function"){try{d.showModal()}catch(_){d.setAttribute("open","")}}else{d.setAttribute("open","")}
- const input=d.querySelector("#lessonCertName"),area=d.querySelector("#lessonCertPreviewArea"),download=d.querySelector("#lessonCertDownload");
+ const input=d.querySelector("#lessonCertName"),area=d.querySelector("#lessonCertPreviewArea"),download=d.querySelector("#lessonCertDownload"),shareButton=d.querySelector("#lessonCertShare");
  d.querySelector("#lessonCertClose").onclick=()=>d.close();
- d.querySelector("#lessonCertPreview").onclick=()=>{const n=clean(input.value);input.value=n;if(n.length<3){input.focus();return}area.innerHTML=`<div class="certificate-stage">${certificateHTML(x,n)}</div>`;download.disabled=false};
- download.onclick=async()=>{const n=clean(input.value),paper=d.querySelector("#lessonCertificatePaper");if(!paper||!n)return;download.disabled=true;try{await libs();if(document.fonts?.ready)await document.fonts.ready;const rect=paper.getBoundingClientRect();const scale=Math.max(3,Math.min(12,4200/Math.max(rect.width,rect.height,1)));const canvas=await html2canvas(paper,{scale,useCORS:true,allowTaint:false,backgroundColor:"#fff",logging:false});const {jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});const ratio=Math.min(297/canvas.width,210/canvas.height),w=canvas.width*ratio,h=canvas.height*ratio;pdf.addImage(canvas.toDataURL("image/png"),"PNG",(297-w)/2,(210-h)/2,w,h,undefined,"NONE");pdf.save(`شهادة درس تطبيقي - ${clean(x.lessonName||x.title)} - ${n}.pdf`)}finally{download.disabled=false}};
+ d.querySelector("#lessonCertPreview").onclick=()=>{const n=clean(input.value);input.value=n;if(n.length<3){input.focus();return}area.innerHTML=`<div class="certificate-stage">${certificateHTML(x,n)}</div>`;download.disabled=false;shareButton.disabled=false;window.ManjazCertificateShareV50?.clear(shareButton)};
+ const lessonShareStatus=document.createElement("p");
+ lessonShareStatus.style.cssText="font:700 13px/1.8 Tahoma,Arial,sans-serif;color:#1c6570;margin:8px 0";
+ lessonShareStatus.setAttribute("role","status");d.querySelector(".v43-cert-controls").after(lessonShareStatus);
+ const report=text=>lessonShareStatus.textContent=text;
+ const bridge=()=>window.ManjazCertificateShareV50;
+ const createPdf=async(forSharing=false)=>{
+  const n=clean(input.value),paper=d.querySelector("#lessonCertificatePaper");
+  if(!paper||!n){report("أنشئي معاينة الشهادة أولًا");return}
+  if(forSharing&&bridge()?.isReady(shareButton)){bridge().share(shareButton,report);return}
+  const btn=forSharing?shareButton:download;
+  btn.disabled=true;
+  try{
+   await libs();if(document.fonts?.ready)await document.fonts.ready;
+   const rect=paper.getBoundingClientRect();
+   const scale=Math.max(3,Math.min(12,4200/Math.max(rect.width,rect.height,1)));
+   const canvas=await html2canvas(paper,{scale,useCORS:true,allowTaint:false,backgroundColor:"#fff",logging:false});
+   const {jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+   const ratio=Math.min(297/canvas.width,210/canvas.height),w=canvas.width*ratio,h=canvas.height*ratio;
+   pdf.addImage(canvas.toDataURL("image/png"),"PNG",(297-w)/2,(210-h)/2,w,h,undefined,"NONE");
+   const title="شهادة درس تطبيقي: "+clean(x.lessonName||x.title)+" – "+n;
+   const filename="شهادة درس تطبيقي - "+clean(x.lessonName||x.title)+" - "+n+".pdf";
+   if(forSharing){
+    if(!bridge())throw Error("أداة مشاركة PDF غير محملة");
+    bridge().prepare(shareButton,pdf,title,filename,report);
+   }else{pdf.save(filename);report("تم تحميل الشهادة PDF");}
+  }catch(err){report("تعذر تجهيز الشهادة: "+(err?.message||err))}
+  finally{btn.disabled=false}
+ };
+ download.onclick=()=>void createPdf(false);
+ shareButton.onclick=()=>void createPdf(true);
+ input.addEventListener("input",()=>{
+  bridge()?.clear(shareButton);
+  shareButton.disabled=true;download.disabled=true;
+ });
 };
 
 function editorHTML(){return `<details class="cert-manage lesson-manage"><summary>إضافة درس تطبيقي</summary><form id="lessonManageForm" class="cert-manage-form"><input type="hidden" id="lmId"><label>عنوان الدرس<input id="lmTitle" required></label><label>المادة<input id="lmSubject"></label><label>الصف<input id="lmGrade"></label><label>التاريخ<input id="lmDate" required></label><label>منفذة الدرس<input id="lmTeacher"></label><label>الاستراتيجيات<input id="lmStrategies"></label><label>رابط المنجز<input id="lmLink" type="url" placeholder="https://"></label><div class="cert-manage-actions"><button class="cert-btn primary" type="submit">حفظ</button><button class="cert-btn secondary" id="lmCancel" type="button">إلغاء</button></div><div id="lmMsg" class="cert-message"></div></form></details>`;}
