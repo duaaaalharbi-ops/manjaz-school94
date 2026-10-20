@@ -244,64 +244,85 @@ async function openPreview(){
 async function exportVersion(variant){
  var btn=byId(variant==="solved"?"ma-export-solved":"ma-print");
  if(!btn||btn.disabled)return;
- // Reserve an iOS document tab synchronously while the click is still trusted.
+ var v=values();
+ if(editingId){uiMsg("أكملي حفظ تعديل السجل أو ألغيه قبل تصدير بطاقة جديدة.",true);return;}
+ if(!completeForm(v))return;
+ if(variant==="solved"&&v.bag!=="general"){
+  uiMsg("بطاقة الحل المقترحة متاحة للحقيبة العامة فقط؛ حقيبة السلوك الإيجابي وخيار «أخرى» لا يحتويان على حل نموذجي.",true);
+  return;
+ }
+ // On iOS reserve a PDF tab while the user's click is still trusted.
  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
  var previewTab=ios?window.open("about:blank","_blank"):null;
  btn.disabled=true;
  var original=btn.textContent;
  btn.textContent=variant==="solved"?"جارٍ تصدير بطاقة الحل المقترحة…":"جارٍ تصدير بطاقة تفعيل الاحتياط…";
+ var link=byId("ma-pdf-download");
+ if(link)link.hidden=true;
  try{
-  var v=values();
-  if(editingId){uiMsg("أكملي حفظ تعديل السجل أو ألغيه قبل تصدير بطاقة جديدة.",true);if(previewTab)previewTab.close();return;}
-  if(!completeForm(v)){if(previewTab)previewTab.close();return;}
-  if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
-   throw new Error("محرك تصدير البطاقات لم يكتمل تحميله. أعيدي فتح القسم ثم حاولي مجددًا.");
-  if(variant==="solved"&&v.bag!=="general")throw new Error("هذه الحقيبة لا تحتوي على حل نموذجي.");
-  var result=v.bag==="general"?await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v)):await window.ManjazExtraActivityV57.exportPdf(v);
+  var result;
+  if(v.bag==="general"){
+   if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
+    throw new Error("محرك تصدير بطاقات الحقيبة العامة غير متاح.");
+   result=await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v));
+  }else{
+   if(!window.ManjazExtraActivityV57||typeof window.ManjazExtraActivityV57.exportPdf!=="function")
+    throw new Error("محرك تصدير الحقيبة المختارة غير متاح؛ أعيدي فتح الصفحة.");
+   result=await window.ManjazExtraActivityV57.exportPdf(v);
+  }
   if(!result||!(result.blob instanceof Blob)||!result.blob.size)
    throw new Error("لم يُنشأ ملف PDF صالح للتنزيل.");
   if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
   pdfObjectUrl=URL.createObjectURL(result.blob);
-  var link=byId("ma-pdf-download");
   if(!link)throw new Error("رابط تنزيل PDF غير موجود.");
-  link.href=pdfObjectUrl;link.download=result.filename;link.hidden=true;
+  link.href=pdfObjectUrl;link.download=result.filename;
+  // Always expose a direct user-click download, even if iOS prevents automatic tab navigation.
+  link.hidden=false;
   if(previewTab){
-   previewTab.location.replace(pdfObjectUrl);
-  }else{
-   // Desktop: initiate download. iOS with blocked pop-ups gets an explicit fallback.
-   try{link.click();}catch(e){link.hidden=false;}
-   if(ios)link.hidden=false;
+   try{previewTab.location.replace(pdfObjectUrl);}catch(e){try{previewTab.close();}catch(_){}}
+  }else if(!ios){
+   try{link.click();}catch(e){}
   }
-  var message="تم إعداد "+(variant==="solved"?"بطاقة الحل المقترحة":"بطاقة تفعيل الاحتياط")+" بصيغة PDF من صفحة A4 واحدة. لا يُحفظ التفعيل إلا عند الضغط على «اعتماد الإرسال».";
-  if(ios&&!previewTab)message+=" إن لم يُفتح الملف، استخدمي رابط فتح / حفظ PDF الظاهر.";
-  uiMsg(message,false);
+  uiMsg("تم إعداد "+(variant==="solved"?"بطاقة الحل المقترحة":"بطاقة تفعيل الاحتياط")+" بصيغة PDF من صفحة A4 واحدة. إذا لم يفتح تلقائيًا اضغطي «فتح / حفظ PDF». لا يُحفظ التفعيل إلا عند «اعتماد الإرسال».",false);
  }catch(e){
   if(previewTab)try{previewTab.close();}catch(_){}
+  if(link)link.hidden=true;
+  console.error("Manjaz activation PDF export",e);
   uiMsg("فشل تصدير "+(variant==="solved"?"بطاقة الحل المقترحة":"بطاقة تفعيل الاحتياط")+": "+(e&&e.message?e.message:String(e)),true);
  }finally{
-  btn.disabled=false;
-  btn.textContent=original;
+  btn.disabled=false;btn.textContent=original;
  }
 }
 async function exportCard(){await exportVersion("activity");}
 async function exportSolved(){await exportVersion("solved");}
 function resetSubmissionStatus(){
- var line=byId("ma-submit-status");if(line)line.textContent="لم يتم اعتماد الإرسال للبيانات الحالية.";
+ var line=byId("ma-submit-status");if(line){line.textContent="لم يتم اعتماد الإرسال للبيانات الحالية.";line.style.color="";}
+}
+function approvalFeedback(message,error){
+ var line=byId("ma-submit-status");
+ if(line){line.textContent=message;line.style.color=error?"#a52c36":"#0b706a";}
+ uiMsg(message,!!error);
 }
 async function approveSubmission(){
  var button=byId("ma-approve-send");if(!button||button.disabled)return;
- if(editingId){uiMsg("أكملي تعديل السجل الحالي أو ألغيه قبل اعتماد إرسال جديد.",true);return;}
- var v=values();if(!completeForm(v))return;
- if(!matchHijriWeekday(v)){uiMsg("اليوم لا يطابق التاريخ الهجري وفق تقويم أم القرى.",true);return;}
+ if(editingId){approvalFeedback("أكملي تعديل السجل الحالي أو ألغيه قبل اعتماد إرسال جديد.",true);return;}
+ var v=values();
+ if(!completeForm(v)){
+  var text=byId("ma-message")?.textContent||"أكملي بيانات التفعيل قبل الاعتماد.";
+  approvalFeedback(text,true);return;
+ }
+ if(!matchHijriWeekday(v)){approvalFeedback("لم يتم الاعتماد: اليوم المختار لا يطابق التاريخ الهجري وفق تقويم أم القرى. صححي اليوم والتاريخ ثم أعيدي المحاولة.",true);return;}
  button.disabled=true;var original=button.textContent;button.textContent="جارٍ اعتماد الإرسال…";
+ var status=byId("ma-submit-status");if(status){status.textContent="جارٍ حفظ التفعيل في قاعدة بيانات منجز…";status.style.color="#0b706a";}
  try{
   var result=await saveExecution(v);
   if(!result.ok)throw Error(result.error||"لم يتم حفظ التفعيل.");
   var message=result.already?"هذا التفعيل معتمد ومحفوظ مسبقًا؛ لن يُكرر السجل.":"تم اعتماد الإرسال وحفظ التفعيل في سجل التنفيذ بنجاح.";
-  var status=byId("ma-submit-status");if(status)status.textContent=message;
-  uiMsg(message,false);
- }catch(e){uiMsg("تعذر اعتماد الإرسال: "+(e.message||e),true);}
- finally{button.disabled=false;button.textContent=original;}
+  approvalFeedback(message,false);
+ }catch(e){
+  console.error("Manjaz activation approval",e);
+  approvalFeedback("تعذر اعتماد الإرسال: "+(e.message||e),true);
+ }finally{button.disabled=false;button.textContent=original;}
 }
 var lastSavedExecutionKey=null;
 async function saveExecution(v){
