@@ -945,6 +945,21 @@ function assertAutoAssignmentIntegrity(teacherId,date,period,exceptAssignmentId=
   if(reserveDailyAssignedCount(teacherId,date,exceptAssignmentId)>=reserveAutoDailyAllowance(teacherId,date))
     throw new Error("تجاوز الحد اليومي للحصص الأصلية والاحتياط.");
 }
+function assertAutoReserveFullCoverage(date){
+  const expected=new Set(),covered=new Set();
+  for(const absent of absencesOn(date)){
+    for(const p of (absent.periods||[])){
+      if(!clean(p.className))continue;
+      expected.add([String(absent.teacherId),Number(p.period),clean(p.className)].join("|"));
+    }
+  }
+  for(const a of assignmentsOn(date)){
+    if(!a.assignedTeacherId)continue;
+    covered.add([String(a.absentTeacherId),Number(a.period),clean(a.className)].join("|"));
+  }
+  for(const key of expected)if(!covered.has(key))
+    throw new Error("توجد حصص غياب غير مسندة؛ يجب استكمال جميع حصص اليوم قبل الاعتماد.");
+}
 function assertAutoReservePlannedCapacity(date,selected){
   // Preserve manual assignments and all other weekdays; replace today's auto
   // rows with the final proposed set to avoid double counting during approval.
@@ -1760,7 +1775,13 @@ function reserveFlexibleAssigneeOptions(selectedId){
 function reserveUnlockAssigneeSelector(select){
   if(!select)return;
   const selected=select.value;
-  select.innerHTML=reserveFlexibleAssigneeOptions(selected);
+  const row=select.closest("[data-assignment]");
+  const a=state.assignments.find(x=>String(x.id)===String(row?.dataset.assignment));
+  if(a&&a.manual!==true){
+    const choices=manualCandidateOptions(a);
+    select.innerHTML='<option value="">اختاري المعلمة المسددة</option>'+
+      choices.map(c=>`<option value="${esc(c.teacherId)}">${esc(c.name)}</option>`).join("");
+  }else select.innerHTML=reserveFlexibleAssigneeOptions(selected);
   select.value=selected;
   select.disabled=false;
   select.hidden=false;
@@ -3381,6 +3402,7 @@ function bindDayAdmin(){
       // Revalidate the completed plan against the latest cloud data before publishing.
       if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId)))
         throw new Error("يجب إسناد جميع الحصص قبل الاعتماد.");
+      assertAutoReserveFullCoverage(date);
       assertAutoReservePlannedCapacity(date,items.map(a=>({
         teacherId:entries.find(x=>x.id===String(a.id))?.teacherId||"",id:String(a.id)
       })));
