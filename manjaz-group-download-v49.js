@@ -59,11 +59,11 @@ function renderGroupCards(){
    '<div class="mj49-approved-actions"><button type="button" data-mj49-public-preview="'+id+'">معاينة</button>'+
    '<button type="button" class="mj49-primary" data-mj49-open-issue="'+id+'">إصدار</button></div>'+
    '<div class="mj49-issue-options" id="mj49Issue-'+id+'" hidden>'+
-   '<button type="button" data-mj49-download-book="'+id+'">إصدار PDF جماعي</button>'+
+   '<button type="button" data-mj49-download-book="'+id+'">إصدار PDF جماعي</button>'+ '<button type="button" data-mj49-share-book="'+id+'">مشاركة PDF جماعي عبر واتساب</button>'+
    '<button type="button" data-mj49-download-zip="'+id+'">إصدار ZIP بالأسماء</button>'+
    '<label>اختيار المستفيدة لإصدار شهادة فردية<select data-mj49-recipient-select="'+id+'">'+
    names.map((n,i)=>'<option value="'+i+'">'+esc(n)+'</option>').join("")+'</select></label>'+
-   '<button type="button" data-mj49-download-one="'+id+'">إصدار شهادة فردية PDF</button>'+
+   '<button type="button" data-mj49-download-one="'+id+'">إصدار شهادة فردية PDF</button>'+ '<button type="button" data-mj49-share-one="'+id+'">مشاركة شهادة فردية PDF عبر واتساب</button>'+
    '</div><div class="mj49-download-status" aria-live="polite"></div></article>';
  }).join(""):'';
 }
@@ -181,7 +181,7 @@ function saveBlob(blob,name){
  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 const waitUI=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
-async function exportCertificates(row,mode,recipientIndex,report){
+async function exportCertificates(row,mode,recipientIndex,report,shareButton=null){
  if(!row||row.status!=="معتمد"||!row.approved_at)throw Error("لم يُعتمد هذا الطلب");
  const names=row.recipient_names;
  if(!Array.isArray(names)||names.length<1||names.length>100)throw Error("قائمة المستفيدات غير صالحة");
@@ -190,6 +190,7 @@ async function exportCertificates(row,mode,recipientIndex,report){
  const selected=mode==="one"?[names[recipientIndex]]:names;
  const batch=mode!=="one";
  let pdf=mode==="book"?freshPdf():null;
+ let individualPdf=null;
  const zip=mode==="zip"?new window.JSZip():null;
  await document.fonts?.ready;
  for(let i=0;i<selected.length;i++){
@@ -204,13 +205,23 @@ async function exportCertificates(row,mode,recipientIndex,report){
    }else{
     const one=freshPdf();addPageImage(one,canvas,true);
     if(zip)zip.file(String(i+1).padStart(3,"0")+"_"+fileSafe(name)+".pdf",one.output("blob"));
+    else if(shareButton)individualPdf=one;
     else saveBlob(one.output("blob"),"منجز_شهادة_"+fileSafe(name)+".pdf");
    }
   }finally{releaseCanvas(canvas)}
  }
  if(pdf){
   report("جارٍ إعداد ملف PDF الجماعي...");
-  saveBlob(pdf.output("blob"),"منجز_شهادات_جماعية_"+fileSafe(row.title)+".pdf");
+  if(shareButton){
+   const bridge=window.ManjazCertificateShareV50;
+   if(!bridge)throw Error("أداة مشاركة PDF غير محملة");
+   bridge.prepare(shareButton,pdf,"شهادات جماعية معتمدة: "+row.title,"منجز_شهادات_جماعية_"+fileSafe(row.title)+".pdf",report);
+  }else saveBlob(pdf.output("blob"),"منجز_شهادات_جماعية_"+fileSafe(row.title)+".pdf");
+ }else if(individualPdf&&shareButton){
+  const bridge=window.ManjazCertificateShareV50;
+  if(!bridge)throw Error("أداة مشاركة PDF غير محملة");
+  const recipient=selected[0];
+  bridge.prepare(shareButton,individualPdf,"شهادة معتمدة: "+row.title+" – "+recipient,"منجز_شهادة_"+fileSafe(recipient)+".pdf",report);
  }else if(zip){
   report("جارٍ ضغط "+selected.length+" شهادة PDF في ملف ZIP...");
   const blob=await zip.generateAsync({type:"blob",compression:"STORE"},info=>{
@@ -220,7 +231,7 @@ async function exportCertificates(row,mode,recipientIndex,report){
  }
  report("اكتمل إصدار "+selected.length+" شهادة دون علامة مائية.");
 }
-async function actionDownload(row,kind,button){
+async function actionDownload(row,kind,button,forSharing=false){
  if(downloading)return;
  const host=button?.closest(".mj49-approved-card");
  const sel=host?.querySelector("select[data-mj49-recipient-select]");
@@ -229,12 +240,12 @@ async function actionDownload(row,kind,button){
  const report=msg=>{if(status){status.textContent=msg;status.style.color="#185b58"}};
  downloading=true;
  const text=button.textContent;button.disabled=true;
- try{await exportCertificates(row,kind,id,report)}
+ try{await exportCertificates(row,kind,id,report,forSharing?button:null)}
  catch(err){
   console.error("Group certificate export",err);
   report("تعذر إصدار الملف: "+(err?.message||err));
   if(status)status.style.color="#a13a38";
- }finally{downloading=false;if(button.isConnected){button.disabled=false;button.textContent=text}}
+ }finally{downloading=false;if(button.isConnected){button.disabled=false;if(!window.ManjazCertificateShareV50?.isReady(button))button.textContent=text}}
 }
 document.addEventListener("click",e=>{
  const preview=e.target.closest("[data-mj49-public-preview]");
@@ -250,12 +261,19 @@ document.addEventListener("click",e=>{
   if(host)host.hidden=!host.hidden;
   return;
  }
- const b=e.target.closest("[data-mj49-download-book],[data-mj49-download-zip],[data-mj49-download-one]");
+ const b=e.target.closest("[data-mj49-download-book],[data-mj49-download-zip],[data-mj49-download-one],[data-mj49-share-book],[data-mj49-share-one]");
  if(!b)return;
- const mode=b.hasAttribute("data-mj49-download-book")?"book":
+ const forSharing=b.hasAttribute("data-mj49-share-book")||b.hasAttribute("data-mj49-share-one");
+ const mode=b.hasAttribute("data-mj49-download-book")||b.hasAttribute("data-mj49-share-book")?"book":
   b.hasAttribute("data-mj49-download-zip")?"zip":"one";
- const id=mode==="book"?b.dataset.mj49DownloadBook:mode==="zip"?b.dataset.mj49DownloadZip:b.dataset.mj49DownloadOne;
- const r=getRecord(id);if(r)void actionDownload(r,mode,b);
+ const id=mode==="book"?(b.dataset.mj49DownloadBook||b.dataset.mj49ShareBook):
+  mode==="zip"?b.dataset.mj49DownloadZip:(b.dataset.mj49DownloadOne||b.dataset.mj49ShareOne);
+ const r=getRecord(id);if(!r)return;
+ const bridge=window.ManjazCertificateShareV50;
+ if(forSharing&&bridge?.isReady(b)){
+  bridge.share(b,message=>{const el=b.closest(".mj49-approved-card")?.querySelector(".mj49-download-status");if(el)el.textContent=message});return;
+ }
+ void actionDownload(r,mode,b,forSharing);
 });
 function boot(){
  const view=document.getElementById("view");
@@ -271,7 +289,11 @@ function boot(){
   if(active()){container=null;observer?.disconnect();observer=null;queueMicrotask(mountPublic)}
   else {observer?.disconnect();observer=null;container=null;records=[]}
  });
- document.addEventListener("click",e=>{
+ document.addEventListener("change",e=>{
+ const select=e.target.closest("[data-mj49-recipient-select]");
+ if(select){const btn=select.closest(".mj49-approved-card")?.querySelector("[data-mj49-share-one]");window.ManjazCertificateShareV50?.clear(btn,"مشاركة شهادة فردية PDF عبر واتساب")}
+});
+document.addEventListener("click",e=>{
   if(e.target.id==="mj37Refresh")setTimeout(()=>{if(active())mountPublic()},100);
  },true);
 }
