@@ -51,6 +51,9 @@ function updateSelectionSummary(){
  var c=byId("ma-class-summary"),p=byId("ma-period-summary");
  if(c)c.textContent=klasses.length?"الفصول المحددة ("+klasses.length+"): "+klasses.join("، "):"لم يتم اختيار فصل";
  if(p)p.textContent=periods.length?"الحصص المحددة ("+periods.length+"): "+periods.map(function(x){return "الحصة "+x;}).join("، "):"لم يتم اختيار حصة";
+ var ct=byId("ma-class-trigger"),pt=byId("ma-period-trigger");
+ if(ct)ct.textContent=klasses.length?"الفصول المحددة ("+klasses.length+"): "+klasses.join("، "):"اختاري الفصول (اختيار متعدد)";
+ if(pt)pt.textContent=periods.length?"الحصص المحددة ("+periods.length+"): "+periods.map(String).join("، "):"اختاري الحصص (اختيار متعدد)";
  var hint=byId("ma-multi-hint");
  if(hint)hint.textContent="تُحفظ الفصول والحصص المختارة في سجل تنفيذ واحد للبطاقة نفسها."+
    (klasses.length&&periods.length?" عدد الفصول: "+klasses.length+" | عدد الحصص: "+periods.length:"");
@@ -64,7 +67,7 @@ function drawClassOptions(){
   option.value=klass;option.textContent=klass;option.selected=chosen.includes(klass);
   select.appendChild(option);
  });
- updateSelectionSummary();
+ renderMultiDropdown('class');updateSelectionSummary();
 }
 function selectMulti(kind,values){
  var select=byId(kind==="class"?"ma-class-choices":"ma-period-choices");
@@ -77,7 +80,22 @@ function selectMulti(kind,values){
   select.appendChild(option);
  });
  [...select.options].forEach(function(option){option.selected=chosen.includes(option.value);});
- updateSelectionSummary();
+ renderMultiDropdown(kind);updateSelectionSummary();
+}
+function renderMultiDropdown(kind){
+ var cls=kind==="class",sel=byId(cls?"ma-class-choices":"ma-period-choices"),host=byId(cls?"ma-class-checks":"ma-period-checks");
+ if(!sel||!host)return;
+ host.replaceChildren();
+ [...sel.options].filter(function(o){return !o.disabled;}).forEach(function(opt){
+  var label=document.createElement("label");label.className="ma-picker-option";
+  var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!opt.selected;cb.value=opt.value;
+  cb.setAttribute("aria-label",(cls?"اختيار الفصل ":"اختيار الحصة ")+opt.textContent);
+  cb.onchange=function(){
+   opt.selected=cb.checked;updateSelectionSummary();resetSubmissionStatus();
+   var download=byId("ma-pdf-download");if(download)download.hidden=true;
+  };
+  label.appendChild(cb);label.appendChild(document.createTextNode(" "+opt.textContent));host.appendChild(label);
+ });
 }
 function rowClasses(row){return Array.isArray(row.class_names)&&row.class_names.length?row.class_names:[row.class_name].filter(Boolean);}
 function rowPeriods(row){return Array.isArray(row.periods)&&row.periods.length?row.periods:[row.period].filter(function(x){return Number(x)>=1;});}
@@ -634,6 +652,13 @@ function initStyle(){
  "#manjazActivation .ma-check-choices input{width:17px;height:17px;accent-color:#0b7975}"+
  "#manjazActivation select.ma-native-multi{width:100%;height:auto;min-height:150px;box-sizing:border-box;border:1px solid #cfdadd;border-radius:10px;padding:8px;font:inherit;background:#fff;overflow-y:auto}"+
  "#manjazActivation select.ma-native-multi option{padding:8px 10px;line-height:1.65;white-space:normal}"+
+ "#manjazActivation .ma-standard-fields{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}"+
+ "#manjazActivation .ma-picker{position:relative;background:#fff;border:1px solid #a9bdc4;border-radius:8px;min-width:0}"+
+ "#manjazActivation .ma-picker>summary{padding:12px;color:#164f5b;cursor:pointer;font-size:13px;overflow-wrap:anywhere}"+
+ "#manjazActivation .ma-picker-options{display:grid;position:absolute;top:100%;right:0;left:0;z-index:200;max-height:250px;overflow-y:auto;background:#fff;border:1px solid #a9bdc4;border-radius:0 0 10px 10px;box-shadow:0 6px 17px #0002;padding:6px}"+
+ "#manjazActivation .ma-picker-option{display:flex;gap:8px;align-items:center;padding:8px 7px;font-size:14px;margin:0;cursor:pointer;font-weight:500}"+
+ "#manjazActivation .ma-picker-option input{width:18px;height:18px;accent-color:#0b7975;flex-shrink:0}"+
+ "#manjazActivation #ma-other-fields input{width:100%;padding:11px;min-height:43px;box-sizing:border-box;margin:3px 0 10px;border:1px solid #a9bdc4;border-radius:8px;font:inherit}"+
  "#manjazActivation .ma-multi-summary{font-size:12px;color:#3c6572;line-height:1.8;margin:7px 0 0;overflow-wrap:anywhere}"+
 
  "#manjazActivation .ma-multi-hint{font-size:12px;color:#3c6572;background:#f0f7f7;padding:10px;border-radius:8px;margin:12px 0 0}"+
@@ -644,7 +669,7 @@ function initStyle(){
  "#manjazActivation textarea{display:block;width:100%;min-height:86px;padding:12px;border:1px solid #a9bdc4;border-radius:9px;resize:vertical;font:inherit;line-height:1.8;color:#153b47;background:#fff}"+
  "#manjazActivation .ma-answer{background:#fff6f5;border:1px solid #e8bfbc;border-radius:11px;padding:14px;color:#8b2941;white-space:pre-line;font-size:14px;line-height:1.9}"+
  "#manjazActivation .ma-report-body{max-height:440px;overflow:auto}#manjazActivation table{border-collapse:collapse;width:100%;font-size:12px}#manjazActivation td,#manjazActivation th{border:1px solid #d7e1e4;padding:7px;text-align:right}"+
- "@media(max-width:640px){#manjazActivation .ma-grid,#manjazActivation .ma-admin-fields{grid-template-columns:1fr}#manjazActivation .ma-hero{padding:17px}#manjazActivation select.ma-native-multi{min-height:190px;font-size:16px;padding:10px}}";
+ "@media(max-width:640px){#manjazActivation .ma-grid,#manjazActivation .ma-admin-fields{grid-template-columns:1fr}#manjazActivation .ma-hero{padding:17px}#manjazActivation .ma-standard-fields{grid-template-columns:1fr}#manjazActivation select.ma-native-multi{min-height:190px;font-size:16px;padding:10px}}";
  document.head.appendChild(style);
 }
 function render(){
