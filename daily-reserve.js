@@ -34,6 +34,10 @@ const CONDITIONAL_EXCLUSION_MIN_DEMAND=13; // More than 12 absent periods on the
 const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البالدي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
 const ADVANCED_RANK=new Set(["دعاء الحربي","سندس الغامدي","عايدة الصاعدي","ريم القحطاني","عوالي السبيعي","بدرية الحربي","حنان المجنوني"]); // Legacy ranking and manual reports: unchanged
 const ABSOLUTE_EXCLUDED=new Set(["نورة الهودان"]);
+// Approved rank and exclusion rules apply exclusively to automatic nomination.
+const AUTO_ADVANCED_RANK=new Set(["دعاء الحربي","عوالي السبيعي","حصة المنتشري","عايدة الصاعدي","عواطف الحربي","ريم القحطاني","بدرية الحربي","حنان المجنوني"]);
+const AUTO_GLOBAL_EXCLUDED=new Set(["دخنة الشهري","نورة الهودان"]);
+const AUTO_OFF_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","أيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البلادي","لمياء البالدي","نجوى الغامدي","نورة العنزي","عايدة الصاعدي","عواطف الحربي","بدرية الحربي"]);
 // Additional personnel authorized for manual assignment, not in the official sixth-edition teacher timetable.
 const MANUAL_SUPPORT_STAFF=[
   {id:"reserve_support_1",name:"دخيلة المالكي",supportStaff:true,role:"التوجيه الطلابي / المختبر"},
@@ -878,33 +882,102 @@ function reserveDailyAssignedCount(teacherId,date,exceptAssignmentId=""){
   return assignmentsOn(date).filter(a=>String(a.id)!==String(exceptAssignmentId)&&
     String(a.assignedTeacherId)===String(teacherId)).length;
 }
-// Mandatory combined original + reserve ceiling for every teacher in both auto modes.
-// Candidate eligibility, workload caps and ranking rules intentionally removed from auto creation.
-// These checks concern only actual conflicts, not who deserves nomination.
-function assertAutoAssignmentIntegrity(teacherId,date,period,exceptAssignmentId=""){
+// Automatic reserve: weekly rank caps count original + manual + automatic duties.
+function reserveAutoIsSupport(t){
+  return !!t&&(t.supportStaff===true||
+    MANUAL_SUPPORT_STAFF.some(s=>String(s.id)===String(t.id))||
+    /مرشد|إرشاد|ارشاد|توجيه طلاب|محضر.*مختبر|مختبر/.test([t.role,t.jobTitle,t.position].map(clean).join(" ")));
+}
+function reserveAutoCeiling(t){
+  return nameSetContains(AUTO_ADVANCED_RANK,editionSixName(t?.name)||clean(t?.name))?22:24;
+}
+function reserveAutoWeeklyCount(teacherId,date,exceptId=""){
+  const wr=weekRange(date);
+  return state.assignments.filter(a=>a.status!=="ملغي"&&a.assignedTeacherId&&
+    String(a.assignedTeacherId)===String(teacherId)&&String(a.id)!==String(exceptId)&&
+    a.date>=wr.start&&a.date<=wr.end).length;
+}
+function reserveAutoDailyCap(date){
+  const day=dayKey(date);
+  return day==="sun"||day==="mon"?5:["tue","wed","thu"].includes(day)?4:0;
+}
+function reserveAutoDailyAllowance(teacherId,date){
   const t=teacherOf(teacherId);
-  if(!t||t.active===false)throw new Error("اختاري معلمة نشطة من السجل.");
-  if(isAbsent(teacherId,date))throw new Error("المعلمة غائبة في يوم التكليف.");
-  if(!t.supportStaff){
-    if(!scheduleOf(teacherId))throw new Error("تعذر التحقق من الجدول الأصلي.");
-    if(regularCell(teacherId,date,period))throw new Error("تعارض مع حصة أصلية أو نشاط في التوقيت نفسه.");
+  return Math.max(0,reserveAutoDailyCap(date)-(reserveAutoIsSupport(t)?0:dailyOriginalCount(teacherId,date)));
+}
+function reserveAutoWeeklyAllowance(teacherId){
+  const t=teacherOf(teacherId);
+  if(!t)return 0;
+  if(reserveAutoIsSupport(t))return 3;
+  const remaining=Math.max(0,reserveAutoCeiling(t)-Number(t.workload));
+  return normName(t.name)===normName("رية الحربي")?Math.min(2,remaining):remaining;
+}
+function reserveAutoPreviousSchoolDate(date){return addDays(date,dayKey(date)==="sun"?-3:-1);}
+function reserveAutoIneligibility(teacherId,date,className="",exceptId="",fullCadre=state.autoAllNames!==false,skipWeekly=false){
+  const t=teacherOf(teacherId);
+  if(!t||t.active===false)return "المعلمة غير نشطة ضمن سجل الكادر.";
+  const name=normName(t.name),support=reserveAutoIsSupport(t);
+  if(nameSetContains(AUTO_GLOBAL_EXCLUDED,name))return "المعلمة مستبعدة دائمًا من الترشيح الآلي.";
+  if(!fullCadre&&(support||t.excluded===true||teacherFlags(t).permanentExcluded||
+    nameSetContains(AUTO_OFF_EXCLUDED,name)))return "المعلمة مستثناة عند عدم تفعيل الكادر الكامل.";
+  if(name===normName("رية الحربي")&&!normName(className).startsWith("اول"))
+    return "رية الحربي تُرشح للصف الأول الثانوي فقط.";
+  if(!support&&(!Number.isFinite(Number(t.workload))||Number(t.workload)<0))
+    return "النصاب الأصلي الأسبوعي غير موثق.";
+  if(!skipWeekly&&reserveAutoWeeklyCount(teacherId,date,exceptId)>=reserveAutoWeeklyAllowance(teacherId))
+    return name===normName("رية الحربي")?"رية الحربي: لا تتجاوز حصتا احتياط أسبوعيًا.":
+      support?"الكادر المساند: ثلاث حصص احتياط أسبوعيًا.":
+      "اكتمل سقف الرتبة الأسبوعي للأصلية والاحتياط.";
+  return "";
+}
+function assertAutoAssignmentIntegrity(teacherId,date,period,exceptAssignmentId="",className="",fullCadre=state.autoAllNames!==false,skipWeekly=false){
+  const t=teacherOf(teacherId);
+  const reason=reserveAutoIneligibility(teacherId,date,className,exceptAssignmentId,fullCadre,skipWeekly);
+  if(reason)throw new Error(reason);
+  if(isAbsent(teacherId,date))throw new Error("المعلمة غائبة يوم التكليف.");
+  if(breastfeedingBlocked(t,date,period))throw new Error("قيد ساعة الرضاعة يمنع هذه الحصة.");
+  if(!reserveAutoIsSupport(t)){
+    if(!scheduleOf(teacherId))throw new Error("الجدول الأصلي غير متاح.");
+    if(regularCell(teacherId,date,period))throw new Error("تعارض مع حصة أصلية أو نشاط.");
   }
   if(occupiedByReserve(teacherId,date,period,exceptAssignmentId))
-    throw new Error("تعارض مع احتياط آخر خلال الحصة نفسها.");
+    throw new Error("المعلمة مكلفة باحتياط آخر في الفترة نفسها.");
+  if(reserveDailyAssignedCount(teacherId,date,exceptAssignmentId)>=reserveAutoDailyAllowance(teacherId,date))
+    throw new Error("تجاوز الحد اليومي للحصص الأصلية والاحتياط.");
 }
 function assertAutoReservePlannedCapacity(date,selected){
-  const planned=new Set();
+  // Preserve manual assignments and all other weekdays; replace today's auto
+  // rows with the final proposed set to avoid double counting during approval.
+  const weekly=new Map(),daily=new Map(),slots=new Set(),wr=weekRange(date);
+  for(const a of state.assignments){
+    if(a.status==="ملغي"||!a.assignedTeacherId)continue;
+    if(a.date===date&&a.manual!==true)continue;
+    const id=String(a.assignedTeacherId);
+    if(a.date===date)daily.set(id,(daily.get(id)||0)+1);
+    if(a.date>=wr.start&&a.date<=wr.end)weekly.set(id,(weekly.get(id)||0)+1);
+  }
   for(const entry of selected){
-    const id=String(entry.teacherId||"");
     const a=state.assignments.find(x=>String(x.id)===String(entry.id));
+    const id=String(entry.teacherId||"");
     if(!id||!a)throw new Error("يجب إسناد معلمة لكل حصة قبل الاعتماد.");
-    assertAutoAssignmentIntegrity(id,date,Number(a.period),a.id);
+    const t=teacherOf(id),mode=a.fullCadreEnabled===true;
+    const reason=reserveAutoIneligibility(id,date,a.className,a.id,mode,true);
+    if(reason)throw new Error(reason);
+    if(isAbsent(id,date)||breastfeedingBlocked(t,date,a.period))
+      throw new Error("تعذر التكليف بسبب الغياب أو قيد ساعة الرضاعة.");
+    if(!reserveAutoIsSupport(t)&&(!scheduleOf(id)||regularCell(id,date,a.period)))
+      throw new Error("تعارض مع الحصص الأصلية أو النشاط.");
+    if(assignmentsOn(date).some(x=>x.manual===true&&String(x.assignedTeacherId)===id&&Number(x.period)===Number(a.period)))
+      throw new Error("احتياط يدوي وآلي متزامنان للمعلمة نفسها.");
     const key=id+"|"+Number(a.period);
-    if(planned.has(key))throw new Error("المعلمة نفسها مسندة لحصتين في الفترة نفسها.");
-    planned.add(key);
+    if(slots.has(key))throw new Error("لا يجوز احتياطان متزامنان للمعلمة نفسها.");
+    slots.add(key);
+    const dc=(daily.get(id)||0)+1,wc=(weekly.get(id)||0)+1;
+    if(dc>reserveAutoDailyAllowance(id,date))throw new Error("تجاوز السقف اليومي ٥/٤.");
+    if(wc>reserveAutoWeeklyAllowance(id))throw new Error("تجاوز السقف الأسبوعي ٢٢/٢٤ أو قيد احتياط فردي.");
+    daily.set(id,dc);weekly.set(id,wc);
   }
 }
-
 function isAbsent(teacherId,date){return absencesOn(date).some(x=>String(x.teacherId)===String(teacherId))}
 function occupiedByReserve(teacherId,date,period,exceptId=""){
   return assignmentsOn(date).some(x=>String(x.assignedTeacherId)===String(teacherId)&&Number(x.period)===Number(period)&&String(x.id)!==String(exceptId));
@@ -922,9 +995,54 @@ function consecutivePenalty(teacherId,date,period){
   return n;
 }
 
-// All automatic nomination criteria are intentionally vacant pending a new approved policy.
-function candidateRanking(){return [];}
-
+// Five-stage full-cadre and protected below-20 normal-mode nomination.
+function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts={}){
+  const fullCadre=state.autoAllNames!==false,targetClass=clean(opts.className||"");
+  const usedPrimary=opts.usedPrimary||new Set(),wr=weekRange(date);
+  const specialNames=["أفراح الجدعاني","نجوى الغامدي","عايدة الصاعدي","بدرية الحربي","عواطف الحربي","عبير المولد"];
+  const candidates=[],seen=new Set();
+  for(const t of [...state.teachers,...MANUAL_SUPPORT_STAFF]){
+    const id=String(t.id),name=normName(t.name);
+    if(t.active===false||seen.has(name)||id===String(absentTeacherId))continue;
+    seen.add(name);
+    if(reserveAutoIneligibility(id,date,targetClass,exceptAssignmentId,fullCadre))continue;
+    if(isAbsent(id,date)||breastfeedingBlocked(t,date,period))continue;
+    const support=reserveAutoIsSupport(t);
+    if(!support&&(!scheduleOf(id)||regularCell(id,date,period)))continue;
+    if(occupiedByReserve(id,date,period,exceptAssignmentId))continue;
+    if(reserveDailyAssignedCount(id,date,exceptAssignmentId)>=reserveAutoDailyAllowance(id,date))continue;
+    const original=Number(t.workload||0),reserved=reserveAutoWeeklyCount(id,date,exceptAssignmentId);
+    const duty=t.excluded===true||teacherFlags(t).permanentExcluded||
+      t.additionallyAssigned===true||t.hasAdditionalDuty===true;
+    const prev=state.absences.some(a=>String(a.teacherId)===id&&a.date===reserveAutoPreviousSchoolDate(date));
+    const absentWeek=state.absences.some(a=>String(a.teacherId)===id&&a.date>=wr.start&&a.date<=wr.end);
+    const matchDay=!!targetClass&&!support&&(scheduleOf(id)?.timetable?.[dayKey(date)]||[])
+      .some(v=>parseScheduleValue(v).className===targetClass);
+    const matchWeek=!!targetClass&&!support&&teacherHasClass(id,targetClass);
+    const specialIndex=specialNames.findIndex(n=>normName(n)===name);
+    const phase=support?5:specialIndex>=0?3:
+      original<20&&!duty?1:original===20&&(prev||absentWeek)?2:4;
+    candidates.push({teacherId:id,name:t.name,workload:original,week:reserved,under20:original+reserved<20,
+      phase,specialIndex,duty,prev,absentWeek,matchDay,matchWeek,used:usedPrimary.has(id),supportStaff:support});
+  }
+  candidates.sort((a,b)=>{
+    if(fullCadre)return a.phase-b.phase||
+      (a.phase===3?a.specialIndex-b.specialIndex:0)||
+      (a.phase===2?Number(b.prev)-Number(a.prev):0)||
+      (a.phase===4?Number(b.under20)-Number(a.under20):0)||
+      (a.phase===4?Number(a.duty)-Number(b.duty):0)||
+      a.workload-b.workload||Number(a.used)-Number(b.used);
+    return Number(b.under20)-Number(a.under20)||
+      Number(a.duty)-Number(b.duty)||
+      Number(b.matchDay)-Number(a.matchDay)||
+      Number(b.matchWeek)-Number(a.matchWeek)||
+      a.workload-b.workload||
+      Number(b.prev)-Number(a.prev)||
+      Number(b.absentWeek)-Number(a.absentWeek)||
+      Number(a.used)-Number(b.used);
+  });
+  return candidates.slice(0,Math.max(1,Number(opts.limit||200))).map((x,i)=>({...x,score:i+1}));
+}
 function injectStyle(){
   if(byId("dailyReserveStyle"))return;
   const s=document.createElement("style");s.id="dailyReserveStyle";
