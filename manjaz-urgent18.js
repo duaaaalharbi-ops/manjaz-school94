@@ -422,7 +422,12 @@ function dutyV18BindEditor(panel){
     const qs='duty_date=eq.'+encodeURIComponent(requestDate)+'&slot=eq.'+encodeURIComponent(slot)+'&position=eq.'+position;
     const check=await api('mj_duty_assignments?select=person_id,activation_status&'+qs,null,true);
     if(check.length!==1||(mode==='person'?check[0].person_id!==value:check[0].activation_status!==value))throw Error('تعذر التحقق من حفظ التعديل.');
-    if(date===requestDate&&serial===refreshSequence)await Promise.all([loadPublic(requestDate,serial),loadAdmin(requestDate,serial)]);
+    if(date===requestDate&&serial===refreshSequence){
+     Object.assign(old,check[0]); // Persisted row only, without rebuilding the administrative workspace.
+     if(mode==='person')links=await api('mj_duty_links?select=duty_date,person_id,link_token,viewed_at&duty_date=eq.'+encodeURIComponent(requestDate),null,true);
+     await loadPublic(requestDate,serial);
+     linkPanel();
+    }
    },{button:e.currentTarget,status:msg,pending:'جارٍ حفظ التعديل...',success:'تم الحفظ'});
   };
  });
@@ -642,12 +647,17 @@ function dutyAutoUpdateAcknowledgements(){
  if(!document.getElementById('mjDutyRoot')||!location.hash.startsWith('#daily-duty')||document.visibilityState==='hidden'||busy)return;
  if(Date.now()-dutyLastPublicPoll<4000)return;
  dutyLastPublicPoll=Date.now();void loadPublic(date,refreshSequence);
- // Refresh link acknowledgement badges without re-rendering manual selection fields.
+ // Keep cross-device changes current without interrupting active admin edits.
  if(session() && !document.getElementById('dutyAdmin')?.hidden && document.getElementById('dutyLinks')){
   const requestDate=date,serial=refreshSequence;
-  void api('mj_duty_links?select=duty_date,person_id,link_token,viewed_at&duty_date=eq.'+encodeURIComponent(requestDate),null,true)
-   .then(data=>{if(serial===refreshSequence && requestDate===date && document.getElementById('dutyLinks')){links=data;linkPanel()}})
-   .catch(()=>{});
+  void Promise.all([
+   api('mj_duty_links?select=duty_date,person_id,link_token,viewed_at&duty_date=eq.'+encodeURIComponent(requestDate),null,true),
+   api('mj_duty_assignments?select=duty_date,slot,position,person_id,activation_status&duty_date=eq.'+encodeURIComponent(requestDate),null,true)
+  ]).then(([freshLinks,freshAssignments])=>{
+   if(serial!==refreshSequence||requestDate!==date||!document.getElementById('dutyLinks'))return;
+   if(document.querySelector('.duty-v18-form:not([hidden])'))return;
+   links=freshLinks;assignments=freshAssignments;linkPanel();
+  }).catch(()=>{});
  }
 }
 window.addEventListener('focus',dutyAutoUpdateAcknowledgements);
