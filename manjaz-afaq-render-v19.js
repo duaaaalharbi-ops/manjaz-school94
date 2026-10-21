@@ -11,7 +11,7 @@ function planParts(lines){
  for(const source of lines||[]){
   const line=String(source||"").trim();if(!line)continue;
   const idx=labels.findIndex(label=>line.includes(label));
-  if(idx!==-1){last=idx;items[idx].text+=line.replace(label,"").replace(/\b(5|7|12|15|6)\s*دقائق?\b/g,"").replace(/^\s*[:：]\s*/,"").trim()+" ";}
+  if(idx!==-1){last=idx;items[idx].text+=line.replace(labels[idx],"").replace(/\b(5|7|12|15|6)\s*دقائق?\b/g,"").replace(/^\s*[:：]\s*/,"").trim()+" ";}
   else if(last>=0)items[last].text+=line+" ";
  }
  return items;
