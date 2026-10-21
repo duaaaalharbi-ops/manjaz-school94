@@ -537,10 +537,22 @@ function installPrintPortal(){
  return portal;
 }
 
+// Publication PDF export filename only; never change stored Gregorian schedule dates.
+function dutyPublicationPdfFilename(date){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||"")))throw Error("تاريخ جدول النشر غير صالح");
+  const dateValue=new Date(date+"T12:00:00+03:00");
+  if(Number.isNaN(dateValue.getTime()))throw Error("تعذر تحديد التاريخ الهجري");
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura",{
+    calendar:"islamic-umalqura",timeZone:"Asia/Riyadh",year:"numeric",month:"numeric",day:"numeric"
+  }).formatToParts(dateValue).filter(x=>["day","month","year"].includes(x.type)).map(x=>[x.type,Number(x.value)]));
+  if(!parts.day||!parts.month||!parts.year)throw Error("تعذر تحديد التاريخ الهجري");
+  const weekday=new Intl.DateTimeFormat("ar-SA",{timeZone:"Asia/Riyadh",weekday:"long"}).format(dateValue).replace(/\s+/g,"_");
+  return "جدول_نشر_المناوبة_"+weekday+"_"+String(parts.day).padStart(2,"0")+"-"+String(parts.month).padStart(2,"0")+"-"+parts.year+"هـ.pdf";
+}
 function dutyPrintStandalone(){
  const tab=window.open('','_blank');
  if(!tab){alert('المتصفح منع فتح صفحة الطباعة؛ اسمحي بفتح النوافذ المنبثقة.');return}
- const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مناوبة '+esc(date)+'</title><style>body{direction:rtl;text-align:right;color:#132f3a;background:#fff;font:13px Tahoma,Arial,sans-serif;margin:12px}.duty-sheet-heading{text-align:center}.duty-sheet-period{margin-top:14px;break-inside:avoid}.duty-sheet-period h2{font-size:16px}.duty-sheet-table{width:100%;border-collapse:collapse;table-layout:fixed}.duty-sheet-table th,.duty-sheet-table td{border:1px solid #9eb6be;padding:6px;overflow-wrap:anywhere;text-align:right}.duty-sheet-table th{background:#eaf5f4}.duty-col-index{width:7%}.duty-sheet-totals{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}.printbar{text-align:center;margin:12px}.printbar button{padding:10px 22px;font:700 16px Tahoma;background:#edf6f5;border:1px solid #497d7c;border-radius:8px}@page{size:A4 portrait;margin:10mm}@media print{.printbar{display:none!important}body{margin:0;font-size:11px}.duty-sheet-period h2{font-size:13px}.duty-sheet-table th,.duty-sheet-table td{padding:4px}}</style></head><body><div class="printbar"><button onclick="window.print()">طباعة / حفظ PDF من الجهاز</button></div>'+sheetHTML()+'</body></html>';
+ const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(dutyPublicationPdfFilename(date).replace(/\.pdf$/,""))+'</title><style>body{direction:rtl;text-align:right;color:#132f3a;background:#fff;font:13px Tahoma,Arial,sans-serif;margin:12px}.duty-sheet-heading{text-align:center}.duty-sheet-period{margin-top:14px;break-inside:avoid}.duty-sheet-period h2{font-size:16px}.duty-sheet-table{width:100%;border-collapse:collapse;table-layout:fixed}.duty-sheet-table th,.duty-sheet-table td{border:1px solid #9eb6be;padding:6px;overflow-wrap:anywhere;text-align:right}.duty-sheet-table th{background:#eaf5f4}.duty-col-index{width:7%}.duty-sheet-totals{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}.printbar{text-align:center;margin:12px}.printbar button{padding:10px 22px;font:700 16px Tahoma;background:#edf6f5;border:1px solid #497d7c;border-radius:8px}@page{size:A4 portrait;margin:10mm}@media print{.printbar{display:none!important}body{margin:0;font-size:11px}.duty-sheet-period h2{font-size:13px}.duty-sheet-table th,.duty-sheet-table td{padding:4px}}</style></head><body><div class="printbar"><button onclick="window.print()">طباعة / حفظ PDF من الجهاز</button></div>'+sheetHTML()+'</body></html>';
  tab.document.open();tab.document.write(html);tab.document.close();tab.focus();
 }
 let dutyV18PdfPromise=null;
@@ -565,7 +577,7 @@ async function dutyV18DownloadPDF(){
   print.querySelectorAll('.duty-sheet-heading').forEach(t=>t.style.textAlign='center');
   print.querySelectorAll('.duty-sheet-period').forEach(t=>t.style.breakInside='avoid');
   host.append(print);document.body.append(host);
-  await window.html2pdf().set({margin:[9,9,9,9],filename:'جدول_المناوبة_'+date+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:1.8,backgroundColor:'#fff',scrollY:0,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}}).from(print).save();
+  await window.html2pdf().set({margin:[9,9,9,9],filename:dutyPublicationPdfFilename(date),image:{type:'jpeg',quality:0.98},html2canvas:{scale:1.8,backgroundColor:'#fff',scrollY:0,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}}).from(print).save();
  }catch(e){console.error('Duty PDF export',e);alert('تعذر التنزيل المباشر؛ استخدمي الطباعة ثم حفظ PDF من الجهاز.')}
  finally{host?.remove();if(button?.isConnected)button.disabled=false}
 }
