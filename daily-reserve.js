@@ -236,6 +236,23 @@ async function reserveGetTableRevision(date,mode){
   return value;
 }
 
+// Replace an unapproved automatic selection in ONE cloud transaction. The
+// database fences old generations and physically removes abandoned drafts.
+async function reserveSyncAutoSelection(date,ids,revision){
+  if(!ids.length)throw new Error("اختاري المعلمات الغائبات أولًا.");
+  await ensureAdmin();
+  const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/manjaz_reserve_sync_auto_selection",{
+    method:"POST",headers:baseHeaders(token()),cache:"no-store",
+    body:JSON.stringify({p_date:date,p_teacher_ids:ids.map(String),p_expected_revision:revision})
+  });
+  if(!response.ok){
+    const detail=await response.json().catch(()=>({}));
+    throw new Error(detail?.message||"تعذر مزامنة اختيار الغائبات.");
+  }
+  const result=await response.json();
+  if(result?.ok!==true||!result.revision)throw new Error("لم تؤكد قاعدة البيانات تحديث مسودة الغياب.");
+  return result;
+}
 function loadSession(){
   try{
     const x=JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null");
@@ -3393,7 +3410,9 @@ function bindDayAdmin(){
     try{
       await ensureAdmin();
       const revision=await reserveGetTableRevision(date,"auto");
-      const n=await registerSelectedAbsences(date,ids,reason,revision);
+      const selection=await reserveSyncAutoSelection(date,ids,revision);
+      await loadAll(); // Remove stale absence IDs before deduplicating new ones.
+      const n=await registerSelectedAbsences(date,ids,reason,selection.revision);
       await loadAll();
       state.autoExtractedSummary={date,teacherIds:[...new Set(ids.map(String))]};
       renderWorkspaceCard("auto");
@@ -3416,7 +3435,7 @@ function bindDayAdmin(){
   byId("reserveGenerate")?.addEventListener("click",async()=>{
     const msg=byId("reserveDayMsg"),button=byId("reserveGenerate"),date=state.currentDate,ids=chosenAbsentIds();
     if(!dayKey(date)){msg.textContent="اختاري تاريخًا من الأحد إلى الخميس.";return;}
-    if(!ids.length&&!absencesOn(date).length){msg.textContent="اختاري أسماء الغائبات أولًا، ثم اضغطي التوليد.";return;}
+    if(!ids.length){msg.textContent="اختاري أسماء الغائبات أولًا، ثم اضغطي التوليد.";return;}
     state.autoAbsentIds=ids;
     state.autoAbsentSelectionResetDate="";
     button.disabled=true;button.textContent="جارٍ التوليد...";
@@ -3424,9 +3443,12 @@ function bindDayAdmin(){
     let created=0,repaired=0,unfilled=0,processed=0;
     try{
       await ensureAdmin();
-      const revision=await reserveGetTableRevision(date,"auto");
+      const initialRevision=await reserveGetTableRevision(date,"auto");
       const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
-      if(ids.length)await registerSelectedAbsences(date,ids,reason,revision);
+      const selection=await reserveSyncAutoSelection(date,ids,initialRevision);
+      const revision=selection.revision;
+      await loadAll(); // All old unapproved drafts disappear before new nominations.
+      await registerSelectedAbsences(date,ids,reason,revision);
       const abs=absencesOn(date).filter(a=>!ids.length||ids.includes(String(a.teacherId)));
       const usedPrimary=new Set(assignmentsOn(date).map(a=>String(a.assignedTeacherId||"")).filter(Boolean));
       const known=new Map(assignmentsOn(date).map(a=>[
