@@ -411,7 +411,7 @@ function dutyV18BindEditor(panel){
    if(!old)return;
    const value=mode==='person'?form.querySelector('.duty-v18-person').value:form.querySelector('.duty-v18-status').value;
    if(!value){msg.textContent='اختاري قيمة صحيحة.';return}
-   if(mode==='person'&&value===old.person_id||mode==='status'&&value===(old.activation_status||'لم تفعل')){form.hidden=true;msg.textContent='لا يوجد تغيير.';return}
+   if(mode==='person'&&value===old.person_id||mode==='status'&&value===old.activation_status){form.hidden=true;msg.textContent='لا يوجد تغيير.';return}
    if(!confirm('حفظ التعديل المحدد فقط دون إعادة نشر الجدول؟'))return;
    const requestDate=date,serial=refreshSequence;
    await doAction(async()=>{
