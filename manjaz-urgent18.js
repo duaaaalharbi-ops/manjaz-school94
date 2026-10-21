@@ -506,7 +506,9 @@ async function refresh(){if(!document.getElementById('mjDutyRoot'))return;
  // Preserve the inline admin login if a date is changed before authentication.
  if(panel && !panel.hidden && !loggedIn && workspace && !workspace.querySelector('#dutyInlineLoginForm'))openDutyLogin();
  const preview=document.getElementById('dutyPreviewBackdrop');if(preview){preview.hidden=true;preview.innerHTML=''}
- await Promise.all([loadPublic(requestDate,serial),loggedIn?loadAdmin(requestDate,serial):Promise.resolve()]);
+ // Load published state before admin cards so the edit controls appear reliably on iPhone and desktop.
+ await loadPublic(requestDate,serial);
+ if(loggedIn)await loadAdmin(requestDate,serial);
 }
 const dutyPublicationTitles={morning:'جدول المناوبة الصباحية',break:'جدول مناوبة الفسحة',end:'جدول مناوبة نهاية الدوام'};
 function dutyPublicationPeriod(slot,rows){
