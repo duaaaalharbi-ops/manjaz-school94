@@ -2821,21 +2821,20 @@ function publicationHTML(date){
     <h1>جدول النشر — الاحتياط اليومي</h1>
     <p class="reserve-publication-school">الثانوية الرابعة والتسعون – مسارات</p>
     <table><thead><tr>
-      <th>المعلمة الغائبة</th><th>الحصة</th><th>الفصل</th><th>المعلمة المسند لها الاحتياط</th><th>عنوان التفعيل</th><th>حالة الاطلاع</th><th>حالة التفعيل</th><th>التوقيع</th>
+      <th>المعلمة الغائبة</th><th>الحصة</th><th>الفصل</th><th>المعلمة المسند لها الاحتياط</th><th>عنوان التفعيل</th><th>حالة الاطلاع</th><th>حالة التفعيل</th>
     </tr></thead><tbody>${items.length?items.map((a,i)=>{
       const title=clean(a.activationTitle||"");
       const acknowledged=Boolean(clean(a.ackAt||""));
       // فاصل أبيض بين مجموعات الحصص؛ لا يُنشأ قبل أول حصة في الجدول.
       const newGroup=i>0&&Number(items[i-1].period)!==Number(a.period);
-      const groupGap=newGroup?'<tr class="reserve-publication-group-gap" aria-hidden="true"><td colspan="8"></td></tr>':"";
+      const groupGap=newGroup?'<tr class="reserve-publication-group-gap" aria-hidden="true"><td colspan="7"></td></tr>':"";
       return `${groupGap}<tr class="reserve-publication-period reserve-publication-period-${Number(a.period)}">
       <td>${esc(a.absentTeacherName||"—")}</td><td>${esc(a.period)}</td>
       <td>${esc(a.className||"—")}</td><td>${esc(a.assignedTeacherName||"—")}</td>
       <td class="reserve-publication-title">${title?esc(title):"—"}</td>
       <td><span class="reserve-publication-status ${acknowledged?"reserve-publication-read":"reserve-publication-unread"}">${acknowledged?"تم الاطلاع":"لم يتم الاطلاع"}</span></td>
       <td><span class="reserve-publication-status ${title?"reserve-publication-activated":"reserve-publication-not-activated"}">${title?"تم التفعيل":"لم يتم التفعيل"}</span></td>
-      <td class="reserve-publication-signature"></td>
-    </tr>`}).join(""):`<tr><td colspan="8">لا توجد حصص احتياط معتمدة لهذا اليوم</td></tr>`}</tbody></table>
+    </tr>`}).join(""):`<tr><td colspan="7">لا توجد حصص احتياط معتمدة لهذا اليوم</td></tr>`}</tbody></table>
     <section class="reserve-publication-summary">
       <h2>إحصائية نهاية الجدول</h2>
       <div class="reserve-publication-totals"><span>إجمالي حصص الاحتياط: <b>${stats.periods}</b></span>
@@ -2881,14 +2880,13 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet tr.reserve-publication-group-gap{height:12px!important;break-after:avoid;page-break-after:avoid}
     #reservePublishSheet tr.reserve-publication-group-gap > td{height:12px!important;min-height:12px!important;border:0!important;background:#fff!important;padding:0!important;line-height:0!important;font-size:0!important}
     #reservePublishSheet tr.reserve-publication-period > td:first-child{border-right-color:#637982!important}
-    #reservePublishSheet th:nth-child(1){width:17%}
-    #reservePublishSheet th:nth-child(2){width:6%}
-    #reservePublishSheet th:nth-child(3){width:9%}
-    #reservePublishSheet th:nth-child(4){width:18%}
-    #reservePublishSheet th:nth-child(5){width:17%}
-    #reservePublishSheet th:nth-child(6){width:12%}
-    #reservePublishSheet th:nth-child(7){width:12%}
-    #reservePublishSheet th:nth-child(8){width:9%}
+    #reservePublishSheet th:nth-child(1){width:18%}
+    #reservePublishSheet th:nth-child(2){width:7%}
+    #reservePublishSheet th:nth-child(3){width:10%}
+    #reservePublishSheet th:nth-child(4){width:20%}
+    #reservePublishSheet th:nth-child(5){width:19%}
+    #reservePublishSheet th:nth-child(6){width:13%}
+    #reservePublishSheet th:nth-child(7){width:13%}
     #reservePublishSheet .reserve-publication-status{display:inline-block;padding:3px 4px;border-radius:5px;font-weight:700;line-height:1.35;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     #reservePublishSheet .reserve-publication-read{background:#d5f4df!important;color:#126536!important;border:1px solid #57ae78!important}
     #reservePublishSheet .reserve-publication-unread{background:#ffe4e5!important;color:#b21d29!important;border:1px solid #d9878c!important}
@@ -2896,7 +2894,6 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet .reserve-publication-not-activated{background:#f1f1f1!important;color:#4e545a!important;border:1px solid #bdc5c8!important}
     #reservePublishSheet .reserve-publication-title{overflow-wrap:anywhere;white-space:normal}
     #reservePublishSheet tr{break-inside:avoid;page-break-inside:avoid}
-    #reservePublishSheet .reserve-publication-signature{height:24px}
     #reservePublishSheet .reserve-publication-summary{border:1px solid #637982;margin-top:14px;padding:9px;break-inside:avoid;page-break-inside:avoid}
     #reservePublishSheet h2{margin:0 0 8px;color:#123e50;font-size:14px}
     #reservePublishSheet .reserve-publication-totals{display:flex;gap:12px;flex-wrap:wrap}
@@ -2931,7 +2928,6 @@ function ensureReservePublicationStyles(){
       #reservePublishSheet tr.reserve-publication-group-gap{height:8px!important}
       #reservePublishSheet tr.reserve-publication-group-gap > td{height:8px!important;min-height:8px!important;padding:0!important;border:0!important;line-height:0!important}
       #reservePublishSheet .reserve-publication-status{padding:2px 3px!important}
-      #reservePublishSheet .reserve-publication-signature{height:17px!important}
       #reservePublishSheet h1{font-size:18px!important;margin:6px 0 0!important}
       #reservePublishSheet .reserve-publication-school{margin:0 0 7px!important}
       #reservePublishSheet .reserve-publication-summary{margin-top:8px!important;padding:7px!important}
