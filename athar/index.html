@@ -215,6 +215,7 @@ window.ATHAR_CONFIG = Object.freeze({
   let mode = 'demo';
   let teachers = [];
   let items = [];
+  let cloudDriveCards = [];
   let teacherId = null;
   let category = 'all';
   let authenticatedAdmin = false;
@@ -241,12 +242,41 @@ window.ATHAR_CONFIG = Object.freeze({
   function loadDemo(){if(cachedDemo)return structuredClone(cachedDemo);try{const saved=localStorage.getItem(DB_KEY);if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed.teachers)&&Array.isArray(parsed.items))return parsed;}}catch(err){console.warn('تعذر قراءة تخزين المعاينة',err);}return demoData();}
   function saveDemo(){cachedDemo=structuredClone({teachers,items});try{localStorage.setItem(DB_KEY,JSON.stringify(cachedDemo));}catch(err){console.warn('الحفظ مستمر في جلسة المعاينة فقط',err);}}
   async function loadRemote(){
-    const [p,i]=await Promise.all([
-      supa.from('athar_teacher_profiles').select('id,full_name,about,vision,mission,photo_url,published,created_at').order('full_name',{ascending:true}),
-      supa.from('athar_portfolio_items').select('id,profile_id,category,title,summary,external_url,visible,created_at').order('created_at',{ascending:false})
+    // The existing Cloud Computing > Portfolios records remain the authoritative source for Drive URLs.
+    // Athar stores editable profile content separately, linked by the stable records.id, not by the name.
+    const [p,i,cloud]=await Promise.all([
+      supa.from('athar_teacher_profiles').select('id,cloud_record_id,full_name,about,vision,mission,photo_url,published,created_at').order('full_name',{ascending:true}),
+      supa.from('athar_portfolio_items').select('id,profile_id,category,title,summary,external_url,visible,created_at').order('created_at',{ascending:false}),
+      supa.from('records').select('id,data').eq('kind','cloud_portfolios')
     ]);
-    if(p.error)throw p.error;if(i.error)throw i.error;
-    teachers=p.data||[];items=i.data||[];
+    if(p.error)throw p.error;
+    if(i.error)throw i.error;
+    teachers=p.data||[];
+    items=i.data||[];
+    cloudDriveCards=[];
+    if(cloud.error){
+      console.warn('تعذر مزامنة روابط ملفات الإنجاز السحابية',cloud.error);
+    } else {
+      const urls=new Map((cloud.data||[]).map(r=>[String(r.id),String(r.data?.url||'').trim()]));
+      cloudDriveCards=teachers.flatMap(t=>{
+        if(t.cloud_record_id==null)return [];
+        const raw=urls.get(String(t.cloud_record_id));
+        const safe=safeUrl(raw);
+        if(!safe)return [];
+        try {
+          if(new URL(safe).hostname!=='drive.google.com')return [];
+        } catch {return [];}
+        return [{
+          id:'cloud-drive-'+t.cloud_record_id,
+          profile_id:t.id,
+          category:'evidence',
+          title:'ملف الإنجاز على Google Drive',
+          summary:'استعراض المستندات والشواهد المرتبطة بملف المعلمة في الحوسبة السحابية.',
+          external_url:safe,
+          visible:true
+        }];
+      });
+    }
   }
   async function reload(){if(mode==='remote')await loadRemote(); else if(mode==='demo'){const d=loadDemo();teachers=d.teachers;items=d.items;}renderDirectory();renderAdminLists();if(currentView==='profile')renderProfile();}
   function view(name){
@@ -288,8 +318,8 @@ window.ATHAR_CONFIG = Object.freeze({
     $('profileVision').textContent=t.vision||'لم تُضف الرؤية المهنية بعد.';
     $('profileMission').textContent=t.mission||'لم تُضف الرسالة المهنية بعد.';
     $('categorySwitch').innerHTML=Object.entries(categories).map(([key,name])=>`<button type="button" class="filter ${category===key?'active':''}" data-action="category" data-category="${esc(key)}">${esc(name)}</button>`).join('');
-    const shown=items.filter(item=>item.profile_id===t.id && item.visible && (category==='all'||item.category===category));
-    $('itemGrid').innerHTML=shown.length?shown.map(item=>`<article class="portfolio-item"><span class="tag">${esc(categories[item.category]||'إنجاز')}</span><h3>${esc(item.title)}</h3><p>${esc(item.summary||'')}</p>${safeUrl(item.external_url)?`<a href="${esc(safeUrl(item.external_url))}" class="item-link" target="_blank" rel="noopener noreferrer">استعراض الشاهد ↗</a>`:''}</article>`).join(''):'<div class="empty">لم تُضف بطاقات منشورة في هذا القسم بعد.</div>';
+    const shown=[...cloudDriveCards,...items].filter(item=>item.profile_id===t.id && item.visible && (category==='all'||item.category===category));
+    $('itemGrid').innerHTML=shown.length?shown.map(item=>`<article class="portfolio-item"><span class="tag">${esc(categories[item.category]||'إنجاز')}</span><h3>${esc(item.title)}</h3><p>${esc(item.summary||'')}</p>${safeUrl(item.external_url)?`<a href="${esc(safeUrl(item.external_url))}" class="item-link" target="_blank" rel="noopener noreferrer">${String(item.id).startsWith('cloud-drive-')?'فتح ملف الإنجاز السحابي ↗':'استعراض الشاهد ↗'}</a>`:''}</article>`).join(''):'<div class="empty">لم تُضف بطاقات منشورة في هذا القسم بعد.</div>';
   }
   function renderAdmin(){
     $('authGate').hidden= mode !== 'remote' || authenticatedAdmin;
