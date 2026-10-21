@@ -6,16 +6,19 @@ const labels=["تهيئة وفكرة أولية","أفكر وحدي","أتعاو
 const minutes=[5,7,12,15,6];
 const css=".ma-afaq-paper{width:210mm;height:297mm;box-sizing:border-box;background:#fff;color:#143944;direction:rtl;text-align:right;overflow:hidden;position:relative;padding:11mm 13mm 18mm;font:13px/1.45 Tahoma,Arial,sans-serif}.ma-afaq-paper *{box-sizing:border-box}.ma-afaq-paper header{border-bottom:2px solid #236a73;display:flex;justify-content:space-between;gap:10px;padding-bottom:3mm;font-size:11px}.ma-afaq-paper header div{display:grid;gap:2px}.ma-afaq-paper header strong{font-size:14px}.ma-afaq-paper h1{text-align:center;font-size:22px;margin:3mm 0 1mm;color:#124354}.ma-afaq-paper h2{font-size:13px;color:#126271;margin:0 0 1mm}.ma-afaq-paper .af-kicker{text-align:center;margin-top:4mm;font-size:12px;color:#17717b}.ma-afaq-paper .af-count{text-align:center;margin-bottom:4mm;font-size:11px;color:#647d84}.ma-afaq-paper .af-data{display:grid;grid-template-columns:1fr 1fr;gap:2mm;margin-bottom:3mm}.ma-afaq-paper .af-data span{border:1px solid #d6e5e7;padding:1.5mm;font-size:11px}.ma-afaq-paper section{border-right:3px solid #2c8a87;background:#f6faf9;padding:2.2mm 3mm;margin:2.5mm 0;overflow-wrap:anywhere}.ma-afaq-paper p{margin:0;overflow-wrap:anywhere}.ma-afaq-paper .af-question{background:#e9f3f5;font-weight:700}.ma-afaq-paper table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:10.5px;line-height:1.35;margin-top:2mm}.ma-afaq-paper th,.ma-afaq-paper td{border:1px solid #cddddd;padding:1.5mm;text-align:right;vertical-align:top;overflow-wrap:anywhere}.ma-afaq-paper th{background:#e7f1f0}.ma-afaq-paper th:first-child{width:24%}.ma-afaq-paper th:last-child{width:13%}.ma-afaq-paper .af-blank{height:6mm;border-bottom:1px dotted #afc4c8}.ma-afaq-paper footer{position:absolute;bottom:6mm;right:13mm;left:13mm;border-top:1px solid #a3c0c1;display:flex;justify-content:space-between;padding-top:2mm;color:#476971;font-size:10px;gap:5px}.ma-afaq-paper.compact{font-size:11.5px;line-height:1.3;padding-top:6mm}.ma-afaq-paper.compact h1{font-size:18px;margin:1mm 0}.ma-afaq-paper.compact section{margin:1.2mm 0;padding:1.2mm 2mm}.ma-afaq-paper.compact table{font-size:9.4px}.ma-afaq-paper.compact td,.ma-afaq-paper.compact th{padding:1mm}";
 function block(label,content,cl=""){return '<section class="'+cl+'"><h2>'+esc(label)+'</h2><p>'+esc(content||"—")+'</p></section>';}
-function planParts(lines){
- const items=labels.map((label,i)=>({label,minutes:minutes[i],text:""}));let last=-1;
- for(const source of lines||[]){
-  const line=String(source||"").trim();if(!line)continue;
-  const idx=labels.findIndex(label=>line.includes(label));
-  if(idx!==-1){last=idx;items[idx].text+=line.replace(labels[idx],"").replace(/\b(5|7|12|15|6)\s*دقائق?\b/g,"").replace(/^\s*[:：]\s*/,"").trim()+" ";}
-  else if(last>=0)items[last].text+=line+" ";
- }
- return items;
+function planParts(lines,challenge="",practice=""){
+ // All five 45-minute phases retain the original guide timings. The source
+ // prompts and answer-card exit task keep each activity unique and readable.
+ const stageText=[
+  "اقرئي السؤال وحددي الموقف أو الفكرة الأساسية دون نقاش.",
+  "دوّني رأيًا أوليًا وسببًا أو دليلًا يدعم اختيارك قبل الحوار.",
+  challenge?"تعاوني مع المجموعة لإنجاز التحدي: "+challenge:"نفّذن تحدي البطاقة في مجموعات مع تبرير اختياراتكن.",
+  "اعرضن نتاج المجموعة مع سبب أو دليل، ثم قارِنّ وجهة نظر أخرى.",
+  practice||"اكتبي خطوة عملية تستفيدين بها مما تعلمتِه في الحصة."
+ ];
+ return labels.map((label,i)=>({label,minutes:minutes[i],text:stageText[i]}));
 }
+
 function markup(id,variant,meta={}){
  const c=get(id);if(!c)throw Error("بطاقة آفاق الفكر غير متاحة.");
  if(!["activity","solved"].includes(variant))throw Error("نوع البطاقة غير صالح.");
@@ -37,7 +40,7 @@ function markup(id,variant,meta={}){
   s+=block("السؤال المحوري",c.question,"af-question");
   s+=block("التحدي التفاعلي",c.challenge);
   s+='<section><h2>خطة الحصة التفاعلية</h2><table><thead><tr><th>المرحلة</th><th>التكليف</th><th>الزمن</th></tr></thead><tbody>'+
-    planParts(c.plan).map(x=>'<tr><td>'+esc(x.label)+'</td><td>'+esc(x.text.trim()||"تقديم استنتاج أو حجة مدعمة.")+'</td><td>'+x.minutes+' د</td></tr>').join('')+'</tbody></table></section>';
+    planParts(c.plan,c.challenge,c.practice).map(x=>'<tr><td>'+esc(x.label)+'</td><td>'+esc(x.text.trim()||"تقديم استنتاج أو حجة مدعمة.")+'</td><td>'+x.minutes+' د</td></tr>').join('')+'</tbody></table></section>';
   s+=block("نتاج البطاقة","حجة واضحة + بديل مدروس + إجراء تطبيقي.");
   s+=block("التحقق السريع","□ فسرت الفكرة  □ قارنت بديلًا  □ بررت اختياري");
   if(meta.indicators?.length)s+=block("مؤشرات التنفيذ المختارة",meta.indicators.join(" | "));
