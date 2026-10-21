@@ -157,14 +157,25 @@ async function dutyReport(period,reference,auth){
  const counts=new Map();
  filtered.forEach(a=>counts.set(String(a.person_id),(counts.get(String(a.person_id))||0)+1));
  const names={morning:"الصباح",break:"الفسحة",end:"نهاية الدوام"};
- const roles={teacher:"معلمة",admin:"إدارية",staff:"إدارية",administrator:"إدارية"};
+ // Duty Excel export ONLY: readable job categories, no changes to assignment roles.
+ const dutyExportRole=(role,fullName)=>{
+  const code=String(role||"").trim();
+  if(code==="teacher")return "معلمة";
+  const label=String(fullName||"").replace(/[أإآ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/\s+/g," ").trim();
+  if(code==="administrative"||code==="admin"||code==="staff"||code==="administrator"){
+   if(label==="نجلاء بنت محمد علي بن ادم الهوساوي")return "محضرة مختبر";
+   if(label==="دخيله سراج فرحان المالكي"||label==="مها محمد سهل العتيبي")return "موجهة طلابية";
+   return "مساعد إداري";
+  }
+  return code||"غير محدد";
+ };
  sorted(filtered,x=>x.duty_date,(a,b)=>String(a.slot).localeCompare(String(b.slot))||a.position-b.position);
  const rows=filtered.map(a=>{
   const person=map.get(String(a.person_id))||{};
   const viewKey=a.duty_date+"|"+a.person_id;
   return [a.duty_date,readableHijri(a.duty_date),weekday(a.duty_date),
    names[a.slot]||a.slot,a.position,person.full_name||"اسم غير متاح",
-   roles[person.role]||person.role||"غير محدد",
+   dutyExportRole(person.role,person.full_name),
    published.get(a.duty_date)?"منشور":"غير منشور",
    viewed.get(viewKey)?"تم الاطلاع":"لم يؤكد",
    counts.get(String(a.person_id))||0,String(a.person_id)];
