@@ -47,6 +47,28 @@ function markup(id,variant,meta={}){
  s+='<footer><span>إعداد المعلمة هاجر السلمي | الإنتاج المعرفي الرقمي</span><span>الثانوية الرابعة والتسعون – مسارات</span></footer></article>';
  return s;
 }
+function guideMarkup(){
+ let s='<article class="ma-afaq-paper" dir="rtl" lang="ar"><header><div><strong>المملكة العربية السعودية | وزارة التعليم</strong><span>الإدارة العامة للتعليم بمحافظة جدة</span><span>الثانوية الرابعة والتسعون – مسارات</span></div><div>المرحلة الثانوية | 1448هـ</div></header>';
+ s+='<div class="af-kicker">حقيبة تدريبية تفاعلية لتفعيل حصص الاحتياط</div><h1>آفاق الفكر – مهارات التفكير العليا</h1><p class="af-count">خمسون بطاقة نشاط مستقلة مع خمسين بطاقة حل نموذجي ودليل المعلمة</p>';
+ s+=block("الهدف العام","تنمية مهارات التفكير العليا لدى طالبات المرحلة الثانوية من خلال أنشطة حوارية وتطبيقية في التحليل والاستدلال والتقويم والإبداع وحل المشكلات.");
+ s+=block("المكونات","50 بطاقة نشاط قابلة للتفعيل خلال حصة احتياط واحدة، 50 بطاقة حل تحمل الأرقام المقابلة، ودليل للتفعيل والتقويم ومؤشرات التحقق.");
+ s+=block("تصنيف البطاقات","البطاقات 01–20: ماذا لو؟ | البطاقات 21–35: أسئلة نقاش | البطاقات 36–50: مواقف تطبيقية.");
+ s+='<section><h2>خطة تنفيذ الحصة (45 دقيقة)</h2><table><thead><tr><th>المرحلة</th><th>الإجراء المقترح</th><th>الزمن</th></tr></thead><tbody>';
+ const plan=["طرح السؤال المركزي واستدعاء المعرفة السابقة","تحديد موقف أولي وتبريره قبل الحوار","تنفيذ مهمة جماعية وتحليل البدائل والحجج","عرض نتاج مجموعتين ومناقشة الأدلة والاختلافات","صياغة إجراء عملي وبطاقة خروج"];
+ labels.forEach((label,i)=>s+='<tr><td>'+esc(label)+'</td><td>'+esc(plan[i])+'</td><td>'+minutes[i]+' دقائق</td></tr>');
+ s+='</tbody></table></section>';
+ s+=block("آلية التنفيذ","تختار المعلمة بطاقة واحدة للحصة. يُفضّل تكوين مجموعات من 3 إلى 5 طالبات وتوزيع أدوار التيسير والكتابة ومراجعة الحجج والتحدث. شاشة العرض اختيارية، ويكفي توفير أوراق وأقلام.");
+ s+=block("تقويم الأداء","تُقبل الإجابات المختلفة إذا استندت إلى دليل أو سبب منطقي، وناقشت بديلًا أو أثرًا مختلفًا، وانتهت بخطوة قابلة للتطبيق. لا تُستخدم الحلول النموذجية لفرض إجابة وحيدة.");
+ s+='<footer><span>إعداد المعلمة هاجر السلمي | الإنتاج المعرفي الرقمي</span><span>الثانوية الرابعة والتسعون – مسارات</span></footer></article>';
+ return s;
+}
+function showGuide(host){
+ if(!host)throw Error("لا توجد مساحة لمعاينة دليل الحقيبة");
+ host.innerHTML='<style>'+css+'</style>'+guideMarkup();
+ const paper=host.querySelector(".ma-afaq-paper"),scale=Math.min(1,Math.max(0.25,(host.clientWidth-15)/794));
+ paper.style.transform="scale("+scale+")";paper.style.transformOrigin="top right";
+ host.style.minHeight=Math.ceil(1123*scale+16)+"px";return paper;
+}
 function show(host,id,variant,meta={}){
  if(!host)throw Error("معاينة البطاقة غير متاحة");
  host.innerHTML='<style>'+css+'</style>'+markup(id,variant,meta);
@@ -82,5 +104,5 @@ async function exportPdf(v,variant="activity"){
   return {blob:pdf.output("blob"),filename:"آفاق_الفكر_"+(variant==="solved"?"الحل_النموذجي_":"بطاقة_النشاط_")+String(card.id).padStart(2,"0")+".pdf"};
  }finally{outer.remove();}
 }
-window.ManjazAfaqActivityV19=Object.freeze({show,exportPdf,markup,cardFor:get,planParts});
+window.ManjazAfaqActivityV19=Object.freeze({show,showGuide,guideMarkup,exportPdf,markup,cardFor:get,planParts});
 })();
