@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f3e9">
+  <meta name="description" content="أثر – ملفات الإنجاز المطورة في منصة منجز">
+  <title>أثر – ملفات الإنجاز المطورة | منجز</title>
+
+
+  <style>
+:root{--ink:#263b36;--green:#477e6e;--green2:#8fbca6;--cream:#f7f3e9;--paper:#fffdf8;--gold:#edbd59;--rose:#d99191;--muted:#718178;--line:#e5e6dc;--shadow:0 18px 50px #273d3415}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:0;background:var(--paper);color:var(--ink);font-family:Alexandria,Tahoma,Arial,sans-serif;font-size:13px;line-height:1.85;overflow-x:hidden}button,input,textarea,select{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #edbd59;outline-offset:3px}h1,h2,h3,p{margin-top:0}.container{width:min(1160px,calc(100% - 40px));margin:auto}[hidden]{display:none!important}.topbar{position:sticky;top:0;z-index:40;background:#fffdf8f7;box-shadow:0 5px 20px #263b3608;border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}.topinner{min-height:81px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:11px}.brand-mark{height:45px;width:45px;display:grid;place-items:center;background:var(--green);color:white;border-radius:14px 14px 14px 4px;box-shadow:5px 5px 0 #edbd5977;font-family:Amiri,serif;font-size:28px}.brand strong{display:block;font-size:18px;line-height:1.3}.brand small{color:var(--muted);font-size:9px}.topnav{display:flex;gap:9px}.topnav-btn{border:1px solid #e0e9df;border-radius:99px;background:transparent;color:#5d7768;padding:10px 17px;font-size:11px}.topnav-btn.active{background:var(--green);color:white;border-color:var(--green)}.mode-banner{background:#f4e9c8;color:#615025;text-align:center;font-size:10px;padding:5px 12px}.mode-banner.live{background:#e7efe7;color:#395b45}.hero{background:linear-gradient(117deg,#f7f3e9 0%,#f0efe5 55%,#e3f0e5 100%);padding:60px 0 93px;position:relative;overflow:hidden}.hero::after{content:"";display:block;position:absolute;bottom:-2px;width:100%;height:70px;background:var(--paper);clip-path:polygon(0 40%,8% 60%,15% 34%,25% 60%,34% 35%,45% 65%,55% 32%,65% 58%,75% 35%,84% 60%,92% 35%,100% 55%,100% 100%,0 100%)}.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:40px;min-height:420px}.eyebrow{display:flex;gap:10px;align-items:center;font-size:11px;font-weight:700;color:var(--green)}.eyebrow:before{content:"";width:26px;height:3px;border-radius:9px;background:var(--gold)}.hero h1{font-size:clamp(32px,4.5vw,60px);line-height:1.4;letter-spacing:-1.5px;margin:16px 0 15px;font-weight:800}.hero em{font-family:Amiri,serif;font-style:normal;color:var(--green);font-size:1.2em;position:relative}.hero em:after{content:"";position:absolute;height:9px;background:#edbd5977;bottom:7px;right:0;left:0;border-radius:100%;z-index:-1}.hero p{color:#687b70;max-width:545px;font-size:12px;line-height:2.25;margin-bottom:22px}.btn{display:inline-flex;gap:8px;align-items:center;justify-content:center;border:1px solid transparent;border-radius:99px;padding:11px 20px;min-height:42px;font-size:11px;font-weight:600;transition:transform .15s,box-shadow .15s}.btn:hover{transform:translateY(-2px);box-shadow:0 9px 24px #477e6e22}.btn.primary{background:var(--green);color:white}.btn.outline{background:white;border-color:#aac8b6;color:var(--green)}.btn.danger{border-color:#efd1ce;color:#a34a46;background:#fff9f8}.hero-art{height:410px;position:relative;display:grid;place-items:center}.hero-blob{width:320px;height:340px;border-radius:42% 58% 50% 50% / 45% 48% 52% 55%;background:#d7e8da;transform:rotate(-13deg);box-shadow:0 0 0 20px #d7e8da55,0 0 0 42px #d7e8da33}.hero-center{position:absolute;width:240px;height:278px;border:9px solid #fffdf8;transform:rotate(3deg);background:linear-gradient(155deg,#78a88e,#477e6e);border-radius:120px 120px 34px 34px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:var(--shadow);color:white}.hero-center span{font-size:45px;color:#ffe7a8}.hero-center strong{font-family:Amiri,serif;font-size:70px;line-height:1.15}.hero-center small{font-size:10px}.hero-tag{position:absolute;background:white;padding:14px 20px;border-radius:15px;box-shadow:var(--shadow);font-size:10px;font-weight:600}.hero-tag.first{top:70px;left:0}.hero-tag.second{bottom:45px;right:0}.glow{position:absolute;border-radius:50%;background:#edbd59}.glow.a{width:61px;height:61px;top:0;left:65px;box-shadow:0 0 0 11px #edbd5930}.glow.b{width:20px;height:20px;right:15px;bottom:48px;background:#d99191}.mini-metrics{margin-top:-36px;position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.metric{background:white;box-shadow:var(--shadow);border:1px solid var(--line);border-radius:20px;display:flex;align-items:center;gap:15px;padding:18px 22px}.metric-icon{display:grid;place-items:center;height:49px;width:49px;border-radius:15px;background:#e7f1e8;color:var(--green);font-size:23px}.metric-icon.soft{background:#f6e6e5;color:#be7e78}.metric-icon.gold{background:#fff1ce;color:#aa8333}.metric b{display:block;font-size:15px}.metric small{font-size:10px;color:var(--muted)}.directory-section{padding:66px 0 80px}.section-heading h2{font-size:30px;line-height:1.6;margin:7px 0}.section-heading p{color:var(--muted);font-size:11px}.searchrow{background:white;border:1px solid var(--line);padding:18px 21px;border-radius:19px;display:flex;gap:18px;justify-content:space-between;align-items:center;margin:23px 0 25px}.searchrow label{font-size:11px;font-weight:700}.search-wrap{position:relative;width:min(100%,400px)}.search-wrap span{position:absolute;right:16px;top:7px;font-size:23px;color:#91ab9d}.search-wrap input{border:1px solid #e3e9e0;border-radius:11px;width:100%;height:43px;padding:9px 48px 9px 12px;background:#fbfcf9;outline:none;font-size:12px;color:var(--ink)}.teacher-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px}.teacher-card{border-radius:22px;overflow:hidden;border:1px solid #e8e9df;background:white;box-shadow:0 11px 27px #263b360c;transition:transform .2s}.teacher-card:hover{transform:translateY(-4px)}.teacher-top{height:78px;background:radial-gradient(circle at 16% 30%,#edbd5978 0 16px,transparent 17px),linear-gradient(120deg,#d3e7d6,#e9f0e2)}.teacher-avatar{display:grid;place-items:center;width:84px;height:84px;background:#477e6e;color:white;border:6px solid #fff;border-radius:50%;margin:-47px 20px 0 auto;font-family:Amiri,serif;font-size:37px;overflow:hidden;position:relative;z-index:1}.teacher-avatar img,.large-avatar img{width:100%;height:100%;object-fit:cover}.teacher-details{padding:14px 22px 23px}.teacher-details h3{font-size:17px;margin:0}.teacher-details .subtitle{font-size:10px;color:var(--muted);margin:6px 0 21px}.teacher-foot{border-top:1px solid #eef0e9;padding-top:15px;display:flex;gap:7px;justify-content:space-between;align-items:center}.tiny-label{background:#eff6ed;color:#477e6e;padding:5px 9px;font-size:9px;border-radius:30px}.teacher-foot .btn{padding:8px 14px;min-height:35px;font-size:10px}.empty{border:1px dashed #bccbc0;border-radius:18px;padding:42px 20px;color:#667e6f;text-align:center;background:#f9fbf6;grid-column:1/-1}.empty strong{display:block;font-size:15px;color:var(--ink)}.profile-hero{background:linear-gradient(130deg,#f7f3e9,#e4f0e5);padding:42px 0 48px}.text-btn{display:inline-flex;border:0;background:transparent;color:var(--green);font-size:11px;padding:6px 0 20px}.profile-heading{display:flex;align-items:center;gap:28px}.large-avatar{width:156px;height:156px;border-radius:32px;background:#477e6e;color:white;font-family:Amiri,serif;font-size:76px;box-shadow:0 15px 45px #273d3424;display:grid;place-items:center;overflow:hidden;flex:none;border:8px solid white}.profile-heading h1{font-size:clamp(28px,4vw,45px);margin:8px 0}.profile-heading p{font-size:11px;color:var(--muted);margin-bottom:19px}.profile-body{padding-bottom:75px}.section-nav{background:white;position:sticky;top:82px;z-index:3;display:flex;flex-wrap:wrap;gap:8px;border:1px solid var(--line);padding:12px;border-radius:14px;margin:26px 0}.section-nav a{font-size:10px;padding:8px 12px;background:#f2f5ef;border-radius:20px;color:#527464}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.info-card{background:white;border:1px solid var(--line);border-radius:19px;box-shadow:0 10px 30px #273d340b;padding:26px;scroll-margin-top:160px}.info-card.wide{grid-column:1/-1}.card-title{display:flex;align-items:center;gap:11px;margin-bottom:14px}.card-title>span{height:38px;width:38px;border-radius:12px;background:#e7f1e8;display:grid;place-items:center;color:var(--green);font-size:20px}.card-title h2{font-size:18px;margin:0}.content-text{font-size:12px;color:#65776d;white-space:pre-wrap;line-height:2.1;margin:0}.category-switch{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}.filter{border:1px solid #deebe0;border-radius:40px;background:#f6f9f4;color:#527464;padding:8px 14px;font-size:10px}.filter.active{background:var(--green);color:white;border-color:var(--green)}.item-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.portfolio-item{border:1px solid #e5ece4;border-radius:15px;background:#fcfdfb;padding:17px}.portfolio-item .tag{font-size:9px;color:#608272;background:#e9f3e9;border-radius:30px;padding:3px 9px;display:inline-block;margin-bottom:10px}.portfolio-item h3{font-size:13px;margin:0 0 10px}.portfolio-item p{font-size:10px;color:var(--muted);white-space:pre-wrap;margin:0 0 12px}.item-link{color:var(--green);font-size:10px;font-weight:700}.admin-hero{background:linear-gradient(125deg,#edf4ec,#f7f3e9);padding:37px 0}.admin-hero h1{font-size:31px;margin:7px 0 3px}.admin-hero p{font-size:11px;color:var(--muted);margin:0}.admin-content{padding:27px 0 80px}.admin-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px}.admin-tabs{display:flex;gap:8px}.admin-tab{background:#f4f7f1;border:1px solid #dfe9dc;color:#557565;border-radius:12px;padding:11px 15px;font-size:11px}.admin-tab.active{background:var(--green);border-color:var(--green);color:white}.admin-layout{display:grid;grid-template-columns:minmax(310px,410px) minmax(0,1fr);gap:18px}.admin-card{border:1px solid var(--line);background:white;border-radius:20px;padding:24px;box-shadow:0 9px 30px #263b360a;min-width:0}.admin-card .card-title{margin-bottom:19px}.admin-card .card-title h2{font-size:17px}.form-stack{display:grid;gap:13px}.form-stack label{display:grid;gap:5px;font-size:11px;font-weight:600}.form-stack input:not([type=checkbox]),.form-stack textarea,.form-stack select{min-width:0;width:100%;border:1px solid #dbe6dc;background:#fbfdf9;border-radius:10px;padding:9px 11px;color:var(--ink);resize:vertical;font-size:11px;outline:none}.form-stack .checkbox-row{display:flex;align-items:center;gap:7px}.required{color:#b25d50}.form-buttons{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.form-feedback{font-size:10px;color:#588366;min-height:16px}.admin-records{display:grid;gap:10px}.record{border:1px solid #e8ede5;border-radius:13px;background:#fafcf8;padding:13px;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}.record-body{min-width:0}.record-body strong{display:block;font-size:11px;overflow-wrap:anywhere}.record-body small{font-size:9px;color:var(--muted)}.record-buttons{display:flex;gap:5px;flex-wrap:wrap}.small-btn{border:1px solid #d8e7d9;color:var(--green);background:white;padding:7px 9px;border-radius:9px;font-size:9px}.small-btn.danger{color:#a14e49;border-color:#ebd6d3}.auth-gate{max-width:470px;margin:auto}.auth-gate p{font-size:11px;color:var(--muted)}.footer{background:#294a40;color:#f8f8f2;padding:34px 0;text-align:center}.footer strong{font-size:12px}.footer p{color:#c5d8ca;font-size:9px;margin:5px 0}.toast{position:fixed;bottom:19px;left:20px;z-index:70;background:#294a40;color:white;border-radius:13px;padding:12px 21px;font-size:11px;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;max-width:calc(100% - 40px)}.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:900px){.hero-grid{gap:10px}.hero-art{transform:scale(.85)}.teacher-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-layout{grid-template-columns:1fr}.item-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.container{width:calc(100% - 26px)}.topinner{min-height:68px}.brand-mark{height:38px;width:38px;font-size:23px}.brand strong{font-size:15px}.brand small{font-size:7px}.topnav-btn{padding:8px 10px;font-size:9px}.hero{padding:37px 0 73px}.hero-grid{grid-template-columns:1fr;gap:0}.hero h1{font-size:33px}.hero p{font-size:10px}.hero-art{height:244px;transform:scale(.62);margin:-40px 0}.mini-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:-31px}.metric{padding:10px 8px;gap:6px;flex-direction:column;text-align:center;min-height:94px;border-radius:14px}.metric-icon{height:30px;width:30px;font-size:17px;border-radius:9px}.metric b{font-size:10px}.metric small{font-size:8px}.directory-section{padding:45px 0 60px}.section-heading h2{font-size:23px}.searchrow{align-items:stretch;flex-direction:column;gap:7px;padding:14px}.search-wrap{width:100%}.teacher-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.teacher-top{height:60px}.teacher-avatar{height:61px;width:61px;font-size:26px;border-width:4px;margin-top:-32px;margin-right:11px}.teacher-details{padding:9px 11px 13px}.teacher-details h3{font-size:11px;min-height:25px}.teacher-details .subtitle{font-size:8px;margin:4px 0 12px}.teacher-foot{display:block}.teacher-foot .tiny-label{display:none}.teacher-foot .btn{width:100%;padding:6px 4px;min-height:34px;font-size:9px}.profile-hero{padding:20px 0 31px}.profile-heading{align-items:flex-start;gap:13px}.large-avatar{width:95px;height:95px;font-size:44px;border-width:5px;border-radius:20px}.profile-heading h1{font-size:25px}.profile-heading p{font-size:9px}.profile-heading .btn{padding:7px 12px;font-size:9px;min-height:34px}.profile-grid{grid-template-columns:1fr;gap:12px}.info-card.wide{grid-column:auto}.info-card{padding:17px}.section-nav{top:67px;gap:5px;padding:9px}.section-nav a{font-size:8px;padding:7px 9px}.item-grid{grid-template-columns:1fr}.admin-hero h1{font-size:24px}.admin-toolbar{flex-wrap:wrap}.admin-tab{font-size:10px;padding:9px}.admin-card{padding:16px}.record{flex-wrap:wrap}.record-buttons{width:100%}}
+@media(max-width:340px){.teacher-grid{grid-template-columns:1fr}.topnav-btn{font-size:8px;padding:7px 6px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+
+/* واجهة اختيار المعلمات – إصدار القائمة المنسدلة */
+.directory-section{padding-top:62px}
+.teacher-chooser{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.92fr);align-items:stretch;gap:0;margin-top:24px;border:1px solid #e6e8dc;border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 18px 55px #263b3610}
+.chooser-form{padding:clamp(22px,3.7vw,48px);position:relative;z-index:1}
+.chooser-overline{display:flex;gap:10px;align-items:center;color:var(--green);font-weight:700;font-size:11px;margin-bottom:27px}
+.chooser-number{font:700 13px Alexandria,Tahoma,sans-serif;color:#be9033;background:#fff3d4;padding:5px 10px;border-radius:9px}
+.chooser-label{font-size:12px;font-weight:700;display:flex;align-items:center;gap:10px;margin:12px 0 9px}
+.optional{color:#8c9b8e;font-size:9px;font-weight:500}
+.teacher-select-wrap{position:relative}
+.teacher-select-wrap select{width:100%;height:56px;background:#f6faf5;border:1.5px solid #bbd4c4;border-radius:14px;color:#294a40;font-size:12px;font-weight:600;padding:0 16px 0 48px;appearance:none;cursor:pointer;outline:none;text-overflow:ellipsis}
+.teacher-select-wrap select:disabled{opacity:.55;cursor:not-allowed}
+.select-arrow{position:absolute;top:50%;left:18px;transform:translateY(-57%);font-size:30px;font-family:Arial,sans-serif;color:var(--green);pointer-events:none}
+.select-hint{font-size:10px;color:#678374;min-height:23px;margin:13px 0 20px}
+.chooser-open{width:100%;min-height:49px;font-size:12px;border-radius:13px}
+.chooser-open:disabled{background:#cad8cf;color:#fff;cursor:not-allowed;box-shadow:none;transform:none}
+.chooser-showcase{background:radial-gradient(circle at 28% 20%,#d6ebd3 0 0,transparent 49%),linear-gradient(130deg,#eef5e9,#e2eee5 72%,#f5ebd2);min-height:430px;display:grid;place-items:center;position:relative;overflow:hidden;isolation:isolate}
+.showcase-halo{width:280px;height:280px;position:absolute;border-radius:50%;border:1px solid #99bea685;box-shadow:0 0 0 28px #bddcc12a,0 0 0 60px #b9d9bb20;transform:rotate(-10deg)}
+.showcase-sheet{position:relative;width:250px;min-height:302px;max-width:calc(100% - 85px);padding:29px 19px;background:#fffefa;border:1px solid #fff;box-shadow:0 21px 58px #42685926;border-radius:19px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1;transform:rotate(-3deg)}
+.sheet-corner{position:absolute;left:20px;top:13px;color:#d3a844;font-size:23px}
+.sheet-avatar{height:66px;width:66px;border:4px solid white;box-shadow:0 6px 16px #355e4c18;border-radius:50%;background:var(--green);display:grid;place-items:center;color:white;font:700 31px Amiri,serif;margin-bottom:17px;overflow:hidden}
+.sheet-avatar img{width:100%;height:100%;object-fit:cover}
+.sheet-eyebrow{font-size:9px;color:#759082}
+.showcase-sheet h3{font-size:14px;line-height:1.9;margin:9px 0;color:#244b3d;max-width:100%;overflow-wrap:anywhere}
+.showcase-sheet #choiceSubtitle{font-size:9px;color:#829488;line-height:1.9}
+.sheet-lines{display:grid;gap:7px;width:95px;margin:18px auto 0}
+.sheet-lines i{height:5px;border-radius:8px;background:#e9f0e7}
+.sheet-lines i:nth-child(2){width:78%;margin:auto}.sheet-lines i:nth-child(3){width:56%;margin:auto}
+.showcase-label{position:absolute;z-index:2;background:#fffdf8;padding:11px 15px;border-radius:12px;box-shadow:0 12px 23px #345c451d;font-size:10px;color:#41765f;font-weight:700}
+.showcase-label.top{top:79px;right:18px}.showcase-label.bottom{bottom:83px;left:9px}
+.teacher-chooser.has-selection .showcase-sheet{border-color:#c9dcca}
+/* حركة بسيطة داخل الصفحة الرئيسية، دون تشتيت أو تعديل للوظائف */
+@keyframes athar-rise{from{opacity:0;transform:translateY(21px)}to{opacity:1;transform:translateY(0)}}
+@keyframes athar-float{0%,100%{translate:0 0}50%{translate:0 -12px}}
+@keyframes athar-float-alt{0%,100%{translate:0 0}50%{translate:0 9px}}
+@keyframes athar-rotate{0%,100%{rotate:-7deg}50%{rotate:5deg}}
+@keyframes athar-pulse{0%,100%{opacity:.65;scale:1}50%{opacity:1;scale:1.12}}
+@keyframes athar-ring{0%,100%{rotate:0deg;opacity:.75}50%{rotate:14deg;opacity:1}}
+.hero-copy .eyebrow{animation:athar-rise .6s ease-out both}
+.hero-copy h1{animation:athar-rise .7s .1s ease-out both}
+.hero-copy p{animation:athar-rise .7s .22s ease-out both}
+.hero-copy .btn{animation:athar-rise .7s .33s ease-out both}
+.hero-center{animation:athar-float 7s ease-in-out infinite}
+.hero-blob{animation:athar-rotate 10s ease-in-out infinite}
+.hero-tag.first{animation:athar-float-alt 5.5s ease-in-out infinite}
+.hero-tag.second{animation:athar-float 6.5s ease-in-out infinite}
+.glow.a{animation:athar-pulse 5s ease-in-out infinite}
+.glow.b{animation:athar-float 6s ease-in-out infinite}
+.orbit-ring{position:absolute;inset:18px 9px;border:1px dashed #90b9a5b3;border-radius:50%;transform:rotate(-20deg);animation:athar-ring 13s ease-in-out infinite;pointer-events:none}
+.orbit-dot{position:absolute;display:block;border-radius:50%;background:#e3ad4b;width:12px;height:12px;box-shadow:0 0 0 7px #e3ad4b23}
+.orbit-dot.dot-one{top:27px;right:65px;animation:athar-float 6s ease-in-out infinite}
+.orbit-dot.dot-two{bottom:13px;left:100px;background:#8fbca6;box-shadow:0 0 0 7px #8fbca623;animation:athar-float-alt 7s ease-in-out infinite}
+.orbit-dot.dot-three{top:160px;left:4px;width:7px;height:7px;background:#d99191;animation:athar-pulse 5s ease-in-out infinite}
+.tag-symbol{color:#bb9445;font-size:15px;margin-left:5px}
+.metric{animation:athar-rise .7s .2s ease-out both}
+.metric:nth-child(2){animation-delay:.33s}.metric:nth-child(3){animation-delay:.46s}
+.showcase-sheet{animation:athar-float 8s ease-in-out infinite}
+.showcase-label.top{animation:athar-float 6s ease-in-out infinite}
+.showcase-label.bottom{animation:athar-float-alt 6.5s ease-in-out infinite}
+.showcase-halo{animation:athar-ring 14s ease-in-out infinite}
+@media(max-width:750px){.teacher-chooser{grid-template-columns:1fr}.chooser-showcase{min-height:280px}.showcase-sheet{width:210px;min-height:229px;padding:18px}.sheet-avatar{height:52px;width:52px;font-size:24px;margin-bottom:9px}.showcase-label.top{top:40px;right:14px}.showcase-label.bottom{bottom:40px;left:9px}.chooser-form{padding:24px}}
+@media(max-width:620px){.directory-section{padding-top:43px}.teacher-chooser{margin-top:18px;border-radius:20px}.chooser-form{padding:20px}.chooser-showcase{min-height:245px}.showcase-sheet{width:185px;min-height:205px}.showcase-sheet h3{font-size:12px}.sheet-eyebrow,.showcase-sheet #choiceSubtitle{font-size:8px}.showcase-label{font-size:8px;padding:8px}.showcase-label.top{top:34px;right:6px}.showcase-label.bottom{bottom:30px;left:4px}.showcase-halo{height:210px;width:210px}.orbit-ring{inset:20px 35px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;translate:none!important;scale:none!important;rotate:none!important}}
+
+/* الإصدار الثالث: تغيير المعلمة بالقائمة فقط، مع حركة لتحديث البطاقة */
+@keyframes athar-choice-in { from { opacity:.3; scale:.93 } to { opacity:1; scale:1 } }
+.teacher-chooser.selection-changed .sheet-avatar,
+.teacher-chooser.selection-changed #choiceTitle,
+.teacher-chooser.selection-changed #choiceSubtitle { animation:athar-choice-in .58s cubic-bezier(.22,1,.36,1) both; }
+@media(prefers-reduced-motion:reduce) {
+  .teacher-chooser.selection-changed .sheet-avatar,
+  .teacher-chooser.selection-changed #choiceTitle,
+  .teacher-chooser.selection-changed #choiceSubtitle { animation:none!important; }
+}
+
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topinner">
+      <div class="brand"><span class="brand-mark">أ</span><span><strong>أثَر</strong><small>ملفات الإنجاز المطورة | منجز</small></span></div>
+      <nav class="topnav" aria-label="التنقل بين الواجهات">
+        <button type="button" class="topnav-btn active" data-view="directory">ملفات المعلمات</button>
+        <button type="button" class="topnav-btn" data-view="admin">إدارة الملفات</button>
+      </nav>
+    </div>
+  </header>
+  <div class="mode-banner" id="modeBanner" role="status"></div>
+  <main id="mainContent">
+    <section id="directoryView">
+      <div class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy"><div class="eyebrow">منجز · الإنتاج المعرفي الرقمي</div>
+            <h1>كل إنجاز له <em>أثَر</em><br>وكل معلمة لها حكاية</h1>
+            <p>مساحة مستقلة لملفات إنجاز المعلمات، تجمع الرؤية والرسالة والممارسات المهنية والمنجزات والشواهد في صفحات شخصية متناسقة وسهلة الاستعراض.</p>
+            <a class="btn primary" href="#directoryList">استعراض الملفات <span aria-hidden="true">←</span></a>
+          </div>
+          <div class="hero-art" aria-hidden="true"><div class="glow a"></div><div class="glow b"></div><div class="hero-blob"></div><div class="orbit-ring"></div><span class="orbit-dot dot-one"></span><span class="orbit-dot dot-two"></span><span class="orbit-dot dot-three"></span><div class="hero-center"><span>✧</span><strong>أثَر</strong><small>ملف الإنجاز الرقمي</small></div></div>
+        </div>
+      </div>
+      <div class="container mini-metrics" aria-label="ملخص القسم">
+        <div class="metric"><span class="metric-icon">▦</span><span><b id="totalCount">٠</b><small>ملفات إنجاز</small></span></div>
+        <div class="metric"><span class="metric-icon soft">◇</span><span><b>قالب واحد</b><small>بهوية متناسقة</small></span></div>
+        <div class="metric"><span class="metric-icon gold">✦</span><span><b>مستقل وآمن</b><small>لا يغيّر أقسام منجز</small></span></div>
+      </div>
+      <section class="container directory-section" id="directoryList">
+        <div class="section-heading"><div><div class="eyebrow">دليل ملفات الإنجاز</div><h2>اختاري المعلمة واستعرضي أثرها</h2><p>جميع ملفات المعلمات متاحة في قائمة منسدلة واحدة مرتبة أبجديًا.</p></div></div>
+        <div class="teacher-chooser" id="teacherChooser">
+          <div class="chooser-form">
+            <div class="chooser-overline"><span class="chooser-number">01</span><span>الوصول إلى ملف المعلمة</span></div>
+            <label for="teacherSelect" class="chooser-label">اسم المعلمة</label>
+            <div class="teacher-select-wrap"><select id="teacherSelect" aria-describedby="selectHint"><option value="">— اختاري اسم المعلمة من القائمة —</option></select><span class="select-arrow" aria-hidden="true">⌄</span></div>
+            <p class="select-hint" id="selectHint" role="status" aria-live="polite">اختاري اسمًا لاستعراض ملف الإنجاز.</p>
+            <button type="button" class="btn primary chooser-open" id="openSelectedTeacher" disabled>فتح ملف الإنجاز <span aria-hidden="true">←</span></button>
+          </div>
+          <div class="chooser-showcase" aria-live="polite">
+            <div class="showcase-halo"></div>
+            <div class="showcase-sheet"><span class="sheet-corner">✦</span><div class="sheet-avatar" id="choiceAvatar">أ</div><span class="sheet-eyebrow">ملف الإنجاز المهني الرقمي</span><h3 id="choiceTitle">ملف إنجاز مميز لكل معلمة</h3><span id="choiceSubtitle">اختاري اسم المعلمة من القائمة لعرض ملفها.</span><div class="sheet-lines" aria-hidden="true"><i></i><i></i><i></i></div></div>
+            <span class="showcase-label top">إنجازات موثقة</span><span class="showcase-label bottom">شواهد وممارسات</span>
+          </div>
+        </div>
+      </section>
+    </section>
+    <section id="profileView" hidden>
+      <div class="profile-hero"><div class="container"><button type="button" class="text-btn" id="backToDirectory">→ الرجوع إلى ملفات المعلمات</button>
+        <div class="profile-heading"><div id="profileAvatar" class="large-avatar">أ</div><div><div class="eyebrow">أثر | ملف الإنجاز المهني الرقمي</div><h1 id="profileName">ملف المعلمة</h1><p>الثانوية الرابعة والتسعون – مسارات | إدارة تعليم جدة</p><a class="btn primary" href="#profileSections">استعراض أقسام الملف ←</a></div></div>
+      </div></div>
+      <div class="container profile-body" id="profileSections"><nav class="section-nav" aria-label="أقسام ملف الإنجاز"><a href="#panelAbout">نبذة تعريفية</a><a href="#panelVision">الرؤية والرسالة</a><a href="#panelItems">المنجزات والشواهد</a></nav>
+        <div class="profile-grid"><article class="info-card wide" id="panelAbout"><div class="card-title"><span>✧</span><h2>نبذة تعريفية</h2></div><p id="profileAbout" class="content-text"></p></article>
+          <article class="info-card" id="panelVision"><div class="card-title"><span>◎</span><h2>الرؤية المهنية</h2></div><p id="profileVision" class="content-text"></p></article>
+          <article class="info-card"><div class="card-title"><span>◇</span><h2>الرسالة المهنية</h2></div><p id="profileMission" class="content-text"></p></article>
+          <article class="info-card wide" id="panelItems"><div class="card-title"><span>▦</span><h2>المنجزات والشواهد</h2></div><div class="category-switch" id="categorySwitch" role="group" aria-label="تصفية بطاقات الملف"></div><div class="item-grid" id="itemGrid"></div></article>
+        </div>
+      </div>
+    </section>
+    <section id="adminView" hidden>
+      <div class="admin-hero"><div class="container"><div class="eyebrow">إدارة وحدة أثر المستقلة</div><h1>إدارة ملفات الإنجاز</h1><p>إضافة المعلمات وتحديث ملفاتهن وبطاقات الإنجاز من لوحة واحدة.</p></div></div>
+      <div class="container admin-content">
+        <div id="authGate" class="auth-gate" hidden><div class="admin-card"><div class="card-title"><span>⚿</span><h2>دخول الإدارة</h2></div><p>التعديل على قاعدة البيانات متاح فقط للحسابات المصرح لها في وحدة أثر.</p><form id="authForm" class="form-stack"><label>البريد الإلكتروني<input id="authEmail" type="email" autocomplete="username" required></label><label>كلمة المرور<input id="authPassword" type="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">تسجيل الدخول</button></form><p id="authMessage" class="form-feedback" role="status"></p></div></div>
+        <div id="adminTools" hidden>
+          <div class="admin-toolbar"><div class="admin-tabs"><button type="button" class="admin-tab active" data-admin="teachers">بيانات المعلمات</button><button type="button" class="admin-tab" data-admin="items">بطاقات الإنجاز</button></div><button type="button" id="logoutBtn" class="btn outline" hidden>تسجيل الخروج</button></div>
+          <div class="admin-layout" id="teacherAdmin"><section class="admin-card"><div class="card-title"><span>＋</span><h2 id="teacherFormTitle">إضافة ملف معلمة</h2></div><form id="teacherForm" class="form-stack"><input type="hidden" id="teacherId">
+            <label>اسم المعلمة <span class="required">*</span><input id="teacherName" type="text" minlength="3" maxlength="120" required placeholder="الاسم الكامل"></label>
+            <label>نبذة تعريفية<textarea id="teacherAbout" maxlength="2500" rows="3" placeholder="نبذة عن المعلمة"></textarea></label>
+            <label>الرؤية المهنية<textarea id="teacherVision" maxlength="1500" rows="2" placeholder="الرؤية"></textarea></label>
+            <label>الرسالة المهنية<textarea id="teacherMission" maxlength="1500" rows="2" placeholder="الرسالة"></textarea></label>
+            <label>رابط صورة المعلمة (اختياري)<input id="teacherPhoto" type="url" placeholder="https://example.com/photo.jpg"></label>
+            <label class="checkbox-row"><input id="teacherPublished" type="checkbox" checked> إظهار الملف للزائرات</label>
+            <div class="form-buttons"><button class="btn primary" type="submit">حفظ بيانات المعلمة</button><button class="btn outline" type="button" id="clearTeacher">إفراغ الحقول</button></div>
+          </form><p class="form-feedback" id="teacherFormFeedback" role="status"></p></section>
+          <section class="admin-card"><div class="card-title"><span>▦</span><h2>سجل الملفات</h2></div><div id="teacherAdminList" class="admin-records"></div></section></div>
+          <div class="admin-layout" id="itemsAdmin" hidden><section class="admin-card"><div class="card-title"><span>✦</span><h2 id="itemFormTitle">إضافة بطاقة إنجاز</h2></div><form class="form-stack" id="itemForm"><input id="itemId" type="hidden">
+            <label>المعلمة <span class="required">*</span><select id="itemProfile" required></select></label>
+            <label>القسم <span class="required">*</span><select id="itemCategory" required><option value="achievements">المنجزات والممارسات</option><option value="development">التطوير المهني</option><option value="certificates">الشهادات والتكريمات</option><option value="evidence">الأدلة والمرفقات</option></select></label>
+            <label>عنوان البطاقة <span class="required">*</span><input id="itemTitle" maxlength="180" required placeholder="عنوان الإنجاز أو الشاهد"></label>
+            <label>وصف مختصر<textarea id="itemSummary" maxlength="2000" rows="3" placeholder="وصف الإنجاز أو الأثر"></textarea></label>
+            <label>رابط الشاهد أو المرفق (اختياري)<input id="itemLink" type="url" placeholder="https://..."></label>
+            <label class="checkbox-row"><input id="itemVisible" type="checkbox" checked> إظهار البطاقة للزائرات</label>
+            <div class="form-buttons"><button class="btn primary" type="submit">حفظ البطاقة</button><button class="btn outline" type="button" id="clearItem">إفراغ الحقول</button></div>
+          </form><p class="form-feedback" id="itemFormFeedback" role="status"></p></section>
+          <section class="admin-card"><div class="card-title"><span>▤</span><h2>البطاقات المسجلة</h2></div><div id="itemAdminList" class="admin-records"></div></section></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><div class="container"><strong>منجز | أثَر – ملفات الإنجاز المطورة</strong><p>الإنتاج المعرفي الرقمي</p></div></footer>
+  <div class="toast" id="toast" aria-live="polite" role="status"></div>
+  <!-- ضعي بيانات الاتصال العامة بمشروع Supabase في الملف config.js. لا تضعي مفتاح service_role إطلاقًا. -->
+  <script>
+/* إعدادات وحدة أثر المستقلة. لا تضعي هنا كلمات مرور أو مفاتيح service_role. */
+window.ATHAR_CONFIG = Object.freeze({
+  /* false: معاينة تجريبية داخل المتصفح، true: استخدام Supabase الفعلي بعد إعداد SQL */
+  production: true,
+  supabaseUrl: 'https://idkjuqfxcweqekdkcktk.supabase.co',
+  supabaseAnonKey: 'sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL',
+  schoolName: 'الثانوية الرابعة والتسعون – مسارات',
+  educationOffice: 'إدارة تعليم جدة'
+});
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3"></script>
+  <script>
+/* أثَر – ملفات الإنجاز المطورة | تطبيق مستقل تماماً عن وظائف منصة منجز */
+(() => {
+  'use strict';
+  const CFG = window.ATHAR_CONFIG || {};
+  const DB_KEY = 'athar-portfolios-demo-v1';
+  const REMOTE = CFG.production === true;
+  const categories = Object.freeze({
+    all: 'جميع البطاقات',
+    achievements: 'المنجزات والممارسات',
+    development: 'التطوير المهني',
+    certificates: 'الشهادات والتكريمات',
+    evidence: 'الأدلة والمرفقات'
+  });
+  let supa = null;
+  let mode = 'demo';
+  let teachers = [];
+  let items = [];
+  let teacherId = null;
+  let category = 'all';
+  let authenticatedAdmin = false;
+  let cachedDemo = null;
+  let currentView = 'directory';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const initial = name => String(name || 'أ').trim().slice(0,1);
+  const fmt = n => Number(n || 0).toLocaleString('ar-SA');
+  const safeUrl = value => { try { const u = new URL(value); return u.protocol === 'https:' ? u.href : ''; } catch { return ''; } };
+  const el = (id) => $(id);
+  let toastTimer;
+  function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3300);}
+  function putFeedback(id,message,isError=false){const e=$(id);e.textContent=message;e.style.color=isError?'#a14e49':'#588366';}
+  function newId(){return 'demo-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);}
+  function demoData(){
+    const names=['معلمة نموذجية ١','معلمة نموذجية ٢','معلمة نموذجية ٣','معلمة نموذجية ٤','معلمة نموذجية ٥','معلمة نموذجية ٦'];
+    return {teachers:names.map((full_name,i)=>({id:'sample-'+(i+1),full_name,about:'ملف مهني رقمي يوثق الخبرات والممارسات والمنجزات التعليمية، ويعرض أثر العمل والتطوير المهني.',vision:'ممارسة مهنية متجددة تدعم التعلم الفعّال وتعزز جودة المخرجات.',mission:'التطوير المستمر وتوظيف الممارسات النوعية وتوثيق نواتجها.',photo_url:'',published:true})),items:[
+      {id:'sample-i1',profile_id:'sample-1',category:'achievements',title:'مبادرة تعليمية نوعية',summary:'بطاقة تجريبية توضح طريقة عرض المنجزات داخل الملف.',external_url:'',visible:true},
+      {id:'sample-i2',profile_id:'sample-1',category:'development',title:'برنامج تطوير مهني',summary:'توثيق المشاركة في ورشة أو برنامج تدريبي.',external_url:'',visible:true},
+      {id:'sample-i3',profile_id:'sample-1',category:'certificates',title:'شهادة شكر وتقدير',summary:'نموذج لبطاقة شهادة أو تكريم.',external_url:'',visible:true}
+    ]};
+  }
+  function loadDemo(){if(cachedDemo)return structuredClone(cachedDemo);try{const saved=localStorage.getItem(DB_KEY);if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed.teachers)&&Array.isArray(parsed.items))return parsed;}}catch(err){console.warn('تعذر قراءة تخزين المعاينة',err);}return demoData();}
+  function saveDemo(){cachedDemo=structuredClone({teachers,items});try{localStorage.setItem(DB_KEY,JSON.stringify(cachedDemo));}catch(err){console.warn('الحفظ مستمر في جلسة المعاينة فقط',err);}}
+  async function loadRemote(){
+    const [p,i]=await Promise.all([
+      supa.from('athar_teacher_profiles').select('id,full_name,about,vision,mission,photo_url,published,created_at').order('full_name',{ascending:true}),
+      supa.from('athar_portfolio_items').select('id,profile_id,category,title,summary,external_url,visible,created_at').order('created_at',{ascending:false})
+    ]);
+    if(p.error)throw p.error;if(i.error)throw i.error;
+    teachers=p.data||[];items=i.data||[];
+  }
+  async function reload(){if(mode==='remote')await loadRemote(); else if(mode==='demo'){const d=loadDemo();teachers=d.teachers;items=d.items;}renderDirectory();renderAdminLists();if(currentView==='profile')renderProfile();}
+  function view(name){
+    if(name==='admin' && mode==='unconfigured'){showToast('يجب إكمال ربط قاعدة البيانات أولًا');return;}
+    currentView=name;
+    $('directoryView').hidden=name!=='directory';$('profileView').hidden=name!=='profile';$('adminView').hidden=name!=='admin';
+    document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
+    if(name==='directory')renderDirectory();if(name==='profile')renderProfile();if(name==='admin')renderAdmin();
+    window.scrollTo({top:0,behavior:'auto'});
+  }
+  function visibleTeachers(){return teachers.filter(t=>t.published===true);}
+  function avatarContent(t){const url=safeUrl(t.photo_url);return url?`<img loading="lazy" src="${esc(url)}" alt="">`:esc(initial(t.full_name));}
+  function updateSelectedTeacher(){
+    const selected=visibleTeachers().find(t=>t.id===$('teacherSelect').value);
+    $('openSelectedTeacher').disabled=!selected;
+    $('choiceAvatar').innerHTML=selected?avatarContent(selected):'أ';
+    $('choiceTitle').textContent=selected?selected.full_name:'ملف إنجاز مميز لكل معلمة';
+    $('choiceSubtitle').textContent=selected?'اضغطي على فتح ملف الإنجاز لاستعراض محتواه.':'اختاري اسم المعلمة من القائمة لعرض ملفها.';
+    const count=$('teacherSelect').options.length-1;
+    $('selectHint').textContent=selected?'تم اختيار '+selected.full_name:count===0?'لا توجد ملفات منشورة حاليًا.':`تتوفر ${fmt(count)} من أسماء المعلمات في القائمة.`;
+    $('teacherChooser').classList.toggle('has-selection',Boolean(selected));
+  }
+  function renderDirectory(){
+    const all=visibleTeachers().sort((a,b)=>String(a.full_name).localeCompare(String(b.full_name),'ar'));
+    const select=$('teacherSelect');
+    const selected=select.value;
+    $('totalCount').textContent=fmt(all.length);
+    select.innerHTML='<option value="">— اختاري اسم المعلمة من القائمة —</option>'+all.map(t=>`<option value="${esc(t.id)}">${esc(t.full_name)}</option>`).join('');
+    select.value=all.some(t=>t.id===selected)?selected:'';
+    select.disabled=all.length===0;
+    updateSelectedTeacher();
+  }
+  function renderProfile(){
+    const t=teachers.find(x=>x.id===teacherId && x.published)||null;
+    if(!t){view('directory');return;}
+    $('profileName').textContent=t.full_name;
+    $('profileAvatar').innerHTML=avatarContent(t);
+    $('profileAbout').textContent=t.about||'لم تُضف نبذة تعريفية بعد.';
+    $('profileVision').textContent=t.vision||'لم تُضف الرؤية المهنية بعد.';
+    $('profileMission').textContent=t.mission||'لم تُضف الرسالة المهنية بعد.';
+    $('categorySwitch').innerHTML=Object.entries(categories).map(([key,name])=>`<button type="button" class="filter ${category===key?'active':''}" data-action="category" data-category="${esc(key)}">${esc(name)}</button>`).join('');
+    const shown=items.filter(item=>item.profile_id===t.id && item.visible && (category==='all'||item.category===category));
+    $('itemGrid').innerHTML=shown.length?shown.map(item=>`<article class="portfolio-item"><span class="tag">${esc(categories[item.category]||'إنجاز')}</span><h3>${esc(item.title)}</h3><p>${esc(item.summary||'')}</p>${safeUrl(item.external_url)?`<a href="${esc(safeUrl(item.external_url))}" class="item-link" target="_blank" rel="noopener noreferrer">استعراض الشاهد ↗</a>`:''}</article>`).join(''):'<div class="empty">لم تُضف بطاقات منشورة في هذا القسم بعد.</div>';
+  }
+  function renderAdmin(){
+    $('authGate').hidden= mode !== 'remote' || authenticatedAdmin;
+    $('adminTools').hidden= mode==='remote' && !authenticatedAdmin;
+    $('logoutBtn').hidden= mode!=='remote' || !authenticatedAdmin;
+    renderAdminLists();
+  }
+  function renderAdminLists(){
+    if(!$('teacherAdminList'))return;
+    $('teacherAdminList').innerHTML=teachers.length?teachers.map(t=>`<div class="record"><div class="record-body"><strong>${esc(t.full_name)}</strong><small>${t.published?'منشور':'غير منشور'}</small></div><div class="record-buttons"><button type="button" class="small-btn" data-action="edit-teacher" data-id="${esc(t.id)}">تعديل</button><button type="button" class="small-btn danger" data-action="delete-teacher" data-id="${esc(t.id)}">حذف</button></div></div>`).join(''):'<div class="empty">لا يوجد أي ملف مسجل.</div>';
+    $('itemProfile').innerHTML=teachers.map(t=>`<option value="${esc(t.id)}">${esc(t.full_name)}</option>`).join('');
+    $('itemAdminList').innerHTML=items.length?items.map(item=>{const t=teachers.find(x=>x.id===item.profile_id);return `<div class="record"><div class="record-body"><strong>${esc(item.title)}</strong><small>${esc(t?.full_name||'معلمة غير محددة')} · ${esc(categories[item.category]||'')} · ${item.visible?'ظاهر':'مخفي'}</small></div><div class="record-buttons"><button type="button" class="small-btn" data-action="edit-item" data-id="${esc(item.id)}">تعديل</button><button type="button" class="small-btn danger" data-action="delete-item" data-id="${esc(item.id)}">حذف</button></div></div>`}).join(''):'<div class="empty">لم تُضف بطاقات حتى الآن.</div>';
+  }
+  function resetTeacher(){ $('teacherForm').reset();$('teacherId').value='';$('teacherPublished').checked=true;$('teacherFormTitle').textContent='إضافة ملف معلمة';putFeedback('teacherFormFeedback','');}
+  function resetItem(){ $('itemForm').reset();$('itemId').value='';$('itemVisible').checked=true;$('itemFormTitle').textContent='إضافة بطاقة إنجاز';putFeedback('itemFormFeedback','');}
+  function openEditTeacher(id){const t=teachers.find(x=>x.id===id);if(!t)return;switchAdmin('teachers');$('teacherId').value=t.id;$('teacherName').value=t.full_name;$('teacherAbout').value=t.about||'';$('teacherVision').value=t.vision||'';$('teacherMission').value=t.mission||'';$('teacherPhoto').value=t.photo_url||'';$('teacherPublished').checked=Boolean(t.published);$('teacherFormTitle').textContent='تعديل ملف المعلمة';$('teacherForm').scrollIntoView({behavior:'smooth',block:'start'});}
+  function openEditItem(id){const i=items.find(x=>x.id===id);if(!i)return;switchAdmin('items');$('itemId').value=i.id;$('itemProfile').value=i.profile_id;$('itemCategory').value=i.category;$('itemTitle').value=i.title;$('itemSummary').value=i.summary||'';$('itemLink').value=i.external_url||'';$('itemVisible').checked=Boolean(i.visible);$('itemFormTitle').textContent='تعديل بطاقة الإنجاز';$('itemForm').scrollIntoView({behavior:'smooth',block:'start'});}
+  function switchAdmin(tab){$('teacherAdmin').hidden=tab!=='teachers';$('itemsAdmin').hidden=tab!=='items';document.querySelectorAll('[data-admin]').forEach(btn=>btn.classList.toggle('active',btn.dataset.admin===tab));}
+  function requireUrl(id){const value=$(id).value.trim();if(value && !safeUrl(value))throw new Error('الروابط المسموحة يجب أن تبدأ بـ https://');return value;}
+  async function saveTeacher(event){
+    event.preventDefault();
+    try{
+      const id=$('teacherId').value;
+      const record={full_name:$('teacherName').value.trim(),about:$('teacherAbout').value.trim(),vision:$('teacherVision').value.trim(),mission:$('teacherMission').value.trim(),photo_url:requireUrl('teacherPhoto'),published:$('teacherPublished').checked};
+      if(record.full_name.length<3)throw new Error('يرجى إدخال اسم المعلمة.');
+      if(mode==='remote'){
+        if(!authenticatedAdmin)throw new Error('هذه العملية متاحة للإدارة فقط.');
+        const query=id?supa.from('athar_teacher_profiles').update(record).eq('id',id):supa.from('athar_teacher_profiles').insert(record);
+        const {error}=await query;if(error)throw error;
+      }else{if(id){const t=teachers.find(t=>t.id===id);if(!t)throw new Error('الملف غير موجود.');Object.assign(t,record);}else teachers.push({id:newId(),...record});saveDemo();}
+      resetTeacher();await reload();putFeedback('teacherFormFeedback','تم حفظ ملف المعلمة بنجاح.');showToast('تم حفظ بيانات المعلمة');
+    }catch(err){putFeedback('teacherFormFeedback',err.message||'فشلت عملية الحفظ.',true);}
+  }
+  async function saveItem(event){
+    event.preventDefault();
+    try{
+      const id=$('itemId').value;
+      const record={profile_id:$('itemProfile').value,category:$('itemCategory').value,title:$('itemTitle').value.trim(),summary:$('itemSummary').value.trim(),external_url:requireUrl('itemLink'),visible:$('itemVisible').checked};
+      if(!record.profile_id||!teachers.some(t=>t.id===record.profile_id))throw new Error('اختاري المعلمة أولًا.');
+      if(!record.title)throw new Error('يرجى كتابة عنوان البطاقة.');
+      if(!Object.hasOwn(categories,record.category)||record.category==='all')throw new Error('نوع البطاقة غير صالح.');
+      if(mode==='remote'){
+        if(!authenticatedAdmin)throw new Error('هذه العملية متاحة للإدارة فقط.');
+        const query=id?supa.from('athar_portfolio_items').update(record).eq('id',id):supa.from('athar_portfolio_items').insert(record);
+        const {error}=await query;if(error)throw error;
+      }else{if(id){const item=items.find(i=>i.id===id);if(!item)throw new Error('البطاقة غير موجودة.');Object.assign(item,record);}else items.unshift({id:newId(),...record});saveDemo();}
+      resetItem();await reload();putFeedback('itemFormFeedback','تم حفظ البطاقة بنجاح.');showToast('تم حفظ بطاقة الإنجاز');
+    }catch(err){putFeedback('itemFormFeedback',err.message||'فشلت عملية الحفظ.',true);}
+  }
+  async function deleteTeacher(id){
+    const t=teachers.find(t=>t.id===id);if(!t||!window.confirm(`حذف ملف ${t.full_name} وجميع بطاقاته من وحدة أثر؟ لا يمكن التراجع عن الحذف.`))return;
+    try{if(mode==='remote'){if(!authenticatedAdmin)throw new Error('ليس لديك صلاحية.');const {error}=await supa.from('athar_teacher_profiles').delete().eq('id',id);if(error)throw error;}
+    else{teachers=teachers.filter(t=>t.id!==id);items=items.filter(i=>i.profile_id!==id);saveDemo();}
+    resetTeacher();resetItem();await reload();showToast('تم حذف الملف من وحدة أثر فقط');}catch(err){showToast('تعذر حذف الملف: '+(err.message||''));}
+  }
+  async function deleteItem(id){
+    const item=items.find(i=>i.id===id);if(!item||!window.confirm(`حذف بطاقة «${item.title}» من وحدة أثر؟`))return;
+    try{if(mode==='remote'){if(!authenticatedAdmin)throw new Error('ليس لديك صلاحية.');const {error}=await supa.from('athar_portfolio_items').delete().eq('id',id);if(error)throw error;}
+    else{items=items.filter(i=>i.id!==id);saveDemo();}
+    resetItem();await reload();showToast('تم حذف البطاقة');}catch(err){showToast('تعذر حذف البطاقة: '+(err.message||''));}
+  }
+  async function checkAdmin(){
+    const {data:sessionResult,error:sessionError}=await supa.auth.getSession();if(sessionError)throw sessionError;
+    if(!sessionResult.session){authenticatedAdmin=false;return;}
+    const {data,error}=await supa.from('athar_admin_users').select('user_id').eq('user_id',sessionResult.session.user.id).maybeSingle();
+    if(error)throw error;authenticatedAdmin=Boolean(data);
+  }
+  async function login(event){
+    event.preventDefault();putFeedback('authMessage','جارٍ التحقق…');
+    try{const {error}=await supa.auth.signInWithPassword({email:$('authEmail').value.trim(),password:$('authPassword').value});if(error)throw error;await checkAdmin();if(!authenticatedAdmin)throw new Error('الحساب مسجل ولكنه غير مفوض لإدارة وحدة أثر.');$('authPassword').value='';await reload();renderAdmin();putFeedback('authMessage','تم الدخول.');}
+    catch(err){putFeedback('authMessage',err.message||'تعذر تسجيل الدخول.',true);}
+  }
+  async function logout(){try{const {error}=await supa.auth.signOut();if(error)throw error;authenticatedAdmin=false;await reload();renderAdmin();showToast('تم تسجيل الخروج');}catch(err){showToast(err.message||'تعذر تسجيل الخروج');}}
+  document.addEventListener('click',event=>{
+    const nav=event.target.closest('[data-view]');if(nav){view(nav.dataset.view);return;}
+    const tab=event.target.closest('[data-admin]');if(tab){switchAdmin(tab.dataset.admin);return;}
+    const btn=event.target.closest('[data-action]');if(!btn)return;
+    const {action,id}=btn.dataset;
+    if(action==='view-teacher'){teacherId=id;category='all';view('profile');}
+    if(action==='category'){category=btn.dataset.category;renderProfile();}
+    if(action==='edit-teacher')openEditTeacher(id);
+    if(action==='edit-item')openEditItem(id);
+    if(action==='delete-teacher')void deleteTeacher(id);
+    if(action==='delete-item')void deleteItem(id);
+  });
+
+  $('teacherSelect').addEventListener('change',()=>{
+    updateSelectedTeacher();
+    const chooser=$('teacherChooser');
+    chooser.classList.remove('selection-changed');
+    void chooser.offsetWidth;
+    chooser.classList.add('selection-changed');
+  });
+  $('openSelectedTeacher').addEventListener('click',()=>{
+    const selected=visibleTeachers().find(t=>t.id===$('teacherSelect').value);
+    if(!selected){showToast('اختاري اسم المعلمة أولًا');return;}
+    teacherId=selected.id;category='all';view('profile');
+  });
+  $('backToDirectory').addEventListener('click',()=>view('directory'));
+  $('teacherForm').addEventListener('submit',saveTeacher);
+  $('itemForm').addEventListener('submit',saveItem);
+  $('clearTeacher').addEventListener('click',resetTeacher);
+  $('clearItem').addEventListener('click',resetItem);
+  $('authForm').addEventListener('submit',login);
+  $('logoutBtn').addEventListener('click',()=>void logout());
+  async function init(){
+    try{
+      if(REMOTE){
+        if(!CFG.supabaseUrl||!CFG.supabaseAnonKey)throw new Error('تم اختيار النشر الفعلي دون إعداد اتصال Supabase.');
+        if(!window.supabase?.createClient)throw new Error('تعذر تحميل مكتبة Supabase. تحقق من الاتصال بالإنترنت.');
+        supa=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true}});
+        mode='remote';
+        $('modeBanner').textContent='أثر – ملفات الإنجاز المطورة | منصة منجز';$('modeBanner').classList.add('live');
+        await checkAdmin();await reload();
+        supa.auth.onAuthStateChange((_event,_session)=>{setTimeout(async()=>{try{await checkAdmin();if(currentView==='admin'){await reload();renderAdmin();}}catch(err){console.warn('تعذر تحديث جلسة الإدارة',err);}},0);});
+      }else{
+        mode='demo';$('modeBanner').textContent='معاينة محلية للتجربة فقط — البيانات لا تتزامن بين المعلمات أو الأجهزة';await reload();
+      }
+    }catch(err){mode='unconfigured';$('modeBanner').textContent='تحتاج وحدة أثر إلى إعداد الربط قبل تشغيلها: '+(err.message||'');$('teacherSelect').disabled=true;$('openSelectedTeacher').disabled=true;$('selectHint').textContent='تعذر تحميل بيانات الملفات. راجعي إعدادات الوحدة المستقلة.';console.error(err);}
+    renderAdmin();
+  }
+  void init();
+})();
+
+  </script>
+</body>
+</html>
