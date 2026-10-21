@@ -136,11 +136,13 @@ async function loadSchoolLists(){
  }
 }
 function selectedBag(){return byId("ma-bag")?byId("ma-bag").value:"general";}
-function activeCatalog(){return selectedBag()==="positive_behavior"?(window.ManjazBehaviorCards||[]).map(x=>[x.id,x.main,x.sub,x.title]):CATALOG;}
+function activeCatalog(){if(selectedBag()==="afaq")return (window.ManjazAfaqCards||[]).map(x=>[x.id,x.main,x.sub,x.title]);return selectedBag()==="positive_behavior"?(window.ManjazBehaviorCards||[]).map(x=>[x.id,x.main,x.sub,x.title]):CATALOG;}
 function updateBag(){
  var mode=selectedBag();
  byId("ma-standard-fields").hidden=mode==="other";byId("ma-other-fields").hidden=mode!=="other";
- byId("ma-export-solved").hidden=mode!=="general";
+ byId("ma-export-solved").hidden=mode!=="general"&&mode!=="afaq";
+  ["ma-afaq-preview-guide","ma-afaq-preview-activity","ma-afaq-preview-solved"].forEach(function(id){var el=byId(id);if(el)el.hidden=mode!=="afaq";});
+  var af=byId("ma-afaq-preview-host");if(af){af.hidden=true;af.innerHTML="";}
  chooseMain();resetSubmissionStatus();
  var dl=byId("ma-pdf-download");if(dl)dl.hidden=true;
 }
@@ -170,7 +172,7 @@ function currentCard(){
   return t?[1,"أخرى","تفعيل حر",t]:null;
  }
  var c=activeCatalog().find(x=>String(x[0])===byId("ma-card").value);
- byId("ma-selected").textContent=c?String(c[0]).padStart(3,"0")+(selectedBag()==="positive_behavior"?" / ٩٠ — ":" / ١٣٠ — ")+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
+ byId("ma-selected").textContent=c?String(c[0]).padStart(3,"0")+(selectedBag()==="positive_behavior"?" / ٩٠ — ":selectedBag()==="afaq"?" / ٥٠ — ":" / ١٣٠ — ")+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
  return c;
 }
 function selectedIndicators(){return [...document.querySelectorAll(".ma-check-item:checked")].map(function(x){return x.value;});}
@@ -247,7 +249,7 @@ async function exportVersion(variant){
  var v=values();
  if(editingId){uiMsg("أكملي حفظ تعديل السجل أو ألغيه قبل تصدير بطاقة جديدة.",true);return;}
  if(!completeForm(v))return;
- if(variant==="solved"&&v.bag!=="general"){
+ if(variant==="solved"&&v.bag!=="general"&&v.bag!=="afaq"){
   uiMsg("بطاقة الحل المقترحة متاحة للحقيبة العامة فقط؛ حقيبة السلوك الإيجابي وخيار «أخرى» لا يحتويان على حل نموذجي.",true);
   return;
  }
@@ -261,7 +263,10 @@ async function exportVersion(variant){
  if(link)link.hidden=true;
  try{
   var result;
-  if(v.bag==="general"){
+  if(v.bag==="afaq"){
+   if(!window.ManjazAfaqActivityV19?.exportPdf)throw Error("محرك بطاقات آفاق الفكر غير متاح.");
+   result=await window.ManjazAfaqActivityV19.exportPdf(v,variant);
+  }else if(v.bag==="general"){
    if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
     throw new Error("محرك تصدير بطاقات الحقيبة العامة غير متاح.");
    result=await window.ManjazActivityCardV4.exportPdf(v.c[0],variant,meta(v));
@@ -554,7 +559,7 @@ async function deleteSelectedRecords(){
 }
 // Administrative read-only card actions: always render from the selected SAVED log row.
 function savedActivationCardValues(row){
- var bag=["general","positive_behavior","other"].includes(row.bag_key)?row.bag_key:"general";
+ var bag=["general","positive_behavior","afaq","other"].includes(row.bag_key)?row.bag_key:"general";
  var klasses=rowClasses(row).map(safe).filter(Boolean);
  var periods=rowPeriods(row).map(Number).filter(function(x){return Number.isInteger(x)&&x>=1&&x<=7;});
  return {
@@ -581,7 +586,10 @@ async function adminSavedCardAction(row,mode,button,status){
   if(!logData.some(function(item){return String(item.id)===String(row.id);}))
    throw Error("هذا السجل لم يعد موجودًا في القائمة الحالية.");
   var v=savedActivationCardValues(row),result;
-  if(v.bag==="general"){
+  if(v.bag==="afaq"){
+   if(!window.ManjazAfaqActivityV19?.exportPdf)throw Error("محرك بطاقات آفاق الفكر غير متاح.");
+   result=await window.ManjazAfaqActivityV19.exportPdf(v,"activity");
+  }else if(v.bag==="general"){
    if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
     throw Error("محرك بطاقات الحقيبة العامة غير متاح.");
    result=await window.ManjazActivityCardV4.exportPdf(v.c[0],"activity",meta(v));
@@ -767,7 +775,7 @@ function render(){
  if(!isPage())return;var view=byId("view");if(!view||byId("manjazActivation"))return;
  initStyle();var root=document.createElement("main");root.id="manjazActivation";
  root.innerHTML=
- '<header class="ma-hero"><h2>تفعيل حصص الاحتياط</h2><p>حقائب التفعيل | الثانوية الرابعة والتسعون – مسارات</p><div class="ma-stats"><span class="ma-stat">الحقيبة العامة: ١٣٠ بطاقة</span><span class="ma-stat">تعزيز السلوك الإيجابي: ٩٠ بطاقة</span><span class="ma-stat">أخرى: تفعيل حر</span></div><button id="ma-admin-entry-top" type="button" class="secondary ma-admin-top">دخول الإدارة | استعراض سجل التنفيذ</button></header>'+
+ '<header class="ma-hero"><h2>تفعيل حصص الاحتياط</h2><p>حقائب التفعيل | الثانوية الرابعة والتسعون – مسارات</p><div class="ma-stats"><span class="ma-stat">الحقيبة العامة: ١٣٠ بطاقة</span><span class="ma-stat">تعزيز السلوك الإيجابي: ٩٠ بطاقة</span><span class="ma-stat">آفاق الفكر: ٥٠ بطاقة و٥٠ حلًا</span><span class="ma-stat">أخرى: تفعيل حر</span></div><button id="ma-admin-entry-top" type="button" class="secondary ma-admin-top">دخول الإدارة | استعراض سجل التنفيذ</button></header>'+
  '<section class="ma-panel"><h3 id="ma-data-heading">بيانات التنفيذ اليومي</h3><div class="ma-grid">'+
  '<div><label for="ma-weekday">اليوم</label><select id="ma-weekday"></select></div>'+
  '<div><label for="ma-hyear">السنة الهجرية</label><select id="ma-hyear"></select></div>'+
@@ -786,7 +794,7 @@ function render(){
  '<div class="ma-verify-box"><label>مؤشرات التحقق السريع</label><details id="ma-check-details" class="ma-check-dropdown"><summary id="ma-check-summary">اختاري مؤشرًا أو أكثر من القائمة</summary><div class="ma-check-choices"><label><input type="checkbox" class="ma-check-item" value="مشاركة"> مشاركة</label><label><input type="checkbox" class="ma-check-item" value="إجابة مبررة"> إجابة مبررة</label><label><input type="checkbox" class="ma-check-item" value="إنجاز المهمة"> إنجاز المهمة</label></div></details></div>'+
  '<div class="ma-verify-box"><label for="ma-outcome">مساحة الإنجاز – وصف نواتج الإنجاز (اختياري)</label><textarea id="ma-outcome" maxlength="600" rows="3" placeholder="يمكن كتابة وصف مختصر للنواتج، أو ترك الحقل فارغًا"></textarea></div>'+
  '</div><p id="ma-selected" class="ma-selected" aria-live="polite"></p>'+
- '<div class="ma-actions ma-export-actions"><button id="ma-print" type="button">تصدير بطاقة تفعيل الاحتياط</button><button id="ma-export-solved" type="button" class="secondary">تصدير بطاقة الحل المقترحة</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a></div><div class="ma-submit-actions"><button id="ma-approve-send" type="button">اعتماد الإرسال</button><p>التصدير يحمّل البطاقة فقط. يتم تسجيل التفعيل عند اعتماد الإرسال.</p><p id="ma-submit-status" role="status" aria-live="polite">لم يتم اعتماد الإرسال للبيانات الحالية.</p></div>'+
+ '<div class="ma-actions ma-export-actions"><button id="ma-print" type="button">تصدير بطاقة تفعيل الاحتياط</button><button id="ma-export-solved" type="button" class="secondary">تصدير بطاقة الحل المقترحة</button><button id="ma-afaq-preview-guide" type="button" class="secondary" hidden>استعراض الحقيبة ودليل التفعيل</button><button id="ma-afaq-preview-activity" type="button" class="secondary" hidden>معاينة بطاقة آفاق الفكر</button><button id="ma-afaq-preview-solved" type="button" class="secondary" hidden>معاينة الحل النموذجي</button><a id="ma-pdf-download" class="ma-direct-download" hidden target="_blank" rel="noopener noreferrer">فتح / حفظ PDF</a></div><div id="ma-afaq-preview-host" class="ma-card-host" hidden></div><div class="ma-submit-actions"><button id="ma-approve-send" type="button">اعتماد الإرسال</button><p>التصدير يحمّل البطاقة فقط. يتم تسجيل التفعيل عند اعتماد الإرسال.</p><p id="ma-submit-status" role="status" aria-live="polite">لم يتم اعتماد الإرسال للبيانات الحالية.</p></div>'+
  '<div id="ma-message" class="ma-message" role="status" aria-live="polite"></div></section>'+
  '<section class="ma-panel"><h3>سجل تنفيذ تفعيل الاحتياط</h3><p>لتعديل السجلات وحذفها، سجّلي دخول الإدارة من هنا.</p><div class="ma-actions"><button type="button" id="ma-admin-entry" class="secondary">دخول الإدارة | إدارة السجل</button></div><div id="ma-admin-auth" class="ma-inline-admin" hidden><div id="ma-admin-login"><div class="ma-admin-fields"><div><label for="ma-admin-email">البريد الإلكتروني للإدارة</label><input id="ma-admin-email" type="email" autocomplete="username" value="munjz.s94@hotmail.com"></div><div><label for="ma-admin-pass">كلمة المرور</label><input id="ma-admin-pass" type="password" autocomplete="current-password"></div></div><div class="ma-actions"><button id="ma-admin-sign-in" type="button">تسجيل الدخول</button></div></div><div id="ma-admin-active" hidden><p>صلاحية الإدارة مفعّلة لإدارة سجلات الاحتياط.</p><div class="ma-actions"><button type="button" id="ma-load-reports" class="secondary">تحديث سجل التنفيذ</button><button type="button" id="ma-csv" class="secondary">تصدير Excel (CSV)</button><button type="button" id="ma-report-print" class="secondary">طباعة التقرير</button><button type="button" id="ma-admin-logout" class="secondary">خروج الإدارة</button></div></div><div id="ma-report" hidden><label for="ma-report-search">بحث داخل سجلات التنفيذ</label><input id="ma-report-search" type="search" placeholder="اسم المنفذة أو الفصل أو البطاقة أو التاريخ"><div id="ma-report-body" class="ma-report-body"></div></div></div></section>';
  view.replaceChildren(root);
@@ -802,7 +810,7 @@ function render(){
  }
  renderMultiDropdown("period");updateSelectionSummary();
  renderExecutors();
- optionList(byId("ma-bag"),[["general","الحقيبة العامة"],["positive_behavior","حقيبة تعزيز السلوك الإيجابي"],["other","أخرى"]],"اختاري حقيبة التفعيل","general");
+ optionList(byId("ma-bag"),[["general","الحقيبة العامة"],["positive_behavior","حقيبة تعزيز السلوك الإيجابي"],["afaq","حقيبة آفاق الفكر – مهارات التفكير العليا"],["other","أخرى"]],"اختاري حقيبة التفعيل","general");
  updateBag();
  root.addEventListener("input",function(e){
   if(e.target.matches("textarea,select,input")){var link=byId("ma-pdf-download");if(link)link.hidden=true;}
@@ -813,6 +821,28 @@ function render(){
   if(e.target.matches("#ma-weekday,#ma-hyear,#ma-hday,#ma-hmonth,#ma-teacher,#ma-class-choices,#ma-period-choices,#ma-main,#ma-sub,#ma-card,#ma-outcome,.ma-check-item"))resetSubmissionStatus();
  });
  byId("ma-bag").addEventListener("change",updateBag);
+ byId("ma-afaq-preview-guide").addEventListener("click",function(){
+  try{
+   if(selectedBag()!=="afaq")return;
+   var host=byId("ma-afaq-preview-host");host.hidden=false;
+   window.ManjazAfaqActivityV19.showGuide(host);
+   uiMsg("تم عرض غلاف آفاق الفكر ودليل تفعيل الحصة.",false);
+   host.scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){uiMsg("تعذر عرض دليل حقيبة آفاق الفكر: "+e.message,true);}
+ });
+ ["activity","solved"].forEach(function(mode){
+  var btn=byId(mode==="activity"?"ma-afaq-preview-activity":"ma-afaq-preview-solved");
+  btn.addEventListener("click",function(){
+   try{
+    var v=values();if(!v||v.bag!=="afaq")return;
+    if(!window.ManjazAfaqActivityV19)throw Error("محرك آفاق الفكر غير متاح.");
+    var host=byId("ma-afaq-preview-host");host.hidden=false;
+    window.ManjazAfaqActivityV19.show(host,v.c[0],mode,meta(v));
+    uiMsg(mode==="activity"?"تم فتح بطاقة نشاط آفاق الفكر.":"تم فتح بطاقة الحل النموذجي لآفاق الفكر.",false);
+    host.scrollIntoView({behavior:"smooth",block:"start"});
+   }catch(e){uiMsg("تعذر عرض بطاقة آفاق الفكر: "+e.message,true);}
+  });
+ });
  byId("ma-custom-title").addEventListener("input",function(){currentCard();resetSubmissionStatus();var a=byId("ma-pdf-download");if(a)a.hidden=true;});
  byId("ma-custom-url").addEventListener("input",function(){resetSubmissionStatus();var a=byId("ma-pdf-download");if(a)a.hidden=true;});
  byId("ma-main").addEventListener("change",chooseSub);
