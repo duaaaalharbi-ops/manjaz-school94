@@ -1262,6 +1262,10 @@ function injectStyle(){
   #dailyReserveRoot .reserve-delete-notice[data-state="success"]{background:#edf8f2;color:#236344;border-color:#b9dec9}
   #dailyReserveRoot .reserve-delete-notice[data-state="error"]{background:#fff2ef;color:#994539;border-color:#efc3bb}
   #dailyReserveRoot #reserveManualMsg:not(:empty),#dailyReserveRoot #reserveDayMsg:not(:empty){display:block;margin-top:10px;padding:11px 12px;border:1px solid #d1dfdc;border-radius:9px;background:#f7fbfa;line-height:1.7;font-weight:700}
+  #dailyReserveRoot #reserveApproveAuto{touch-action:manipulation;cursor:pointer}
+  #dailyReserveRoot .reserve-auto-approve-status:not(:empty){display:block;flex-basis:100%;width:100%;margin-top:8px;padding:12px;border-radius:9px;border:1px solid #d1dfdc;background:#f7fbfa;color:#165b57;font-weight:800;line-height:1.7;box-sizing:border-box}
+  #dailyReserveRoot .reserve-auto-approve-status[data-state="error"]{border-color:#eac4bd;background:#fff3f0;color:#8b332d}
+  #dailyReserveRoot .reserve-auto-approve-status[data-state="success"]{border-color:#c8dfce;background:#f0faf3;color:#1d633b}
   #dailyReserveRoot #reserveManualMsg[data-deletion-state="busy"],#dailyReserveRoot #reserveDayMsg[data-deletion-state="busy"]{background:#fff9ed;color:#77551d;border-color:#efd9aa}
   #dailyReserveRoot #reserveManualMsg[data-deletion-state="success"],#dailyReserveRoot #reserveDayMsg[data-deletion-state="success"]{background:#edf8f2;color:#236344;border-color:#b9dec9}
   #dailyReserveRoot #reserveManualMsg[data-deletion-state="error"],#dailyReserveRoot #reserveDayMsg[data-deletion-state="error"]{background:#fff2ef;color:#994539;border-color:#efc3bb}
@@ -1762,6 +1766,7 @@ function dayAdminHTML(){
       <div id="reserveAssignmentsAdmin">${adminAssignmentsHTML(assign)}</div>
       <div class="form-actions" style="margin-top:12px">
         <button class="btn btn-primary" id="reserveApproveAuto" type="button">حفظ واعتماد جدول اليوم</button>
+        <output class="reserve-auto-approve-status" id="reserveApproveAutoStatus" role="status" aria-live="polite"></output>
         <button class="reserve-mini danger" id="reserveDeleteAutoTable" type="button" aria-label="حذف جدول الإنشاء الآلي لهذا اليوم" title="حذف الجدول الآلي للتاريخ المختار">🗑 حذف الجدول</button>
       </div>
     </section>
@@ -1790,7 +1795,7 @@ function adminAssignmentsHTML(items){
     <td>${a.candidates?.[0]?`<div class="reserve-candidate"><strong>${esc(a.candidates[0].name)}</strong></div>`:"لا توجد مرشحة مؤهلة؛ تحتاج معالجة إدارية"}</td>
     <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select><button type="button" class="reserve-mini reserve-auto-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button><small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small></td>
     <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
-    <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee">تحديث وحفظ</button>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط نموذج المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button><button class="reserve-mini reserve-send-ack" type="button">إرسال إشعار</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
+    <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee" type="button">تحديث وحفظ</button><small class="reserve-row-save-status" role="status" aria-live="polite"></small>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط نموذج المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button><button class="reserve-mini reserve-send-ack" type="button">إرسال إشعار</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
   </tr>`}).join("")}</tbody></table></div>`;
 }
 
@@ -3326,6 +3331,7 @@ function plainData(x){
 async function ensureAdmin(){if(!token())throw new Error("يلزم تسجيل الدخول الإداري")}
 
 
+const reserveAutoPendingAssigneeSaves=new Set();
 function bindDayAdmin(){
   bindHijriDateControl("reserveAdminDate",next=>syncReserveSectionDate(next));
   // Changing a saved automatic assignee commits the change immediately while
@@ -3505,28 +3511,49 @@ function bindDayAdmin(){
     }
   });
 
-  document.querySelectorAll(".reserve-save-assignee").forEach(b=>b.onclick=async()=>{
+  // Keep the form mounted while mobile native selects finish their auto-save.
+  // Replacing the entire card here used to interrupt a subsequent approval tap.
+  document.querySelectorAll(".reserve-save-assignee").forEach(b=>b.onclick=()=>{
+    if(b.disabled)return;
     const tr=b.closest("[data-assignment]");
+    const recordId=tr?.dataset.assignment;
     const target=tr?.querySelector(".reserve-assignee")?.value||"";
-    const msg=byId("reserveDayMsg");
-    if(!target){if(msg)msg.textContent="اختاري المعلمة المسددة قبل الحفظ.";return;}
-    b.disabled=true;
-    if(msg)msg.textContent="جارٍ حفظ التعديل...";
-    try{
-      const result=await reserveCommitFlexibleAssignee(tr.dataset.assignment,target);
-      renderWorkspaceCard("auto");
-      const done=byId("reserveDayMsg");if(done)done.textContent="تم الحفظ";
-      try{await reserveSyncAdminMutation(result.date);}
-      catch(error){console.error(error);if(done)done.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات.";}
-    }catch(error){console.error("تعذر تعديل التكليف الآلي",error);
-      const current=byId("reserveDayMsg")||msg;
-      if(current)current.textContent=`تعذر حفظ التعديل: ${error.message||"خطأ غير معروف"}`;
-      // Restore the persisted teacher after a rejected automatic reassignment.
-      const persisted=state.assignments.find(a=>String(a.id)===String(tr.dataset.assignment));
-      const select=tr.querySelector(".reserve-assignee");
-      if(select&&persisted)select.value=String(persisted.assignedTeacherId||"");
-      b.disabled=false;
+    const msg=byId("reserveDayMsg"),rowStatus=tr?.querySelector(".reserve-row-save-status");
+    if(!recordId||!target){
+      if(rowStatus)rowStatus.textContent="اختاري المعلمة المسددة قبل الحفظ.";
+      if(msg)msg.textContent="اختاري المعلمة المسددة قبل الحفظ.";
+      return;
     }
+    b.disabled=true;
+    if(rowStatus)rowStatus.textContent="جارٍ حفظ التعديل...";
+    if(msg)msg.textContent="جارٍ حفظ التعديل...";
+    const pending=(async()=>{
+      try{
+        const result=await reserveCommitFlexibleAssignee(recordId,target);
+        const persisted=state.assignments.find(a=>String(a.id)===String(recordId));
+        const select=tr?.querySelector(".reserve-assignee");
+        if(select&&persisted)select.value=String(persisted.assignedTeacherId||"");
+        if(rowStatus)rowStatus.textContent="تم حفظ تعديل المعلمة.";
+        if(msg)msg.textContent="تم حفظ تعديل المعلمة.";
+        try{await reserveSyncAdminMutation(result.date);}
+        catch(error){console.error(error);if(rowStatus)rowStatus.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات.";}
+      }catch(error){
+        console.error("تعذر تعديل التكليف الآلي",error);
+        const persisted=state.assignments.find(a=>String(a.id)===String(recordId));
+        const select=tr?.querySelector(".reserve-assignee");
+        if(select&&persisted)select.value=String(persisted.assignedTeacherId||"");
+        const message=`تعذر حفظ التعديل: ${error.message||"خطأ غير معروف"}`;
+        if(rowStatus)rowStatus.textContent=message;
+        if(msg)msg.textContent=message;
+        throw error;
+      }finally{
+        if(b.isConnected)b.disabled=false;
+      }
+    })();
+    reserveAutoPendingAssigneeSaves.add(pending);
+    // Both outcomes are handled; approval explicitly awaits these promises.
+    pending.then(()=>reserveAutoPendingAssigneeSaves.delete(pending),
+      ()=>reserveAutoPendingAssigneeSaves.delete(pending));
   });
   document.querySelectorAll(".reserve-delete-assignment").forEach(b=>b.onclick=async()=>{
     const tr=b.closest("[data-assignment]"); if(!confirm("حذف هذا التكليف؟"))return;
@@ -3587,16 +3614,34 @@ function bindDayAdmin(){
     }
   });
   byId("reserveApproveAuto")?.addEventListener("click",async()=>{
-    const msg=byId("reserveDayMsg"),button=byId("reserveApproveAuto"),date=state.currentDate;
-    const entries=[...document.querySelectorAll('#reserveAssignmentsAdmin tr[data-assignment]')]
-      .map(tr=>({id:String(tr.dataset.assignment),teacherId:String(tr.querySelector('.reserve-assignee')?.value||'')}));
-    const items=assignmentsOn(date).filter(a=>a.manual!==true);
-    if(!items.length){msg.textContent="لا توجد تكليفات آلية لهذا اليوم. اختاري الغائبات واضغطي «توليد آلي» أولًا.";return}
-    if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId&&teacherOf(x.teacherId)))){
-      msg.textContent="يجب اختيار معلمة لكل حصة من القوائم المنسدلة قبل الاعتماد.";return;
-    }
-    button.disabled=true;button.textContent="جارٍ الحفظ...";msg.textContent="جارٍ الحفظ والاعتماد...";
+    const button=byId("reserveApproveAuto"),date=state.currentDate;
+    if(!button||button.disabled)return;
+    const report=(message,kind="")=>{
+      const inline=byId("reserveApproveAutoStatus"),top=byId("reserveDayMsg");
+      if(inline){inline.textContent=message;inline.dataset.state=kind;}
+      if(top)top.textContent=message;
+    };
+    button.disabled=true;button.textContent="جارٍ التحقق...";button.setAttribute("aria-busy","true");
+    report("جارٍ التحقق من الحصص وحفظ التعديلات...");
     try{
+      // Native iOS select changes trigger an immediate row save. Wait for those
+      // cloud writes before reading the final plan or approving its records.
+      const pending=[...reserveAutoPendingAssigneeSaves];
+      if(pending.length){
+        report("جارٍ إكمال حفظ تعديلات المعلمات قبل اعتماد الجدول...");
+        const finished=await Promise.allSettled(pending);
+        if(finished.some(result=>result.status==="rejected"))
+          throw new Error("تعذر حفظ تعديل إحدى المعلمات؛ راجعي الصف ثم أعيدي الاعتماد.");
+      }
+      const entries=[...document.querySelectorAll('#reserveAssignmentsAdmin tr[data-assignment]')]
+        .map(tr=>({id:String(tr.dataset.assignment),teacherId:String(tr.querySelector('.reserve-assignee')?.value||'')}));
+      const items=assignmentsOn(date).filter(a=>a.manual!==true);
+      if(!items.length)
+        throw new Error("لا توجد تكليفات آلية لهذا اليوم. اختاري الغائبات واضغطي «توليد آلي» أولًا.");
+      if(items.some(a=>!entries.some(x=>x.id===String(a.id)&&x.teacherId&&teacherOf(x.teacherId))))
+        throw new Error("يجب اختيار معلمة لكل حصة من القوائم المنسدلة قبل الاعتماد.");
+      button.textContent="جارٍ الحفظ...";
+      report("جارٍ حفظ واعتماد جدول اليوم...");
       await ensureAdmin();
       await loadAll();
       const fresh=assignmentsOn(date).filter(a=>a.manual!==true);
@@ -3658,14 +3703,14 @@ function bindDayAdmin(){
         throw new Error("لم يكتمل اعتماد جميع التكليفات الآلية");
       state.lastReserveWarnings={date,source:"auto",warnings:allWarnings};
       renderWorkspaceCard("auto");
-      byId("reserveDayMsg").textContent="تم الحفظ والاعتماد، وأصبح جدول اليوم ظاهرًا في النشر.";
+      report("تم الحفظ والاعتماد، وأصبح جدول اليوم ظاهرًا في النشر.","success");
       showReserveWorkspaceWarnings("reserveAutoWarnings",allWarnings);
       try{await reserveSyncAdminMutation(date)}
       catch(syncError){console.error("تعذر تحديث العرض بعد حفظ الجدول الآلي",syncError);
-        const current=byId("reserveDayMsg");if(current)current.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات. أعيدي فتح القسم.";}
-    }catch(err){console.error(err);const current=byId("reserveDayMsg")||msg;
-      if(current)current.textContent=`تعذر اكتمال الاعتماد أو التحقق منه: ${err.message||"خطأ غير معروف"}. قد تكون بعض الحصص محفوظة.`;}
-    finally{button.disabled=false;button.textContent="حفظ واعتماد جدول اليوم";}
+        report("تم الحفظ والاعتماد، لكن تعذر تحديث بعض البطاقات. أعيدي فتح القسم.","success");}
+    }catch(err){console.error(err);
+      report(`تعذر اكتمال الاعتماد أو التحقق منه: ${err.message||"خطأ غير معروف"}. قد تكون بعض الحصص محفوظة.`,"error");}
+    finally{const latest=byId("reserveApproveAuto");if(latest){latest.disabled=false;latest.textContent="حفظ واعتماد جدول اليوم";latest.removeAttribute("aria-busy");}}
   });
 }
 
