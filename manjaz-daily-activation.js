@@ -552,6 +552,69 @@ async function deleteSelectedRecords(){
   else uiMsg("تم حذف "+removedIds.size+" سجل تنفيذ محددًا من قاعدة البيانات.",false);
  }
 }
+// Administrative read-only card actions: always render from the selected SAVED log row.
+function savedActivationCardValues(row){
+ var bag=["general","positive_behavior","other"].includes(row.bag_key)?row.bag_key:"general";
+ var klasses=rowClasses(row).map(safe).filter(Boolean);
+ var periods=rowPeriods(row).map(Number).filter(function(x){return Number.isInteger(x)&&x>=1&&x<=7;});
+ return {
+  bag:bag,c:[Number(row.card_id),row.main_category,row.sub_category,row.card_title],
+  title:safe(row.card_title),url:safe(row.reference_url),
+  teacher:safe(row.teacher_name),weekday:safe(row.weekday),
+  day:Number(row.hijri_day),month:Number(row.hijri_month),year:Number(row.hijri_year),
+  klass:klasses[0]||"",klasses:klasses,period:periods[0]||0,periods:periods,
+  indicators:Array.isArray(row.verification_indicators)?row.verification_indicators:[],
+  outcome:safe(row.outcome_description)
+ };
+}
+async function adminSavedCardAction(row,mode,button,status){
+ // Open preview in the click event to prevent Safari from blocking its PDF tab.
+ var previewTab=mode==="preview"?window.open("about:blank","_blank"):null;
+ if(button.disabled)return;
+ button.disabled=true;
+ status.replaceChildren();
+ status.textContent="جارٍ إعداد البطاقة المحفوظة…";
+ status.style.color="#365b67";
+ try{
+  var token=await getVerifiedAdminToken();
+  if(!token)throw Error("انتهت صلاحية دخول الإدارة؛ سجّلي الدخول مجددًا.");
+  if(!logData.some(function(item){return String(item.id)===String(row.id);}))
+   throw Error("هذا السجل لم يعد موجودًا في القائمة الحالية.");
+  var v=savedActivationCardValues(row),result;
+  if(v.bag==="general"){
+   if(!window.ManjazActivityCardV4||typeof window.ManjazActivityCardV4.exportPdf!=="function")
+    throw Error("محرك بطاقات الحقيبة العامة غير متاح.");
+   result=await window.ManjazActivityCardV4.exportPdf(v.c[0],"activity",meta(v));
+  }else{
+   if(!window.ManjazExtraActivityV57||typeof window.ManjazExtraActivityV57.exportPdf!=="function")
+    throw Error("محرك بطاقات التفعيل الإضافية غير متاح.");
+   result=await window.ManjazExtraActivityV57.exportPdf(v);
+  }
+  if(!result||!(result.blob instanceof Blob)||!result.blob.size)throw Error("تعذر إنشاء ملف PDF صالح.");
+  var url=URL.createObjectURL(result.blob);
+  if(mode==="preview"){
+   if(previewTab)previewTab.location.replace(url);
+  }else{
+   var anchor=document.createElement("a");
+   anchor.href=url;anchor.download=result.filename||"بطاقة_تفعيل_الاحتياط.pdf";
+   document.body.appendChild(anchor);
+   try{anchor.click();}finally{anchor.remove();}
+  }
+  // A direct link remains available if an iPhone blocks automatic opening or saving.
+  var fallback=document.createElement("a");
+  fallback.href=url;fallback.target="_blank";fallback.rel="noopener noreferrer";
+  if(mode==="download")fallback.download=result.filename||"بطاقة_تفعيل_الاحتياط.pdf";
+  fallback.textContent=mode==="preview"?"فتح المعاينة":"حفظ PDF";
+  status.replaceChildren(document.createTextNode("تم إعداد البطاقة. "),fallback);
+  status.style.color="#08716d";
+ }catch(e){
+  if(previewTab)try{previewTab.close();}catch(_){}
+  status.textContent="تعذر "+(mode==="preview"?"معاينة":"تحميل")+" البطاقة: "+(e.message||e);
+  status.style.color="#b42318";
+ }finally{
+  button.disabled=false;
+ }
+}
 function renderReportRows(){
  var target=byId("ma-report-body");if(!target)return;
  target.replaceChildren();
@@ -603,6 +666,13 @@ function renderReportRows(){
    var td=document.createElement("td");td.textContent=safe(value);tr.appendChild(td);
   });
   var actions=document.createElement("td");actions.className="ma-row-actions";
+  var preview=document.createElement("button");preview.type="button";preview.className="secondary";preview.textContent="معاينة البطاقة";
+  var download=document.createElement("button");download.type="button";download.className="secondary";download.textContent="تحميل البطاقة";
+  var cardStatus=document.createElement("small");cardStatus.setAttribute("role","status");cardStatus.setAttribute("aria-live","polite");
+  cardStatus.style.cssText="display:block;white-space:normal;max-width:240px;line-height:1.7;margin-top:5px";
+  preview.onclick=function(){adminSavedCardAction(row,"preview",preview,cardStatus);};
+  download.onclick=function(){adminSavedCardAction(row,"download",download,cardStatus);};
+  actions.appendChild(preview);actions.appendChild(download);actions.appendChild(cardStatus);
   var edit=document.createElement("button");edit.type="button";edit.className="secondary";edit.textContent="تعديل";
   edit.onclick=function(){beginEditing(row);};actions.appendChild(edit);
   var del=document.createElement("button");del.type="button";del.className="ma-delete";del.textContent="حذف";
