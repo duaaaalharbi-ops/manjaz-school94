@@ -142,7 +142,7 @@ addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once
 
 
 /* MANJAZ: isolated daily reserve section loader */
-(()=>{if(document.querySelector('script[data-manjaz-daily-reserve="2.0"]'))return;const s=document.createElement("script");s.src="daily-reserve.js?v=57.0-publish-without-signatures";s.dataset.manjazDailyReserve="2.0";document.head.appendChild(s)})();
+(()=>{if(document.querySelector('script[data-manjaz-daily-reserve="2.0"]'))return;const s=document.createElement("script");s.src="daily-reserve.js?v=57.5-mobile-auto-approve";s.dataset.manjazDailyReserve="2.0";document.head.appendChild(s)})();
 
 
 /* Daily activation now loaded directly in index.html, in a predictable order. */
