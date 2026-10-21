@@ -153,11 +153,29 @@ const dateLong=d=>{try{return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqu
 const hijri=d=>{try{return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'long',day:'numeric',timeZone:'Asia/Riyadh'}).format(new Date(d+'T12:00:00+03:00'))}catch{return d}};
 const slotName=k=>SLOTS.find(x=>x[0]===k)?.[1]||k;
 const root=()=>document.getElementById('view');
-let date=localDate(),roster=[],assignments=[],links=[],history=[],published=false,activeCard='manual',busy=false,routeKey='',publicStats=null,refreshSequence=0;
+let date=localDate(),roster=[],assignments=[],links=[],history=[],published=false,activeCard='manual',busy=false,routeKey='',publicStats=null,refreshSequence=0,dutyRevision='';
 function session(){try{const s=JSON.parse(sessionStorage.getItem(AUTH_KEY)||'null');return s?.access_token&&(!s.expires_at||s.expires_at>Date.now()/1000)?s:null}catch{return null}}
 function headers(){return {apikey:KEY,Authorization:'Bearer '+(session()?.access_token||KEY),'Content-Type':'application/json'}}
 async function api(path,body,admin=false){if(admin&&!session())throw Error('سجلي الدخول للإدارة أولًا');const r=await fetch(BASE+'/rest/v1/'+path,{method:body?'POST':'GET',headers:headers(),...(body?{body:JSON.stringify(body)}:{}),cache:'no-store'});const t=await r.text();let data;try{data=t?JSON.parse(t):null}catch{data=t}if(!r.ok)throw Error(data?.message||data?.hint||'تعذر الاتصال بقاعدة البيانات '+r.status);return data}
 const rpc=(name,params={},admin=false)=>api('rpc/'+name,params,admin);
+// Every mutation is fenced by the revision loaded with this date. Old mobile
+// requests can no longer recreate a deleted table after the server rotates it.
+async function dutyMutate(action,chosenDate=date,rows=null){
+ if(!dutyRevision)throw Error('تعذر التحقق من نسخة جدول المناوبة؛ اضغطي عرض الجدول ثم أعيدي المحاولة.');
+ const result=await rpc('mj_duty_mutate_v2',{
+   p_date:chosenDate,p_action:action,p_revision:dutyRevision,p_assignments:rows
+ },true);
+ if(!result?.revision)throw Error('لم تؤكد قاعدة البيانات عملية المناوبة.');
+ if(action==='delete'&&(Number(result.remainingDays)!==0||
+   Number(result.remainingAssignments)!==0||Number(result.remainingLinks)!==0))
+   throw Error('لم يُتحقق من حذف جدول اليوم وروابطه من قاعدة البيانات.');
+ dutyRevision=result.revision;
+ return result;
+}
+async function dutyLoadRevision(requestDate=date,serial=refreshSequence){
+ const revision=await rpc('mj_duty_revision_get',{p_date:requestDate},true);
+ if(serial===refreshSequence && requestDate===date) dutyRevision=String(revision||'');
+}
 const log=t=>{const p=document.getElementById('dutyStatus');if(p){p.textContent=t||'';p.classList.toggle('error',/تعذر|يلزم|غير |خطأ/.test(t))}};
 const urlFor=(h)=>location.href.split('#')[0]+h;
 function home(){const view=root();if(!view || (location.hash&&location.hash!=='#home'))return;
@@ -297,7 +315,7 @@ function openDutyLogin(){
     expires_at:Math.floor(Date.now()/1000)+Math.max(1,Number(auth.expires_in||3600)),user
    }));
    revealDutyAdminControls(true);
-   await loadAdmin();
+   await refresh();
    if(document.getElementById('dutyInlineLoginForm'))throw Error('لم يتم فتح بطاقات الإنشاء. أعيدي المحاولة.');
    log('تم الدخول إلى إدارة المناوبة اليومية.');
   }catch(error){
@@ -375,12 +393,12 @@ function workspace(){const p=document.getElementById('dutyAdminWorkspace');if(!p
  if(new Set(rows.map(r=>r.person_id)).size!==rows.length)throw Error('المنفذة مكررة في اليوم نفسه؛ اختاري أسماء مختلفة.');
  if(!session())throw Error('انتهت صلاحية الدخول الإداري. أعيدي تسجيل الدخول داخل المناوبة.');
  if(!confirm('حفظ الجدول سيوقف النشر السابق حتى تعيدي نشره. هل تستمرين؟'))return false;
- const result=await rpc('mj_duty_save',{p_date:selectedDate,p_assignments:rows},true);
+ const result=await dutyMutate('save',selectedDate,rows);
  if(result?.saved!==true||Number(result.assignments)!==rows.length)throw Error('لم تؤكد قاعدة البيانات حفظ جميع التكليفات.');
  await refresh();log('تم حفظ '+rows.length+' تكليفًا بتاريخ '+dateLong(selectedDate)+'. يمكن النشر بعد المراجعة.');
 }, {button:section.querySelector('#dutySave'),status:section.querySelector('#dutyInlineActionStatus'),pending:'جارٍ الحفظ...',success:'تم الحفظ'});
- if(auto)section.querySelector('#dutyGenerate').onclick=()=>doAction(async()=>{if(!confirm('سيُعاد توليد جدول التاريخ المحدد وفق العدالة. هل تستمرين؟'))return false;const r=await rpc('mj_duty_generate',{p_date:date},true);await refresh();log('تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.')}, {button:section.querySelector('#dutyGenerate'),pending:'جارٍ التوليد...',success:'تم التوليد'});
- section.querySelector('#dutyClear').onclick=()=>doAction(async()=>{if(!confirm('هل تريدين حذف تكليفات هذا اليوم وروابط اطلاعها؟'))return false;await rpc('mj_duty_delete_day',{p_date:date},true);await refresh();log('تم حذف تكليفات اليوم فقط.')}, {button:section.querySelector('#dutyClear'),pending:'جارٍ الحذف...',success:'تم الحذف'});
+ if(auto)section.querySelector('#dutyGenerate').onclick=()=>doAction(async()=>{if(!confirm('سيُعاد توليد جدول التاريخ المحدد وفق العدالة. هل تستمرين؟'))return false;const r=await dutyMutate('generate',date);await refresh();log('تم توليد '+r.count+' تكليفًا، والفسحة للإداريات فقط.')}, {button:section.querySelector('#dutyGenerate'),pending:'جارٍ التوليد...',success:'تم التوليد'});
+ section.querySelector('#dutyClear').onclick=()=>doAction(async()=>{if(!confirm('هل تريدين حذف تكليفات هذا اليوم وروابط اطلاعها؟'))return false;await dutyMutate('delete',date);await refresh();log('تم حذف تكليفات اليوم فقط.')}, {button:section.querySelector('#dutyClear'),pending:'جارٍ الحذف...',success:'تم الحذف'});
  linkPanel();
 }
 function collect(){return [...document.querySelectorAll('#dutyWorkspaceContent select[data-slot]')].filter(x=>x.value).map(x=>({slot:x.dataset.slot,position:Number(x.dataset.position),person_id:x.value}))}
@@ -442,7 +460,7 @@ function linkPanel(){const panel=document.getElementById('dutyLinks');if(!panel)
  ${published?`<div class="reserve-actions"><button type="button" class="reserve-mini" id="dutyCopyShared">نسخ رابط الاطلاع العام</button><button type="button" class="reserve-mini" id="dutyShareShared">مشاركة واتساب بالرابطين</button></div><p class="reserve-public-note">تم الاطلاع: <strong>${confirmed}</strong> من <strong>${assignments.length}</strong> منفذة. تُحدَّث حالة الاطلاع تلقائيًا.</p>`:''}
  </section>${dutyV18Editor()}`;
  dutyV18BindEditor(panel);
- panel.querySelector('#dutyPublishButton').onclick=()=>doAction(async()=>{await rpc('mj_duty_publish',{p_date:date},true);await refresh();log('تم نشر جدول اليوم. يمكنك إرسال رابط الاطلاع العام ورابط جدول النشر عبر واتساب.')}, {button:panel.querySelector('#dutyPublishButton'),pending:'جارٍ النشر...',success:'تم النشر'});
+ panel.querySelector('#dutyPublishButton').onclick=()=>doAction(async()=>{await dutyMutate('publish',date);await refresh();log('تم نشر جدول اليوم. يمكنك إرسال رابط الاطلاع العام ورابط جدول النشر عبر واتساب.')}, {button:panel.querySelector('#dutyPublishButton'),pending:'جارٍ النشر...',success:'تم النشر'});
  panel.querySelector('#dutyPreviewButton').onclick=()=>preview(false);
  panel.querySelector('#dutyCopyShared')?.addEventListener('click',()=>document.getElementById('dutyCopyDay')?.click());
  panel.querySelector('#dutyShareShared')?.addEventListener('click',()=>document.getElementById('dutyWhatsapp')?.click());
@@ -501,7 +519,7 @@ async function refresh(){if(!document.getElementById('mjDutyRoot'))return;
  if(label)label.textContent=dateLong(requestDate);
  if(button){button.textContent=dateLong(requestDate);button.setAttribute('aria-label','اختيار التاريخ الهجري: '+dateLong(requestDate))}
  if(input)input.value=requestDate;
- log('');publicStats=null;publicDayRows=[];published=false;assignments=[];links=[];history=[];
+ log('');publicStats=null;publicDayRows=[];published=false;assignments=[];links=[];history=[];dutyRevision='';
  const table=document.getElementById('dutyPublicTable'),stats=document.getElementById('dutyStats'),workspace=document.getElementById('dutyAdminWorkspace');
  if(table)table.textContent='جارٍ تحميل جدول التاريخ المحدد...';
  if(stats)stats.textContent='جارٍ تحميل إحصائيات التاريخ المحدد...';
@@ -513,7 +531,11 @@ async function refresh(){if(!document.getElementById('mjDutyRoot'))return;
  const preview=document.getElementById('dutyPreviewBackdrop');if(preview){preview.hidden=true;preview.innerHTML=''}
  // Load published state before admin cards so the edit controls appear reliably on iPhone and desktop.
  await loadPublic(requestDate,serial);
- if(loggedIn)await loadAdmin(requestDate,serial);
+ if(loggedIn){
+    try{await dutyLoadRevision(requestDate,serial)}
+    catch(err){log('تعذر تحميل نسخة المناوبة الآمنة: '+err.message);return}
+    await loadAdmin(requestDate,serial);
+  }
 }
 const dutyPublicationTitles={morning:'جدول المناوبة الصباحية',break:'جدول مناوبة الفسحة',end:'جدول مناوبة نهاية الدوام'};
 function dutyPublicationPeriod(slot,rows){
