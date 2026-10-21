@@ -1090,9 +1090,45 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
   candidates.sort((a,b)=>compareAutoReservePriority(a,b,fullCadre));
   return candidates.slice(0,Math.max(1,Number(opts.limit||200))).map((x,i)=>({...x,score:i+1}));
 }
+// Stage preferences are SLOT-ONLY, nonbinding and applied after the unchanged
+// entitlement/eligibility comparator has already chosen the teacher.
+// Preserve the legacy matchDay/matchWeek ordering within each preference tier.
+const RESERVE_STAGE_SECOND_PREFERENCE=new Set(["رحمة العيسى","فاطمة حسن","هاجر السلمي","علية القاسمي","وضحة المحمادي","بدرية الحربي","دعاء الحربي","سندس الغامدي","عوالي السبيعي","شيخة المالكي","خلود الكثيري","نجوى الغامدي","أفراح الجدعاني","ريم القحطاني","لمياء البلادي"].map(normName));
+const RESERVE_STAGE_FIRST_THIRD_PREFERENCE=new Set(["شوق المطيري","عايدة الصاعدي","سحر الشمراني","فاطمة الغامدي","حصة المنتشري","إيمان الجدعاني","فاطمة العماري","منال الجابري","غالية المزمومي","بدرية السلمي","عبير المولد","ليلى مجرشي","وحش القحطاني"].map(normName));
+function reserveAutoStageSlotPreference(candidate,record){
+  // Applied ONLY while choosing a vacant slot for the already entitled teacher.
+  // No stage preference can change eligibility, teacher ranking or duty caps.
+  const name=normName(candidate.name),className=normName(record?.className||"");
+  const stage=className.startsWith("اول")?1:className.startsWith("ثاني")?2:className.startsWith("ثالث")?3:0;
+  const own=!!candidate.matchWeek;
+  const legacy=candidate.matchDay?2:own?1:0;
+  if(name===normName("فاطمة الزهراني")){
+    if(own)return 400+legacy;
+    if(stage===2)return 300+legacy;
+    return 100+legacy;
+  }
+  if(RESERVE_STAGE_SECOND_PREFERENCE.has(name)){
+    if(stage===2)return 400+legacy;
+    if(stage===1)return 300+legacy;
+    if(own)return 200+legacy;
+    if(stage===3)return 100+legacy;
+    return legacy;
+  }
+  if(RESERVE_STAGE_FIRST_THIRD_PREFERENCE.has(name)){
+    if(stage===1||stage===3)return 300+legacy;
+    if(stage===2)return 100+legacy;
+    return legacy;
+  }
+  if(name===normName("نورة العنزي")){
+    if(stage===3)return 300+legacy;
+    if(stage===1||stage===2)return 100+legacy;
+    return legacy;
+  }
+  return legacy; // Teachers outside these groups retain the previous class preference.
+}
 // First select the entitled teacher using ONLY the approved ranking. Then,
-// and only then, select a compatible uncovered slot, favoring one of her classes.
-// Class match never competes against a different teacher's workload or priority.
+// and only then, apply stage preferences among HER compatible vacant slots.
+// Neither stage nor original-class matching can promote a different teacher.
 function reserveAutoSelectNext(date,pending,usedPrimary,blockedPairs=new Set()){
   const preferredByTeacher=new Map(),fullCadre=state.autoAllNames!==false;
   for(let i=0;i<pending.length;i++){
@@ -1105,7 +1141,7 @@ function reserveAutoSelectNext(date,pending,usedPrimary,blockedPairs=new Set()){
       if(blockedPairs.has(pairKey))continue;
       // This preference scores the SLOT for this ALREADY eligible teacher.
       // It is deliberately not part of compareAutoReservePriority.
-      const slotMatch=candidate.matchDay?2:candidate.matchWeek?1:0;
+      const slotMatch=reserveAutoStageSlotPreference(candidate,a);
       const earlier=preferredByTeacher.get(candidate.teacherId);
       if(!earlier||slotMatch>earlier.slotMatch||
           (slotMatch===earlier.slotMatch&&Number(a.period)<Number(earlier.entry.record.period))||
@@ -3399,7 +3435,7 @@ function bindDayAdmin(){
         }
       }
       // Pick the highest-priority teacher who can cover ANY pending slot;
-      // match one of her classes only when distributing that teacher's slot.
+      // Apply the nonbinding stage preference only when distributing that teacher's slot.
       // If a pairing is rejected by cloud integrity checks, try the next
       // eligible pairing without changing the approved teacher priority.
       const blockedPairs=new Set();
