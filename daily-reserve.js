@@ -3435,7 +3435,7 @@ function bindDayAdmin(){
         }
       }
       // Pick the highest-priority teacher who can cover ANY pending slot;
-      apply the nonbinding stage preference only when distributing that teacher's slot.
+      // Apply the nonbinding stage preference only when distributing that teacher's slot.
       // If a pairing is rejected by cloud integrity checks, try the next
       // eligible pairing without changing the approved teacher priority.
       const blockedPairs=new Set();
