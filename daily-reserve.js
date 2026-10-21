@@ -2940,11 +2940,23 @@ function ensureReservePublicationStyles(){
   document.head.appendChild(style);
 }
 
+// Publication PDF export filename only; never change stored Gregorian schedule dates.
+function reservePublicationPdfFilename(date){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||"")))throw Error("تاريخ جدول النشر غير صالح");
+  const dateValue=new Date(date+"T12:00:00+03:00");
+  if(Number.isNaN(dateValue.getTime()))throw Error("تعذر تحديد التاريخ الهجري");
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura",{
+    calendar:"islamic-umalqura",timeZone:"Asia/Riyadh",year:"numeric",month:"numeric",day:"numeric"
+  }).formatToParts(dateValue).filter(x=>["day","month","year"].includes(x.type)).map(x=>[x.type,Number(x.value)]));
+  if(!parts.day||!parts.month||!parts.year)throw Error("تعذر تحديد التاريخ الهجري");
+  const weekday=new Intl.DateTimeFormat("ar-SA",{timeZone:"Asia/Riyadh",weekday:"long"}).format(dateValue).replace(/\s+/g,"_");
+  return "جدول_نشر_الاحتياط_"+weekday+"_"+String(parts.day).padStart(2,"0")+"-"+String(parts.month).padStart(2,"0")+"-"+parts.year+"هـ.pdf";
+}
 function reservePrintStandalone(date){
  const tab=window.open('','_blank');
  if(!tab){alert('تعذر فتح صفحة الطباعة، يُرجى السماح بالنوافذ المنبثقة من إعدادات المتصفح.');return}
  const css='html,body{margin:0;padding:0;direction:rtl;background:#fff;color:#17323a;font:12px Tahoma,Arial,sans-serif}#reservePublishSheet{margin:auto;max-width:275mm;padding:10px;box-sizing:border-box}h1{text-align:center;font-size:19px}h2{font-size:13px}.reserve-publication-school{text-align:center}.reserve-publication-date{display:flex;gap:15px;justify-content:space-between;border-bottom:2px solid #155b58;padding:6px}table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px}td,th{border:1px solid #71939b;padding:5px 3px;text-align:center;overflow-wrap:anywhere}th{background:#edf4f3}.reserve-publication-period td:nth-child(2){font-weight:bold}.reserve-publication-status{font-weight:700}.reserve-publication-group-gap td{height:8px;border:0}.reserve-publication-summary{border:1px solid #aabdc3;padding:8px;margin-top:12px}.reserve-publication-totals{display:flex;gap:10px;flex-wrap:wrap}.reserve-publication-footer{text-align:center;border-top:1px solid #b2c3c8;margin-top:10px;padding:6px}.print-tools{text-align:center;padding:14px}.print-tools button{border:1px solid #18776f;border-radius:8px;background:#eaf7f5;padding:12px 24px;font:700 15px Tahoma}@page{size:A4 landscape;margin:9mm}@media print{.print-tools{display:none!important}#reservePublishSheet{padding:0;width:100%;max-width:100%}table{font-size:9px}td,th{padding:3px 2px}tr{break-inside:avoid}}';
- const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>طباعة الاحتياط '+esc(date)+'</title><style>'+css+'</style></head><body><div class="print-tools"><button onclick="window.print()">طباعة الجدول / حفظ PDF</button></div>'+publicationHTML(date)+'</body></html>';
+ const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(reservePublicationPdfFilename(date).replace(/\.pdf$/,""))+'</title><style>'+css+'</style></head><body><div class="print-tools"><button onclick="window.print()">طباعة الجدول / حفظ PDF</button></div>'+publicationHTML(date)+'</body></html>';
  tab.document.open();tab.document.write(html);tab.document.close();tab.focus();
 }
 
@@ -3006,7 +3018,7 @@ async function downloadReservePublicationPDF(date){
     offscreen.appendChild(page);document.body.appendChild(offscreen);
     try{
     await engine().set({
-      margin:[10,10,10,10],filename:`جدول_النشر_${date}.pdf`,
+      margin:[10,10,10,10],filename:reservePublicationPdfFilename(date),
       image:{type:"jpeg",quality:0.98},
       html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
       jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
