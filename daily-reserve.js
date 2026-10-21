@@ -2939,6 +2939,15 @@ function ensureReservePublicationStyles(){
     }`;
   document.head.appendChild(style);
 }
+
+function reservePrintStandalone(date){
+ const tab=window.open('','_blank');
+ if(!tab){alert('تعذر فتح صفحة الطباعة، يُرجى السماح بالنوافذ المنبثقة من إعدادات المتصفح.');return}
+ const css='html,body{margin:0;padding:0;direction:rtl;background:#fff;color:#17323a;font:12px Tahoma,Arial,sans-serif}#reservePublishSheet{margin:auto;max-width:275mm;padding:10px;box-sizing:border-box}h1{text-align:center;font-size:19px}h2{font-size:13px}.reserve-publication-school{text-align:center}.reserve-publication-date{display:flex;gap:15px;justify-content:space-between;border-bottom:2px solid #155b58;padding:6px}table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px}td,th{border:1px solid #71939b;padding:5px 3px;text-align:center;overflow-wrap:anywhere}th{background:#edf4f3}.reserve-publication-period td:nth-child(2){font-weight:bold}.reserve-publication-status{font-weight:700}.reserve-publication-group-gap td{height:8px;border:0}.reserve-publication-summary{border:1px solid #aabdc3;padding:8px;margin-top:12px}.reserve-publication-totals{display:flex;gap:10px;flex-wrap:wrap}.reserve-publication-footer{text-align:center;border-top:1px solid #b2c3c8;margin-top:10px;padding:6px}.print-tools{text-align:center;padding:14px}.print-tools button{border:1px solid #18776f;border-radius:8px;background:#eaf7f5;padding:12px 24px;font:700 15px Tahoma}@page{size:A4 landscape;margin:9mm}@media print{.print-tools{display:none!important}#reservePublishSheet{padding:0;width:100%;max-width:100%}table{font-size:9px}td,th{padding:3px 2px}tr{break-inside:avoid}}';
+ const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>طباعة الاحتياط '+esc(date)+'</title><style>'+css+'</style></head><body><div class="print-tools"><button onclick="window.print()">طباعة الجدول / حفظ PDF</button></div>'+publicationHTML(date)+'</body></html>';
+ tab.document.open();tab.document.write(html);tab.document.close();tab.focus();
+}
+
 function openReservePublication(date){
   // Do not combine printed pages with warnings, ranking, or internal audit records.
   byId("reservePublishOverlay")?.remove();
@@ -2958,7 +2967,7 @@ function openReservePublication(date){
   document.body.appendChild(overlay);
   byId("reservePublishClose")?.addEventListener("click",()=>overlay.remove());
   overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove()});
-  byId("reservePublishPrintCopy")?.addEventListener("click",()=>window.print());
+  byId("reservePublishPrintCopy")?.addEventListener("click",()=>reservePrintStandalone(date));
   byId("reservePublishPDF")?.addEventListener("click",()=>downloadReservePublicationPDF(date));
 }
 let reservePdfLoader=null;
@@ -3210,7 +3219,7 @@ function bindPublic(){
     if(card.open)opened.add(id);else opened.delete(id);
     state.publicOpenCards=[...opened];
   }));
-  byId("reservePrint")?.addEventListener("click",()=>window.print());
+  byId("reservePrint")?.addEventListener("click",()=>openReservePublication(state.currentDate));
   byId("reservePublish")?.addEventListener("click",()=>openReservePublication(state.currentDate));
   byId("reserveAdminOpen")?.addEventListener("click",async()=>{
     const s=await validateSession().catch(()=>null);
