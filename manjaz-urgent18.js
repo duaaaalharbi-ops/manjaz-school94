@@ -520,8 +520,8 @@ function dutyPublicationPeriod(slot,rows){
  const title=dutyPublicationTitles[slot],selected=rows.filter(x=>x.slot===slot);
  // Render only the actual assigned personnel, never six empty placeholders or ditto marks.
  return `<section class="duty-sheet-period" data-print-slot="${esc(slot)}" aria-label="${esc(title)}"><h2>${esc(title)}</h2>
- <table class="duty-sheet-table"><thead><tr><th scope="col" class="duty-col-index">م</th><th scope="col">اسم المنفذة</th><th scope="col">حالة الاطلاع</th><th scope="col">حالة التفعيل</th><th scope="col">التوقيع</th></tr></thead>
- <tbody>${selected.map((x,i)=>`<tr><td class="duty-col-index">${i+1}</td><td>${esc(x.name)}</td><td>${x.viewed_at?'تم الاطلاع':'لم يتم الاطلاع'}</td><td>${x.activation_status==='تم التفعيل'?'تم التفعيل':'لم تفعل'}</td><td></td></tr>`).join('')}</tbody></table></section>`;
+ <table class="duty-sheet-table"><thead><tr><th scope="col" class="duty-col-index">م</th><th scope="col">اسم المنفذة</th><th scope="col">حالة الاطلاع</th><th scope="col">حالة التفعيل</th></tr></thead>
+ <tbody>${selected.map((x,i)=>`<tr><td class="duty-col-index">${i+1}</td><td>${esc(x.name)}</td><td>${x.viewed_at?'تم الاطلاع':'لم يتم الاطلاع'}</td><td>${x.activation_status==='تم التفعيل'?'تم التفعيل':'لم تفعل'}</td></tr>`).join('')}</tbody></table></section>`;
 }
 function sheetHTML(){
  const rows=published?(publicDayRows||[]):[];
