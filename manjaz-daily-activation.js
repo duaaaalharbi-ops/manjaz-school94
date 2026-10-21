@@ -160,7 +160,7 @@ function chooseSub(){
 }
 function chooseCard(){
  var main=byId("ma-main").value,sub=byId("ma-sub").value;
- var cards=activeCatalog().filter(x=>x[1]===main&&x[2]===sub).map(x=>[String(x[0]),String(x[0]).padStart(3,"0")+" | "+x[3]]);
+ var cards=activeCatalog().filter(x=>x[1]===main&&x[2]===sub).map(x=>[String(x[0]),String(x[0]).padStart(selectedBag()==="afaq"?2:3,"0")+" | "+x[3]]);
  optionList(byId("ma-card"),selectedBag()==="other"?[]:cards,"اختاري رقم البطاقة وعنوانها");
  if(cards.length&&selectedBag()!=="other")byId("ma-card").value=cards[0][0];
  cardChanged();
@@ -172,7 +172,7 @@ function currentCard(){
   return t?[1,"أخرى","تفعيل حر",t]:null;
  }
  var c=activeCatalog().find(x=>String(x[0])===byId("ma-card").value);
- byId("ma-selected").textContent=c?String(c[0]).padStart(3,"0")+(selectedBag()==="positive_behavior"?" / ٩٠ — ":selectedBag()==="afaq"?" / ٥٠ — ":" / ١٣٠ — ")+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
+ byId("ma-selected").textContent=c?String(c[0]).padStart(selectedBag()==="afaq"?2:3,"0")+(selectedBag()==="positive_behavior"?" / ٩٠ — ":selectedBag()==="afaq"?" / ٥٠ — ":" / ١٣٠ — ")+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
  return c;
 }
 function selectedIndicators(){return [...document.querySelectorAll(".ma-check-item:checked")].map(function(x){return x.value;});}
