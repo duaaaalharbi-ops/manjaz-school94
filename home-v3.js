@@ -123,7 +123,7 @@ function buildHome(){
   nataj.innerHTML=`
     <div class="manjaz-home-card-title">
       <span class="manjaz-home-icon" aria-hidden="true">▥</span>
-      <h3 class="nataj-name"><span class="nataj-name-noon">نَ</span>تاج</h3>
+      <h3 class="nataj-name">نَتاج</h3>
     </div>
     <div class="nataj-body">
       <span class="nataj-kicker">لوحة الأداء المدرسي</span>
