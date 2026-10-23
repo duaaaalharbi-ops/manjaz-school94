@@ -113,6 +113,25 @@ function buildHome(){
 
   const grid=document.createElement("section");
   grid.className="manjaz-home-grid";
+  // نَتاج: first and taller card; independent link, no impact on existing cards.
+  const nataj=document.createElement("a");
+  nataj.className="manjaz-home-card nataj-entry";
+  nataj.href="https://track-my-school.lovable.app";
+  nataj.target="_blank";
+  nataj.rel="noopener noreferrer";
+  nataj.setAttribute("aria-label","نَتاج – لوحة الأداء المدرسي");
+  nataj.innerHTML=`
+    <div class="manjaz-home-card-title">
+      <span class="manjaz-home-icon" aria-hidden="true">▥</span>
+      <h3 class="nataj-name"><span class="nataj-name-noon">نَ</span>تاج</h3>
+    </div>
+    <div class="nataj-body">
+      <span class="nataj-kicker">لوحة الأداء المدرسي</span>
+      <strong>من المؤشرات إلى الإنجازات</strong>
+      <p>عرض مؤشرات الأداء المدرسي ونتائج التقويم، وتحديد أولويات التحسين، والاطلاع على التقارير.</p>
+    </div>
+    <div class="manjaz-home-actions"><span class="manjaz-home-action view">استعراض</span></div>`;
+  grid.append(nataj);
   cards.forEach(item=>{
     const card=document.createElement("article");
     card.className="manjaz-home-card";
