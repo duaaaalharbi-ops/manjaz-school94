@@ -326,6 +326,7 @@ window.ATHAR_CONFIG = Object.freeze({
     $('adminTools').hidden= mode==='remote' && !authenticatedAdmin;
     $('logoutBtn').hidden= mode!=='remote' || !authenticatedAdmin;
     renderAdminLists();
+    window.dispatchEvent(new Event('athar:admin-rendered'));
   }
   function renderAdminLists(){
     if(!$('teacherAdminList'))return;
@@ -441,9 +442,15 @@ window.ATHAR_CONFIG = Object.freeze({
     }catch(err){mode='unconfigured';$('modeBanner').textContent='تحتاج وحدة أثر إلى إعداد الربط قبل تشغيلها: '+(err.message||'');$('teacherSelect').disabled=true;$('openSelectedTeacher').disabled=true;$('selectHint').textContent='تعذر تحميل بيانات الملفات. راجعي إعدادات الوحدة المستقلة.';console.error(err);}
     renderAdmin();
   }
+  window.ATHAR_ACCESS_BRIDGE = Object.freeze({
+    client: () => supa,
+    teachers: () => teachers.map(t => ({id:t.id,full_name:t.full_name,published:t.published})),
+    reload: () => reload()
+  });
   void init();
 })();
 
   </script>
+  <script src="./teacher-access-v1.js?v=1.0" defer></script>
 </body>
 </html>
