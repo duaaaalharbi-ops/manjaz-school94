@@ -103,16 +103,25 @@
     const link=String(records[0]?.data?.url||"");
     const hasLink=validDriveURL(link);
     trigger.textContent=hasLink?"تعديل رابط درايف":"إضافة رابط درايف";
+    // Always preserve the previous Qudrat / Google Drive card, including when the
+    // database has no saved URL. Bayan remains above this card on the page.
     content.innerHTML=hasLink?
-      `<article class="achievement-card"><span class="badge">ملف القدرات</span>
+      `<article class="achievement-card" data-qudrat-drive-card="1"><span class="badge">ملف القدرات</span>
         <h3>ملف القدرات</h3>
         <div class="record-actions-grid">
           <a class="details-btn" href="${esc(link)}" target="_blank" rel="noopener noreferrer">استعراض الملف في Google Drive</a>
           <button class="record-delete-btn" type="button" id="qudratDelete">حذف الرابط</button>
         </div>
       </article>`:
-      `<div class="surface empty-state"><h3>لم يُضف رابط ملف القدرات بعد</h3>
-        <p>أضيفي رابط Google Drive من زر إضافة.</p></div>`;
+      `<article class="achievement-card" data-qudrat-drive-card="1"><span class="badge">ملف القدرات</span>
+        <h3>ملف القدرات</h3>
+        <p>لا يوجد رابط Google Drive محفوظ حاليًا. أعيدي إضافة الرابط السابق لإظهار زر استعراض الملف.</p>
+        <div class="record-actions-grid">
+          <button class="details-btn" type="button" id="qudratRestoreLink">إضافة رابط ملف القدرات</button>
+        </div>
+      </article>`;
+    const restore=document.getElementById("qudratRestoreLink");
+    if(restore)restore.onclick=()=>trigger.click();
     const deletion=document.getElementById("qudratDelete");
     if(deletion)deletion.onclick=async()=>{
       if(!confirm("هل تريدين حذف رابط ملف القدرات؟"))return;
