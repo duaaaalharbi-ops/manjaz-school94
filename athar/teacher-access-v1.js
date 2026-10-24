@@ -31,10 +31,13 @@ st.textContent=[
 document.head.appendChild(st);
 var entry=document.createElement("section");
 entry.id="atharTeacherEntry";entry.innerHTML=
-'<h3>تفعيل حسابي | دخول المعلمة</h3><p>أدخلي بريدك لاستقبال رابط دخول آمن. بعد التحقق تختارين ملفك، وتعتمد الإدارة الربط مرة واحدة فقط.</p>'+
-'<form id="atharSignIn"><label>البريد الإلكتروني<input id="atharLoginEmail" type="email" autocomplete="email" required></label>'+
-'<div class="athar-actions"><button class="btn primary" type="submit" id="atharEmailSend">إرسال رابط الدخول</button></div>'+
-'<p id="atharLoginMsg" class="athar-msg" role="status"></p></form>';
+'<h3>تفعيل حسابي | دخول المعلمة</h3><p>أدخلي بريدك لاستقبال رمز تحقق، ثم اكتبيه هنا. لا حاجة إلى فتح رابط من رسالة البريد.</p>'+
+'<form id="atharSignIn"><label>البريد الإلكتروني<input id="atharLoginEmail" type="email" autocomplete="email" inputmode="email" required></label>'+
+'<div class="athar-actions"><button class="btn primary" type="submit" id="atharEmailSend">إرسال رمز التحقق</button></div>'+
+'<p id="atharLoginMsg" class="athar-msg" role="status"></p></form>'+
+'<form id="atharVerifyForm" hidden><label>رمز التحقق من البريد<input id="atharVerifyCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" minlength="6" pattern="[0-9]{6,8}" placeholder="أدخلي الرمز الرقمي" required></label>'+
+'<div class="athar-actions"><button class="btn primary" id="atharVerifyButton" type="submit">تأكيد الرمز والدخول</button><button type="button" class="btn outline" id="atharResendCode">إعادة إرسال الرمز</button></div>'+
+'<p id="atharVerifyMsg" class="athar-msg" role="status"></p></form>';
 gate.appendChild(entry);
 var area=document.createElement("section");area.id="atharTeacherArea";area.hidden=true;host.appendChild(area);
 var queue=document.createElement("section");queue.id="atharAccessAdmin";queue.hidden=true;adminTools.appendChild(queue);
@@ -42,11 +45,44 @@ var message=function(id,msg,error){var e=$(id);if(e){e.textContent=msg;e.style.c
 var failure=function(e){return e&&e.message?e.message:"تعذر إكمال الإجراء"};
 var safeUrl=function(v){if(!v)return true;try{return new URL(v).protocol==="https:"}catch(e){return false}};
 async function exit(){var r=await client().auth.signOut();if(r.error)alert(failure(r.error));else{user=null;member=null;await refresh()}}
+var verificationEmail="";
+async function sendEmailOtp(){
+ var email=$("atharLoginEmail").value.trim().toLowerCase();
+ if(!email)throw Error("أدخلي بريدك الإلكتروني.");
+ // OTP code entry has no browser redirect and avoids single-use email-link prefetch failures.
+ var r=await client().auth.signInWithOtp({email:email,options:{shouldCreateUser:true}});
+ if(r.error)throw r.error;
+ verificationEmail=email;
+ $("atharVerifyForm").hidden=false;
+ message("atharLoginMsg","أرسل طلب رمز جديد. افتحي البريد وانسخي رمز التحقق إلى الحقل أدناه.");
+ $("atharVerifyCode").focus();
+}
 $("atharSignIn").onsubmit=async function(e){
- e.preventDefault();var b=$("atharEmailSend");b.disabled=true;message("atharLoginMsg","جارٍ إرسال رابط التحقق...");
- try{var email=$("atharLoginEmail").value.trim().toLowerCase();var r=await client().auth.signInWithOtp({email:email,options:{shouldCreateUser:true,emailRedirectTo:location.origin+location.pathname}});if(r.error)throw r.error;
- message("atharLoginMsg","تم طلب إرسال رابط التحقق. افتحيه من بريدك، ثم ادخلي إلى إدارة الملفات.");}
- catch(err){message("atharLoginMsg","تعذر إرسال الرابط: "+failure(err),true)}
+ e.preventDefault();var b=$("atharEmailSend");b.disabled=true;message("atharLoginMsg","جارٍ إرسال رمز التحقق...");
+ try{await sendEmailOtp()}
+ catch(err){message("atharLoginMsg","تعذر إرسال الرمز: "+failure(err),true)}
+ finally{b.disabled=false}
+};
+$("atharVerifyForm").onsubmit=async function(e){
+ e.preventDefault();var b=$("atharVerifyButton");b.disabled=true;
+ message("atharVerifyMsg","جارٍ التحقق من الرمز...");
+ try{
+  var email=verificationEmail||$("atharLoginEmail").value.trim().toLowerCase();
+  var token=$("atharVerifyCode").value.trim();
+  if(!email||!/^[0-9]{6,8}$/.test(token))throw Error("أدخلي رمز التحقق الرقمي الصحيح.");
+  var r=await client().auth.verifyOtp({email:email,token:token,type:"email"});
+  if(r.error)throw r.error;
+  $("atharVerifyCode").value="";
+  message("atharVerifyMsg","تم التحقق بنجاح.");
+  await refresh();
+ }catch(err){
+  message("atharVerifyMsg","تعذر التحقق: "+failure(err)+". تأكدي من الرمز، أو اطلبي رمزًا جديدًا.",true);
+ }finally{b.disabled=false}
+};
+$("atharResendCode").onclick=async function(){
+ var b=$("atharResendCode");b.disabled=true;message("atharVerifyMsg","جارٍ إعادة إرسال الرمز...");
+ try{await sendEmailOtp();$("atharVerifyCode").value="";message("atharVerifyMsg","تم طلب إرسال رمز جديد. استخدمي أحدث رمز فقط.")}
+ catch(err){message("atharVerifyMsg","تعذر الإرسال: "+failure(err),true)}
  finally{b.disabled=false}
 };
 function outButton(){var b=$("atharSelfLogout");if(b)b.onclick=exit}
