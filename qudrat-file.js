@@ -84,7 +84,7 @@
       <div class="mj-bayan-topic">القسم اللفظي</div>
       <span class="mj-bayan-cta">استعراض</span>
     </a>
-    <div class="section-actions" style="display:none"><button type="button" class="btn btn-primary" id="qudratOpenForm">إضافة رابط درايف</button></div>
+    <button type="button" id="qudratOpenForm" hidden style="display:none!important" tabindex="-1" aria-hidden="true">إضافة رابط درايف</button>
     <form id="qudratForm" class="surface form-card" style="display:none">
       <div class="form-section-title">رابط ملف القدرات</div>
       <div class="form-grid"><label class="wide">رابط Google Drive *
