@@ -189,6 +189,8 @@ async function refresh(){
  busy=true;
  try{
   var c=client();if(!c)return;
+  var session=await c.auth.getSession();if(session.error)throw session.error;
+  if(!session.data.session){user=null;member=null;area.hidden=true;queue.hidden=true;entry.hidden=false;gate.hidden=false;return}
   var auth=await c.auth.getUser();if(auth.error)throw auth.error;
   user=auth.data.user||null;
   if(!user){area.hidden=true;queue.hidden=true;entry.hidden=false;gate.hidden=false;return}
