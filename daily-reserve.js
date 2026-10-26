@@ -958,10 +958,18 @@ function reserveAutoWeeklyAllowance(teacherId){
   return normName(t.name)===normName("رية الحربي")?Math.min(2,remaining):remaining;
 }
 function reserveAutoPreviousSchoolDate(date){return addDays(date,dayKey(date)==="sun"?-3:-1);}
+function reserveTeacherClassRestriction(t,className=""){
+  if(normName(t?.name)!==normName("فاطمة حسن"))return "";
+  const stage=normName(className);
+  return stage.startsWith("اول")||stage.startsWith("ثاني")?"":
+    "فاطمة حسن تُكلف بالاحتياط في فصول الأول أو الثاني الثانوي فقط.";
+}
 function reserveAutoIneligibility(teacherId,date,className="",exceptId="",fullCadre=state.autoAllNames!==false,skipWeekly=false){
   const t=teacherOf(teacherId);
   if(!t||t.active===false)return "المعلمة غير نشطة ضمن سجل الكادر.";
   const name=normName(t.name),support=reserveAutoIsSupport(t);
+  const classRestriction=reserveTeacherClassRestriction(t,className);
+  if(classRestriction)return classRestriction;
   if(nameSetContains(AUTO_GLOBAL_EXCLUDED,name))return "المعلمة مستبعدة دائمًا من الترشيح الآلي.";
   if(!fullCadre&&(support||t.excluded===true||teacherFlags(t).permanentExcluded||
     nameSetContains(AUTO_OFF_EXCLUDED,name)))return "المعلمة مستثناة عند عدم تفعيل الكادر الكامل.";
@@ -1897,8 +1905,8 @@ function currentReserveWarnings(date){
 }
 // Flexible administrative reassignment does not invoke or modify candidateRanking.
 // Current nominations and source type remain immutable; only the chosen assignee changes.
-function reserveFlexibleAssigneeOptions(selectedId){
-  const all=manualAssigneeDirectory();
+function reserveFlexibleAssigneeOptions(selectedId,className=""){
+  const all=manualAssigneeDirectory().filter(t=>!reserveTeacherClassRestriction(t,className));
   if(selectedId&&!all.some(t=>String(t.id)===String(selectedId))){
     const previous=teacherOf(selectedId);
     if(previous)all.unshift(previous);
@@ -1915,7 +1923,7 @@ function reserveUnlockAssigneeSelector(select){
     const choices=manualCandidateOptions(a);
     select.innerHTML='<option value="">اختاري المعلمة المسددة</option>'+
       choices.map(c=>`<option value="${esc(c.teacherId)}">${esc(c.name)}</option>`).join("");
-  }else select.innerHTML=reserveFlexibleAssigneeOptions(selected);
+  }else select.innerHTML=reserveFlexibleAssigneeOptions(selected,a?.className||"");
   select.value=selected;
   select.disabled=false;
   select.hidden=false;
@@ -1944,6 +1952,8 @@ async function reserveCommitFlexibleAssignee(recordId,teacherId){
   const a=state.assignments.find(x=>String(x.id)===String(recordId)&&x.status!=="ملغي");
   const t=teacherOf(teacherId);
   if(!a||!t||!a.date)throw new Error("تعذر العثور على التكليف أو المعلمة المسددة.");
+  const classRestriction=reserveTeacherClassRestriction(t,a.className);
+  if(classRestriction)throw new Error(classRestriction);
   if(a.manual!==true){
     assertAutoAssignmentIntegrity(t.id,a.date,Number(a.period),a.id,a.className,a.fullCadreEnabled===true);
   }
@@ -2213,6 +2223,11 @@ async function saveManualAssignments(){
   });
   if(missing||selections.length!==rows.length||selections.some(x=>!teacherOf(x.teacherId))){
     msg.textContent="يجب اختيار معلمة معتمدة لكل حصة قبل الحفظ.";return;
+  }
+  const invalidStage=selections.find(x=>reserveTeacherClassRestriction(teacherOf(x.teacherId),x.className));
+  if(invalidStage){
+    msg.textContent=reserveTeacherClassRestriction(teacherOf(invalidStage.teacherId),invalidStage.className);
+    return;
   }
   const warnings=manualConflictMessages(date,selections,absentIds);
   // Administration explicitly allows all rule warnings to be overridden.
