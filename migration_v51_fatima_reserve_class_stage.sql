@@ -15,6 +15,13 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- Preserve acknowledgments and other updates to existing assignment details.
+  IF TG_OP='UPDATE' AND OLD.kind=NEW.kind
+     AND OLD.data->>'assignedTeacherId' IS NOT DISTINCT FROM NEW.data->>'assignedTeacherId'
+     AND OLD.data->>'className' IS NOT DISTINCT FROM NEW.data->>'className' THEN
+    RETURN NEW;
+  END IF;
+
   IF COALESCE(NEW.data->>'assignedTeacherId','') !~ '^[0-9]+$' THEN
     RETURN NEW;
   END IF;
