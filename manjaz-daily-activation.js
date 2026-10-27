@@ -136,7 +136,7 @@ async function loadSchoolLists(){
  }
 }
 function selectedBag(){return byId("ma-bag")?byId("ma-bag").value:"general";}
-function activeCatalog(){if(selectedBag()==="afaq")return (window.ManjazAfaqCards||[]).map(x=>[x.id,x.main,x.sub,x.title]);return selectedBag()==="positive_behavior"?(window.ManjazBehaviorCards||[]).map(x=>[x.id,x.main,x.sub,x.title]):CATALOG;}
+function activeCatalog(){if(selectedBag()==="intellectual_awareness")return (window.ManjazAwarenessCards||[]).map(x=>[x.id,x.main,x.sub,x.title]);if(selectedBag()==="afaq")return (window.ManjazAfaqCards||[]).map(x=>[x.id,x.main,x.sub,x.title]);return selectedBag()==="positive_behavior"?(window.ManjazBehaviorCards||[]).map(x=>[x.id,x.main,x.sub,x.title]):CATALOG;}
 function updateBag(){
  var mode=selectedBag();
  byId("ma-standard-fields").hidden=mode==="other";byId("ma-other-fields").hidden=mode!=="other";
@@ -172,7 +172,7 @@ function currentCard(){
   return t?[1,"أخرى","تفعيل حر",t]:null;
  }
  var c=activeCatalog().find(x=>String(x[0])===byId("ma-card").value);
- byId("ma-selected").textContent=c?String(c[0]).padStart(selectedBag()==="afaq"?2:3,"0")+(selectedBag()==="positive_behavior"?" / ٩٠ — ":selectedBag()==="afaq"?" / ٥٠ — ":" / ١٣٠ — ")+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
+ byId("ma-selected").textContent=c?String(c[0]).padStart(selectedBag()==="afaq"?2:3,"0")+(selectedBag()==="intellectual_awareness"?" / ١٣ — ":selectedBag()==="positive_behavior"?" / ٩٠ — ":selectedBag()==="afaq"?" / ٥٠ — ":" / ١٣٠ — ")+c[3]+" | "+c[1]+" / "+c[2]:"لا توجد بطاقة محددة";
  return c;
 }
 function selectedIndicators(){return [...document.querySelectorAll(".ma-check-item:checked")].map(function(x){return x.value;});}
@@ -263,7 +263,10 @@ async function exportVersion(variant){
  if(link)link.hidden=true;
  try{
   var result;
-  if(v.bag==="afaq"){
+  if(v.bag==="intellectual_awareness"){
+   if(!window.ManjazAwarenessActivity)throw Error("محرك بطاقات الوعي الفكري غير متاح.");
+   result=await window.ManjazAwarenessActivity.exportPdf(v);
+  }else if(v.bag==="afaq"){
    if(!window.ManjazAfaqActivityV19?.exportPdf)throw Error("محرك بطاقات آفاق الفكر غير متاح.");
    result=await window.ManjazAfaqActivityV19.exportPdf(v,variant);
   }else if(v.bag==="general"){
@@ -559,7 +562,7 @@ async function deleteSelectedRecords(){
 }
 // Administrative read-only card actions: always render from the selected SAVED log row.
 function savedActivationCardValues(row){
- var bag=["general","positive_behavior","afaq","other"].includes(row.bag_key)?row.bag_key:"general";
+ var bag=["general","positive_behavior","afaq","intellectual_awareness","other"].includes(row.bag_key)?row.bag_key:"general";
  var klasses=rowClasses(row).map(safe).filter(Boolean);
  var periods=rowPeriods(row).map(Number).filter(function(x){return Number.isInteger(x)&&x>=1&&x<=7;});
  return {
@@ -586,7 +589,10 @@ async function adminSavedCardAction(row,mode,button,status){
   if(!logData.some(function(item){return String(item.id)===String(row.id);}))
    throw Error("هذا السجل لم يعد موجودًا في القائمة الحالية.");
   var v=savedActivationCardValues(row),result;
-  if(v.bag==="afaq"){
+  if(v.bag==="intellectual_awareness"){
+   if(!window.ManjazAwarenessActivity)throw Error("محرك بطاقات الوعي الفكري غير متاح.");
+   result=await window.ManjazAwarenessActivity.exportPdf(v);
+  }else if(v.bag==="afaq"){
    if(!window.ManjazAfaqActivityV19?.exportPdf)throw Error("محرك بطاقات آفاق الفكر غير متاح.");
    result=await window.ManjazAfaqActivityV19.exportPdf(v,"activity");
   }else if(v.bag==="general"){
@@ -775,7 +781,7 @@ function render(){
  if(!isPage())return;var view=byId("view");if(!view||byId("manjazActivation"))return;
  initStyle();var root=document.createElement("main");root.id="manjazActivation";
  root.innerHTML=
- '<header class="ma-hero"><h2>تفعيل حصص الاحتياط</h2><p>حقائب التفعيل | الثانوية الرابعة والتسعون – مسارات</p><div class="ma-stats"><span class="ma-stat">الحقيبة العامة: ١٣٠ بطاقة</span><span class="ma-stat">تعزيز السلوك الإيجابي: ٩٠ بطاقة</span><span class="ma-stat">آفاق الفكر: ٥٠ بطاقة و٥٠ حلًا</span><span class="ma-stat">أخرى: تفعيل حر</span></div><button id="ma-admin-entry-top" type="button" class="secondary ma-admin-top">دخول الإدارة | استعراض سجل التنفيذ</button></header>'+
+ '<header class="ma-hero"><h2>تفعيل حصص الاحتياط</h2><p>حقائب التفعيل | الثانوية الرابعة والتسعون – مسارات</p><div class="ma-stats"><span class="ma-stat">الحقيبة العامة: ١٣٠ بطاقة</span><span class="ma-stat">تعزيز السلوك الإيجابي: ٩٠ بطاقة</span><span class="ma-stat">آفاق الفكر: ٥٠ بطاقة و٥٠ حلًا</span><span class="ma-stat">الوعي الفكري: ١٣ بطاقة</span><span class="ma-stat">أخرى: تفعيل حر</span></div><button id="ma-admin-entry-top" type="button" class="secondary ma-admin-top">دخول الإدارة | استعراض سجل التنفيذ</button></header>'+
  '<section class="ma-panel"><h3 id="ma-data-heading">بيانات التنفيذ اليومي</h3><div class="ma-grid">'+
  '<div><label for="ma-weekday">اليوم</label><select id="ma-weekday"></select></div>'+
  '<div><label for="ma-hyear">السنة الهجرية</label><select id="ma-hyear"></select></div>'+
@@ -810,7 +816,7 @@ function render(){
  }
  renderMultiDropdown("period");updateSelectionSummary();
  renderExecutors();
- optionList(byId("ma-bag"),[["general","الحقيبة العامة"],["positive_behavior","حقيبة تعزيز السلوك الإيجابي"],["afaq","حقيبة آفاق الفكر – مهارات التفكير العليا"],["other","أخرى"]],"اختاري حقيبة التفعيل","general");
+ optionList(byId("ma-bag"),[["general","الحقيبة العامة"],["positive_behavior","حقيبة تعزيز السلوك الإيجابي"],["afaq","حقيبة آفاق الفكر – مهارات التفكير العليا"],["intellectual_awareness","حقيبة الوعي الفكري"],["other","أخرى"]],"اختاري حقيبة التفعيل","general");
  updateBag();
  root.addEventListener("input",function(e){
   if(e.target.matches("textarea,select,input")){var link=byId("ma-pdf-download");if(link)link.hidden=true;}
