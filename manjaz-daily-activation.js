@@ -11,7 +11,23 @@ var ADMIN_EMAIL="munjz.s94@hotmail.com";
 // Verified abbreviated names from the existing school contacts roster.
 var EXTRA_EXECUTORS=["دخيلة المالكي","مها العتيبي","نجلاء هوساوي"];
 function safe(v){return String(v==null?"":v);}
-function uiMsg(s,bad){var el=byId("ma-message");if(el){el.textContent=s;el.style.color=bad?"#b42318":"#08716d";}}
+function uiMsg(s,bad){[byId("ma-message"),byId("ma-report-status")].forEach(function(el){if(el){el.textContent=s;el.style.color=bad?"#b42318":"#08716d";}});}
+function confirmActivationDelete(message){
+ if(byId("ma-delete-confirm"))return Promise.resolve(false);
+ return new Promise(function(resolve){
+  var previous=document.activeElement,overlay=document.createElement("div");overlay.id="ma-delete-confirm";
+  overlay.style.cssText="position:fixed;inset:0;z-index:2147483647;background:rgba(10,35,45,.55);display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl";
+  var box=document.createElement("section");box.setAttribute("role","alertdialog");box.setAttribute("aria-modal","true");box.setAttribute("aria-labelledby","ma-delete-confirm-title");box.style.cssText="background:white;color:#153b47;padding:24px;border-radius:14px;max-width:440px;width:100%;font:16px/1.8 Tahoma,Arial";
+  var title=document.createElement("h3");title.id="ma-delete-confirm-title";title.textContent="تأكيد حذف التفعيل";
+  var text=document.createElement("p");text.textContent=message;
+  var cancel=document.createElement("button");cancel.type="button";cancel.textContent="إلغاء";
+  var approve=document.createElement("button");approve.type="button";approve.textContent="تأكيد الحذف";approve.style.cssText="background:#a52c36;color:white;margin:8px;padding:12px;border:0;border-radius:8px";
+  function finish(value){overlay.remove();document.removeEventListener("keydown",key);if(previous&&previous.isConnected)previous.focus();resolve(value);}
+  function key(e){if(e.key==="Escape")finish(false);if(e.key==="Tab"){e.preventDefault();(document.activeElement===cancel?approve:cancel).focus();}}
+  cancel.onclick=function(){finish(false);};approve.onclick=function(){finish(true);};
+  document.addEventListener("keydown",key);box.append(title,text,cancel,approve);overlay.appendChild(box);document.body.appendChild(overlay);cancel.focus();
+ });
+}
 function optionList(el,arr,placeholder,current){
  if(!el)return;el.replaceChildren();
  var empty=document.createElement("option");empty.value="";empty.textContent=placeholder;el.appendChild(empty);
@@ -510,7 +526,7 @@ async function saveEditedRecord(){
 async function deleteRecord(id){
  var row=logData.find(function(x){return x.id===id;});if(!row)return;
  var name=row.teacher_name||"",title=row.card_title||"";
- if(!window.confirm("حذف سجل تنفيذ «"+title+"» للمنفذة «"+name+"»؟ لا يمكن التراجع عن الحذف."))return;
+ if(!await confirmActivationDelete("حذف سجل تنفيذ «"+title+"» للمنفذة «"+name+"»؟ لا يمكن التراجع عن الحذف."))return;
  if(adminBusy)return;adminBusy=true;
  try{
   var token=await getVerifiedAdminToken();
@@ -531,7 +547,7 @@ async function deleteSelectedRecords(){
  var known=new Set(logData.map(function(row){return String(row.id);}));
  var ids=[...selectedLogIds].filter(function(id){return known.has(id);});
  if(!ids.length){selectedLogIds.clear();renderReportRows();return;}
- if(!window.confirm("هل تريدين حذف "+ids.length+" سجل تنفيذ محددًا نهائيًا؟ لا يمكن التراجع عن الحذف."))return;
+ if(!await confirmActivationDelete("هل تريدين حذف "+ids.length+" سجل تنفيذ محددًا نهائيًا؟ لا يمكن التراجع عن الحذف."))return;
  adminBusy=true;
  var removedIds=new Set(),error=null;
  try{
@@ -631,6 +647,7 @@ async function adminSavedCardAction(row,mode,button,status){
 }
 function renderReportRows(){
  var target=byId("ma-report-body");if(!target)return;
+ if(!byId("ma-report-status")){var status=document.createElement("p");status.id="ma-report-status";status.setAttribute("role","status");status.setAttribute("aria-live","polite");target.parentNode.insertBefore(status,target);}
  target.replaceChildren();
  var q=String(byId("ma-report-search")&&byId("ma-report-search").value||"").trim().toLowerCase();
  var entries=logData.filter(function(row){
