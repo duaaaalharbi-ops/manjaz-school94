@@ -42,10 +42,9 @@ const AUTO_OFF_EXCLUDED=new Set(["أفراح الجدعاني","إيمان ال�
 const MANUAL_SUPPORT_STAFF=[
   {id:"reserve_support_1",name:"دخيلة المالكي",supportStaff:true,role:"التوجيه الطلابي / المختبر"},
   {id:"reserve_support_2",name:"مها العتيبي",supportStaff:true,role:"التوجيه الطلابي / المختبر"},
-  {id:"reserve_support_3",name:"نجلاء هوساوي",supportStaff:true,role:"التوجيه الطلابي / المختبر"},
-  {id:"reserve_fixed_reduced_load",name:"تخفيض نصاب",supportStaff:true,role:"معلمة تخفيض نصاب",fixedReserveOnly:true}
+  {id:"reserve_support_3",name:"نجلاء هوساوي",supportStaff:true,role:"التوجيه الطلابي / المختبر"}
 ];
-const V6_SEED=[{"name":"أفراح الجدعاني","workload":9,"timetable":{"sun":["","","","","","أول6","ثالث3"],"mon":["أول6","","أول4","","","ثالث3",""],"tue":["","أول5","","","",""],"wed":["أول5","","","أول4","",""],"thu":["","ثالث3","","","",""]}},{"name":"إيمان الجدعاني","workload":20,"timetable":{"sun":["ثاني6","","","","ثاني3","ثاني1","ثاني2"],"mon":["ثاني2","","ثاني6","ثاني1","","","ثاني4"],"tue":["ثاني6","","","ثاني4","ثاني3","ثاني1"],"wed":["ثاني2","ثاني4","","","ثاني3","ثاني6"],"thu":["ثاني3","ثاني1","","ثاني2","ثاني4",""]}},{"name":"بدريه الحربي","workload":11,"timetable":{"sun":["","ثاني4","","","ثاني4|نشاط","","ثاني5"],"mon":["ثاني6","","","","ثاني4|نشاط","",""],"tue":["","","ثاني5","","","ثاني4"],"wed":["","","","ثاني6","ثاني4",""],"thu":["ثاني5","ثاني6","","","",""]}},{"name":"بدريه السلمي","workload":16,"timetable":{"sun":["","ثالث1|نشاط","ثالث2","ثالث3","","","ثالث1"],"mon":["ثالث1","","ثالث3","","","","ثالث2"],"tue":["","ثالث2","ثالث1","","","ثالث3"],"wed":["ثالث1","","","","ثالث3","ثالث2"],"thu":["","ثالث1","","ثالث2","ثالث3",""]}},{"name":"تهاني العتيبي","workload":22,"timetable":{"sun":["أول1","أول2","","ثالث2","ثالث3","ثالث1",""],"mon":["ثالث2","ثالث3","","أول2","ثالث1","أول1",""],"tue":["ثالث1","أول1","","أول2","ثالث3",""],"wed":["ثالث2","ثالث1","","أول1","أول2",""],"thu":["ثالث3","","","أول1","أول2","ثالث2"]}},{"name":"حصة المنتشري","workload":20,"timetable":{"sun":["أول6","","ثاني1","ثاني3","ثاني2","",""],"mon":["","ثاني3","ثاني1","أول6","","ثاني2",""],"tue":["أول6","","ثاني3","ثاني2","ثاني1",""],"wed":["ثاني3","أول6","","ثاني2","ثاني1",""],"thu":["ثاني2","ثاني3","ثاني1","أول6","",""]}},{"name":"حنان المجنوني","workload":13,"timetable":{"sun":["ثالث5","ثالث2","","","","ثالث3","ثالث4"],"mon":["","ثالث1","","","ثالث6","","ثالث3"],"tue":["","ثالث5","","","ثالث2|نشاط","ثالث6"],"wed":["","","ثالث2","","",""],"thu":["ثالث4","","","","ثالث1",""]}},{"name":"خزماء الجبيري","workload":18,"timetable":{"sun":["","أول4","أول6","أول3","أول1","",""],"mon":["أول5","أول2","","","","أول6","أول3"],"tue":["","","أول2","","أول4","أول1"],"wed":["","أول2","أول4","","أول5",""],"thu":["أول3","","أول6","أول5","أول1",""]}},{"name":"خلود الكثيري","workload":18,"timetable":{"sun":["أول5","","أول2","","أول6","أول1",""],"mon":["أول1","أول3","","أول5","","","أول4"],"tue":["","أول3","","أول6","",""],"wed":["","أول4","أول1","","","أول2"],"thu":["أول2","أول3","أول4","","أول5","أول6"]}},{"name":"دعاء الحربي","workload":20,"timetable":{"sun":["","أول6","","ثاني6","ثاني5","","أول5"],"mon":["","أول5","أول6","","ثاني5","","ثاني6"],"tue":["","أول6","أول5","ثاني5","","ثاني6"],"wed":["ثاني5","ثاني6","","أول5","أول6",""],"thu":["ثاني6","ثاني5","","","أول6","أول5"]}},{"name":"رحمة العيسي","workload":4,"timetable":{"sun":["","","","","","","أول4"],"mon":["أول4","","","","","",""],"tue":["أول4","","","","",""],"wed":["","","","","",""],"thu":["","","","","","أول4"]}},{"name":"ريم الحربي","workload":18,"timetable":{"sun":["ثالث4","","ثالث5","","ثالث1","ثالث6",""],"mon":["","","ثالث2","ثالث3","","ثالث4",""],"tue":["ثالث3","ثالث6","","ثالث5","ثالث1",""],"wed":["ثالث3","","ثالث4","","ثالث2",""],"thu":["ثالث1","","ثالث5","ثالث6","ثالث2",""]}},{"name":"ريم القحطاني","workload":17,"timetable":{"sun":["ثاني2","ثاني3","","ثاني2|نشاط","ثاني1","",""],"mon":["ثاني1","","","ثاني2","ثاني3","",""],"tue":["ثاني2","ثاني1","","","ثاني2|نشاط","ثاني3"],"wed":["","ثاني3","","ثاني1","","ثاني2"],"thu":["","","ثاني2","ثاني1","ثاني3",""]}},{"name":"رية الحربي","workload":13,"timetable":{"sun":["ثالث3|نشاط","","","","ثالث2","","ثالث6"],"mon":["","","","ثالث4","","ثالث1","ثالث5"],"tue":["ثالث4","","","ثالث1","","ثالث2"],"wed":["","","","ثالث3","","ثالث5"],"thu":["","","ثالث6","","","ثالث3"]}},{"name":"سحر الشمراني","workload":17,"timetable":{"sun":["ثاني4","ثاني6","","ثاني5","","ثاني5|نشاط",""],"mon":["","ثاني5","","ثاني4","ثاني6","",""],"tue":["ثاني5","ثاني4","","ثاني6","",""],"wed":["","","ثاني6","","ثاني5","ثاني4"],"thu":["","ثاني4","ثاني6","","ثاني5","ثاني5|نشاط"]}},{"name":"سندس الغامدي","workload":20,"timetable":{"sun":["ثاني1","ثاني2","","ثاني4","","","ثاني3"],"mon":["","ثاني4","ثاني2","","","ثاني1","ثاني3"],"tue":["ثاني4","ثاني3","ثاني2","ثاني1","",""],"wed":["","ثاني2","ثاني3","ثاني4","","ثاني1"],"thu":["","ثاني2","ثاني3","ثاني4","","ثاني1"]}},{"name":"شوق المطيري","workload":8,"timetable":{"sun":["","","","","","أول2",""],"mon":["","","","","أول1","","أول2"],"tue":["","","","","أول1","أول2"],"wed":["أول1","","","","",""],"thu":["","أول2","أول1","","",""]}},{"name":"شيخة المالكي","workload":16,"timetable":{"sun":["ثالث2","ثالث3","","","ثالث6","",""],"mon":["","ثالث2","ثالث6","","ثالث3","ثالث6|نشاط",""],"tue":["","","ثالث3","ثالث2","ثالث6",""],"wed":["","ثالث6","","ثالث2","","ثالث3"],"thu":["","ثالث2","","ثالث3","","ثالث6"]}},{"name":"عايدة الصاعدي","workload":18,"timetable":{"sun":["","","ثالث1","ثالث6","ثالث4","","ثالث2"],"mon":["ثالث3","ثالث5","","ثالث2","ثالث4","","ثالث1"],"tue":["","","","ثالث3","","ثالث5"],"wed":["","ثالث3","ثالث1","ثالث4","ثالث6",""],"thu":["","","ثالث2","","ثالث6","ثالث5"]}},{"name":"عبير المولد","workload":9,"timetable":{"sun":["","","ثالث4","","ثالث5","",""],"mon":["","","","ثالث5","","","ثالث6"],"tue":["","","","ثالث6","","ثالث4"],"wed":["","","","","","ثالث6"],"thu":["","ثالث5","","","","ثالث4"]}},{"name":"علوه الحربي","workload":11,"timetable":{"sun":["","","ثاني2","","","ثاني3","ثاني1|نشاط"],"mon":["ثاني3","","","","ثاني1","","ثاني2"],"tue":["ثاني1|نشاط","","","","",""],"wed":["","ثاني1","","","","ثاني3"],"thu":["","","","","ثاني1","ثاني2"]}},{"name":"علية القاسمي","workload":4,"timetable":{"sun":["","","أول3","","","",""],"mon":["","","","","","أول3",""],"tue":["أول3","","","","",""],"wed":["","","","أول3","",""],"thu":["","","","","",""]}},{"name":"عواطف الحربي","workload":12,"timetable":{"sun":["ثاني3","","ثاني4","","ثاني6","",""],"mon":["","","ثاني3","ثاني6","","ثاني4",""],"tue":["","","ثاني6","ثاني3","",""],"wed":["","","ثاني4","","",""],"thu":["","","ثاني4","ثاني6","","ثاني3"]}},{"name":"عوالي السبيعي","workload":20,"timetable":{"sun":["","أول1","أول5","أول4","","أول3",""],"mon":["أول3","أول4","","أول1","أول2","",""],"tue":["أول2","أول4","","أول3","أول5",""],"wed":["أول2","","أول5","","أول1","أول3"],"thu":["أول5","","أول2","","أول4","أول1"]}},{"name":"غاليه المزمومي","workload":16,"timetable":{"sun":["","ثالث6","","","","ثالث4","ثالث5"],"mon":["","","ثالث5","ثالث6","","","ثالث4"],"tue":["ثالث5","ثالث4","ثالث6","","",""],"wed":["ثالث4","","","ثالث6","ثالث5","ثالث4|نشاط"],"thu":["ثالث6","ثالث4","","ثالث5","",""]}},{"name":"فاطمة الزهراني","workload":13,"timetable":{"sun":["","","ثاني5","","","ثاني6","ثاني6|نشاط"],"mon":["","أول6","","","","ثاني6","ثاني5"],"tue":["","","أول6","","ثاني6","ثاني5"],"wed":["ثاني6","","أول6","","",""],"thu":["","","ثاني5","","","ثاني6|نشاط"]}},{"name":"فاطمة العماري","workload":16,"timetable":{"sun":["ثالث1","ثالث4","","ثالث5","","",""],"mon":["ثالث5","","ثالث4","ثالث1","","",""],"tue":["","ثالث1","ثالث5","ثالث4","",""],"wed":["ثالث5","ثالث4","ثالث5|نشاط","","ثالث1",""],"thu":["ثالث5","","ثالث1","ثالث4","",""]}},{"name":"فاطمة الغامدي","workload":18,"timetable":{"sun":["","ثاني1","ثاني3","","","","ثاني4"],"mon":["","ثاني2","ثاني4","ثاني3|نشاط","","ثاني3","ثاني1"],"tue":["ثاني3|نشاط","ثاني2","","","ثاني4",""],"wed":["","","ثاني1","ثاني3","ثاني2",""],"thu":["ثاني1","","","ثاني3","ثاني2","ثاني4"]}},{"name":"فاطمة حسن","workload":9,"timetable":{"sun":["","أول3","","","","","أول2"],"mon":["","","أول2","","","","أول1"],"tue":["","","أول1","","","أول3"],"wed":["","أول1","","","أول3",""],"thu":["","","","","","أول2"]}},{"name":"لمياء البلادي","workload":22,"timetable":{"sun":["أول4","","ثالث6","ثالث4","أول3","ثالث5",""],"mon":["ثالث4","ثالث6","","أول4","أول3","ثالث5",""],"tue":["ثالث6","","أول3","أول4","ثالث4",""],"wed":["أول3","","ثالث6","ثالث5","أول4",""],"thu":["أول4","","ثالث4","أول3","ثالث5",""]}},{"name":"ليلى مجرشي","workload":20,"timetable":{"sun":["","","أول4","أول1","أول2","","أول3"],"mon":["","أول1","أول3","","أول4","أول2",""],"tue":["","أول2","أول4","أول1","أول3",""],"wed":["أول4","","أول3","أول2","","أول1"],"thu":["أول1","أول4","","أول2","","أول3"]}},{"name":"منال الجابري","workload":15,"timetable":{"sun":["أول2","أول5","","","أول4","","أول1"],"mon":["أول2","","أول1","أول3","","أول5",""],"tue":["أول1","","","","","أول4"],"wed":["","أول3","أول2","","","أول4"],"thu":["","أول5","","","أول3",""]}},{"name":"نجوى الغامدي","workload":12,"timetable":{"sun":["ثاني5","","","ثاني1","","ثاني2",""],"mon":["","ثاني1","","ثاني5","ثاني2","",""],"tue":["","ثاني5","ثاني1","","","ثاني2"],"wed":["ثاني1","","ثاني2","","","ثاني5"],"thu":["","","","","",""]}},{"name":"نورة الهودان","workload":24,"timetable":{"sun":["ثالث6","ثالث5","ثالث3","ثالث1","","ثالث2",""],"mon":["ثالث6","ثالث4","ثالث1","","ثالث5","ثالث2",""],"tue":["ثالث2","ثالث3","ثالث4","","ثالث5",""],"wed":["ثالث6","ثالث5","ثالث3","ثالث1","ثالث4",""],"thu":["ثالث2","ثالث6","ثالث3","ثالث1","ثالث4",""]}},{"name":"نورة العنزي","workload":12,"timetable":{"sun":["أول3","","أول1","أول2","","",""],"mon":["","","","","ثالث2","",""],"tue":["","","ثالث2","","أول2","ثالث1"],"wed":["","ثالث2","","","","ثالث1"],"thu":["","أول1","أول3","","","ثالث1"]}},{"name":"هاجر السلمي","workload":9,"timetable":{"sun":["","","","أول5","","أول4",""],"mon":["","","","","","أول4","أول5"],"tue":["أول5","","","","","أول6"],"wed":["أول6","","","","",""],"thu":["أول6","","","أول4","",""]}},{"name":"وحش القحطاني","workload":20,"timetable":{"sun":["","ثاني5","ثاني6","","أول5","ثاني4",""],"mon":["ثاني4","ثاني6","ثاني5","","أول5","",""],"tue":["","ثاني6","ثاني4","أول5","ثاني5",""],"wed":["ثاني4","أول5","","ثاني5","ثاني6",""],"thu":["ثاني4","","أول5","ثاني5","ثاني6",""]}},{"name":"وضحه المحمادي","workload":8,"timetable":{"sun":["","","","أول6","","أول5","أول6"],"mon":["","","أول5","","","",""],"tue":["","","","","أول6","أول5"],"wed":["","","","","","أول5"],"thu":["","أول6","","","",""]}},{"name":"دخنه الشهري","workload":8,"timetable":{"sun":["","","","","","",""],"mon":["ثاني5","","","","أول6","ثاني5","أول6"],"tue":["","","","","",""],"wed":["","ثاني5","ثاني5","أول6","","أول6"],"thu":["","","","","",""]}}];
+const V6_SEED=[{"name":"أفراح الجدعاني","workload":9,"timetable":{"sun":["","","","","","أول6","ثالث3"],"mon":["أول6","","أول4","","","ثالث3",""],"tue":["","أول5","","","",""],"wed":["أول5","","","أول4","",""],"thu":["","ثالث3","","","",""]}},{"name":"إيمان الجدعاني","workload":20,"timetable":{"sun":["ثاني6","","","","ثاني3","ثاني1","ثاني2"],"mon":["ثاني2","","ثاني6","ثاني1","","","ثاني4"],"tue":["ثاني6","","","ثاني4","ثاني3","ثاني1"],"wed":["ثاني2","ثاني4","","","ثاني3","ثاني6"],"thu":["ثاني3","ثاني1","","ثاني2","ثاني4",""]}},{"name":"بدريه الحربي","workload":11,"timetable":{"sun":["","ثاني4","","","ثاني4|نشاط","","ثاني5"],"mon":["ثاني6","","","","ثاني4|نشاط","",""],"tue":["","","ثاني5","","","ثاني4"],"wed":["","","","ثاني6","ثاني4",""],"thu":["ثاني5","ثاني6","","","",""]}},{"name":"بدريه السلمي","workload":16,"timetable":{"sun":["","ثالث1|نشاط","ثالث2","ثالث3","","","ثالث1"],"mon":["ثالث1","","ثالث3","","","","ثالث2"],"tue":["","ثالث2","ثالث1","","","ثالث3"],"wed":["ثالث1","","","","ثالث3","ثالث2"],"thu":["","ثالث1","","ثالث2","ثالث3",""]}},{"name":"تهاني العتيبي","workload":22,"timetable":{"sun":["أول1","أول2","","ثالث2","ثالث3","ثالث1",""],"mon":["ثالث2","ثالث3","","أول2","ثالث1","أول1",""],"tue":["ثالث1","أول1","","أول2","ثالث3",""],"wed":["ثالث2","ثالث1","","أول1","أول2",""],"thu":["ثالث3","","","أول1","أول2","ثالث2"]}},{"name":"حصة المنتشري","workload":20,"timetable":{"sun":["أول6","","ثاني1","ثاني3","ثاني2","",""],"mon":["","ثاني3","ثاني1","أول6","","ثاني2",""],"tue":["أول6","","ثاني3","ثاني2","ثاني1",""],"wed":["ثاني3","أول6","","ثاني2","ثاني1",""],"thu":["ثاني2","ثاني3","ثاني1","أول6","",""]}},{"name":"حنان المجنوني","workload":13,"timetable":{"sun":["ثالث5","ثالث2","","","","ثالث3","ثالث4"],"mon":["","ثالث1","","","ثالث6","","ثالث3"],"tue":["","ثالث5","","","ثالث2|نشاط","ثالث6"],"wed":["","","ثالث2","","",""],"thu":["ثالث4","","","","ثالث1",""]}},{"name":"خزماء الجبيري","workload":18,"timetable":{"sun":["","أول4","أول6","أول3","أول1","",""],"mon":["أول5","أول2","","","","أول6","أول3"],"tue":["","","أول2","","أول4","أول1"],"wed":["","أول2","أول4","","أول5",""],"thu":["أول3","","أول6","أول5","أول1",""]}},{"name":"خلود الكثيري","workload":18,"timetable":{"sun":["أول5","","أول2","","أول6","أول1",""],"mon":["أول1","أول3","","أول5","","","أول4"],"tue":["","أول3","","أول6","",""],"wed":["","أول4","أول1","","","أول2"],"thu":["أول2","أول3","أول4","","أول5","أول6"]}},{"name":"دعاء الحربي","workload":20,"timetable":{"sun":["","أول6","","ثاني6","ثاني5","","أول5"],"mon":["","أول5","أول6","","ثاني5","","ثاني6"],"tue":["","أول6","أول5","ثاني5","","ثاني6"],"wed":["ثاني5","ثاني6","","أول5","أول6",""],"thu":["ثاني6","ثاني5","","","أول6","أول5"]}},{"name":"رحمة العيسي","workload":4,"timetable":{"sun":["","","","","","","أول4"],"mon":["أول4","","","","","",""],"tue":["أول4","","","","",""],"wed":["","","","","",""],"thu":["","","","","","أول4"]}},{"name":"ريم الحربي","workload":18,"timetable":{"sun":["ثالث4","","ثالث5","","ثالث1","ثالث6",""],"mon":["","","ثالث2","ثالث3","","ثالث4",""],"tue":["ثالث3","ثالث6","","ثالث5","ثالث1",""],"wed":["ثالث3","","ثالث4","","ثالث2",""],"thu":["ثالث1","","ثالث5","ثالث6","ثالث2",""]}},{"name":"ريم القحطاني","workload":17,"timetable":{"sun":["ثاني2","ثاني3","","ثاني2|نشاط","ثاني1","",""],"mon":["ثاني1","","","ثاني2","ثاني3","",""],"tue":["ثاني2","ثاني1","","","ثاني2|نشاط","ثاني3"],"wed":["","ثاني3","","ثاني1","","ثاني2"],"thu":["","","ثاني2","ثاني1","ثاني3",""]}},{"name":"رية الحربي","workload":13,"timetable":{"sun":["ثالث3|نشاط","","","","ثالث2","","ثالث6"],"mon":["","","","ثالث4","","ثالث1","ثالث5"],"tue":["ثالث4","","","ثالث1","","ثالث2"],"wed":["","","","ثالث3","","ثالث5"],"thu":["","","ثالث6","","","ثالث3"]}},{"name":"سحر الشمراني","workload":17,"timetable":{"sun":["ثاني4","ثاني6","","ثاني5","","ثاني5|نشاط",""],"mon":["","ثاني5","","ثاني4","ثاني6","",""],"tue":["ثاني5","ثاني4","","ثاني6","",""],"wed":["","","ثاني6","","ثاني5","ثاني4"],"thu":["","ثاني4","ثاني6","","ثاني5","ثاني5|نشاط"]}},{"name":"سندس الغامدي","workload":20,"timetable":{"sun":["ثاني1","ثاني2","","ثاني4","","","ثاني3"],"mon":["","ثاني4","ثاني2","","","ثاني1","ثاني3"],"tue":["ثاني4","ثاني3","ثاني2","ثاني1","",""],"wed":["","ثاني2","ثاني3","ثاني4","","ثاني1"],"thu":["","ثاني2","ثاني3","ثاني4","","ثاني1"]}},{"name":"شوق المطيري","workload":8,"timetable":{"sun":["","","","","","أول2",""],"mon":["","","","","أول1","","أول2"],"tue":["","","","","أول1","أول2"],"wed":["أول1","","","","",""],"thu":["","أول2","أول1","","",""]}},{"name":"شيخة المالكي","workload":16,"timetable":{"sun":["ثالث2","ثالث3","","","ثالث6","",""],"mon":["","ثالث2","ثالث6","","ثالث3","ثالث6|نشاط",""],"tue":["","","ثالث3","ثالث2","ثالث6",""],"wed":["","ثالث6","","ثالث2","","ثالث3"],"thu":["","ثالث2","","ثالث3","","ثالث6"]}},{"name":"عايدة الصاعدي","workload":18,"timetable":{"sun":["","","ثالث1","ثالث6","ثالث4","","ثالث2"],"mon":["ثالث3","ثالث5","","ثالث2","ثالث4","","ثالث1"],"tue":["","","","ثالث3","","ثالث5"],"wed":["","ثالث3","ثالث1","ثالث4","ثالث6",""],"thu":["","","ثالث2","","ثالث6","ثالث5"]}},{"name":"عبير المولد","workload":9,"timetable":{"sun":["","","ثالث4","","ثالث5","",""],"mon":["","","","ثالث5","","","ثالث6"],"tue":["","","","ثالث6","","ثالث4"],"wed":["","","","","","ثالث6"],"thu":["","ثالث5","","","","ثالث4"]}},{"name":"علوه الحربي","workload":11,"timetable":{"sun":["","","ثاني2","","","ثاني3","ثاني1|نشاط"],"mon":["ثاني3","","","","ثاني1","","ثاني2"],"tue":["ثاني1|نشاط","","","","",""],"wed":["","ثاني1","","","","ثاني3"],"thu":["","","","","ثاني1","ثاني2"]}},{"name":"علية القاسمي","workload":4,"timetable":{"sun":["","","أول3","","","",""],"mon":["","","","","","أول3",""],"tue":["أول3","","","","",""],"wed":["","","","أول3","",""],"thu":["","","","","",""]}},{"name":"عواطف الحربي","workload":13,"timetable":{"sun":["ثاني3","","ثاني4","","ثاني6","",""],"mon":["","","ثاني3","ثاني6","","ثاني4",""],"tue":["","","ثاني6","ثاني3","",""],"wed":["","","ثاني4","","","","أول1"],"thu":["","","ثاني4","ثاني6","","ثاني3"]}},{"name":"عوالي السبيعي","workload":20,"timetable":{"sun":["","أول1","أول5","أول4","","أول3",""],"mon":["أول3","أول4","","أول1","أول2","",""],"tue":["أول2","أول4","","أول3","أول5",""],"wed":["أول2","","أول5","","أول1","أول3"],"thu":["أول5","","أول2","","أول4","أول1"]}},{"name":"غاليه المزمومي","workload":16,"timetable":{"sun":["","ثالث6","","","","ثالث4","ثالث5"],"mon":["","","ثالث5","ثالث6","","","ثالث4"],"tue":["ثالث5","ثالث4","ثالث6","","",""],"wed":["ثالث4","","","ثالث6","ثالث5","ثالث4|نشاط"],"thu":["ثالث6","ثالث4","","ثالث5","",""]}},{"name":"فاطمة الزهراني","workload":13,"timetable":{"sun":["","","ثاني5","","","ثاني6","ثاني6|نشاط"],"mon":["","أول6","","","","ثاني6","ثاني5"],"tue":["","","أول6","","ثاني6","ثاني5"],"wed":["ثاني6","","أول6","","",""],"thu":["","","ثاني5","","","ثاني6|نشاط"]}},{"name":"فاطمة العماري","workload":16,"timetable":{"sun":["ثالث1","ثالث4","","ثالث5","","",""],"mon":["ثالث5","","ثالث4","ثالث1","","",""],"tue":["","ثالث1","ثالث5","ثالث4","",""],"wed":["ثالث5","ثالث4","ثالث5|نشاط","","ثالث1",""],"thu":["ثالث5","","ثالث1","ثالث4","",""]}},{"name":"فاطمة الغامدي","workload":18,"timetable":{"sun":["","ثاني1","ثاني3","","","","ثاني4"],"mon":["","ثاني2","ثاني4","ثاني3|نشاط","","ثاني3","ثاني1"],"tue":["ثاني3|نشاط","ثاني2","","","ثاني4",""],"wed":["","","ثاني1","ثاني3","ثاني2",""],"thu":["ثاني1","","","ثاني3","ثاني2","ثاني4"]}},{"name":"فاطمة حسن","workload":9,"timetable":{"sun":["","أول3","","","","","أول2"],"mon":["","","أول2","","","","أول1"],"tue":["","","أول1","","","أول3"],"wed":["","أول1","","","أول3",""],"thu":["","","","","","أول2"]}},{"name":"لمياء البلادي","workload":22,"timetable":{"sun":["أول4","","ثالث6","ثالث4","أول3","ثالث5",""],"mon":["ثالث4","ثالث6","","أول4","أول3","ثالث5",""],"tue":["ثالث6","","أول3","أول4","ثالث4",""],"wed":["أول3","","ثالث6","ثالث5","أول4",""],"thu":["أول4","","ثالث4","أول3","ثالث5",""]}},{"name":"ليلى مجرشي","workload":17,"timetable":{"sun":["","","أول4","أول1","أول2","","أول3"],"mon":["","أول1","أول3","","","أول2",""],"tue":["","أول2","أول4","أول1","أول3",""],"wed":["أول4","","أول3","أول2","","أول1"],"thu":["أول1","أول4","","","",""]}},{"name":"منال الجابري","workload":15,"timetable":{"sun":["أول2","أول5","","","أول4","","أول1"],"mon":["أول2","","أول1","أول3","","أول5",""],"tue":["أول1","","","","","أول4"],"wed":["","أول3","أول2","","","أول4"],"thu":["","أول5","","","أول3",""]}},{"name":"نجوى الغامدي","workload":12,"timetable":{"sun":["ثاني5","","","ثاني1","","ثاني2",""],"mon":["","ثاني1","","ثاني5","ثاني2","",""],"tue":["","ثاني5","ثاني1","","","ثاني2"],"wed":["ثاني1","","ثاني2","","","ثاني5"],"thu":["","","","","",""]}},{"name":"نورة الهودان","workload":24,"timetable":{"sun":["ثالث6","ثالث5","ثالث3","ثالث1","","ثالث2",""],"mon":["ثالث6","ثالث4","ثالث1","","ثالث5","ثالث2",""],"tue":["ثالث2","ثالث3","ثالث4","","ثالث5",""],"wed":["ثالث6","ثالث5","ثالث3","ثالث1","ثالث4",""],"thu":["ثالث2","ثالث6","ثالث3","ثالث1","ثالث4",""]}},{"name":"نورة العنزي","workload":12,"timetable":{"sun":["أول3","","أول1","أول2","","",""],"mon":["","","","","ثالث2","",""],"tue":["","","ثالث2","","أول2","ثالث1"],"wed":["","ثالث2","","","","ثالث1"],"thu":["","أول1","أول3","","","ثالث1"]}},{"name":"هاجر السلمي","workload":9,"timetable":{"sun":["","","","أول5","","أول4",""],"mon":["","","","","","أول4","أول5"],"tue":["أول5","","","","","أول6"],"wed":["أول6","","","","",""],"thu":["أول6","","","أول4","",""]}},{"name":"وحش القحطاني","workload":20,"timetable":{"sun":["","ثاني5","ثاني6","","أول5","ثاني4",""],"mon":["ثاني4","ثاني6","ثاني5","","أول5","",""],"tue":["","ثاني6","ثاني4","أول5","ثاني5",""],"wed":["ثاني4","أول5","","ثاني5","ثاني6",""],"thu":["ثاني4","","أول5","ثاني5","ثاني6",""]}},{"name":"وضحه المحمادي","workload":8,"timetable":{"sun":["","","","أول6","","أول5","أول6"],"mon":["","","أول5","","","",""],"tue":["","","","","أول6","أول5"],"wed":["","","","","","أول5"],"thu":["","أول6","","","",""]}},{"name":"دخنه الشهري","workload":8,"timetable":{"sun":["","","","","","",""],"mon":["ثاني5","","","","أول6","ثاني5","أول6"],"tue":["","","","","",""],"wed":["","ثاني5","ثاني5","أول6","","أول6"],"thu":["","","","","",""]}},{"name":"تخفيض نصاب","workload":3,"independentTeacher":true,"timetable":{"sun":["","","","","","",""],"mon":["","","","","أول4","",""],"tue":["","","","","","",""],"wed":["","","","","","",""],"thu":["","","","أول2","","أول3",""]}}];
 let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],monthlyCertificates:[],monthlyCertificateKey:"",admin:null,currentDate:todayISO(),workspaceCard:"manual",autoAbsentIds:[],manualAllNames:true,publicOpenCards:[]};
 let renderBusy=false;
 // Contacts are fetched exclusively after an authenticated administrative login;
@@ -239,12 +238,12 @@ async function reserveGetTableRevision(date,mode){
 
 // Replace an unapproved automatic selection in ONE cloud transaction. The
 // database fences old generations and physically removes abandoned drafts.
-async function reserveSyncAutoSelection(date,ids,revision){
+async function reserveSyncAutoSelection(date,ids,revision,reason="غياب"){
   if(!ids.length)throw new Error("اختاري المعلمات الغائبات أولًا.");
   await ensureAdmin();
-  const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/manjaz_reserve_sync_auto_selection",{
+  const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/manjaz_reserve_register_absences",{
     method:"POST",headers:baseHeaders(token()),cache:"no-store",
-    body:JSON.stringify({p_date:date,p_teacher_ids:ids.map(String),p_expected_revision:revision})
+    body:JSON.stringify({p_date:date,p_teacher_ids:ids.map(String),p_expected_revision:revision,p_reason:reason})
   });
   if(!response.ok){
     const detail=await response.json().catch(()=>({}));
@@ -649,7 +648,7 @@ async function loadAll(){
   }
   state.teachers=V6_SEED.map(s=>oldestByName.get(s.name)).filter(Boolean);
   const validIds=new Set(state.teachers.map(t=>String(t.id)));
-  state.schedules=schedules.filter(s=>validIds.has(String(s.teacherId)));
+  state.schedules=schedules.filter(s=>validIds.has(String(s.teacherId))).sort((a,b)=>Number(b.id)-Number(a.id));
   state.absences=absences;
   const approvedTopicMap=new Map(approvedTopics.map(row=>[String(row.assignment_id),row]));
   state.assignments=assignments.map(assignment=>{
@@ -799,28 +798,12 @@ async function ensureSeedV6Once(){
   return true;
 }
 function scheduleOf(teacherId){
-  const schedule=state.schedules.find(x=>String(x.teacherId)===String(teacherId))||null;
-  if(!schedule||normName(schedule.teacherName||teacherOf(teacherId)?.name)!==normName("ليلى مجرشي"))return schedule;
-  const timetable={...(schedule.timetable||{})},wed=[...(timetable.wed||[])];
-  while(wed.length<7)wed.push("");
-  wed[6]="أول1";timetable.wed=wed;
-  return {...schedule,timetable};
+  return state.schedules.find(x=>String(x.teacherId)===String(teacherId))||null;
 }
-function reserveFixedAssigneeName(date,period,className,absentTeacherName){
-  if(normName(absentTeacherName)!==normName("ليلى مجرشي"))return "";
-  const day=dayKey(date),slot=`${day}|${Number(period)}|${normName(className)}`;
-  const rules=new Map([
-    ["wed|7|اول1","عواطف الحربي"],
-    ["mon|5|اول4","تخفيض نصاب"],
-    ["thu|4|اول2","تخفيض نصاب"],
-    ["thu|6|اول3","تخفيض نصاب"]
-  ]);
-  return rules.get(slot)||"";
-}
-function reserveFixedAssigneeId(date,period,className,absentTeacherName){
-  const name=reserveFixedAssigneeName(date,period,className,absentTeacherName);
-  return name?manualAssigneeDirectory().find(t=>normName(t.name)===normName(name))?.id||"":"";
-}
+// Fixed teaching transfers belong to the original timetable and are extracted
+// under their actual teacher; they are not substitute nominations for Leila.
+function reserveFixedAssigneeName(){return "";}
+function reserveFixedAssigneeId(){return "";}
 function reserveEffectiveWeeklyWorkload(t){
   if(!t)return 0;
   const stored=Number(t.workload||0),schedule=scheduleOf(t.id);
@@ -1879,7 +1862,7 @@ function adminAssignmentsHTML(items){
     return `<tr data-assignment="${esc(a.id)}">
     <td>${esc(a.period)}</td><td>${esc(a.className||"—")}${a.activity?' <small>(نشاط)</small>':""}</td><td>${esc(a.reason||"غياب")}</td><td>${esc(a.absentTeacherName)}</td>
     <td>${a.candidates?.[0]?`<div class="reserve-candidate"><strong>${esc(a.candidates[0].name)}</strong></div>`:"لا توجد مرشحة مؤهلة؛ تحتاج معالجة إدارية"}</td>
-    <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${nameSetContains(new Set(["دخنة الشهري"]),c.name)?"disabled":""} ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}${nameSetContains(AUTO_MANUAL_ONLY,c.name)?" — يدوي عند الرغبة":c.supportStaff?" — مرشدة / محضّرة مختبر":""}${nameSetContains(new Set(["دخنة الشهري"]),c.name)?" — مستبعدة نهائيًا":""}</option>`).join("")}</select><button type="button" class="reserve-mini reserve-auto-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button><small class="reserve-source-note">قائمة التعديل تشمل الكادر كاملًا؛ التوليد الآلي يفعّل التوسيع عند الحاجة.</small></td>
+    <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>{const permanentlyExcluded=nameSetContains(new Set(["دخنة الشهري"]),c.name),manualOnly=nameSetContains(AUTO_MANUAL_ONLY,c.name);return `<option value="${esc(c.teacherId)}" ${permanentlyExcluded?"disabled":""} ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}${manualOnly?" — يدوي عند الرغبة":c.supportStaff?" — مرشدة / محضّرة مختبر":""}${permanentlyExcluded?" — مستبعدة نهائيًا":""}</option>`}).join("")}</select><button type="button" class="reserve-mini reserve-auto-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button><small class="reserve-source-note">قائمة التعديل تشمل جميع الأسماء؛ اختيار نورة الهودان يُسجّل إسنادًا يدويًا عند رغبتها.</small></td>
     <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
     <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee" type="button">تحديث وحفظ</button><small class="reserve-row-save-status" role="status" aria-live="polite"></small>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط نموذج المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button><button class="reserve-mini reserve-send-ack" type="button">إرسال إشعار</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
   </tr>`}).join("")}</tbody></table></div>`;
@@ -2011,13 +1994,19 @@ async function reserveCommitFlexibleAssignee(recordId,teacherId){
   const a=state.assignments.find(x=>String(x.id)===String(recordId)&&x.status!=="ملغي");
   const t=teacherOf(teacherId);
   if(!a||!t||!a.date)throw new Error("تعذر العثور على التكليف أو المعلمة المسددة.");
+  // A dropdown choice is an administrative selection, even inside an auto table.
+  // Keep the table mode and revision so edits cannot move to another table.
   reserveValidateManualDailyCapacity(a.date,[{teacherId:String(t.id),period:Number(a.period)}],[String(a.id)]);
   const changed=String(a.assignedTeacherId)!==String(t.id);
   const warnings=manualConflictMessages(a.date,[{
     teacherId:String(t.id),period:Number(a.period),className:a.className,existingId:String(a.id)
   }],[String(a.absentTeacherId),...absencesOn(a.date).map(x=>String(x.teacherId))]);
   const data={...plainData(a),assignedTeacherId:String(t.id),assignedTeacherName:t.name,
-    fullCadreEnabled:a.fullCadreEnabled===true,
+    assigneeSelection:"manual",
+    // The database guard checks this flag even for a manual administrator
+    // reassignment from an automatically generated row.
+    fullCadreEnabled:a.manual===true?a.fullCadreEnabled===true:
+      a.fullCadreEnabled===true||reserveAutoRequiresFullCadre(t),
     manualOverride:changed||a.manualOverride===true||warnings.length>0,
     manualOverrideWarnings:warnings};
   // Ensure the former teacher's link cannot continue to act for reassigned work.
@@ -2027,7 +2016,7 @@ async function reserveCommitFlexibleAssignee(recordId,teacherId){
   await loadAll();
   const persisted=state.assignments.find(x=>String(x.id)===String(a.id));
   if(!persisted||String(persisted.assignedTeacherId)!==String(t.id)||
-     persisted.manual!==a.manual||persisted.published!==a.published||
+     persisted.manual!==a.manual||persisted.published!==a.published||persisted.assigneeSelection!=="manual"||
      (changed&&persisted.ackToken===a.ackToken))
     throw new Error("لم يثبت حفظ تعديل المعلمة في قاعدة البيانات.");
   state.lastReserveWarnings={date:a.date,source:a.manual===true?"manual":"auto",warnings};
@@ -2042,7 +2031,9 @@ function bindReserveFlexibleAssignmentEditing(container){
     const select=event.target.closest("select.reserve-flex-select");
     const row=select?.closest("[data-reserve-flex-id]");
     const save=row?.querySelector("button.reserve-flex-save");
-    if(select?.value && save && !save.hidden && !save.disabled)save.click();
+    if(!select?.value||!save||save.hidden)return;
+    if(save.disabled){save.dataset.pendingAssigneeChange="true";return;}
+    save.click();
   });
   node.addEventListener("click",async event=>{
     const button=event.target.closest("button.reserve-flex-edit,button.reserve-flex-save");
@@ -2068,7 +2059,11 @@ function bindReserveFlexibleAssignmentEditing(container){
         if(status)status.textContent="تم الحفظ، لكن تعذر تحديث بعض البطاقات.";}
     }catch(error){console.error("تعذر تعديل الإسناد اليدوي",error);
       if(message)message.textContent=`تعذر حفظ التعديل: ${error.message||"خطأ غير معروف"}`;
-      button.disabled=false;}
+      const queued=button.dataset.pendingAssigneeChange==="true";
+      const persisted=state.assignments.find(x=>String(x.id)===String(row.dataset.reserveFlexId));
+      if(!queued&&persisted)select.value=String(persisted.assignedTeacherId||"");
+      button.disabled=false;
+      if(queued){delete button.dataset.pendingAssigneeChange;button.click();}}
   });
 }
 function manualTeacherLinksHTML(date){
@@ -3448,7 +3443,9 @@ function bindDayAdmin(){
     const select=event.target.closest("select.reserve-assignee");
     const row=select?.closest("[data-assignment]");
     const save=row?.querySelector("button.reserve-save-assignee");
-    if(select?.value && save && !save.disabled)save.click();
+    if(!select?.value||!save)return;
+    if(save.disabled){save.dataset.pendingAssigneeChange="true";return;}
+    save.click();
   });
   byId("reserveAssignmentsAdmin")?.addEventListener("click",event=>{
     const button=event.target.closest(".reserve-auto-unlock");
@@ -3463,48 +3460,43 @@ function bindDayAdmin(){
   });
   // Both actions consume the selected absent teachers directly. Register once,
   // generate once, and leave manual assignments unmodified.
-  async function registerSelectedAbsences(date,ids,reason,revision){
-    const existingIds=new Set(absencesOn(date).map(a=>String(a.teacherId)));
-    let created=0;
-    for(const teacherId of ids){
-      const t=teacherOf(teacherId);
-      if(!t||existingIds.has(String(teacherId)))continue;
-      const cells=scheduleOf(teacherId)?.timetable?.[dayKey(date)]||[];
-      const periods=cells.map((v,i)=>{
-        const x=parseScheduleValue(v);
-        return {period:i+1,className:x.className,activity:x.activity};
-      }).filter(x=>x.className);
-      const saved=await insertKind(K.absence,{
-        date,dayKey:dayKey(date),teacherId:String(teacherId),teacherName:t.name,
-        reason,periods,source:"auto",reserveRevision:revision,createdAt:new Date().toISOString()
-      },token());
-      state.absences.push(saved);
-      existingIds.add(String(teacherId));created++;
-    }
-    return created;
-  }
   const chosenAbsentIds=()=>[...(byId("reserveAbsentTeacher")?.selectedOptions||[])]
     .map(o=>String(o.value)).filter(Boolean);
   byId("reserveAddAbsence")?.addEventListener("click",async()=>{
-    const msg=byId("reserveDayMsg"),date=state.currentDate,ids=chosenAbsentIds();
+    const msg=byId("reserveDayMsg"),date=state.currentDate,ids=chosenAbsentIds(),button=byId("reserveAddAbsence");
+    if(button?.disabled)return;
     if(!ids.length){msg.textContent="اختاري أسماء الغائبات أولًا.";return}
     if(!dayKey(date)){msg.textContent="اختاري تاريخًا من الأحد إلى الخميس.";return}
     const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
     state.autoAbsentIds=ids;
     state.autoAbsentSelectionResetDate="";
-    msg.textContent="جارٍ حفظ أسماء الغائبات...";
+    button.disabled=true;
+    msg.textContent="جارٍ حفظ أسماء الغائبات واستخراج حصصهن...";
     try{
       await ensureAdmin();
       const revision=await reserveGetTableRevision(date,"auto");
-      const selection=await reserveSyncAutoSelection(date,ids,revision);
-      await loadAll(); // Remove stale absence IDs before deduplicating new ones.
-      const n=await registerSelectedAbsences(date,ids,reason,selection.revision);
+      const selection=await reserveSyncAutoSelection(date,ids,revision,reason);
       await loadAll();
+      const missing=ids.filter(id=>!absencesOn(date).some(a=>String(a.teacherId)===id));
+      if(missing.length)throw new Error("لم تؤكد قاعدة البيانات تسجيل جميع الغائبات.");
+      if(reserveExtractedPeriodCount(date,ids)!==Number(selection.periodCount))
+        throw new Error("لم تتطابق الحصص المستخرجة مع البيانات المحفوظة؛ أعيدي تحميل اليوم.");
+      const n=Number(selection.insertedCount||0);
       state.autoExtractedSummary={date,teacherIds:[...new Set(ids.map(String))]};
       renderWorkspaceCard("auto");
-      await reserveSyncAdminMutation(date);
       byId("reserveDayMsg").textContent=`تم تسجيل الغائبات (${n} جديدات). عدد الحصص المستخرجة: ${reserveExtractedPeriodCount(date,ids)}. يتولى النظام توسيع الكادر تلقائيًا عند الحاجة؛ اضغطي «توليد آلي».`;
-    }catch(err){console.error(err);msg.textContent="تعذر استكمال تسجيل الغياب. الأسماء المحفوظة لن تتكرر عند إعادة المحاولة."}
+      try{await reserveSyncAdminMutation(date)}catch(error){
+        console.error("تم حفظ الغياب؛ تعذر تحديث بعض البطاقات",error);
+        const current=byId("reserveDayMsg");
+        if(current)current.textContent+=" تم الحفظ، وتعذر تحديث بعض البطاقات الإضافية.";
+      }
+    }catch(err){
+      console.error(err);
+      const current=byId("reserveDayMsg")||msg;
+      if(current)current.textContent="تعذر تسجيل الغياب واستخراج الحصص: "+(err.message||"تعذر الاتصال بقاعدة البيانات.");
+    }finally{
+      const current=byId("reserveAddAbsence");if(current)current.disabled=false;
+    }
   });
   document.querySelectorAll(".reserve-delete-absence").forEach(b=>b.onclick=async()=>{
     if(!confirm("حذف تسجيل الغياب؟"))return;
@@ -3531,10 +3523,9 @@ function bindDayAdmin(){
       await ensureAdmin();
       const initialRevision=await reserveGetTableRevision(date,"auto");
       const reason=clean(byId("reserveAbsenceReason")?.value||"غياب");
-      const selection=await reserveSyncAutoSelection(date,ids,initialRevision);
+      const selection=await reserveSyncAutoSelection(date,ids,initialRevision,reason);
       const revision=selection.revision;
       await loadAll(); // All old unapproved drafts disappear before new nominations.
-      await registerSelectedAbsences(date,ids,reason,revision);
       const abs=absencesOn(date).filter(a=>!ids.length||ids.includes(String(a.teacherId)));
       const usedPrimary=new Set(assignmentsOn(date).map(a=>String(a.assignedTeacherId||"")).filter(Boolean));
       const known=new Map(assignmentsOn(date).map(a=>[
@@ -3654,13 +3645,23 @@ function bindDayAdmin(){
         console.error("تعذر تعديل التكليف الآلي",error);
         const persisted=state.assignments.find(a=>String(a.id)===String(recordId));
         const select=tr?.querySelector(".reserve-assignee");
-        if(select&&persisted)select.value=String(persisted.assignedTeacherId||"");
+        const queued=b.dataset.pendingAssigneeChange==="true";
+        if(select&&persisted&&!queued)select.value=String(persisted.assignedTeacherId||"");
         const message=`تعذر حفظ التعديل: ${error.message||"خطأ غير معروف"}`;
         if(rowStatus)rowStatus.textContent=message;
         if(msg)msg.textContent=message;
         throw error;
       }finally{
-        if(b.isConnected)b.disabled=false;
+        if(b.isConnected){
+          const queued=b.dataset.pendingAssigneeChange==="true";
+          b.disabled=false;
+          if(queued){
+            delete b.dataset.pendingAssigneeChange;
+            const select=tr?.querySelector(".reserve-assignee");
+            const persisted=state.assignments.find(a=>String(a.id)===String(recordId));
+            if(select?.value&&String(select.value)!==String(persisted?.assignedTeacherId||""))b.click();
+          }
+        }
       }
     })();
     reserveAutoPendingAssigneeSaves.add(pending);
