@@ -30,5 +30,20 @@ window.MANJAZ_CERTIFICATE_WORKSHOPS = [
     durationText: "ساعتان",
     attendanceText: "بواقع ساعتين تدريبيتين",
     availability: "available"
+  },
+  {
+    "id": "workshop-1792469587252",
+    "title": "هندسة الذكاء الاصطناعي -١",
+    "date": "٥/٢/١٤٤٨هـ",
+    "availability": "available"
+  },
+  {
+    "id": "workshop-1792341650738",
+    "title": "ملخص القسم الكمي في اختبار الرخصة المهنية التربوي العام",
+    "implementers": [
+      "أ. لمياء البلادي"
+    ],
+    "date": "١٤٤٨/٥/٨",
+    "availability": "available"
   }
 ];
