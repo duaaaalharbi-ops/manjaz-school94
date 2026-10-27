@@ -31,21 +31,22 @@ const V6_SOURCE="v6-1448-04-27";
 const COUNT_START="2026-10-18";
 const EMERGENCY_DAILY_DEMAND=20;
 const CONDITIONAL_EXCLUSION_MIN_DEMAND=13; // More than 12 absent periods on the same school day
-const PERMANENT_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البلادي","نجوى الغامدي","نورة العنزي","دخنة الشهري"]);
+const PERMANENT_EXCLUDED=new Set(["دخنة الشهري"]);
 const ADVANCED_RANK=new Set(["دعاء الحربي","سندس الغامدي","عايدة الصاعدي","ريم القحطاني","عوالي السبيعي","بدرية الحربي","حنان المجنوني"]); // Legacy ranking and manual reports: unchanged
-const ABSOLUTE_EXCLUDED=new Set(["نورة الهودان"]);
+const ABSOLUTE_EXCLUDED=new Set([]);
+const AUTO_MANUAL_ONLY=new Set(["نورة الهودان"]);
 // Approved rank and exclusion rules apply exclusively to automatic nomination.
-const AUTO_ADVANCED_RANK=new Set(["دعاء الحربي","عوالي السبيعي","حصة المنتشري","عايدة الصاعدي","عواطف الحربي","ريم القحطاني","بدرية الحربي","حنان المجنوني"]);
 const AUTO_GLOBAL_EXCLUDED=new Set(["دخنة الشهري","نورة الهودان"]);
 const AUTO_OFF_EXCLUDED=new Set(["أفراح الجدعاني","إيمان الجدعاني","حصة المنتشري","عبير المولد","لمياء البلادي","لمياء البالدي","نجوى الغامدي","نورة العنزي","عايدة الصاعدي","عواطف الحربي","بدرية الحربي"]);
 // Additional personnel authorized for manual assignment, not in the official sixth-edition teacher timetable.
 const MANUAL_SUPPORT_STAFF=[
   {id:"reserve_support_1",name:"دخيلة المالكي",supportStaff:true,role:"التوجيه الطلابي / المختبر"},
   {id:"reserve_support_2",name:"مها العتيبي",supportStaff:true,role:"التوجيه الطلابي / المختبر"},
-  {id:"reserve_support_3",name:"نجلاء هوساوي",supportStaff:true,role:"التوجيه الطلابي / المختبر"}
+  {id:"reserve_support_3",name:"نجلاء هوساوي",supportStaff:true,role:"التوجيه الطلابي / المختبر"},
+  {id:"reserve_fixed_reduced_load",name:"تخفيض نصاب",supportStaff:true,role:"معلمة تخفيض نصاب",fixedReserveOnly:true}
 ];
 const V6_SEED=[{"name":"أفراح الجدعاني","workload":9,"timetable":{"sun":["","","","","","أول6","ثالث3"],"mon":["أول6","","أول4","","","ثالث3",""],"tue":["","أول5","","","",""],"wed":["أول5","","","أول4","",""],"thu":["","ثالث3","","","",""]}},{"name":"إيمان الجدعاني","workload":20,"timetable":{"sun":["ثاني6","","","","ثاني3","ثاني1","ثاني2"],"mon":["ثاني2","","ثاني6","ثاني1","","","ثاني4"],"tue":["ثاني6","","","ثاني4","ثاني3","ثاني1"],"wed":["ثاني2","ثاني4","","","ثاني3","ثاني6"],"thu":["ثاني3","ثاني1","","ثاني2","ثاني4",""]}},{"name":"بدريه الحربي","workload":11,"timetable":{"sun":["","ثاني4","","","ثاني4|نشاط","","ثاني5"],"mon":["ثاني6","","","","ثاني4|نشاط","",""],"tue":["","","ثاني5","","","ثاني4"],"wed":["","","","ثاني6","ثاني4",""],"thu":["ثاني5","ثاني6","","","",""]}},{"name":"بدريه السلمي","workload":16,"timetable":{"sun":["","ثالث1|نشاط","ثالث2","ثالث3","","","ثالث1"],"mon":["ثالث1","","ثالث3","","","","ثالث2"],"tue":["","ثالث2","ثالث1","","","ثالث3"],"wed":["ثالث1","","","","ثالث3","ثالث2"],"thu":["","ثالث1","","ثالث2","ثالث3",""]}},{"name":"تهاني العتيبي","workload":22,"timetable":{"sun":["أول1","أول2","","ثالث2","ثالث3","ثالث1",""],"mon":["ثالث2","ثالث3","","أول2","ثالث1","أول1",""],"tue":["ثالث1","أول1","","أول2","ثالث3",""],"wed":["ثالث2","ثالث1","","أول1","أول2",""],"thu":["ثالث3","","","أول1","أول2","ثالث2"]}},{"name":"حصة المنتشري","workload":20,"timetable":{"sun":["أول6","","ثاني1","ثاني3","ثاني2","",""],"mon":["","ثاني3","ثاني1","أول6","","ثاني2",""],"tue":["أول6","","ثاني3","ثاني2","ثاني1",""],"wed":["ثاني3","أول6","","ثاني2","ثاني1",""],"thu":["ثاني2","ثاني3","ثاني1","أول6","",""]}},{"name":"حنان المجنوني","workload":13,"timetable":{"sun":["ثالث5","ثالث2","","","","ثالث3","ثالث4"],"mon":["","ثالث1","","","ثالث6","","ثالث3"],"tue":["","ثالث5","","","ثالث2|نشاط","ثالث6"],"wed":["","","ثالث2","","",""],"thu":["ثالث4","","","","ثالث1",""]}},{"name":"خزماء الجبيري","workload":18,"timetable":{"sun":["","أول4","أول6","أول3","أول1","",""],"mon":["أول5","أول2","","","","أول6","أول3"],"tue":["","","أول2","","أول4","أول1"],"wed":["","أول2","أول4","","أول5",""],"thu":["أول3","","أول6","أول5","أول1",""]}},{"name":"خلود الكثيري","workload":18,"timetable":{"sun":["أول5","","أول2","","أول6","أول1",""],"mon":["أول1","أول3","","أول5","","","أول4"],"tue":["","أول3","","أول6","",""],"wed":["","أول4","أول1","","","أول2"],"thu":["أول2","أول3","أول4","","أول5","أول6"]}},{"name":"دعاء الحربي","workload":20,"timetable":{"sun":["","أول6","","ثاني6","ثاني5","","أول5"],"mon":["","أول5","أول6","","ثاني5","","ثاني6"],"tue":["","أول6","أول5","ثاني5","","ثاني6"],"wed":["ثاني5","ثاني6","","أول5","أول6",""],"thu":["ثاني6","ثاني5","","","أول6","أول5"]}},{"name":"رحمة العيسي","workload":4,"timetable":{"sun":["","","","","","","أول4"],"mon":["أول4","","","","","",""],"tue":["أول4","","","","",""],"wed":["","","","","",""],"thu":["","","","","","أول4"]}},{"name":"ريم الحربي","workload":18,"timetable":{"sun":["ثالث4","","ثالث5","","ثالث1","ثالث6",""],"mon":["","","ثالث2","ثالث3","","ثالث4",""],"tue":["ثالث3","ثالث6","","ثالث5","ثالث1",""],"wed":["ثالث3","","ثالث4","","ثالث2",""],"thu":["ثالث1","","ثالث5","ثالث6","ثالث2",""]}},{"name":"ريم القحطاني","workload":17,"timetable":{"sun":["ثاني2","ثاني3","","ثاني2|نشاط","ثاني1","",""],"mon":["ثاني1","","","ثاني2","ثاني3","",""],"tue":["ثاني2","ثاني1","","","ثاني2|نشاط","ثاني3"],"wed":["","ثاني3","","ثاني1","","ثاني2"],"thu":["","","ثاني2","ثاني1","ثاني3",""]}},{"name":"رية الحربي","workload":13,"timetable":{"sun":["ثالث3|نشاط","","","","ثالث2","","ثالث6"],"mon":["","","","ثالث4","","ثالث1","ثالث5"],"tue":["ثالث4","","","ثالث1","","ثالث2"],"wed":["","","","ثالث3","","ثالث5"],"thu":["","","ثالث6","","","ثالث3"]}},{"name":"سحر الشمراني","workload":17,"timetable":{"sun":["ثاني4","ثاني6","","ثاني5","","ثاني5|نشاط",""],"mon":["","ثاني5","","ثاني4","ثاني6","",""],"tue":["ثاني5","ثاني4","","ثاني6","",""],"wed":["","","ثاني6","","ثاني5","ثاني4"],"thu":["","ثاني4","ثاني6","","ثاني5","ثاني5|نشاط"]}},{"name":"سندس الغامدي","workload":20,"timetable":{"sun":["ثاني1","ثاني2","","ثاني4","","","ثاني3"],"mon":["","ثاني4","ثاني2","","","ثاني1","ثاني3"],"tue":["ثاني4","ثاني3","ثاني2","ثاني1","",""],"wed":["","ثاني2","ثاني3","ثاني4","","ثاني1"],"thu":["","ثاني2","ثاني3","ثاني4","","ثاني1"]}},{"name":"شوق المطيري","workload":8,"timetable":{"sun":["","","","","","أول2",""],"mon":["","","","","أول1","","أول2"],"tue":["","","","","أول1","أول2"],"wed":["أول1","","","","",""],"thu":["","أول2","أول1","","",""]}},{"name":"شيخة المالكي","workload":16,"timetable":{"sun":["ثالث2","ثالث3","","","ثالث6","",""],"mon":["","ثالث2","ثالث6","","ثالث3","ثالث6|نشاط",""],"tue":["","","ثالث3","ثالث2","ثالث6",""],"wed":["","ثالث6","","ثالث2","","ثالث3"],"thu":["","ثالث2","","ثالث3","","ثالث6"]}},{"name":"عايدة الصاعدي","workload":18,"timetable":{"sun":["","","ثالث1","ثالث6","ثالث4","","ثالث2"],"mon":["ثالث3","ثالث5","","ثالث2","ثالث4","","ثالث1"],"tue":["","","","ثالث3","","ثالث5"],"wed":["","ثالث3","ثالث1","ثالث4","ثالث6",""],"thu":["","","ثالث2","","ثالث6","ثالث5"]}},{"name":"عبير المولد","workload":9,"timetable":{"sun":["","","ثالث4","","ثالث5","",""],"mon":["","","","ثالث5","","","ثالث6"],"tue":["","","","ثالث6","","ثالث4"],"wed":["","","","","","ثالث6"],"thu":["","ثالث5","","","","ثالث4"]}},{"name":"علوه الحربي","workload":11,"timetable":{"sun":["","","ثاني2","","","ثاني3","ثاني1|نشاط"],"mon":["ثاني3","","","","ثاني1","","ثاني2"],"tue":["ثاني1|نشاط","","","","",""],"wed":["","ثاني1","","","","ثاني3"],"thu":["","","","","ثاني1","ثاني2"]}},{"name":"علية القاسمي","workload":4,"timetable":{"sun":["","","أول3","","","",""],"mon":["","","","","","أول3",""],"tue":["أول3","","","","",""],"wed":["","","","أول3","",""],"thu":["","","","","",""]}},{"name":"عواطف الحربي","workload":12,"timetable":{"sun":["ثاني3","","ثاني4","","ثاني6","",""],"mon":["","","ثاني3","ثاني6","","ثاني4",""],"tue":["","","ثاني6","ثاني3","",""],"wed":["","","ثاني4","","",""],"thu":["","","ثاني4","ثاني6","","ثاني3"]}},{"name":"عوالي السبيعي","workload":20,"timetable":{"sun":["","أول1","أول5","أول4","","أول3",""],"mon":["أول3","أول4","","أول1","أول2","",""],"tue":["أول2","أول4","","أول3","أول5",""],"wed":["أول2","","أول5","","أول1","أول3"],"thu":["أول5","","أول2","","أول4","أول1"]}},{"name":"غاليه المزمومي","workload":16,"timetable":{"sun":["","ثالث6","","","","ثالث4","ثالث5"],"mon":["","","ثالث5","ثالث6","","","ثالث4"],"tue":["ثالث5","ثالث4","ثالث6","","",""],"wed":["ثالث4","","","ثالث6","ثالث5","ثالث4|نشاط"],"thu":["ثالث6","ثالث4","","ثالث5","",""]}},{"name":"فاطمة الزهراني","workload":13,"timetable":{"sun":["","","ثاني5","","","ثاني6","ثاني6|نشاط"],"mon":["","أول6","","","","ثاني6","ثاني5"],"tue":["","","أول6","","ثاني6","ثاني5"],"wed":["ثاني6","","أول6","","",""],"thu":["","","ثاني5","","","ثاني6|نشاط"]}},{"name":"فاطمة العماري","workload":16,"timetable":{"sun":["ثالث1","ثالث4","","ثالث5","","",""],"mon":["ثالث5","","ثالث4","ثالث1","","",""],"tue":["","ثالث1","ثالث5","ثالث4","",""],"wed":["ثالث5","ثالث4","ثالث5|نشاط","","ثالث1",""],"thu":["ثالث5","","ثالث1","ثالث4","",""]}},{"name":"فاطمة الغامدي","workload":18,"timetable":{"sun":["","ثاني1","ثاني3","","","","ثاني4"],"mon":["","ثاني2","ثاني4","ثاني3|نشاط","","ثاني3","ثاني1"],"tue":["ثاني3|نشاط","ثاني2","","","ثاني4",""],"wed":["","","ثاني1","ثاني3","ثاني2",""],"thu":["ثاني1","","","ثاني3","ثاني2","ثاني4"]}},{"name":"فاطمة حسن","workload":9,"timetable":{"sun":["","أول3","","","","","أول2"],"mon":["","","أول2","","","","أول1"],"tue":["","","أول1","","","أول3"],"wed":["","أول1","","","أول3",""],"thu":["","","","","","أول2"]}},{"name":"لمياء البلادي","workload":22,"timetable":{"sun":["أول4","","ثالث6","ثالث4","أول3","ثالث5",""],"mon":["ثالث4","ثالث6","","أول4","أول3","ثالث5",""],"tue":["ثالث6","","أول3","أول4","ثالث4",""],"wed":["أول3","","ثالث6","ثالث5","أول4",""],"thu":["أول4","","ثالث4","أول3","ثالث5",""]}},{"name":"ليلى مجرشي","workload":20,"timetable":{"sun":["","","أول4","أول1","أول2","","أول3"],"mon":["","أول1","أول3","","أول4","أول2",""],"tue":["","أول2","أول4","أول1","أول3",""],"wed":["أول4","","أول3","أول2","","أول1"],"thu":["أول1","أول4","","أول2","","أول3"]}},{"name":"منال الجابري","workload":15,"timetable":{"sun":["أول2","أول5","","","أول4","","أول1"],"mon":["أول2","","أول1","أول3","","أول5",""],"tue":["أول1","","","","","أول4"],"wed":["","أول3","أول2","","","أول4"],"thu":["","أول5","","","أول3",""]}},{"name":"نجوى الغامدي","workload":12,"timetable":{"sun":["ثاني5","","","ثاني1","","ثاني2",""],"mon":["","ثاني1","","ثاني5","ثاني2","",""],"tue":["","ثاني5","ثاني1","","","ثاني2"],"wed":["ثاني1","","ثاني2","","","ثاني5"],"thu":["","","","","",""]}},{"name":"نورة الهودان","workload":24,"timetable":{"sun":["ثالث6","ثالث5","ثالث3","ثالث1","","ثالث2",""],"mon":["ثالث6","ثالث4","ثالث1","","ثالث5","ثالث2",""],"tue":["ثالث2","ثالث3","ثالث4","","ثالث5",""],"wed":["ثالث6","ثالث5","ثالث3","ثالث1","ثالث4",""],"thu":["ثالث2","ثالث6","ثالث3","ثالث1","ثالث4",""]}},{"name":"نورة العنزي","workload":12,"timetable":{"sun":["أول3","","أول1","أول2","","",""],"mon":["","","","","ثالث2","",""],"tue":["","","ثالث2","","أول2","ثالث1"],"wed":["","ثالث2","","","","ثالث1"],"thu":["","أول1","أول3","","","ثالث1"]}},{"name":"هاجر السلمي","workload":9,"timetable":{"sun":["","","","أول5","","أول4",""],"mon":["","","","","","أول4","أول5"],"tue":["أول5","","","","","أول6"],"wed":["أول6","","","","",""],"thu":["أول6","","","أول4","",""]}},{"name":"وحش القحطاني","workload":20,"timetable":{"sun":["","ثاني5","ثاني6","","أول5","ثاني4",""],"mon":["ثاني4","ثاني6","ثاني5","","أول5","",""],"tue":["","ثاني6","ثاني4","أول5","ثاني5",""],"wed":["ثاني4","أول5","","ثاني5","ثاني6",""],"thu":["ثاني4","","أول5","ثاني5","ثاني6",""]}},{"name":"وضحه المحمادي","workload":8,"timetable":{"sun":["","","","أول6","","أول5","أول6"],"mon":["","","أول5","","","",""],"tue":["","","","","أول6","أول5"],"wed":["","","","","","أول5"],"thu":["","أول6","","","",""]}},{"name":"دخنه الشهري","workload":8,"timetable":{"sun":["","","","","","",""],"mon":["ثاني5","","","","أول6","ثاني5","أول6"],"tue":["","","","","",""],"wed":["","ثاني5","ثاني5","أول6","","أول6"],"thu":["","","","","",""]}}];
-let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],monthlyCertificates:[],monthlyCertificateKey:"",settings:null,admin:null,currentDate:todayISO(),workspaceCard:"manual",autoAllNames:true,autoAbsentIds:[],publicOpenCards:[]};
+let state={teachers:[],schedules:[],absences:[],assignments:[],adjustments:[],monthlyCertificates:[],monthlyCertificateKey:"",admin:null,currentDate:todayISO(),workspaceCard:"manual",autoAbsentIds:[],manualAllNames:true,publicOpenCards:[]};
 let renderBusy=false;
 // Contacts are fetched exclusively after an authenticated administrative login;
 // phone numbers are never embedded in public JavaScript or public records.
@@ -676,10 +677,9 @@ function teacherFlags(t){
   return {
     permanentExcluded:t.permanentExcluded===true||nameSetContains(PERMANENT_EXCLUDED,n),
     advanced:t.advancedRank===true||nameSetContains(ADVANCED_RANK,n),
-    absolute:t.absoluteExcluded===true||nameSetContains(ABSOLUTE_EXCLUDED,n)
+    absolute:!nameSetContains(AUTO_MANUAL_ONLY,n)&&(t.absoluteExcluded===true||nameSetContains(ABSOLUTE_EXCLUDED,n))
   };
 }
-function ceilingFor(t){return teacherFlags(t).advanced?22:20}
 // The eight rank-advanced teachers explicitly approved for automatic reserve duty.
 function parseScheduleValue(v){
   const s=clean(v),activity=s.includes("|نشاط");
@@ -757,11 +757,7 @@ function breastfeedingBlocked(t,date,period){
   return ((dk==="sun"||dk==="mon")&&Number(period)===7)||(["tue","wed","thu"].includes(dk)&&Number(period)===6);
 }
 function makeupPending(t,date){
-  const missed=currentWeekAbsenceLoad(t.id,date);
-  if(!missed)return false;
-  const c=assignmentCounts(date).get(String(t.id))||{week:0};
-  const effective=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
-  return effective<Number(t.workload||0);
+  return reserveHasPreviousSchoolAbsence(t.id,date);
 }
 let editionSixImportPromise=null;
 function ensureSeedV6(){
@@ -803,7 +799,35 @@ async function ensureSeedV6Once(){
   return true;
 }
 function scheduleOf(teacherId){
-  return state.schedules.find(x=>String(x.teacherId)===String(teacherId))||null;
+  const schedule=state.schedules.find(x=>String(x.teacherId)===String(teacherId))||null;
+  if(!schedule||normName(schedule.teacherName||teacherOf(teacherId)?.name)!==normName("ليلى مجرشي"))return schedule;
+  const timetable={...(schedule.timetable||{})},wed=[...(timetable.wed||[])];
+  while(wed.length<7)wed.push("");
+  wed[6]="أول1";timetable.wed=wed;
+  return {...schedule,timetable};
+}
+function reserveFixedAssigneeName(date,period,className,absentTeacherName){
+  if(normName(absentTeacherName)!==normName("ليلى مجرشي"))return "";
+  const day=dayKey(date),slot=`${day}|${Number(period)}|${normName(className)}`;
+  const rules=new Map([
+    ["wed|7|اول1","عواطف الحربي"],
+    ["mon|5|اول4","تخفيض نصاب"],
+    ["thu|4|اول2","تخفيض نصاب"],
+    ["thu|6|اول3","تخفيض نصاب"]
+  ]);
+  return rules.get(slot)||"";
+}
+function reserveFixedAssigneeId(date,period,className,absentTeacherName){
+  const name=reserveFixedAssigneeName(date,period,className,absentTeacherName);
+  return name?manualAssigneeDirectory().find(t=>normName(t.name)===normName(name))?.id||"":"";
+}
+function reserveEffectiveWeeklyWorkload(t){
+  if(!t)return 0;
+  const stored=Number(t.workload||0),schedule=scheduleOf(t.id);
+  if(!schedule)return stored;
+  const actual=DAYS.reduce((sum,[day])=>sum+
+    (schedule.timetable?.[day]||[]).filter(value=>parseScheduleValue(value).className).length,0);
+  return actual;
 }
 function teacherOf(id){
   return state.teachers.find(x=>String(x.id)===String(id))||
@@ -901,8 +925,7 @@ function assignmentCounts(referenceDate){
 // Weekly reserve tallies and ranking list only teachers eligible for substitute duty.
 // Absent-teacher selectors intentionally remain unfiltered: exempt teachers can be absent.
 function reserveSummaryEligible(t){
-  const flags=teacherFlags(t);
-  return t.active!==false&&t.excluded!==true&&!flags.permanentExcluded&&!flags.absolute;
+  return t.active!==false&&!reserveIsNeverAssignable(t);
 }
 function publicWeeklyRows(referenceDate){
   // Statistics card alone includes every teacher from the approved timetable,
@@ -933,8 +956,9 @@ function reserveAutoIsSupport(t){
     MANUAL_SUPPORT_STAFF.some(s=>String(s.id)===String(t.id))||
     /مرشد|إرشاد|ارشاد|توجيه طلاب|محضر.*مختبر|مختبر/.test([t.role,t.jobTitle,t.position].map(clean).join(" ")));
 }
-function reserveAutoCeiling(t){
-  return nameSetContains(AUTO_ADVANCED_RANK,editionSixName(t?.name)||clean(t?.name))?22:24;
+function reserveAutoRequiresFullCadre(t){
+  return reserveAutoIsSupport(t)||t?.excluded===true||teacherFlags(t).permanentExcluded||
+    nameSetContains(AUTO_OFF_EXCLUDED,t?.name||"");
 }
 function reserveAutoWeeklyCount(teacherId,date,exceptId=""){
   const wr=weekRange(date);
@@ -942,27 +966,59 @@ function reserveAutoWeeklyCount(teacherId,date,exceptId=""){
     String(a.assignedTeacherId)===String(teacherId)&&String(a.id)!==String(exceptId)&&
     a.date>=wr.start&&a.date<=wr.end).length;
 }
-function reserveAutoDailyCap(date){
-  const day=dayKey(date);
-  return day==="sun"||day==="mon"?5:["tue","wed","thu"].includes(day)?4:0;
+function reserveRotationCount(teacherId,date){
+  const start=state.settings?.countStart||COUNT_START;
+  return state.assignments.filter(a=>a.status!=="ملغي"&&a.assignedTeacherId&&
+    String(a.assignedTeacherId)===String(teacherId)&&a.date>=start&&a.date<date).length;
 }
-function reserveAutoDailyAllowance(teacherId,date){
+function reserveAutoDailyAllowance(teacherId,date,makeup=false){
   const t=teacherOf(teacherId);
-  return Math.max(0,reserveAutoDailyCap(date)-(reserveAutoIsSupport(t)?0:dailyOriginalCount(teacherId,date)));
+  if(!t)return 0;
+  const original=reserveAutoIsSupport(t)?0:dailyOriginalCount(teacherId,date);
+  if(original===0)return 3;
+  const dailyTotalCap=makeup?5:4;
+  return Math.max(0,dailyTotalCap-original);
+}
+function reserveIsNeverAssignable(t){return !!t&&normName(t.name)===normName("دخنة الشهري")}
+function reserveValidateManualDailyCapacity(date,selections,replaceIds=[]){
+  const replacing=new Set(replaceIds.map(String)),counts=new Map(),weekly=new Map(),wr=weekRange(date);
+  for(const a of state.assignments){
+    if(a.status==="ملغي"||replacing.has(String(a.id))||!a.assignedTeacherId)continue;
+    const id=String(a.assignedTeacherId);
+    if(a.date===date)counts.set(id,(counts.get(id)||0)+1);
+    if(a.date>=wr.start&&a.date<=wr.end)weekly.set(id,(weekly.get(id)||0)+1);
+  }
+  for(const x of selections){
+    const t=teacherOf(x.teacherId);
+    if(!t)throw new Error("اختاري اسمًا موجودًا في قائمة الكادر.");
+    if(reserveIsNeverAssignable(t))throw new Error("دخنة الشهري مستبعدة نهائيًا من شغل الاحتياط.");
+    const id=String(t.id),next=(counts.get(id)||0)+1;
+    const allowance=reserveAutoDailyAllowance(id,date,reserveHasPreviousSchoolAbsence(id,date));
+    if(next>allowance)throw new Error(`${t.name}: سيتجاوز الإسناد السقف اليومي المسموح (${allowance} حصة احتياط إضافية وفق حصصها الأصلية).`);
+    const nextWeekly=(weekly.get(id)||0)+1;
+    if(nextWeekly>reserveAutoWeeklyAllowance(id))throw new Error(`${t.name}: تجاوزت الحد الأسبوعي الفردي للاحتياط.`);
+    counts.set(id,next);
+    weekly.set(id,nextWeekly);
+  }
+  return true;
 }
 function reserveAutoWeeklyAllowance(teacherId){
   const t=teacherOf(teacherId);
   if(!t)return 0;
-  if(reserveAutoIsSupport(t))return 3;
-  const remaining=Math.max(0,reserveAutoCeiling(t)-Number(t.workload));
-  return normName(t.name)===normName("رية الحربي")?Math.min(2,remaining):remaining;
+  // No general weekly reserve ceiling. Preserve the explicit Rية الحربي exception.
+  return normName(t.name)===normName("رية الحربي")?2:Infinity;
 }
 function reserveAutoPreviousSchoolDate(date){return addDays(date,dayKey(date)==="sun"?-3:-1);}
-function reserveAutoIneligibility(teacherId,date,className="",exceptId="",fullCadre=state.autoAllNames!==false,skipWeekly=false){
+function reserveHasPreviousSchoolAbsence(teacherId,date){
+  const previous=reserveAutoPreviousSchoolDate(date);
+  return state.absences.some(a=>String(a.teacherId)===String(teacherId)&&a.date===previous&&
+    (a.periods||[]).some(p=>Number(p.period)>0));
+}
+function reserveAutoIneligibility(teacherId,date,className="",exceptId="",fullCadre=false,skipWeekly=false){
   const t=teacherOf(teacherId);
   if(!t||t.active===false)return "المعلمة غير نشطة ضمن سجل الكادر.";
   const name=normName(t.name),support=reserveAutoIsSupport(t);
-  if(nameSetContains(AUTO_GLOBAL_EXCLUDED,name))return "المعلمة مستبعدة دائمًا من الترشيح الآلي.";
+  if(nameSetContains(AUTO_GLOBAL_EXCLUDED,name)||nameSetContains(AUTO_MANUAL_ONLY,name))return "المعلمة غير متاحة للترشيح الآلي.";
   if(!fullCadre&&(support||t.excluded===true||teacherFlags(t).permanentExcluded||
     nameSetContains(AUTO_OFF_EXCLUDED,name)))return "المعلمة مستثناة عند عدم تفعيل الكادر الكامل.";
   if(name===normName("رية الحربي")&&!normName(className).startsWith("اول"))
@@ -971,11 +1027,11 @@ function reserveAutoIneligibility(teacherId,date,className="",exceptId="",fullCa
     return "النصاب الأصلي الأسبوعي غير موثق.";
   if(!skipWeekly&&reserveAutoWeeklyCount(teacherId,date,exceptId)>=reserveAutoWeeklyAllowance(teacherId))
     return name===normName("رية الحربي")?"رية الحربي: لا تتجاوز حصتا احتياط أسبوعيًا.":
-      support?"الكادر المساند: ثلاث حصص احتياط أسبوعيًا.":
-      "اكتمل سقف الرتبة الأسبوعي للأصلية والاحتياط.";
+      support?"الكادر المساند: ثلاث حصص احتياط يوميًا عند عدم وجود حصص أصلية.":
+      "اكتمل الحد الأسبوعي الخاص المقرر للمعلمة.";
   return "";
 }
-function assertAutoAssignmentIntegrity(teacherId,date,period,exceptAssignmentId="",className="",fullCadre=state.autoAllNames!==false,skipWeekly=false){
+function assertAutoAssignmentIntegrity(teacherId,date,period,exceptAssignmentId="",className="",fullCadre=false,skipWeekly=false){
   const t=teacherOf(teacherId);
   const reason=reserveAutoIneligibility(teacherId,date,className,exceptAssignmentId,fullCadre,skipWeekly);
   if(reason)throw new Error(reason);
@@ -987,7 +1043,7 @@ function assertAutoAssignmentIntegrity(teacherId,date,period,exceptAssignmentId=
   }
   if(occupiedByReserve(teacherId,date,period,exceptAssignmentId))
     throw new Error("المعلمة مكلفة باحتياط آخر في الفترة نفسها.");
-  if(reserveDailyAssignedCount(teacherId,date,exceptAssignmentId)>=reserveAutoDailyAllowance(teacherId,date))
+  if(reserveDailyAssignedCount(teacherId,date,exceptAssignmentId)>=reserveAutoDailyAllowance(teacherId,date,reserveHasPreviousSchoolAbsence(teacherId,date)))
     throw new Error("تجاوز الحد اليومي للحصص الأصلية والاحتياط.");
 }
 function assertAutoReserveFullCoverage(date){
@@ -1020,9 +1076,8 @@ function assertAutoReservePlannedCapacity(date,selected){
     const a=state.assignments.find(x=>String(x.id)===String(entry.id));
     const id=String(entry.teacherId||"");
     if(!id||!a)throw new Error("يجب إسناد معلمة لكل حصة قبل الاعتماد.");
-    const t=teacherOf(id),mode=a.fullCadreEnabled===true;
-    const reason=reserveAutoIneligibility(id,date,a.className,a.id,mode,true);
-    if(reason)throw new Error(reason);
+    const t=teacherOf(id);
+    if(!t||reserveIsNeverAssignable(t))throw new Error("الاسم المحدد غير متاح للإسناد.");
     if(isAbsent(id,date)||breastfeedingBlocked(t,date,a.period))
       throw new Error("تعذر التكليف بسبب الغياب أو قيد ساعة الرضاعة.");
     if(!reserveAutoIsSupport(t)&&(!scheduleOf(id)||regularCell(id,date,a.period)))
@@ -1033,8 +1088,9 @@ function assertAutoReservePlannedCapacity(date,selected){
     if(slots.has(key))throw new Error("لا يجوز احتياطان متزامنان للمعلمة نفسها.");
     slots.add(key);
     const dc=(daily.get(id)||0)+1,wc=(weekly.get(id)||0)+1;
-    if(dc>reserveAutoDailyAllowance(id,date))throw new Error("تجاوز السقف اليومي ٥/٤.");
-    if(wc>reserveAutoWeeklyAllowance(id))throw new Error("تجاوز السقف الأسبوعي ٢٢/٢٤ أو قيد احتياط فردي.");
+    const makeup=reserveHasPreviousSchoolAbsence(id,date);
+    if(dc>reserveAutoDailyAllowance(id,date,makeup))throw new Error("تجاوز السقف اليومي: أربع حصص، أو خمس لتسديد غياب سابق؛ وثلاث عند عدم وجود حصص أصلية.");
+    if(wc>reserveAutoWeeklyAllowance(id))throw new Error("تجاوز الحد الأسبوعي الفردي الخاص بالمعلمة.");
     daily.set(id,dc);weekly.set(id,wc);
   }
 }
@@ -1055,27 +1111,23 @@ function consecutivePenalty(teacherId,date,period){
   return n;
 }
 
-// Automatic nomination: compare teachers by approved workload and duty criteria ONLY.
-// Same-class teaching is NEVER an input to candidate priority.
+// Compare by actual weekly load, then reserve frequency; a previous-day
+// missed subject period is a make-up priority. Class-role preferences remain slot-only.
 function compareAutoReservePriority(a,b,fullCadre){
-  if(fullCadre)return a.phase-b.phase||
-    (a.phase===3?a.specialIndex-b.specialIndex:0)||
-    (a.phase===2?Number(b.prev)-Number(a.prev):0)||
-    (a.phase===4?Number(b.under20)-Number(a.under20):0)||
-    (a.phase===4?Number(a.duty)-Number(b.duty):0)||
-    a.workload-b.workload||Number(a.used)-Number(b.used);
-  return Number(b.under20)-Number(a.under20)||
-    Number(a.duty)-Number(b.duty)||
-    a.workload-b.workload||
-    Number(b.prev)-Number(a.prev)||
-    Number(b.absentWeek)-Number(a.absentWeek)||
-    Number(a.used)-Number(b.used);
+  return Number(b.makeup)-Number(a.makeup)||
+    a.weekTotal-b.weekTotal||
+    a.week-b.week||
+    Number(b.rolePriority||0)-Number(a.rolePriority||0)||
+    a.rotation-b.rotation||
+    Number(a.supportStaff)-Number(b.supportStaff)||
+    Number(a.used)-Number(b.used)||
+    a.directoryIndex-b.directoryIndex;
 }
-// Five-stage full-cadre and protected below-20 normal-mode nomination.
+// Normal eligible staff are considered first; if they cannot cover remaining
+// periods, full cadre activates automatically for the remaining nominations.
 function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts={}){
-  const fullCadre=state.autoAllNames!==false,targetClass=clean(opts.className||"");
+  const fullCadre=opts.fullCadre===true,targetClass=clean(opts.className||"");
   const usedPrimary=opts.usedPrimary||new Set(),wr=weekRange(date);
-  const specialNames=["أفراح الجدعاني","نجوى الغامدي","عايدة الصاعدي","بدرية الحربي","عواطف الحربي","عبير المولد"];
   const candidates=[],seen=new Set();
   let directoryIndex=0;
   for(const t of [...state.teachers,...MANUAL_SUPPORT_STAFF]){
@@ -1083,26 +1135,29 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
     const id=String(t.id),name=normName(t.name);
     if(t.active===false||seen.has(name)||id===String(absentTeacherId))continue;
     seen.add(name);
+    const fixedName=reserveFixedAssigneeName(date,period,targetClass,teacherOf(absentTeacherId)?.name||"");
+    if(fixedName&&normName(t.name)!==normName(fixedName))continue;
+    if(t.fixedReserveOnly&&(!fixedName||normName(t.name)!==normName(fixedName)))continue;
     if(reserveAutoIneligibility(id,date,targetClass,exceptAssignmentId,fullCadre))continue;
     if(isAbsent(id,date)||breastfeedingBlocked(t,date,period))continue;
     const support=reserveAutoIsSupport(t);
     if(!support&&(!scheduleOf(id)||regularCell(id,date,period)))continue;
     if(occupiedByReserve(id,date,period,exceptAssignmentId))continue;
-    if(reserveDailyAssignedCount(id,date,exceptAssignmentId)>=reserveAutoDailyAllowance(id,date))continue;
-    const original=Number(t.workload||0),reserved=reserveAutoWeeklyCount(id,date,exceptAssignmentId);
-    const duty=t.excluded===true||teacherFlags(t).permanentExcluded||
-      t.additionallyAssigned===true||t.hasAdditionalDuty===true;
-    const prev=state.absences.some(a=>String(a.teacherId)===id&&a.date===reserveAutoPreviousSchoolDate(date));
+    const makeup=reserveHasPreviousSchoolAbsence(id,date);
+    if(reserveDailyAssignedCount(id,date,exceptAssignmentId)>=reserveAutoDailyAllowance(id,date,makeup))continue;
+    const original=reserveEffectiveWeeklyWorkload(t),reserved=reserveAutoWeeklyCount(id,date,exceptAssignmentId);
     const absentWeek=state.absences.some(a=>String(a.teacherId)===id&&a.date>=wr.start&&a.date<=wr.end);
     const matchDay=!!targetClass&&!support&&(scheduleOf(id)?.timetable?.[dayKey(date)]||[])
       .some(v=>parseScheduleValue(v).className===targetClass);
     const matchWeek=!!targetClass&&!support&&teacherHasClass(id,targetClass);
-    const specialIndex=specialNames.findIndex(n=>normName(n)===name);
-    const phase=support?5:specialIndex>=0?3:
-      original<20&&!duty?1:original===20&&(prev||absentWeek)?2:4;
-    candidates.push({teacherId:id,name:t.name,workload:original,week:reserved,under20:original+reserved<20,
-      phase,specialIndex,duty,prev,absentWeek,matchDay,matchWeek,used:usedPrimary.has(id),supportStaff:support,
-      directoryIndex:currentDirectoryIndex});
+    if(!reserveAutoRoleAllowsClass(t,targetClass,matchWeek))continue;
+    const candidate={teacherId:id,name:t.name,workload:original,week:reserved,
+      weekTotal:support?Number.POSITIVE_INFINITY:original+reserved,rotation:reserveRotationCount(id,date),
+      absentWeek,makeup,matchDay,matchWeek,used:usedPrimary.has(id),supportStaff:support,
+      directoryIndex:currentDirectoryIndex};
+    candidate.rolePriority=reserveAutoStageSlotPreference(candidate,{date,period,className:targetClass,
+      absentTeacherId:String(absentTeacherId),absentTeacherName:teacherOf(absentTeacherId)?.name||""});
+    candidates.push(candidate);
   }
   candidates.sort((a,b)=>compareAutoReservePriority(a,b,fullCadre));
   return candidates.slice(0,Math.max(1,Number(opts.limit||200))).map((x,i)=>({...x,score:i+1}));
@@ -1112,17 +1167,32 @@ function candidateRanking(date,period,absentTeacherId,exceptAssignmentId="",opts
 // Preserve the legacy matchDay/matchWeek ordering within each preference tier.
 const RESERVE_STAGE_SECOND_PREFERENCE=new Set(["رحمة العيسى","فاطمة حسن","هاجر السلمي","علية القاسمي","وضحة المحمادي","بدرية الحربي","دعاء الحربي","سندس الغامدي","عوالي السبيعي","شيخة المالكي","خلود الكثيري","نجوى الغامدي","أفراح الجدعاني","ريم القحطاني","لمياء البلادي"].map(normName));
 const RESERVE_STAGE_FIRST_THIRD_PREFERENCE=new Set(["شوق المطيري","عايدة الصاعدي","سحر الشمراني","فاطمة الغامدي","حصة المنتشري","إيمان الجدعاني","فاطمة العماري","منال الجابري","غالية المزمومي","بدرية السلمي","عبير المولد","ليلى مجرشي","وحش القحطاني"].map(normName));
+function reserveAutoRoleAllowsClass(t,className,ownClass=false){
+  const name=normName(t?.name),klass=normName(className||"");
+  const stage=klass.startsWith("اول")?1:klass.startsWith("ثاني")?2:klass.startsWith("ثالث")?3:0;
+  if(name===normName("فاطمة حسن"))return stage===1||stage===2;
+  if(name===normName("فاطمة الزهراني"))return ownClass||stage===1||stage===2;
+  if(name===normName("نورة العنزي"))return stage===3;
+  return true;
+}
 function reserveAutoStageSlotPreference(candidate,record){
   // Applied ONLY while choosing a vacant slot for the already entitled teacher.
   // No stage preference can change eligibility, teacher ranking or duty caps.
   const name=normName(candidate.name),className=normName(record?.className||"");
   const stage=className.startsWith("اول")?1:className.startsWith("ثاني")?2:className.startsWith("ثالث")?3:0;
+  const fixed=reserveFixedAssigneeName(record?.date,record?.period,record?.className,record?.absentTeacherName||teacherOf(record?.absentTeacherId)?.name||"");
+  if(fixed)return name===normName(fixed)?1000:0;
   const own=!!candidate.matchWeek;
   const legacy=candidate.matchDay?2:own?1:0;
   if(name===normName("فاطمة الزهراني")){
     if(own)return 400+legacy;
-    if(stage===2)return 300+legacy;
-    return 100+legacy;
+    if(stage===1||stage===2)return 300+legacy;
+    return 0;
+  }
+  if(name===normName("فاطمة حسن")){
+    if(stage===2)return 400+legacy;
+    if(stage===1)return 300+legacy;
+    return 0;
   }
   if(RESERVE_STAGE_SECOND_PREFERENCE.has(name)){
     if(stage===2)return 400+legacy;
@@ -1138,8 +1208,7 @@ function reserveAutoStageSlotPreference(candidate,record){
   }
   if(name===normName("نورة العنزي")){
     if(stage===3)return 300+legacy;
-    if(stage===1||stage===2)return 100+legacy;
-    return legacy;
+    return 0;
   }
   return legacy; // Teachers outside these groups retain the previous class preference.
 }
@@ -1147,31 +1216,40 @@ function reserveAutoStageSlotPreference(candidate,record){
 // and only then, apply stage preferences among HER compatible vacant slots.
 // Neither stage nor original-class matching can promote a different teacher.
 function reserveAutoSelectNext(date,pending,usedPrimary,blockedPairs=new Set()){
-  const preferredByTeacher=new Map(),fullCadre=state.autoAllNames!==false;
-  for(let i=0;i<pending.length;i++){
-    const entry=pending[i],a=entry.record;
-    const choices=candidateRanking(date,Number(a.period),a.absentTeacherId,String(a.id),{
-      className:a.className,usedPrimary,limit:200
-    });
-    for(const candidate of choices){
-      const pairKey=String(a.id)+"|"+candidate.teacherId;
-      if(blockedPairs.has(pairKey))continue;
-      // This preference scores the SLOT for this ALREADY eligible teacher.
-      // It is deliberately not part of compareAutoReservePriority.
-      const slotMatch=reserveAutoStageSlotPreference(candidate,a);
-      const earlier=preferredByTeacher.get(candidate.teacherId);
-      if(!earlier||slotMatch>earlier.slotMatch||
-          (slotMatch===earlier.slotMatch&&Number(a.period)<Number(earlier.entry.record.period))||
-          (slotMatch===earlier.slotMatch&&Number(a.period)===Number(earlier.entry.record.period)&&i<earlier.index)){
-        preferredByTeacher.set(candidate.teacherId,{candidate,entry,index:i,slotMatch,pairKey});
+  const bestByMode=new Map();
+  for(const fullCadre of [false,true]){
+    const preferredByTeacher=new Map();
+    for(let i=0;i<pending.length;i++){
+      const entry=pending[i],a=entry.record;
+      const choices=candidateRanking(date,Number(a.period),a.absentTeacherId,String(a.id),{
+        className:a.className,usedPrimary,limit:200,fullCadre
+      });
+      for(const candidate of choices){
+        if(fullCadre&&!reserveAutoRequiresFullCadre(teacherOf(candidate.teacherId)))continue;
+        const pairKey=String(a.id)+"|"+candidate.teacherId;
+        if(blockedPairs.has(pairKey))continue;
+        const slotMatch=reserveAutoStageSlotPreference(candidate,a);
+        if(slotMatch<=0)continue;
+        const earlier=preferredByTeacher.get(candidate.teacherId);
+        if(!earlier||slotMatch>earlier.slotMatch||
+            (slotMatch===earlier.slotMatch&&Number(a.period)<Number(earlier.entry.record.period))||
+            (slotMatch===earlier.slotMatch&&Number(a.period)===Number(earlier.entry.record.period)&&i<earlier.index)){
+          preferredByTeacher.set(candidate.teacherId,{candidate,entry,index:i,slotMatch,pairKey,fullCadreEnabled:fullCadre});
+        }
       }
     }
+    if(preferredByTeacher.size){
+      const eligible=[...preferredByTeacher.values()];
+      eligible.sort((a,b)=>compareAutoReservePriority(a.candidate,b.candidate,fullCadre));
+      bestByMode.set(fullCadre,eligible[0]||null);
+    }
   }
-  const eligible=[...preferredByTeacher.values()];
-  // Stable roster order breaks exact ties; a matching class cannot influence nomination.
-  eligible.sort((a,b)=>compareAutoReservePriority(a.candidate,b.candidate,fullCadre)||
-    a.candidate.directoryIndex-b.candidate.directoryIndex);
-  return eligible[0]||null;
+  const ordinary=bestByMode.get(false),expanded=bestByMode.get(true);
+  if(!ordinary)return expanded||null;
+  if(!expanded)return ordinary;
+  // Activate the full cadre as soon as its next teacher reaches the same or
+  // lower actual workload position as the ordinary pool.
+  return compareAutoReservePriority(expanded.candidate,ordinary.candidate,true)<=0?expanded:ordinary;
 }
 function injectStyle(){
   if(byId("dailyReserveStyle"))return;
@@ -1749,7 +1827,7 @@ function dayAdminHTML(){
   return `<div class="reserve-grid">
     <section class="surface form-card">
       <div class="form-section-title">الإنشاء الآلي</div>
-      <p class="reserve-public-note"><strong>ضوابط التوليد:</strong> خمس حصص أصلية واحتياط للأحد والاثنين، وأربع للثلاثاء إلى الخميس؛ والسقف الأسبوعي ٢٢ للمتقدم و٢٤ للممارس. عند إيقاف الكادر الكامل تُقدَّم المرشحات دون مجموع ٢٠، وعند تفعيله تُطبق المراحل الخمس المعتمدة. <strong>دخنة الشهري ونورة الهودان مستبعدتان من الترشيح الآلي في الوضعين.</strong> لا يُعتمد الجدول قبل إسناد جميع الحصص.</p>
+      <p class="reserve-public-note"><strong>ضوابط التوليد:</strong> تُقدَّم الأقل في مجموع الحصص الفعلي للأسبوع، ثم الأقل احتياطًا. الحد اليومي أربع حصص إجمالًا، ويرتفع إلى خمس لتسديد غياب سابق، ويكون ثلاث حصص احتياط عند عدم وجود حصص أصلية. تتوسع المفاضلة تلقائيًا للكادر الكامل عند الحاجة. <strong>دخنة الشهري مستبعدة نهائيًا، ونورة الهودان للإسناد اليدوي عند رغبتها فقط.</strong> لا يُعتمد الجدول قبل إسناد جميع الحصص.</p>
       ${reserveWorkspaceSharingHTML()}
       <div id="reserveWorkspaceNotify">${reserveWorkspaceNotificationHTML()}</div>
       ${hijriDateControl("reserveAdminDate",date)}
@@ -1766,9 +1844,7 @@ function dayAdminHTML(){
         <small class="reserve-extracted-hint" id="reserveExtractedHint">${extractedCount===null?"يظهر العدد بعد الضغط على تسجيل الغائبات واستخراج حصصهن.":"يشمل حصص النشاط، ولا يحتسب الحصة المكررة للمعلمة نفسها."}</small>
       </output>
 
-      <label class="reserve-admin-manual-toggle"><input type="checkbox" id="reserveAutoAllNames" ${state.autoAllNames!==false?"checked":""}>
-        <span><strong>تفعيل الكادر الكامل:</strong> تطبيق مراحل المفاضلة الخمس وإدخال الكادر المساند أخيرًا، مع الالتزام بالحدود اليومية والأسبوعية والقيود الفردية.</span>
-      </label>
+      <div class="reserve-admin-sync" id="reserveAutoCadreStatus">يتولى النظام توسيع الكادر تلقائيًا عند الحاجة وفق عدد الحصص المتاحة وآلية المفاضلة، ويشمل المرشدات ومحضّرة المختبر في مرحلة التوسيع.</div>
       <div id="reserveDayMsg" role="status" aria-live="polite"></div>
       <div class="reserve-admin-list" style="margin-top:12px">${abs.length?abs.map(a=>`<div class="reserve-teacher-row">
         <strong>${esc(a.teacherName)}</strong><span>${esc(a.reason||"غياب")} — ${(a.periods||[]).map(p=>`ح${p.period}: ${esc(p.className)}${p.activity?" (نشاط)":""}`).join(" — ")||"لا توجد حصص مسجلة"}</span>
@@ -1790,14 +1866,7 @@ function dayAdminHTML(){
   </div>`;
 }
 function manualCandidateOptions(a){
-  const mode=a.fullCadreEnabled===true;
-  const all=[...state.teachers,...MANUAL_SUPPORT_STAFF].filter(t=>
-    !reserveAutoIneligibility(t.id,a.date,a.className,a.id,mode)&&
-    !isAbsent(t.id,a.date)&&!breastfeedingBlocked(t,a.date,a.period)&&
-    (reserveAutoIsSupport(t)||(scheduleOf(t.id)&&!regularCell(t.id,a.date,a.period)))&&
-    !occupiedByReserve(t.id,a.date,a.period,a.id)&&
-    reserveDailyAssignedCount(t.id,a.date,a.id)<reserveAutoDailyAllowance(t.id,a.date)
-  ).map(t=>({teacherId:String(t.id),name:t.name}));
+  const all=manualAssigneeDirectory().map(t=>({teacherId:String(t.id),name:t.name,supportStaff:reserveAutoIsSupport(t)}));
   if(a.assignedTeacherId&&!all.some(t=>t.teacherId===String(a.assignedTeacherId)))
     all.unshift({teacherId:String(a.assignedTeacherId),name:a.assignedTeacherName||"المكلفة سابقًا"});
   return all;
@@ -1810,7 +1879,7 @@ function adminAssignmentsHTML(items){
     return `<tr data-assignment="${esc(a.id)}">
     <td>${esc(a.period)}</td><td>${esc(a.className||"—")}${a.activity?' <small>(نشاط)</small>':""}</td><td>${esc(a.reason||"غياب")}</td><td>${esc(a.absentTeacherName)}</td>
     <td>${a.candidates?.[0]?`<div class="reserve-candidate"><strong>${esc(a.candidates[0].name)}</strong></div>`:"لا توجد مرشحة مؤهلة؛ تحتاج معالجة إدارية"}</td>
-    <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}</option>`).join("")}</select><button type="button" class="reserve-mini reserve-auto-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button><small class="reserve-source-note">تحرير إداري: جميع المعلمات والموجهات ومحضرة المختبر</small></td>
+    <td><select class="reserve-assignee"><option value="">اختاري المكلفة</option>${all.map(c=>`<option value="${esc(c.teacherId)}" ${nameSetContains(new Set(["دخنة الشهري"]),c.name)?"disabled":""} ${String(c.teacherId)===String(a.assignedTeacherId)?"selected":""}>${esc(c.name)}${nameSetContains(AUTO_MANUAL_ONLY,c.name)?" — يدوي عند الرغبة":c.supportStaff?" — مرشدة / محضّرة مختبر":""}${nameSetContains(new Set(["دخنة الشهري"]),c.name)?" — مستبعدة نهائيًا":""}</option>`).join("")}</select><button type="button" class="reserve-mini reserve-auto-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button><small class="reserve-source-note">قائمة التعديل تشمل الكادر كاملًا؛ التوليد الآلي يفعّل التوسيع عند الحاجة.</small></td>
     <td>${a.activationTitle?`<div><span class="reserve-status">تم التفعيل</span><br><small>${esc(a.activationTitle)}</small></div>`:(a.ackAt?'<span class="reserve-status">تم الاطلاع</span>':(a.published?'<span class="reserve-status pending">معتمد</span>':'—'))}</td>
     <td><div class="reserve-actions"><button class="reserve-mini reserve-save-assignee" type="button">تحديث وحفظ</button><small class="reserve-row-save-status" role="status" aria-live="polite"></small>${a.published?`<button class="reserve-mini reserve-copy-ack" type="button">نسخ رابط نموذج المعلمة</button><button class="reserve-mini reserve-open-ack" type="button">فتح نموذج المعلمة</button><button class="reserve-mini reserve-send-ack" type="button">إرسال إشعار</button>`:""}<button class="reserve-mini danger reserve-delete-assignment">حذف</button></div></td>
   </tr>`}).join("")}</tbody></table></div>`;
@@ -1903,19 +1972,18 @@ function reserveFlexibleAssigneeOptions(selectedId){
     const previous=teacherOf(selectedId);
     if(previous)all.unshift(previous);
   }
-  return `<option value="">اختاري المعلمة المسددة</option>`+all.map(t=>
-    `<option value="${esc(t.id)}" ${String(t.id)===String(selectedId)?"selected":""}>${esc(t.name)}${t.supportStaff?" — التوجيه / المختبر":""}</option>`).join("");
+  return `<option value="">اختاري المعلمة المسددة</option>`+all.map(t=>{
+    const excluded=nameSetContains(new Set(["دخنة الشهري"]),t.name);
+    const manualOnly=nameSetContains(AUTO_MANUAL_ONLY,t.name);
+    return `<option value="${esc(t.id)}" ${excluded?"disabled":""} ${String(t.id)===String(selectedId)?"selected":""}>${esc(t.name)}${manualOnly?" — يدوي عند الرغبة":reserveAutoIsSupport(t)?" — مرشدة / محضّرة مختبر":""}${excluded?" — مستبعدة نهائيًا":""}</option>`;
+  }).join("");
 }
 function reserveUnlockAssigneeSelector(select){
   if(!select)return;
   const selected=select.value;
   const row=select.closest("[data-assignment]");
   const a=state.assignments.find(x=>String(x.id)===String(row?.dataset.assignment));
-  if(a&&a.manual!==true){
-    const choices=manualCandidateOptions(a);
-    select.innerHTML='<option value="">اختاري المعلمة المسددة</option>'+
-      choices.map(c=>`<option value="${esc(c.teacherId)}">${esc(c.name)}</option>`).join("");
-  }else select.innerHTML=reserveFlexibleAssigneeOptions(selected);
+  select.innerHTML=reserveFlexibleAssigneeOptions(selected);
   select.value=selected;
   select.disabled=false;
   select.hidden=false;
@@ -1938,15 +2006,12 @@ function reserveSavedManualAssignmentsHTML(date){
 }
 async function reserveCommitFlexibleAssignee(recordId,teacherId){
   await ensureAdmin();
-  const initial=state.assignments.find(x=>String(x.id)===String(recordId)&&x.status!=="ملغي");
-  // Auto changes must consider the latest cloud assignments, including manual ones.
-  if(initial&&initial.manual!==true)await loadAll();
+  // Revalidate every edit against the latest cloud assignments and attendance.
+  await loadAll();
   const a=state.assignments.find(x=>String(x.id)===String(recordId)&&x.status!=="ملغي");
   const t=teacherOf(teacherId);
   if(!a||!t||!a.date)throw new Error("تعذر العثور على التكليف أو المعلمة المسددة.");
-  if(a.manual!==true){
-    assertAutoAssignmentIntegrity(t.id,a.date,Number(a.period),a.id,a.className,a.fullCadreEnabled===true);
-  }
+  reserveValidateManualDailyCapacity(a.date,[{teacherId:String(t.id),period:Number(a.period)}],[String(a.id)]);
   const changed=String(a.assignedTeacherId)!==String(t.id);
   const warnings=manualConflictMessages(a.date,[{
     teacherId:String(t.id),period:Number(a.period),className:a.className,existingId:String(a.id)
@@ -2036,9 +2101,7 @@ function manualAdminHTML(){
         </select>
       </label>
     </div>
-    <label class="reserve-admin-manual-toggle"><input id="reserveManualAllNames" type="checkbox" ${state.manualAllNames?"checked":""}>
-      <span><strong>تحرير يدوي شامل:</strong> إظهار جميع المعلمات (حتى المستثنيات والغائبات) والموجهات الطلابيات ومحضرة المختبر في قوائم التسديد. سيظهر تحذير عند التعارض.</span>
-    </label>
+    <p class="reserve-admin-sync">قائمة التسديد تعرض جميع الأسماء، بما فيها المستثنيات والمرشدات ومحضّرة المختبر. يُمنع إسناد الاحتياط إلى دخنة الشهري، وتُتاح نورة الهودان يدويًا عند رغبتها فقط.</p>
     <div class="form-actions">
       <button class="btn btn-primary" id="reserveManualBuild" type="button">إظهار جدول التسديد الكامل</button>
       <button class="reserve-mini danger" id="reserveDeleteManualTable" type="button" aria-label="حذف جدول الإنشاء اليدوي لهذا اليوم" title="حذف الجدول اليدوي للتاريخ المختار">🗑 حذف الجدول</button>
@@ -2071,11 +2134,12 @@ function manualRowsHTML(absentIds,date){
       const existing=existingSlotAssignment(date,t.id,i+1);
       const candidates=manualPhysicalCandidates(date,i+1,absentIds,state.manualAllNames===true,existing?.id||"",plannedDemand);
       const currentId=String(existing?.assignedTeacherId||"");
+      const fixedId=String(reserveFixedAssigneeId(date,i+1,p.className,t?.name)||"");
       if(currentId&&!candidates.some(c=>String(c.id)===currentId)){
         const current=teacherOf(currentId);
         if(current)candidates.unshift(current);
       }
-      rows.push({absent:t,period:i+1,className:p.className,activity:p.activity,candidates,existingId:existing?.id||"",existingTeacherId:currentId});
+      rows.push({absent:t,period:i+1,className:p.className,activity:p.activity,candidates,existingId:existing?.id||"",existingTeacherId:currentId,fixedAssigneeId:fixedId});
     });
   });
   state.manualRows=rows;
@@ -2083,7 +2147,7 @@ function manualRowsHTML(absentIds,date){
   return `<div class="reserve-table-wrap"><table class="reserve-table"><thead><tr><th>الغائبة</th><th>الحصة</th><th>الفصل</th><th>معلمة التسديد</th></tr></thead><tbody>
     ${rows.map((r,i)=>`<tr data-manual-row="${i}">
       <td>${esc(r.absent?.name||"")}</td><td>${r.period}</td><td>${esc(r.className)}${r.activity?" <small>(نشاط)</small>":""}</td>
-      <td><div class="reserve-actions"><select class="reserve-manual-assignee"><option value="">اختاري معلمة التسديد</option>${r.candidates.map(t=>`<option value="${esc(t.id)}" ${String(t.id)===r.existingTeacherId?"selected":""}>${esc(t.name)}${t.supportStaff?" — التوجيه / المختبر":""}</option>`).join("")}</select>
+      <td><div class="reserve-actions"><select class="reserve-manual-assignee"><option value="">اختاري معلمة التسديد</option>${r.candidates.map(t=>{const selected=r.existingTeacherId?String(t.id)===r.existingTeacherId:r.fixedAssigneeId?String(t.id)===r.fixedAssigneeId:false;const excluded=reserveIsNeverAssignable(t);return `<option value="${esc(t.id)}" ${excluded?"disabled":""} ${selected?"selected":""}>${esc(t.name)}${nameSetContains(AUTO_MANUAL_ONLY,t.name)?" — يدوي عند الرغبة":t.role?` — ${esc(t.role)}`:""}${excluded?" — مستبعدة نهائيًا":""}</option>`}).join("")}</select>
       <button type="button" class="reserve-mini reserve-manual-unlock" aria-label="تعديل المعلمة المسددة">✎ تعديل</button></div></td>
     </tr>`).join("")}
   </tbody></table></div>
@@ -2101,13 +2165,9 @@ function manualConflictMessages(date,selections,absentIds){
       warnings.push(`${t.name}: من الكادر المساند؛ لا يوجد جدول للحصص ضمن الإصدار السادس للتحقق من تفرغها. يرجى التأكد إداريًا.`);
       return;
     }
-    const flags=teacherFlags(t);
-    if(t.excluded===true||flags.permanentExcluded||flags.absolute)warnings.push(`${t.name}: ضمن قائمة المستثنيات من التسديد.`);
+    if(reserveIsNeverAssignable(t))warnings.push(`${t.name}: مستبعدة نهائيًا من شغل الاحتياط.`);
     if(regularCell(t.id,date,x.period))warnings.push(`${t.name}: لديها حصة أصلية في الحصة ${x.period}.`);
     if(breastfeedingBlocked(t,date,x.period))warnings.push(`${t.name}: الحصة ${x.period} ضمن استثناء ثابت.`);
-    const c=assignmentCounts(date).get(String(t.id))||{week:0,daily:0};
-    const missed=currentWeekAbsenceLoad(t.id,date),pending=makeupPending(t,date),effective=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
-    if(!pending&&effective>=ceilingFor(t))warnings.push(`${t.name}: بلغت الحد الأسبوعي المفضل (${ceilingFor(t)}).`);
   });
   slotUse.forEach((n,key)=>{
     if(n>1){
@@ -2214,6 +2274,8 @@ async function saveManualAssignments(){
   if(missing||selections.length!==rows.length||selections.some(x=>!teacherOf(x.teacherId))){
     msg.textContent="يجب اختيار معلمة معتمدة لكل حصة قبل الحفظ.";return;
   }
+  try{reserveValidateManualDailyCapacity(date,selections,selections.map(x=>x.existingId).filter(Boolean))}
+  catch(error){msg.textContent=error.message||"تجاوز سقف الحصص اليومي.";return}
   const warnings=manualConflictMessages(date,selections,absentIds);
   // Administration explicitly allows all rule warnings to be overridden.
   // Never block saving completed substitutions; keep an audit trail.
@@ -2335,7 +2397,7 @@ function bindManualAdmin(){
     const msg=byId("reserveManualMsg");
     if(!ids.length){msg.textContent="اختاري جميع أسماء المعلمات الغائبات أولًا.";return}
     state.manualAbsentIds=ids;
-    state.manualAllNames=byId("reserveManualAllNames")?.checked===true;
+    state.manualAllNames=true;
     const date=byId("reserveManualDate")?.value||state.currentDate;
     byId("reserveManualRows").innerHTML=manualRowsHTML(ids,date);
     msg.textContent=`تم إدخال ${ids.length} غائبات. اختاري معلمة تسديد لكل حصة.`;
@@ -2359,9 +2421,10 @@ function rankingOverviewRows(referenceDate){
     (!teacherFlags(t).absolute&&Number(counts.get(String(t.id))?.week||0)>0)).map(t=>{
     const c=counts.get(String(t.id))||{daily:0,week:0,term:0};
     const flags=teacherFlags(t),missed=currentWeekAbsenceLoad(t.id,referenceDate);
-    const effective=Math.max(0,Number(t.workload||0)-missed)+Number(c.week||0);
+    const workload=reserveEffectiveWeeklyWorkload(t);
+    const effective=Math.max(0,workload-missed)+Number(c.week||0);
     return {
-      teacher:t,workload:Number(t.workload||0),dailyOriginal:dailyOriginalCount(t.id,referenceDate),
+      teacher:t,workload,dailyOriginal:dailyOriginalCount(t.id,referenceDate),
       daily:Number(c.daily||0),week:Number(c.week||0),prevWeek:previousWeekReserveCount(t.id,referenceDate),
       term:Number(c.term||0),missed,effective,flags,pending:makeupPending(t,referenceDate)
     };
@@ -2750,7 +2813,7 @@ function teachersAdminHTML(){
     <section class="surface panel">
       <div class="panel-head"><h3>المعلمات</h3><span>${state.teachers.length}</span></div>
       <div class="reserve-admin-list">${state.teachers.map(t=>`<div class="reserve-teacher-row" data-teacher="${esc(t.id)}">
-        <strong>${esc(t.name)}</strong><span>النصاب: ${Number(t.workload||0)} ${teacherFlags(t).advanced?'<span class="reserve-rank-badge">رتبة متقدم — حد 22</span>':""} ${teacherFlags(t).permanentExcluded?'<span class="reserve-status pending">مستثناة: تكليف إضافي</span>':""} ${teacherFlags(t).absolute?'<span class="reserve-status pending">مستثناة من الاحتياط</span>':""} ${t.excluded?'<span class="reserve-status pending">مستبعدة مؤقتًا</span>':""}</span>
+        <strong>${esc(t.name)}</strong><span>النصاب الفعلي: ${reserveEffectiveWeeklyWorkload(t)} ${teacherFlags(t).advanced?'<span class="reserve-rank-badge">رتبة متقدم</span>':""} ${nameSetContains(AUTO_MANUAL_ONLY,t.name)?'<span class="reserve-status">إسناد يدوي عند الرغبة</span>':""} ${teacherFlags(t).permanentExcluded?'<span class="reserve-status pending">استثناء سابق يُرفع عند التساوي</span>':""} ${teacherFlags(t).absolute?'<span class="reserve-status pending">مستثناة من الاحتياط</span>':""} ${t.excluded?'<span class="reserve-status pending">مستبعدة مؤقتًا</span>':""}</span>
         <div class="reserve-actions"><button class="reserve-mini reserve-edit-teacher">تعديل البيانات</button><button class="reserve-mini reserve-edit-schedule">الجدول المدرسي</button><button class="reserve-mini danger reserve-delete-teacher">حذف</button></div>
       </div>`).join("")||'<div class="empty-inline">لا توجد معلمات مضافة بعد</div>'}</div>
     </section>
@@ -2836,35 +2899,35 @@ function dailyPublicationStats(items){
   return {periods:items.length,absentTeachers:absent.size,assignedTeachers:assigned.size,breakdown};
 }
 function publicationHTML(date){
-  const items=dailyPublicationRows(date),stats=dailyPublicationStats(items);
-  const summary=stats.breakdown.map(([name,n])=>`<span>${esc(name)}: <b>${n}</b></span>`).join("، ");
+  const items=dailyPublicationRows(date);
+  const groups=new Map();
+  for(const item of items){
+    const key=String(item.absentTeacherId||item.absentTeacherName||"غير محددة");
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push(item);
+  }
+  const forms=[...groups.entries()].map(([key,rows])=>{
+    const first=rows[0],absentName=clean(first.absentTeacherName||"—");
+    const subject=clean(teacherOf(first.absentTeacherId)?.subject||first.subject||"");
+    const byPeriod=new Map(rows.map(row=>[Number(row.period),row]));
+    return `<section class="reserve-publication-form">
+      <p class="reserve-publication-intro">إخواني المعلمين / نظراً لغياب الزميلة <strong>${esc(absentName)}</strong> لهذا اليوم، نأمل تسديد حصصها حسب الجدول أدناه، ولكم جزيل الشكر.</p>
+      <p class="reserve-publication-approval">هذا اليوم: ${esc(dayName(date))} &nbsp; الموافق: ${esc(fmtDate(date))} &nbsp;|&nbsp; يرجى التوقيع بعد تنفيذ الحصة.</p>
+      <table class="reserve-publication-duty"><thead><tr><th>الحصة</th><th>الفصل</th><th>المادة</th><th>المعلمة المسند لها الاحتياط</th><th>ما تم تنفيذه في حصة الانتظار</th><th>التوقيع</th><th>ملاحظات</th></tr></thead><tbody>
+      ${PERIODS.map(period=>{const row=byPeriod.get(period);return `<tr><td class="reserve-publication-period-cell">${period}</td><td>${esc(row?.className||"")}</td><td>${esc(subject)}</td><td>${esc(row?.assignedTeacherName||"")}</td><td>${esc(row?.activationTitle||"")}</td><td></td><td></td></tr>`}).join("")}
+      </tbody></table>
+    </section>`;
+  }).join("");
   return `<div id="reservePublishSheet" dir="rtl" lang="ar">
-    <div class="reserve-publication-date"><b>اليوم:</b> ${esc(dayName(date))} <span><b>التاريخ:</b> ${esc(fmtDate(date))}</span></div>
-    <h1>جدول النشر — الاحتياط اليومي</h1>
-    <p class="reserve-publication-school">الثانوية الرابعة والتسعون – مسارات</p>
-    <table><thead><tr>
-      <th>المعلمة الغائبة</th><th>الحصة</th><th>الفصل</th><th>المعلمة المسند لها الاحتياط</th><th>عنوان التفعيل</th><th>حالة الاطلاع</th><th>حالة التفعيل</th>
-    </tr></thead><tbody>${items.length?items.map((a,i)=>{
-      const title=clean(a.activationTitle||"");
-      const acknowledged=Boolean(clean(a.ackAt||""));
-      // فاصل أبيض بين مجموعات الحصص؛ لا يُنشأ قبل أول حصة في الجدول.
-      const newGroup=i>0&&Number(items[i-1].period)!==Number(a.period);
-      const groupGap=newGroup?'<tr class="reserve-publication-group-gap" aria-hidden="true"><td colspan="7"></td></tr>':"";
-      return `${groupGap}<tr class="reserve-publication-period reserve-publication-period-${Number(a.period)}">
-      <td>${esc(a.absentTeacherName||"—")}</td><td>${esc(a.period)}</td>
-      <td>${esc(a.className||"—")}</td><td>${esc(a.assignedTeacherName||"—")}</td>
-      <td class="reserve-publication-title">${title?esc(title):"—"}</td>
-      <td><span class="reserve-publication-status ${acknowledged?"reserve-publication-read":"reserve-publication-unread"}">${acknowledged?"تم الاطلاع":"لم يتم الاطلاع"}</span></td>
-      <td><span class="reserve-publication-status ${title?"reserve-publication-activated":"reserve-publication-not-activated"}">${title?"تم التفعيل":"لم يتم التفعيل"}</span></td>
-    </tr>`}).join(""):`<tr><td colspan="7">لا توجد حصص احتياط معتمدة لهذا اليوم</td></tr>`}</tbody></table>
-    <section class="reserve-publication-summary">
-      <h2>إحصائية نهاية الجدول</h2>
-      <div class="reserve-publication-totals"><span>إجمالي حصص الاحتياط: <b>${stats.periods}</b></span>
-      <span>عدد المعلمات الغائبات: <b>${stats.absentTeachers}</b></span>
-      <span>عدد المكلفات بالاحتياط: <b>${stats.assignedTeachers}</b></span></div>
-      ${stats.breakdown.length?`<p><b>توزيع حصص الاحتياط على المكلفات:</b> ${summary}</p>`:""}
-    </section>
-    <div class="reserve-publication-footer">الثانوية الرابعة والتسعون – مسارات | الاحتياط اليومي</div>
+    <header class="reserve-official-header">
+      <div class="reserve-official-office"><strong>الإدارة العامة للتعليم بمنطقة جدة</strong><span>مكتب التعليم</span></div>
+      <div class="reserve-official-brand"><img src="${esc(new URL("ministry-logo.png",location.href).href)}" alt="شعار وزارة التعليم"><strong>وزارة التعليم</strong><small>Ministry of Education</small></div>
+    </header>
+    <div class="reserve-official-school">الثانوية الرابعة والتسعون – مسارات</div>
+    <div class="reserve-official-meta"><span>اسم النموذج: سجل توزيع الانتظار اليومي</span><span>اليوم: ${esc(dayName(date))} — التاريخ: ${esc(fmtDate(date))}</span><span>رمز النموذج: __________</span></div>
+    <h1>سجل توزيع حصص الانتظار اليومي</h1>
+    ${forms||'<p class="reserve-publication-empty">لا توجد حصص احتياط معتمدة لهذا اليوم.</p>'}
+    <div class="reserve-publication-signatures"><span>وكيلة الشؤون التعليمية: ____________________</span><span>التوقيع: ____________________</span></div>
   </div>`;
 }
 function ensureReservePublicationStyles(){
@@ -2872,12 +2935,41 @@ function ensureReservePublicationStyles(){
   const style=document.createElement("style");
   style.id="reservePublishPrintStyle";
   style.textContent=`
+    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{max-width:210mm;min-width:0;width:100%}
+    #reservePublishSheet .reserve-official-header{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:78px;padding:10px 20px;background:#06434a;color:#fff;border-radius:0 0 18px 18px;box-sizing:border-box}
+    #reservePublishSheet .reserve-official-office{display:grid;gap:5px;text-align:right;font-size:12px}
+    #reservePublishSheet .reserve-official-brand{display:grid;grid-template-columns:auto auto;align-items:center;column-gap:9px;text-align:right}
+    #reservePublishSheet .reserve-official-brand img{grid-row:span 2;width:44px;height:44px;object-fit:contain}
+    #reservePublishSheet .reserve-official-brand strong{font-size:18px}
+    #reservePublishSheet .reserve-official-brand small{font-size:10px}
+    #reservePublishSheet .reserve-official-school{width:58%;margin:0 auto 10px;padding:8px;text-align:center;background:#0b555a;color:#fff;border-radius:0 0 12px 12px;font-weight:800}
+    #reservePublishSheet .reserve-official-meta{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;margin:14px 0 4px;font-size:10px}
+    #reservePublishSheet h1{text-align:center;margin:8px 0 14px;font-size:17px;color:#123e50}
+    #reservePublishSheet .reserve-publication-form{margin:0 0 15px;break-inside:avoid;page-break-inside:avoid}
+    #reservePublishSheet .reserve-publication-intro,#reservePublishSheet .reserve-publication-approval{font-size:10px;margin:5px 0;line-height:1.5}
+    #reservePublishSheet .reserve-publication-duty{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center;font-size:9px}
+    #reservePublishSheet .reserve-publication-duty th,#reservePublishSheet .reserve-publication-duty td{border:1px solid #4d5c60;padding:4px 3px;vertical-align:middle;overflow-wrap:anywhere;box-sizing:border-box}
+    #reservePublishSheet .reserve-publication-duty th{background:#e7e7e7!important;color:#1a2528;font-weight:800}
+    #reservePublishSheet .reserve-publication-duty th:nth-child(1){width:7%}
+    #reservePublishSheet .reserve-publication-duty th:nth-child(2){width:10%}
+    #reservePublishSheet .reserve-publication-duty th:nth-child(3){width:11%}
+    #reservePublishSheet .reserve-publication-duty th:nth-child(4){width:20%}
+    #reservePublishSheet .reserve-publication-duty th:nth-child(5){width:24%}
+    #reservePublishSheet .reserve-publication-duty th:nth-child(6){width:14%}
+    #reservePublishSheet .reserve-publication-duty th:nth-child(7){width:14%}
+    #reservePublishSheet .reserve-publication-duty td{height:21px}
+    #reservePublishSheet .reserve-publication-duty .reserve-publication-period-cell{font-weight:800}
+    #reservePublishSheet .reserve-publication-empty{padding:25px;text-align:center}
+    #reservePublishSheet .reserve-publication-summary{border:1px solid #637982;margin-top:12px;padding:8px;break-inside:avoid;page-break-inside:avoid;font-size:10px}
+    #reservePublishSheet .reserve-publication-summary h2{margin:0 0 7px;font-size:13px}
+    #reservePublishSheet .reserve-publication-totals{display:flex;gap:10px;flex-wrap:wrap}
+    #reservePublishSheet .reserve-publication-signatures{display:flex;justify-content:space-between;gap:20px;margin-top:14px;padding-top:8px;border-top:1px solid #9cb3b7;font-size:10px}
     #reservePublishOverlay{position:fixed;inset:0;z-index:2147481000;background:rgba(21,39,47,.68);overflow:auto;padding:16px;box-sizing:border-box;direction:rtl}
     #reservePublishOverlay .reserve-publish-content{max-width:1150px;margin:0 auto 20px;background:#fff;border-radius:12px;box-shadow:0 12px 50px rgba(0,0,0,.18);padding:14px;box-sizing:border-box}
     #reservePublishOverlay .reserve-publish-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
     #reservePublishOverlay .reserve-publish-status{color:#36515a;font-size:12px;flex:1;min-width:180px}
     #reservePublishOverlay .reserve-publish-preview-scroll{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box}
-    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%;max-width:100%;min-width:950px;box-sizing:border-box;margin-left:auto;margin-right:auto}
+    #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%;max-width:210mm;min-width:0;box-sizing:border-box;margin-left:auto;margin-right:auto}
     #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet table{width:100%;max-width:100%;box-sizing:border-box}
     #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet th:last-child,
     #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet td:last-child{box-sizing:border-box}
@@ -2902,13 +2994,13 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet tr.reserve-publication-group-gap{height:12px!important;break-after:avoid;page-break-after:avoid}
     #reservePublishSheet tr.reserve-publication-group-gap > td{height:12px!important;min-height:12px!important;border:0!important;background:#fff!important;padding:0!important;line-height:0!important;font-size:0!important}
     #reservePublishSheet tr.reserve-publication-period > td:first-child{border-right-color:#637982!important}
-    #reservePublishSheet th:nth-child(1){width:18%}
-    #reservePublishSheet th:nth-child(2){width:7%}
-    #reservePublishSheet th:nth-child(3){width:10%}
+    #reservePublishSheet th:nth-child(1){width:7%}
+    #reservePublishSheet th:nth-child(2){width:10%}
+    #reservePublishSheet th:nth-child(3){width:11%}
     #reservePublishSheet th:nth-child(4){width:20%}
-    #reservePublishSheet th:nth-child(5){width:19%}
-    #reservePublishSheet th:nth-child(6){width:13%}
-    #reservePublishSheet th:nth-child(7){width:13%}
+    #reservePublishSheet th:nth-child(5){width:24%}
+    #reservePublishSheet th:nth-child(6){width:14%}
+    #reservePublishSheet th:nth-child(7){width:14%}
     #reservePublishSheet .reserve-publication-status{display:inline-block;padding:3px 4px;border-radius:5px;font-weight:700;line-height:1.35;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     #reservePublishSheet .reserve-publication-read{background:#d5f4df!important;color:#126536!important;border:1px solid #57ae78!important}
     #reservePublishSheet .reserve-publication-unread{background:#ffe4e5!important;color:#b21d29!important;border:1px solid #d9878c!important}
@@ -2922,8 +3014,8 @@ function ensureReservePublicationStyles(){
     #reservePublishSheet .reserve-publication-summary p{margin:8px 0 0}
     #reservePublishSheet .reserve-publication-footer{text-align:center;border-top:1px solid #9cb3b7;margin-top:14px;padding-top:6px;font-size:10px}
     @media(max-width:700px){
-      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:950px;max-width:none;min-width:950px!important;font-size:11px!important}
-      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet table{width:100%;table-layout:fixed;font-size:9px}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%;max-width:210mm;min-width:0!important;font-size:10px!important}
+      #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet table{width:100%;table-layout:fixed;font-size:8px}
       #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet th,
       #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet td{padding:3px 1px;overflow-wrap:anywhere;word-break:normal;font-size:8px;line-height:1.35}
       #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet .reserve-publication-status{font-size:7px;padding:2px 0}
@@ -2936,7 +3028,7 @@ function ensureReservePublicationStyles(){
       #reservePublishSheet h1{font-size:17px}
     }
     @media print{
-      @page{size:A4 landscape;margin:10mm}
+      @page{size:A4 portrait;margin:8mm}
       body > :not(#reservePublishOverlay):not(#reservePublishPrintStyle){display:none!important}
       html,body{background:#fff!important;color:#172c34!important;margin:0!important;padding:0!important;width:100%!important}
       #reservePublishOverlay{position:static!important;inset:auto!important;padding:0!important;background:#fff!important;overflow:visible!important}
@@ -2944,7 +3036,7 @@ function ensureReservePublicationStyles(){
       #reservePublishOverlay .reserve-publish-actions{display:none!important}
       #reservePublishOverlay .reserve-publish-preview-scroll{overflow:visible!important}
       #reservePublishOverlay .reserve-publish-preview-scroll #reservePublishSheet{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
-      #reservePublishSheet{font-size:10px!important;line-height:1.28!important;overflow:visible!important}
+      #reservePublishSheet{width:100%!important;max-width:100%!important;font-size:10px!important;line-height:1.28!important;overflow:visible!important}
       #reservePublishSheet table{width:100%!important;max-width:100%!important;table-layout:fixed!important}
       #reservePublishSheet th,#reservePublishSheet td{padding:2px 4px!important;line-height:1.28!important}
       #reservePublishSheet tr.reserve-publication-group-gap{height:8px!important}
@@ -2973,7 +3065,7 @@ function reservePublicationPdfFilename(date){
 function reservePrintStandalone(date){
  const tab=window.open('','_blank');
  if(!tab){alert('تعذر فتح صفحة الطباعة، يُرجى السماح بالنوافذ المنبثقة من إعدادات المتصفح.');return}
- const css='html,body{margin:0;padding:0;direction:rtl;background:#fff;color:#17323a;font:12px Tahoma,Arial,sans-serif}#reservePublishSheet{margin:auto;max-width:275mm;padding:10px;box-sizing:border-box}h1{text-align:center;font-size:19px}h2{font-size:13px}.reserve-publication-school{text-align:center}.reserve-publication-date{display:flex;gap:15px;justify-content:space-between;border-bottom:2px solid #155b58;padding:6px}table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px}td,th{border:1px solid #71939b;padding:5px 3px;text-align:center;overflow-wrap:anywhere}th{background:#edf4f3}.reserve-publication-period td:nth-child(2){font-weight:bold}.reserve-publication-status{font-weight:700}.reserve-publication-group-gap td{height:8px;border:0}.reserve-publication-summary{border:1px solid #aabdc3;padding:8px;margin-top:12px}.reserve-publication-totals{display:flex;gap:10px;flex-wrap:wrap}.reserve-publication-footer{text-align:center;border-top:1px solid #b2c3c8;margin-top:10px;padding:6px}.print-tools{text-align:center;padding:14px}.print-tools button{border:1px solid #18776f;border-radius:8px;background:#eaf7f5;padding:12px 24px;font:700 15px Tahoma}@page{size:A4 landscape;margin:9mm}@media print{.print-tools{display:none!important}#reservePublishSheet{padding:0;width:100%;max-width:100%}table{font-size:9px}td,th{padding:3px 2px}tr{break-inside:avoid}}';
+ const css='html,body{margin:0;padding:0;direction:rtl;background:#fff;color:#17323a;font:12px Tahoma,Arial,sans-serif}#reservePublishSheet{margin:auto;max-width:194mm;padding:0;box-sizing:border-box}.reserve-official-header{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:78px;padding:10px 20px;background:#06434a;color:#fff;border-radius:0 0 18px 18px;box-sizing:border-box}.reserve-official-office{display:grid;gap:5px;text-align:right;font-size:12px}.reserve-official-brand{display:grid;grid-template-columns:auto auto;align-items:center;column-gap:9px;text-align:right}.reserve-official-brand img{grid-row:span 2;width:44px;height:44px;object-fit:contain}.reserve-official-school{width:58%;margin:0 auto 10px;padding:8px;text-align:center;background:#0b555a;color:#fff;border-radius:0 0 12px 12px;font-weight:800}.reserve-official-meta{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;margin:14px 0 4px;font-size:10px}h1{text-align:center;font-size:17px}.reserve-publication-form{margin-bottom:15px;break-inside:avoid}.reserve-publication-intro,.reserve-publication-approval{font-size:10px;margin:5px 0}.reserve-publication-duty{width:100%;table-layout:fixed;border-collapse:collapse;font-size:9px}.reserve-publication-duty td,.reserve-publication-duty th{border:1px solid #4d5c60;padding:4px 3px;text-align:center;overflow-wrap:anywhere}.reserve-publication-duty th{background:#e7e7e7}.reserve-publication-duty td{height:21px}.reserve-publication-summary{border:1px solid #aabdc3;padding:8px;margin-top:12px;font-size:10px}.reserve-publication-totals{display:flex;gap:10px;flex-wrap:wrap}.reserve-publication-signatures{display:flex;justify-content:space-between;gap:20px;margin-top:14px;padding-top:8px;border-top:1px solid #9cb3b7;font-size:10px}.print-tools{text-align:center;padding:14px}.print-tools button{border:1px solid #18776f;border-radius:8px;background:#eaf7f5;padding:12px 24px;font:700 15px Tahoma}@page{size:A4 portrait;margin:8mm}@media print{.print-tools{display:none!important}#reservePublishSheet{padding:0;width:100%;max-width:100%}.reserve-publication-duty{font-size:8px}.reserve-publication-duty td,.reserve-publication-duty th{padding:3px 2px}tr{break-inside:avoid}}';
  const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(reservePublicationPdfFilename(date).replace(/\.pdf$/,""))+'</title><style>'+css+'</style></head><body><div class="print-tools"><button onclick="window.print()">طباعة الجدول / حفظ PDF</button></div>'+publicationHTML(date)+'</body></html>';
  tab.document.open();tab.document.write(html);tab.document.close();tab.focus();
 }
@@ -3020,26 +3112,25 @@ async function downloadReservePublicationPDF(date){
   msg.textContent="جارٍ إعداد ملف PDF لجدول النشر...";
   try{
     const engine=await loadReservePdfEngine();
-    // Keep the publication PDF landscape, matching its preview.
+    // Keep the publication PDF portrait, matching the official school form.
     const page=sheet.cloneNode(true);
     page.id="reservePublishSheet";
-    // Landscape A4 has 277mm usable width with two 10mm margins.
-    // Use 268mm to retain a safety margin around the signature column.
-    page.style.cssText="width:268mm;max-width:268mm;min-width:0;box-sizing:border-box;margin:0;padding:0;overflow:visible;font-size:11px;line-height:1.4";
+    // Portrait A4 has 194mm usable width with 8mm side margins.
+    page.style.cssText="width:194mm;max-width:194mm;min-width:0;box-sizing:border-box;margin:0;padding:0;overflow:visible;font-size:10px;line-height:1.3";
     const table=page.querySelector("table");
-    if(table){table.style.cssText="width:100%;table-layout:fixed;font-size:10px";
+    if(table){table.style.cssText="width:100%;table-layout:fixed;font-size:8px";
       table.querySelectorAll("th,td").forEach(cell=>{cell.style.padding="4px 2px";cell.style.overflowWrap="anywhere";});
     }
     // Preserve publication styles on the detached PDF copy without changing the preview.
     const offscreen=document.createElement("div");
-    offscreen.style.cssText="position:fixed;left:-20000px;top:0;width:268mm;max-width:268mm;pointer-events:none";
+    offscreen.style.cssText="position:fixed;left:-20000px;top:0;width:194mm;max-width:194mm;pointer-events:none";
     offscreen.appendChild(page);document.body.appendChild(offscreen);
     try{
     await engine().set({
-      margin:[10,10,10,10],filename:reservePublicationPdfFilename(date),
+      margin:[8,8,8,8],filename:reservePublicationPdfFilename(date),
       image:{type:"jpeg",quality:0.98},
       html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
-      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
       pagebreak:{mode:["css","legacy"]}
     }).from(page).save();
     }finally{offscreen.remove()}
@@ -3370,11 +3461,6 @@ function bindDayAdmin(){
     if(number)number.textContent="—";
     if(hint)hint.textContent="يظهر العدد بعد الضغط على تسجيل الغائبات واستخراج حصصهن.";
   });
-  byId("reserveAutoAllNames")?.addEventListener("change",event=>{
-    state.autoAllNames=event.target.checked;
-    state.autoAbsentIds=[...(byId("reserveAbsentTeacher")?.selectedOptions||[])].map(o=>String(o.value));
-    renderWorkspaceCard("auto");
-  });
   // Both actions consume the selected absent teachers directly. Register once,
   // generate once, and leave manual assignments unmodified.
   async function registerSelectedAbsences(date,ids,reason,revision){
@@ -3417,7 +3503,7 @@ function bindDayAdmin(){
       state.autoExtractedSummary={date,teacherIds:[...new Set(ids.map(String))]};
       renderWorkspaceCard("auto");
       await reserveSyncAdminMutation(date);
-      byId("reserveDayMsg").textContent=`تم تسجيل الغائبات (${n} جديدات). عدد الحصص المستخرجة: ${reserveExtractedPeriodCount(date,ids)}. حددي حالة الكادر الكامل، ثم اضغطي «توليد آلي».`;
+      byId("reserveDayMsg").textContent=`تم تسجيل الغائبات (${n} جديدات). عدد الحصص المستخرجة: ${reserveExtractedPeriodCount(date,ids)}. يتولى النظام توسيع الكادر تلقائيًا عند الحاجة؛ اضغطي «توليد آلي».`;
     }catch(err){console.error(err);msg.textContent="تعذر استكمال تسجيل الغياب. الأسماء المحفوظة لن تتكرر عند إعادة المحاولة."}
   });
   document.querySelectorAll(".reserve-delete-absence").forEach(b=>b.onclick=async()=>{
@@ -3468,7 +3554,7 @@ function bindDayAdmin(){
               activity:period.activity===true,reason:absent.reason||"غياب",
               absentTeacherId:String(absent.teacherId),absentTeacherName:absent.teacherName,
               candidates:[],assignedTeacherId:"",assignedTeacherName:"",
-              fullCadreEnabled:state.autoAllNames!==false,manual:false,source:"auto",
+              fullCadreEnabled:false,manual:false,source:"auto",
               reserveRevision:revision,published:false,status:"مسودة",ackToken:uid(),ackAt:"",
               activationTitle:"",activationAt:"",createdAt:new Date().toISOString()
             },token(),"مسودة");
@@ -3490,10 +3576,10 @@ function bindDayAdmin(){
         const {entry,candidate,pairKey}=picked,record=entry.record;
         try{
           assertAutoAssignmentIntegrity(candidate.teacherId,date,record.period,
-            record.id,record.className,state.autoAllNames!==false);
+            record.id,record.className,picked.fullCadreEnabled===true);
           const data={...plainData(record),assignedTeacherId:String(candidate.teacherId),
             assignedTeacherName:candidate.name,candidates:[candidate],
-            fullCadreEnabled:state.autoAllNames!==false,
+            fullCadreEnabled:picked.fullCadreEnabled===true,
             manual:false,source:"auto",reserveRevision:revision,published:false,status:"مسودة",
             draftAutoCandidateNote:""};
           const saved=await patchKind(K.assignment,record.id,data,token(),"مسودة");
@@ -3520,6 +3606,11 @@ function bindDayAdmin(){
       processed+=unfilled;
       await loadAll();renderWorkspaceCard("auto");
       await reserveSyncAdminMutation(date);
+      const expandedCount=assignmentsOn(date).filter(a=>a.manual!==true&&a.fullCadreEnabled===true).length;
+      const cadreStatus=byId("reserveAutoCadreStatus");
+      if(cadreStatus)cadreStatus.textContent=expandedCount?
+        `وسّع النظام الكادر تلقائيًا وفق الحاجة، وشمل المرشدات ومحضّرة المختبر في ${expandedCount} إسنادًا.`:
+        "اكتفى النظام بالمرشحات المستوفيات للمرحلة الأساسية؛ ويتوسع تلقائيًا للكادر الكامل عند الحاجة.";
       const done=byId("reserveDayMsg");
       if(done)done.textContent="تم التوليد. المسودات الجديدة: "+created+"، حصص أُسندت: "+repaired+(unfilled?"، حصص تحتاج إسنادًا: "+unfilled+". لا يمكن اعتماد جدول ناقص.":"؛ راجعي الجدول ثم احفظي واعتمدي.");
     }catch(err){
