@@ -35,7 +35,14 @@ window.MANJAZ_CERTIFICATE_WORKSHOPS = [
     "id": "workshop-1792469587252",
     "title": "هندسة الذكاء الاصطناعي -١",
     "date": "٥/٢/١٤٤٨هـ",
-    "availability": "available"
+    "availability": "available",
+    "implementers": [
+      "أ. عايدة علي سفر الصاعدي"
+    ],
+    "trainingType": "مباشر",
+    "durationHours": 2,
+    "durationText": "ساعتان",
+    "attendanceText": "بواقع ساعتين تدريبيتين"
   },
   {
     "id": "workshop-1792341650738",
@@ -44,6 +51,10 @@ window.MANJAZ_CERTIFICATE_WORKSHOPS = [
       "أ. لمياء البلادي"
     ],
     "date": "١٤٤٨/٥/٨",
-    "availability": "available"
+    "availability": "available",
+    "trainingType": "عن بعد",
+    "durationHours": 2,
+    "durationText": "ساعتان",
+    "attendanceText": "بواقع ساعتين تدريبيتين"
   }
 ];
