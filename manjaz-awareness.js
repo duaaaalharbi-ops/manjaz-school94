@@ -4,10 +4,7 @@ window.ManjazAwarenessCards=[{"id": 1, "main": "تعزيز القيم والسل
 window.ManjazAwarenessActivity={exportPdf:async function(v){
  var card=window.ManjazAwarenessCards.find(function(c){return c.id===Number(v.c&&v.c[0]);});
  if(!card)throw Error("تعذر العثور على بطاقة الوعي الفكري.");
- var response=await fetch("assets/intellectual-awareness/card-"+String(card.id).padStart(2,"0")+".pdf");
- if(!response.ok)throw Error("تعذر تحميل بطاقة الوعي الفكري.");
- var blob=await response.blob();
- if(!blob.size)throw Error("ملف البطاقة فارغ.");
- return {blob:blob,filename:"الوعي_الفكري_"+card.id+".pdf"};
+ if(!window.ManjazExtraActivityV57)throw Error("محرك تقرير التنفيذ غير متاح.");
+ return window.ManjazExtraActivityV57.exportPdf(v);
 }};
 })();

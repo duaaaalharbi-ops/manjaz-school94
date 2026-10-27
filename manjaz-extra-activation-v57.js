@@ -3,6 +3,12 @@
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function row(label,value){return '<div class="kv"><b>'+esc(label)+'</b><span>'+esc(value||"—")+'</span></div>';}
 function cardTemplate(v){
+ if(v.bag==="intellectual_awareness"){
+  var awareness=(window.ManjazAwarenessCards||[]).find(function(c){return c.id===Number(v.c&&v.c[0]);});
+  if(!awareness)throw Error("تعذر العثور على بطاقة الوعي الفكري.");
+  return '<section class="mj-extra-paper" dir="rtl" lang="ar" style="padding:8mm 10mm;height:297mm"><div style="font-size:17px;font-weight:bold;color:#12475c">تقرير تفعيل حقيبة الوعي الفكري</div><div class="mj-extra-grid" style="margin:3mm 0;gap:2mm">'+row("المعلمة المنفذة",v.teacher)+row("اليوم والتاريخ الهجري",v.weekday+" – "+v.day+"/"+v.month+"/"+v.year+" هـ")+row("الفصول",(v.klasses||[]).join("، "))+row("الحصص",(v.periods||[]).map(function(p){return "الحصة "+p;}).join("، "))+'</div><img alt="'+esc(awareness.title)+'" src="assets/intellectual-awareness/card-'+String(awareness.id).padStart(2,"0")+'.jpg" style="display:block;width:100%;height:221mm;object-fit:contain">'+(v.outcome?'<div style="font-size:11px;line-height:1.4;margin-top:2mm"><b>نواتج الإنجاز: </b>'+esc(v.outcome)+'</div>':"")+'</section>';
+ }
+
  var behavior=v.bag==="positive_behavior";
  var card=behavior&&(window.ManjazBehaviorCards||[]).find(x=>x.id===Number(v.c&&v.c[0]));
  if(behavior&&!card)throw new Error("تعذر العثور على بطاقة السلوك الإيجابي.");
@@ -37,7 +43,7 @@ function ensureEngine(){
  document.head.appendChild(x);});
 }
 async function exportPdf(v){
- if(v.bag!=="positive_behavior"&&v.bag!=="other")throw new Error("نوع الحقيبة غير مدعوم.");
+ if(v.bag!=="positive_behavior"&&v.bag!=="other"&&v.bag!=="intellectual_awareness")throw new Error("نوع الحقيبة غير مدعوم.");
  var pdfEngine=await ensureEngine();
  var staging=document.createElement("div");
  staging.style.cssText="position:fixed;top:0;left:-20000px;z-index:-1;pointer-events:none;visibility:visible";
@@ -49,6 +55,9 @@ async function exportPdf(v){
  document.body.appendChild(staging);
  try{
   if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+  await Promise.all(Array.from(root.querySelectorAll("img")).map(function(img){
+   return img.decode().catch(function(){throw Error("تعذر تحميل محتوى بطاقة الوعي الفكري.");});
+  }));
   var paper=root.querySelector(".mj-extra-paper");
   if(paper.scrollHeight>paper.clientHeight+2)paper.classList.add("compact");
   if(paper.scrollHeight>paper.clientHeight+2)throw new Error("البيانات تتجاوز مساحة البطاقة؛ اختصري وصف الإنجاز أو الاختيارات.");
@@ -64,7 +73,7 @@ async function exportPdf(v){
   var pdf=new JSPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
   pdf.addImage(canvas.toDataURL("image/jpeg",.96),"JPEG",0,0,210,297,undefined,"FAST");
   if(pdf.internal.getNumberOfPages()!==1)throw new Error("عدد الصفحات غير صحيح.");
-  return {blob:pdf.output("blob"),filename:"بطاقة_تفعيل_"+(v.bag==="other"?"أخرى":String(v.c[0]).padStart(3,"0"))+".pdf"};
+  return {blob:pdf.output("blob"),filename:(v.bag==="intellectual_awareness"?"تقرير_الوعي_الفكري_":"بطاقة_تفعيل_")+(v.bag==="other"?"أخرى":String(v.c[0]).padStart(3,"0"))+".pdf"};
  }finally{staging.remove();}
 }
 window.ManjazExtraActivityV57={exportPdf:exportPdf,html:cardTemplate};
