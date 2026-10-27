@@ -116,7 +116,7 @@ function buildHome(){
   // نَتاج: first and taller card; independent link, no impact on existing cards.
   const nataj=document.createElement("a");
   nataj.className="manjaz-home-card nataj-entry";
-  nataj.href="https://track-my-school.lovable.app";
+  nataj.href="https://school-selfeval-compass.lovable.app";
   nataj.target="_blank";
   nataj.rel="noopener noreferrer";
   nataj.setAttribute("aria-label","نَتاج – لوحة الأداء المدرسي");
