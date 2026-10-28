@@ -69,6 +69,7 @@
     const style=document.createElement("style");
     style.id="manjazBayanVerbalStyle";
     style.textContent="\n#manjazBayanVerbal{box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;gap:12px;width:100%;min-width:0;min-height:264px;margin:16px 0 20px;padding:22px 20px;border:1px solid #cfdfdb;border-top:3px solid #238581;border-radius:18px;background:linear-gradient(135deg,#fff 8%,#f0faf7 100%);color:#173d48;text-decoration:none!important;box-shadow:0 8px 19px rgba(18,54,76,.08);-webkit-tap-highlight-color:transparent;transition:box-shadow .15s ease,transform .15s ease}\n#manjazBayanVerbal:hover{box-shadow:0 12px 26px rgba(18,54,76,.13);transform:translateY(-1px)}\n#manjazBayanVerbal:focus-visible{outline:3px solid #258a86;outline-offset:3px}\n#manjazBayanVerbal .mj-bayan-brand{display:flex;gap:13px;align-items:center;min-width:0}\n#manjazBayanVerbal .mj-bayan-icon{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:13px;background:#dcefeb;color:#146d69;font-size:26px;font-weight:700}\n#manjazBayanVerbal .mj-bayan-name{margin:0;font-size:27px;font-weight:650;line-height:1.4;letter-spacing:normal;color:#173d48}\n#manjazBayanVerbal .mj-bayan-subtitle{margin:3px 0 0;color:#4b7570;font-size:13px;font-weight:600;line-height:1.6}\n#manjazBayanVerbal .mj-bayan-topic{font-size:18px;font-weight:800;color:#1e5552;line-height:1.5}\n#manjazBayanVerbal .mj-bayan-cta{box-sizing:border-box;min-height:45px;width:100%;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#0b7777;color:#fff;font-size:14px;font-weight:800;line-height:1.25}\n@media(max-width:430px){#manjazBayanVerbal{min-height:250px;padding:17px 14px;margin:12px 0 17px}#manjazBayanVerbal .mj-bayan-icon{width:42px;height:42px;flex-basis:42px;font-size:23px}#manjazBayanVerbal .mj-bayan-name{font-size:25px}#manjazBayanVerbal .mj-bayan-subtitle{font-size:12px}#manjazBayanVerbal .mj-bayan-topic{font-size:16px}}\n";
+    style.textContent+=style.textContent.replaceAll("#manjazBayanVerbal","#manjazVerbalExcellence");
     document.head.appendChild(style);
   }
   function shell(){return `
@@ -76,12 +77,18 @@
       <span class="kicker">ملف القدرات</span><h2>ملف القدرات</h2>
       <p>استعراض ملف القدرات من Google Drive</p>
     </div></section>
-    <a id="manjazBayanVerbal" href="https://bayan-verbal-boost.lovable.app" target="_blank" rel="noopener noreferrer" aria-label="استعراض بَيان منصة التدريب الرقمي القسم اللفظي">
+    <a id="manjazBayanVerbal" href="https://bayan-verbal-boost.lovable.app" target="_blank" rel="noopener noreferrer" aria-label="استعراض بَيان منصة التدريب الرقمي أ. إيمان الجدعاني">
       <div class="mj-bayan-brand">
-        <span class="mj-bayan-icon" aria-hidden="true">ب</span>
         <div><h3 class="mj-bayan-name">بَيان</h3><p class="mj-bayan-subtitle">منصة التدريب الرقمي</p></div>
       </div>
-      <div class="mj-bayan-topic">القسم اللفظي</div>
+      <div class="mj-bayan-topic">أ. إيمان الجدعاني</div>
+      <span class="mj-bayan-cta">استعراض</span>
+    </a>
+    <a id="manjazVerbalExcellence" href="https://lovable.dev/preview/NGZbNn9cAK0vsseYFlyGueAJCIr9r5Op" target="_blank" rel="noopener noreferrer" aria-label="استعراض بوابة التميز في القدرات اللفظية منصة التدريب الرقمي أ. عوالي السبيعي">
+      <div class="mj-bayan-brand">
+        <div><h3 class="mj-bayan-name">بوابة التميز في القدرات اللفظية</h3><p class="mj-bayan-subtitle">منصة التدريب الرقمي</p></div>
+      </div>
+      <div class="mj-bayan-topic">أ. عوالي السبيعي</div>
       <span class="mj-bayan-cta">استعراض</span>
     </a>
     <button type="button" id="qudratOpenForm" hidden style="display:none!important" tabindex="-1" aria-hidden="true">إضافة رابط درايف</button>
