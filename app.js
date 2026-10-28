@@ -328,6 +328,24 @@ async function uploadOneFile(parentKeyValue,kind,file){
 }
 
 const activeUploadLocks=new Set();
+
+// Upload attachments before INSERT so public creation never needs UPDATE permission.
+async function prepareNewRecordMedia(kind,item,form,msg){
+  const key=parentKey(kind,item.id||crypto.randomUUID());
+  const queue=[...selectedFiles(form.elements.images).map(file=>({kind:"image",file})),...selectedFiles(form.elements.documents).map(file=>({kind:"document",file}))];
+  const seen=new Set();
+  item.media=Array.isArray(item.media)?item.media:[];
+  for(const entry of queue){
+    const fingerprint=fileFingerprint(entry.file,entry.kind);
+    if(seen.has(fingerprint))continue;seen.add(fingerprint);
+    const existing=item.media.find(x=>x.clientKey===fingerprint);
+    if(!existing)item.media.push(await uploadOneFile(key,entry.kind,entry.file));
+    if(msg)msg.textContent=`جارٍ رفع المرفقات ${item.media.length} من ${queue.length}...`;
+  }
+  item.coverUrl=item.media.find(x=>x.kind==="image")?.url||"";
+  return item;
+}
+
 async function saveSelectedFiles(parentKeyValue, imageFiles=[], docFiles=[], onProgress=null){
   const rawQueue=[
     ...Array.from(imageFiles||[]).map(file=>({kind:"image",file})),
@@ -1038,55 +1056,27 @@ form.dataset.busy="1";
       media:[]
     };
 
-    /* نحفظ بيانات المنجز أولًا دائمًا */
-    const items=getItems();
-    items.unshift(item);
-    saveItems(mergeUniqueRecords([items]));
-
-    let cloudSaveFailed=false;
-    let activeId=id;
+    let cloudSaveFailed=false,uploadFailed=false;
     try{
+      const draft=form._manjazCreationDraft||(form._manjazCreationDraft=item);
+      item.media=draft.media;
+      item.id=draft.id;
+      await prepareNewRecordMedia("achievement",item,form,msg);
+      draft.media=item.media;
       const cloudItem=await insertCloudRecord("achievement",item);
-      if(cloudItem && cloudItem.id){
-        activeId=replaceLocalId("achievement",id,cloudItem);
-        item.id=activeId;
-      }
+      const items=getItems();
+      items.unshift(cloudItem);
+      saveItems(mergeUniqueRecords([items]));
+      delete form._manjazCreationDraft;
     }catch(err){
       cloudSaveFailed=true;
-      console.error("حفظ المنجز سحابيًا:",err);
-    }
-
-    if(msg){
-      msg.className=cloudSaveFailed ? "warning" : "success";
-      msg.textContent=cloudSaveFailed
-        ? "تم حفظ نسخة محلية مؤقتًا، لكن تعذر إرسال بيانات المنجز إلى Supabase"
-        : "تم حفظ بيانات المنجز سحابيًا، جارٍ رفع المرفقات...";
-    }
-
-    let uploadFailed=false;
-    try{
-      await saveSelectedFiles(
-        parentKey("achievement",activeId),
-        selectedFiles(form.elements.images),
-        selectedFiles(form.elements.documents),
-        (done,total)=>{
-          if(msg && total){
-            msg.className="success";
-            msg.textContent=done<total ? `جارٍ رفع المرفقات ${done} من ${total}...` : "اكتمل رفع المرفقات، جارٍ إنهاء الحفظ...";
-          }
-        }
-      );
-      const refreshed=getItems().find(x=>String(x.id)===String(activeId));
-      if(refreshed && !cloudSaveFailed) await updateCloudRecord("achievement",refreshed);
-    }catch(err){
-      uploadFailed=true;
-      console.error("رفع المرفقات:",err);
+      console.error("تعذر حفظ المنجز ومرفقاته:",err);
     }
 
     if(msg){
       msg.className=(uploadFailed||cloudSaveFailed) ? "warning" : "success";
       msg.textContent=cloudSaveFailed
-        ? "تم حفظ نسخة محلية مؤقتة، لكن تعذر الحفظ السحابي. تحققي من الاتصال ثم أعيدي المحاولة"
+        ? "تعذر إكمال الحفظ السحابي. تحققي من الاتصال ثم أعيدي المحاولة"
         : uploadFailed
           ? "تم حفظ المنجز سحابيًا، لكن تعذر رفع بعض المرفقات. يمكنك إضافتها لاحقًا من التفاصيل"
           : "تم حفظ المنجز ورفع المرفقات وإرساله للمراجعة بنجاح";

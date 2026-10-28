@@ -294,11 +294,15 @@ async function cloudAwardSubmit(e){
     }
 
     /* Save the record to Supabase FIRST. No local award write occurs. */
+    const draft=form._manjazCreationDraft||(form._manjazCreationDraft={id:crypto.randomUUID(),media:[]});
+    item.id=draft.id;item.media=draft.media;
+    await prepareNewRecordMedia("award",item,form,msg);
     const cloudItem=await insertAwardCloud(item);
+    delete form._manjazCreationDraft;
     awardsCache=[cloudItem,...awardsCache.filter(x=>String(x.id)!==String(cloudItem.id))];
 
     /* Multiple images and multiple files stay attached to the same cloud row. */
-    await uploadAwardFiles(cloudItem,form,msg);
+
 
     await fetchAwardsCloud();
     clearAwardFiles(form);

@@ -157,7 +157,7 @@ addEventListener("load",()=>{render();setTimeout(enhanceAwardsSection,80)},{once
 })();
 
 /* MANJAZ: isolated cloud-first partnership update loader */
-(()=>{if(document.querySelector('script[data-manjaz-partners-cloud="2.0"]'))return;const s=document.createElement("script");s.src="partners-cloud.js?v=2.0";s.dataset.manjazPartnersCloud="2.0";document.head.appendChild(s)})();
+(()=>{if(document.querySelector('script[data-manjaz-partners-cloud="2.0"]'))return;const s=document.createElement("script");s.src="partners-cloud.js?v=20261028-admin-content-only";s.dataset.manjazPartnersCloud="2.0";document.head.appendChild(s)})();
 
 
 /* MANJAZ: isolated daily reserve section loader */

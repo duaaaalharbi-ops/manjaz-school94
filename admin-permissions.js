@@ -677,3 +677,61 @@ if(view){
   }).observe(view,{childList:true,subtree:true});
 }
 })();
+
+
+/* Content mutations require a verified administrative session. */
+(()=>{"use strict";
+ const base="https://idkjuqfxcweqekdkcktk.supabase.co", key="sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
+ const originalFetch=window.fetch.bind(window), protectedKinds=new Set(["achievement","award","partner","workshop"]);
+ let verifiedToken="",checking="";
+ const session=()=>{try{return JSON.parse(sessionStorage.getItem("manjaz_admin_auth_session_v1")||"null")}catch{return null}};
+ window.manjazContentAdminReady=()=>!!verifiedToken&&verifiedToken===session()?.access_token&&Number(session()?.expires_at||0)>Date.now()/1000;
+ const selectors=".record-edit-btn,.record-delete-btn,.cert-edit-workshop,.cert-delete-workshop,.delete-attachment,.edit-record,.admin-delete-record,.partner-replace-attachment,.add-attachments";
+ const style=document.createElement("style");
+ style.textContent=selectors.split(",").map(s=>"html.manjaz-content-scope:not(.manjaz-content-admin) "+s).join(",")+"{display:none!important}";
+ document.head.appendChild(style);
+ const setScope=()=>document.documentElement.classList.toggle("manjaz-content-scope",["achievements","awards","partners","certificates","certificates-add","admin"].includes((location.hash||"").slice(1)));
+ async function verify(){
+  setScope();
+  const s=session(),token=s?.access_token||"";
+  if(checking===token)return;
+  checking=token;verifiedToken="";document.documentElement.classList.remove("manjaz-content-admin");
+  if(!token||Number(s.expires_at||0)<=Date.now()/1000)return;
+  try{
+   const r=await originalFetch(base+"/auth/v1/user",{headers:{apikey:key,Authorization:"Bearer "+token},cache:"no-store"});
+   const u=r.ok?await r.json():null;
+   if(token===session()?.access_token&&String(u?.email||"").toLowerCase()==="munjz.s94@hotmail.com"){
+    verifiedToken=token;document.documentElement.classList.add("manjaz-content-admin");
+   }
+  }catch(_){}
+ }
+ window.fetch=async function(input,init){
+  const url=new URL(typeof input==="string"?input:input.url,location.href);
+  const method=String(init?.method||input?.method||"GET").toUpperCase();
+  if(url.origin===base&&["PATCH","DELETE","PUT"].includes(method)){
+   const kind=(url.searchParams.get("kind")||"").replace(/^eq\./,"");
+   const record=url.pathname==="/rest/v1/records";
+   const media=url.pathname.startsWith("/storage/v1/object/manjaz-media/")&&["achievement","award","partner","workshop"].includes(decodeURIComponent(url.pathname).split("/")[5]);
+   if(record||media){
+    await verify();
+    if((protectedKinds.has(kind)||media)&&!window.manjazContentAdminReady())throw Error("التعديل والحذف متاحان للإدارة فقط");
+    if(window.manjazContentAdminReady()){
+     const h=new Headers(init?.headers||(input instanceof Request?input.headers:undefined));h.set("Authorization","Bearer "+verifiedToken);
+     init={...init,headers:h};
+    }
+   }
+  }
+  return originalFetch(input,init);
+ };
+ document.addEventListener("click",e=>{
+  const button=e.target.closest(selectors);
+  const route=(location.hash||"").slice(1);
+  if(button&&["achievements","awards","partners","certificates","certificates-add","admin"].includes(route)&&!window.manjazContentAdminReady()){
+   e.preventDefault();e.stopImmediatePropagation();verify();
+  }
+ },true);
+ document.addEventListener("manjaz:admin-session-changed",()=>{checking="";verify()});
+ window.addEventListener("hashchange",verify);
+ window.addEventListener("focus",()=>{checking="";verify()});
+ verify();
+})();

@@ -266,10 +266,14 @@ async function cloudPartnerSubmit(e){
     if(missing.length) throw new Error(`بيانات ناقصة: ${missing.join("، ")}`);
 
     if(msg){msg.className="success";msg.textContent="جارٍ حفظ الشراكة سحابيًا...";}
+    const draft=form._manjazCreationDraft||(form._manjazCreationDraft={id:crypto.randomUUID(),media:[]});
+    item.id=draft.id;item.media=draft.media;
+    await prepareNewRecordMedia("partner",item,form,msg);
     const cloudItem=await insertPartnerCloud(item);
+    delete form._manjazCreationDraft;
     partnersCache=[cloudItem,...partnersCache.filter(x=>String(x.id)!==String(cloudItem.id))];
 
-    await uploadPartnerFiles(cloudItem,form,msg);
+
     await fetchPartnersCloud();
     clearPartnerFiles(form);
 
