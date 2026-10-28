@@ -91,7 +91,7 @@
       <div class="mj-bayan-topic">أ. عوالي السبيعي</div>
       <span class="mj-bayan-cta">استعراض</span>
     </a>
-    <button type="button" id="qudratOpenForm" hidden style="display:none!important" tabindex="-1" aria-hidden="true">إضافة رابط درايف</button>
+    <button type="button" id="qudratOpenForm" class="btn btn-primary">إضافة رابط درايف</button>
     <form id="qudratForm" class="surface form-card" style="display:none">
       <div class="form-section-title">رابط ملف القدرات</div>
       <div class="form-grid"><label class="wide">رابط Google Drive *
@@ -116,7 +116,7 @@
       `<article class="achievement-card" data-qudrat-drive-card="1"><span class="badge">ملف القدرات</span>
         <h3>ملف القدرات</h3>
         <div class="record-actions-grid">
-          <a class="details-btn" href="${esc(link)}" target="_blank" rel="noopener noreferrer">استعراض الملف في Google Drive</a>
+          <a class="details-btn" href="${esc(link)}" target="_blank" rel="noopener noreferrer">فتح الرابط</a>
           <button class="record-delete-btn" type="button" id="qudratDelete">حذف الرابط</button>
         </div>
       </article>`:
@@ -275,7 +275,7 @@
       `<article class="achievement-card" data-qudrat-quant-drive-card="1"><span class="badge">ملف القدرات الكمي</span>
         <h3>ملف القدرات الكمي</h3>
         <div class="record-actions-grid">
-          <a class="details-btn" href="${esc(link)}" target="_blank" rel="noopener noreferrer">استعراض الملف في Google Drive</a>
+          <a class="details-btn" href="${esc(link)}" target="_blank" rel="noopener noreferrer">فتح الرابط</a>
           <button class="record-delete-btn" type="button" id="qudrat-quantDelete">حذف الرابط</button>
         </div>
       </article>`:

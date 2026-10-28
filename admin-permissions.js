@@ -682,15 +682,21 @@ if(view){
 /* Content mutations require a verified administrative session. */
 (()=>{"use strict";
  const base="https://idkjuqfxcweqekdkcktk.supabase.co", key="sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
- const originalFetch=window.fetch.bind(window), protectedKinds=new Set(["achievement","award","partner","workshop"]);
+ const originalFetch=window.fetch.bind(window), linkKinds=new Set(["cloud_activity","cloud_excellence","cloud_portfolios","talent_work_link","qudrat_drive_link","qudrat-quant_drive_link","tahsili_drive_link"]), protectedKinds=new Set(["achievement","award","partner","workshop","applied_lesson",...linkKinds]);
  let verifiedToken="",checking="";
  const session=()=>{try{return JSON.parse(sessionStorage.getItem("manjaz_admin_auth_session_v1")||"null")}catch{return null}};
  window.manjazContentAdminReady=()=>!!verifiedToken&&verifiedToken===session()?.access_token&&Number(session()?.expires_at||0)>Date.now()/1000;
- const selectors=".record-edit-btn,.record-delete-btn,.cert-edit-workshop,.cert-delete-workshop,.delete-attachment,.edit-record,.admin-delete-record,.partner-replace-attachment,.add-attachments";
+ const selectors=".applied-lesson-card .edit,.applied-lesson-card .delete,.cloud-edit,.cloud-delete,.c-edit,.c-delete,.record-edit-btn,.record-delete-btn,.cert-edit-workshop,.cert-delete-workshop,.delete-attachment,.edit-record,.admin-delete-record,.partner-replace-attachment,.add-attachments";
  const style=document.createElement("style");
  style.textContent=selectors.split(",").map(s=>"html.manjaz-content-scope:not(.manjaz-content-admin) "+s).join(",")+"{display:none!important}";
  document.head.appendChild(style);
- const setScope=()=>document.documentElement.classList.toggle("manjaz-content-scope",["achievements","awards","partners","certificates","certificates-add","admin"].includes((location.hash||"").slice(1)));
+ const linkRoutes=["cloud-activity","cloud-excellence","cloud-portfolios","talent","qudrat-file","qudrat-quant-file","tahsili-file"];
+ const contentRoutes=["achievements","awards","partners","certificates","certificates-add","admin","lessons",...linkRoutes];
+ const linkControls="#cloudShowAdd,#cloudLinkForm,#talentShowAdd,#talentForm,#qudratOpenForm,#qudratForm,#qudratRestoreLink,#qudrat-quantOpenForm,#qudrat-quantForm,#qudrat-quantRestoreLink,#tahsiliOpenForm,#tahsiliForm";
+ style.textContent+=linkControls.split(",").map(s=>"html.manjaz-link-scope:not(.manjaz-content-admin) "+s).join(",")+"{display:none!important}";
+ style.textContent+=linkRoutes.map(r=>'html:not(.manjaz-content-admin) #manjazHome a.manjaz-home-action.add[href="#'+r+'"]').join(",")+"{display:none!important}";
+ style.textContent+='html.manjaz-link-scope:not(.manjaz-content-admin) #view .record-actions-grid{grid-template-columns:minmax(0,1fr)}';
+ const setScope=()=>{const route=(location.hash||"").slice(1);document.documentElement.classList.toggle("manjaz-content-scope",contentRoutes.includes(route));document.documentElement.classList.toggle("manjaz-link-scope",linkRoutes.includes(route));};
  async function verify(){
   setScope();
   const s=session(),token=s?.access_token||"";
@@ -705,14 +711,16 @@ if(view){
    }
   }catch(_){}
  }
+ window.manjazRequireContentAdmin=async()=>{await verify();if(!window.manjazContentAdminReady())throw Error("التعديل والحذف متاحان للإدارة فقط");};
  window.fetch=async function(input,init){
   const url=new URL(typeof input==="string"?input:input.url,location.href);
   const method=String(init?.method||input?.method||"GET").toUpperCase();
-  if(url.origin===base&&["PATCH","DELETE","PUT"].includes(method)){
-   const kind=(url.searchParams.get("kind")||"").replace(/^eq\./,"");
+  if(url.origin===base&&["PATCH","DELETE","PUT","POST"].includes(method)){
+   let kind=(url.searchParams.get("kind")||"").replace(/^eq\./,"");
+   if(method==="POST"){try{kind=JSON.parse(init?.body||"{}").kind||kind}catch(_){}}
    const record=url.pathname==="/rest/v1/records";
-   const media=url.pathname.startsWith("/storage/v1/object/manjaz-media/")&&["achievement","award","partner","workshop"].includes(decodeURIComponent(url.pathname).split("/")[5]);
-   if(record||media){
+   const media=method!=="POST"&&url.pathname.startsWith("/storage/v1/object/manjaz-media/")&&["achievement","award","partner","workshop"].includes(decodeURIComponent(url.pathname).split("/")[5]);
+   if((record&&(method!=="POST"||linkKinds.has(kind)))||media){
     await verify();
     if((protectedKinds.has(kind)||media)&&!window.manjazContentAdminReady())throw Error("التعديل والحذف متاحان للإدارة فقط");
     if(window.manjazContentAdminReady()){
@@ -724,11 +732,18 @@ if(view){
   return originalFetch(input,init);
  };
  document.addEventListener("click",e=>{
-  const button=e.target.closest(selectors);
+  const button=e.target.closest(selectors+","+linkControls);
   const route=(location.hash||"").slice(1);
-  if(button&&["achievements","awards","partners","certificates","certificates-add","admin"].includes(route)&&!window.manjazContentAdminReady()){
+  if(button&&contentRoutes.includes(route)&&!window.manjazContentAdminReady()){
    e.preventDefault();e.stopImmediatePropagation();verify();
   }
+ },true);
+ document.addEventListener("submit",e=>{
+  const form=e.target;
+  const route=(location.hash||"").slice(1);
+  const protectedForm=linkRoutes.includes(route)&&form.matches("#cloudLinkForm,#talentForm,#qudratForm,#qudrat-quantForm,#tahsiliForm");
+  const lessonEdit=form.id==="lessonManageForm"&&!!document.getElementById("lmId")?.value;
+  if((protectedForm||lessonEdit)&&!window.manjazContentAdminReady()){e.preventDefault();e.stopImmediatePropagation();verify();}
  },true);
  document.addEventListener("manjaz:admin-session-changed",()=>{checking="";verify()});
  window.addEventListener("hashchange",verify);

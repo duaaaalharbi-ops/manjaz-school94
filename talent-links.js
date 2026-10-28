@@ -148,7 +148,7 @@ function draw(){
       <h3>${esc(x.title||"عمل بدون عنوان")}</h3>
       ${x.description?`<p>${esc(x.description)}</p>`:""}
       <div class="record-actions-grid">
-        <a class="details-btn" href="${esc(x.url)}" target="_blank" rel="noopener">عرض العمل</a>
+        <a class="details-btn" href="${esc(x.url)}" target="_blank" rel="noopener">فتح الرابط</a>
         <button type="button" class="record-edit-btn talent-edit" data-id="${esc(x.id)}">تعديل</button>
         <button type="button" class="record-delete-btn talent-delete" data-id="${esc(x.id)}">حذف</button>
       </div>`;

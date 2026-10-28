@@ -103,12 +103,14 @@ async function createCloudLesson(x){
   if(Array.isArray(rows)&&rows[0]) cloudRows.push(rows[0]);
 }
 async function patchCloudLesson(rowId,x){
+  await window.manjazRequireContentAdmin();
   const p=new URLSearchParams({id:`eq.${rowId}`,kind:`eq.${CLOUD_KIND}`});
   const payload={data:normalize(x),status:"معتمد",updated_at:new Date().toISOString()};
   const r=await fetch(`${ENDPOINT}?${p.toString()}`,{method:"PATCH",headers:{...HEADERS,"Prefer":"return=representation"},body:JSON.stringify(payload)});
   if(!r.ok) throw new Error(`تعذر تحديث الدرس المشترك (${r.status})`);
 }
 async function deleteCloudRow(rowId){
+  await window.manjazRequireContentAdmin();
   const p=new URLSearchParams({id:`eq.${rowId}`,kind:`eq.${CLOUD_KIND}`});
   const r=await fetch(`${ENDPOINT}?${p.toString()}`,{method:"DELETE",headers:{...HEADERS,"Prefer":"return=minimal"}});
   if(!r.ok) throw new Error(`تعذر حذف الدرس المشترك (${r.status})`);
@@ -153,13 +155,13 @@ async function syncLocalToCloud(){
     for(const [id,x] of localById){
       const row=remoteByLesson.get(id);
       if(row){
-        if(signature([normalize(row.data)])!==signature([x])) await patchCloudLesson(row.id,x);
+        if(window.manjazContentAdminReady?.()&&signature([normalize(row.data)])!==signature([x])) await patchCloudLesson(row.id,x);
       }else{
         await createCloudLesson(x);
       }
     }
     for(const [id,row] of remoteByLesson){
-      if(!localById.has(id)&&pendingDeleteIds.has(id)){
+      if(window.manjazContentAdminReady?.()&&!localById.has(id)&&pendingDeleteIds.has(id)){
         await deleteCloudRow(row.id);
         pendingDeleteIds.delete(id);
       }
@@ -205,7 +207,7 @@ document.addEventListener("click",e=>{
   const btn=e.target?.closest?.(".applied-lesson-card .cert-mini-action.danger.delete");
   const card=btn?.closest?.("[data-lesson-id]");
   const id=clean(card?.getAttribute?.("data-lesson-id"));
-  if(!id) return;
+  if(!id||!window.manjazContentAdminReady?.()) return;
   pendingDeleteIds.add(id);
   setTimeout(()=>{if(readLocal().some(x=>x.id===id)) pendingDeleteIds.delete(id)},1500);
 },true);

@@ -91,7 +91,7 @@
       `<article class="achievement-card"><span class="badge">ملف التحصيلي</span>
         <h3>ملف التحصيلي</h3>
         <div class="record-actions-grid">
-          <a class="details-btn" href="${esc(link)}" target="_blank" rel="noopener noreferrer">استعراض الملف في Google Drive</a>
+          <a class="details-btn" href="${esc(link)}" target="_blank" rel="noopener noreferrer">فتح الرابط</a>
           <button class="record-delete-btn" type="button" id="tahsiliDelete">حذف الرابط</button>
         </div>
       </article>`:

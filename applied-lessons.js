@@ -81,9 +81,10 @@ function lessonCard(x){
  return card;
 }
 function fillEditor(x){
+ if(!window.manjazContentAdminReady?.())return;
  const f=document.getElementById("lessonManageForm");if(!f)return;const q=id=>document.getElementById(id);q("lmId").value=x.id;q("lmTitle").value=x.lessonName||x.title||"";q("lmSubject").value=x.subject||"";q("lmGrade").value=x.grade||"";q("lmDate").value=x.date||"";q("lmTeacher").value=x.teacher||"";q("lmStrategies").value=x.strategies||"";q("lmLink").value=x.link||x.url||x.achievementUrl||"";f.closest("details").open=true;f.scrollIntoView({behavior:"smooth",block:"start"});
 }
-function deleteLesson(x){if(!confirm(`حذف الدرس «${x.lessonName||x.title||""}»؟`))return;const m=managedLessons(),i=m.findIndex(r=>String(r.id)===String(x.id));if(i>=0)m.splice(i,1);else m.push({...x,available:false,availability:"hidden"});saveManaged(m);window.wireAppliedLessons();}
+function deleteLesson(x){if(!window.manjazContentAdminReady?.())return;if(!confirm(`حذف الدرس «${x.lessonName||x.title||""}»؟`))return;const m=managedLessons(),i=m.findIndex(r=>String(r.id)===String(x.id));if(i>=0)m.splice(i,1);else m.push({...x,available:false,availability:"hidden"});saveManaged(m);window.wireAppliedLessons();}
 function wireEditor(){
  const f=document.getElementById("lessonManageForm");if(!f)return;const q=id=>document.getElementById(id),msg=q("lmMsg"),submit=f.querySelector('button[type="submit"]');let busy=false;
  q("lmCancel")?.addEventListener("click",()=>{f.reset();q("lmId").value="";msg.textContent=""});
