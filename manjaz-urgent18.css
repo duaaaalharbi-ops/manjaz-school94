@@ -11,7 +11,10 @@
 #view:has(#achievementList) .page-intro,#view:has(#awardList) .page-intro{display:none!important}
 #view:has(#achievementList) #emptyState,#view:has(#awardList) #awardEmpty{display:none!important}
 #view:has(#awardList) :is(.mj18-award-admin-controls,#awardForm,.mj18-legacy-counters){display:none!important}
-#view:has(#awardList) .record-actions-grid{display:none!important}
+#view:has(#awardList) .record-actions-grid{display:grid!important}
+#view:not(.mj19-admin-awards) #awardList .record-actions-grid{grid-template-columns:minmax(0,1fr)}
+#view #awardList .record-actions-grid .details-btn{display:flex;align-items:center;justify-content:center;gap:8px}
+#view #awardList .details-btn::before{content:"";width:20px;height:20px;flex:0 0 20px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='1.8' d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z'/%3E%3Ccircle cx='12' cy='12' r='3' fill='none' stroke='black' stroke-width='1.8'/%3E%3C/svg%3E") center/contain no-repeat}
 #view:has(#awardList) :is(.record-edit-btn,.record-delete-btn){display:none!important}
 #view:has(#achievementList) .achievement-card[hidden],#view:has(#awardList) .achievement-card[hidden]{display:none!important}
 #view .mj18-utility-card .stat-grid{margin-bottom:12px}
