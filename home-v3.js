@@ -11,6 +11,7 @@ const cards=[
   {title:"برامج الهيكل الإداري",view:"#admin-programs",add:"#admin-programs",icon:"▦"},
   {title:"الحوسبة السحابية | منجزات النشاط",view:"#cloud-activity",icon:"☁",viewOnly:true},
   {title:"الحوسبة السحابية | فريق التميز",view:"#cloud-excellence",icon:"☁",viewOnly:true},
+  {title:"الحوسبة السحابية | الخطة التشغيلية",view:"#cloud-operational-plan",icon:"☁",viewOnly:true},
   {title:"الحوسبة السحابية | ملفات الإنجاز",view:"#cloud-portfolios",icon:"☁",viewOnly:true},
   {title:"الاحتياط اليومي",view:"#daily-reserve",icon:"▦",viewOnly:true},
   {title:"تفعيل الاحتياط اليومي",view:"#daily-activation",icon:"▣",viewOnly:true},
@@ -83,7 +84,7 @@ function action(label,href,kind,addKind){
 function ensureCloudLinksScript(){
   if(document.querySelector('script[data-manjaz-cloud-links="1"]')) return;
   const s=document.createElement("script");
-  s.src="cloud-links.js?v=1.2";
+  s.src="cloud-links.js?v=20261028-operational-plan";
   s.dataset.manjazCloudLinks="1";
   document.head.appendChild(s);
 }

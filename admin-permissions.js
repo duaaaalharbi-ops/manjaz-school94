@@ -682,7 +682,7 @@ if(view){
 /* Content mutations require a verified administrative session. */
 (()=>{"use strict";
  const base="https://idkjuqfxcweqekdkcktk.supabase.co", key="sb_publishable_3yW3waOwoT0m5XtTCi1lyQ_6DGfXtIL";
- const originalFetch=window.fetch.bind(window), linkKinds=new Set(["cloud_activity","cloud_excellence","cloud_portfolios","talent_work_link","qudrat_drive_link","qudrat-quant_drive_link","tahsili_drive_link"]), protectedKinds=new Set(["achievement","award","partner","workshop","applied_lesson",...linkKinds]);
+ const originalFetch=window.fetch.bind(window), linkKinds=new Set(["cloud_operational_plan","cloud_activity","cloud_excellence","cloud_portfolios","talent_work_link","qudrat_drive_link","qudrat-quant_drive_link","tahsili_drive_link"]), protectedKinds=new Set(["achievement","award","partner","workshop","applied_lesson",...linkKinds]);
  let verifiedToken="",checking="";
  const session=()=>{try{return JSON.parse(sessionStorage.getItem("manjaz_admin_auth_session_v1")||"null")}catch{return null}};
  window.manjazContentAdminReady=()=>!!verifiedToken&&verifiedToken===session()?.access_token&&Number(session()?.expires_at||0)>Date.now()/1000;
@@ -690,7 +690,7 @@ if(view){
  const style=document.createElement("style");
  style.textContent=selectors.split(",").map(s=>"html.manjaz-content-scope:not(.manjaz-content-admin) "+s).join(",")+"{display:none!important}";
  document.head.appendChild(style);
- const linkRoutes=["cloud-activity","cloud-excellence","cloud-portfolios","talent","qudrat-file","qudrat-quant-file","tahsili-file"];
+ const linkRoutes=["cloud-operational-plan","cloud-activity","cloud-excellence","cloud-portfolios","talent","qudrat-file","qudrat-quant-file","tahsili-file"];
  const contentRoutes=["achievements","awards","partners","certificates","certificates-add","admin","lessons",...linkRoutes];
  const linkControls="#cloudShowAdd,#cloudLinkForm,#talentShowAdd,#talentForm,#qudratOpenForm,#qudratForm,#qudratRestoreLink,#qudrat-quantOpenForm,#qudrat-quantForm,#qudrat-quantRestoreLink,#tahsiliOpenForm,#tahsiliForm";
  style.textContent+=linkControls.split(",").map(s=>"html.manjaz-link-scope:not(.manjaz-content-admin) "+s).join(",")+"{display:none!important}";

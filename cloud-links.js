@@ -11,6 +11,11 @@ const HEADERS={
 };
 
 const SECTIONS={
+  "cloud-operational-plan":{
+    title:"الحوسبة السحابية | الخطة التشغيلية",
+    kind:"cloud_operational_plan",
+    empty:"لم يُضف رابط ملف الخطة التشغيلية بعد"
+  },
   "cloud-activity":{
     title:"الحوسبة السحابية | منجزات النشاط",
     kind:"cloud_activity",
