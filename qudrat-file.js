@@ -250,6 +250,11 @@
       <span class="kicker">ملف القدرات الكمي</span><h2>ملف القدرات الكمي</h2>
       <p>استعراض ملف القدرات الكمي من Google Drive</p>
     </div></section>
+    <a id="manjazMadarQuant" class="surface" href="https://ninetyfour-number-navigator.lovable.app" target="_blank" rel="noopener noreferrer" dir="rtl" style="display:flex;flex-direction:column;gap:14px;margin:16px 0 20px;padding:22px 20px;border:1px solid #cfdfdb;border-top:3px solid #238581;border-radius:18px;background:linear-gradient(135deg,#fff 8%,#f0faf7 100%);color:#173d48;text-decoration:none;box-shadow:0 8px 19px rgba(18,54,76,.08)">
+      <div><h3 style="margin:0;font-size:27px;line-height:1.4">مَدار</h3><p style="margin:3px 0 0;color:#4b7570;font-size:14px">منصة التدريب الرقمي</p></div>
+      <div style="font-size:18px;font-weight:800;line-height:1.8">أ.وحش القحطاني<br>أ.حصة المنتشري</div>
+      <span style="display:flex;align-items:center;justify-content:center;min-height:45px;border-radius:10px;background:#0b7777;color:#fff;font-size:14px;font-weight:800">استعراض</span>
+    </a>
     <button type="button" id="qudrat-quantOpenForm">إضافة رابط درايف</button>
     <form id="qudrat-quantForm" class="surface form-card" style="display:none">
       <div class="form-section-title">رابط ملف القدرات الكمي</div>
