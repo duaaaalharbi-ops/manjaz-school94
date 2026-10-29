@@ -2894,36 +2894,59 @@ function dailyPublicationStats(items){
   return {periods:items.length,absentTeachers:absent.size,assignedTeachers:assigned.size,breakdown};
 }
 function publicationHTML(date){
-  const items=dailyPublicationRows(date);
   const groups=new Map();
-  for(const item of items){
+  for(const item of dailyPublicationRows(date)){
     const key=String(item.absentTeacherId||item.absentTeacherName||"غير محددة");
     if(!groups.has(key))groups.set(key,[]);
     groups.get(key).push(item);
   }
-  const forms=[...groups.entries()].map(([key,rows])=>{
-    const first=rows[0],absentName=clean(first.absentTeacherName||"—");
-    const subject=clean(teacherOf(first.absentTeacherId)?.subject||first.subject||"");
-    const byPeriod=new Map(rows.map(row=>[Number(row.period),row]));
+  const forms=[...groups.values()].map(rows=>{
+    const first=rows[0],subject=clean(teacherOf(first.absentTeacherId)?.subject||first.subject||"");
     return `<section class="reserve-publication-form">
-      <p class="reserve-publication-intro">إخواني المعلمين / نظراً لغياب الزميلة <strong>${esc(absentName)}</strong> لهذا اليوم، نأمل تسديد حصصها حسب الجدول أدناه، ولكم جزيل الشكر.</p>
-      <p class="reserve-publication-approval">هذا اليوم: ${esc(dayName(date))} &nbsp; الموافق: ${esc(fmtDate(date))} &nbsp;|&nbsp; يرجى التوقيع بعد تنفيذ الحصة.</p>
-      <table class="reserve-publication-duty"><thead><tr><th>الحصة</th><th>الفصل</th><th>المادة</th><th>المعلمة المسند لها الاحتياط</th><th>ما تم تنفيذه في حصة الانتظار</th><th>التوقيع</th><th>ملاحظات</th></tr></thead><tbody>
-      ${PERIODS.map(period=>{const row=byPeriod.get(period);return `<tr><td class="reserve-publication-period-cell">${period}</td><td>${esc(row?.className||"")}</td><td>${esc(subject)}</td><td>${esc(row?.assignedTeacherName||"")}</td><td>${esc(row?.activationTitle||"")}</td><td></td><td></td></tr>`}).join("")}
-      </tbody></table>
-    </section>`;
-  }).join("");
-  return `<div id="reservePublishSheet" dir="rtl" lang="ar">
-    <header class="reserve-official-header">
-      <div class="reserve-official-office"><strong>الإدارة العامة للتعليم بمنطقة جدة</strong><span>مكتب التعليم</span></div>
-      <div class="reserve-official-brand"><img src="${esc(new URL("ministry-logo.png",location.href).href)}" alt="شعار وزارة التعليم"><strong>وزارة التعليم</strong><small>Ministry of Education</small></div>
-    </header>
-    <div class="reserve-official-school">الثانوية الرابعة والتسعون – مسارات</div>
-    <div class="reserve-official-meta"><span>اسم النموذج: سجل توزيع الانتظار اليومي</span><span>اليوم: ${esc(dayName(date))} — التاريخ: ${esc(fmtDate(date))}</span><span>رمز النموذج: __________</span></div>
-    <h1>سجل توزيع حصص الانتظار اليومي</h1>
-    ${forms||'<p class="reserve-publication-empty">لا توجد حصص احتياط معتمدة لهذا اليوم.</p>'}
-    <div class="reserve-publication-signatures"><span>وكيلة الشؤون التعليمية: ____________________</span><span>التوقيع: ____________________</span></div>
-  </div>`;
+      <p class="reserve-publication-intro">زميلاتي المعلمات / نظراً لغياب المعلمة: <strong>${esc(first.absentTeacherName||"—")}</strong> لهذا اليوم <strong>${esc(dayName(date))}</strong></p>
+      <p class="reserve-publication-approval">الموافق ${esc(fmtDate(date))} آمل تسديد مكانها حسب الجدول الموضح والتوقيع بالعلم، ولكم جزيل الشكر.</p>
+      <table class="reserve-publication-duty"><colgroup><col style="width:9%"><col style="width:13%"><col style="width:15%"><col style="width:27%"><col style="width:14%"><col style="width:22%"></colgroup>
+      <thead><tr><th>الحصة</th><th>الفصل</th><th>المادة</th><th>المعلمة المنتظرة</th><th>التوقيع</th><th>ملاحظات</th></tr></thead><tbody>
+      ${PERIODS.map(period=>{
+        const matches=rows.filter(row=>Number(row.period)===Number(period));
+        return (matches.length?matches:[null]).map(row=>`<tr><td>${esc(String(period))}</td><td>${esc(row?.className||"")}</td><td>${esc(row?(row.subject||subject):"")}</td><td>${esc(row?.assignedTeacherName||"")}</td><td></td><td></td></tr>`).join("");
+      }).join("")}
+      </tbody></table></section>`;
+  });
+  const pages=[];
+  for(let i=0;i<forms.length;i+=3)pages.push(forms.slice(i,i+3).join(""));
+  if(!pages.length)pages.push('<p class="reserve-publication-empty">لا توجد حصص احتياط معتمدة لهذا اليوم.</p>');
+  return `<div id="reservePublishSheet" dir="rtl" lang="ar">${pages.map(forms=>`<section class="reserve-publication-page">
+    <header class="reserve-official-header"><div class="reserve-official-office"><strong>المملكة العربية السعودية</strong><span>وزارة التعليم</span><span>الإدارة العامة للتعليم بجدة</span><span>الثانوية الرابعة والتسعون – مسارات</span></div>
+    <img src="${esc(new URL("ministry-logo.png",location.href).href)}" alt="شعار وزارة التعليم"></header>
+    <div class="reserve-official-meta"><div><strong>نموذج رقم (٧)</strong><h1>سجل توزيع الانتظار</h1></div><span>رمز النموذج (........................)</span></div>
+    <div class="reserve-official-meta"><span>للعام الدراسي: ١٤...... هـ / ١٤...... هـ</span><span>الفصل (........................)</span></div>
+    ${forms}
+    <footer class="reserve-publication-signatures"><span>إعداد / ................................</span><span>يعتمد وكيلة الشؤون التعليمية<br>................................</span></footer>
+    </section>`).join("")}</div>`;
+}
+function reserveOfficialPublicationCSS(){
+  return `
+#reservePublishSheet{font:13px/1.6 Tahoma,Arial,sans-serif!important;color:#111!important;background:#fff;direction:rtl}
+#reservePublishSheet .reserve-publication-page{padding:5mm 2mm;box-sizing:border-box;break-after:page;page-break-after:always}
+#reservePublishSheet .reserve-publication-page:last-child{break-after:auto;page-break-after:auto}
+#reservePublishSheet .reserve-official-header{display:flex;justify-content:space-between;align-items:flex-start;min-height:29mm;padding:0;background:#fff;color:#111;border-radius:0}
+#reservePublishSheet .reserve-official-office{display:grid;gap:1px;text-align:right;font-size:12px;line-height:1.65}
+#reservePublishSheet .reserve-official-header>img{width:27mm;height:22mm;object-fit:contain}
+#reservePublishSheet .reserve-official-meta{display:flex;justify-content:space-between;align-items:center;margin:3mm 0;font-size:12px;gap:8mm}
+#reservePublishSheet .reserve-official-meta>div{text-align:center;min-width:45%}
+#reservePublishSheet h1{font-size:15px!important;color:#111;margin:1mm 0 0!important}
+#reservePublishSheet .reserve-publication-form{margin:5mm 0;break-inside:avoid;page-break-inside:avoid}
+#reservePublishSheet .reserve-publication-intro,#reservePublishSheet .reserve-publication-approval{font-size:12px;line-height:1.8;margin:1mm 0}
+#reservePublishSheet .reserve-publication-duty{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center;font-size:12px}
+#reservePublishSheet .reserve-publication-duty th,#reservePublishSheet .reserve-publication-duty td{border:1px solid #555;padding:1mm 1mm!important;line-height:1.4!important;overflow-wrap:anywhere;vertical-align:middle;height:6mm;box-sizing:border-box;color:#111}
+#reservePublishSheet .reserve-publication-duty th{width:auto!important;background:#eee!important;font-weight:normal}
+#reservePublishSheet .reserve-publication-duty td{background:#fff!important}
+#reservePublishSheet .reserve-publication-signatures{display:flex;justify-content:space-between;gap:15mm;border:0;padding:0;margin-top:5mm;font-size:12px;color:#111}
+#reservePublishSheet .reserve-publication-empty{text-align:center;padding:15mm}
+@media(max-width:700px){#reservePublishSheet .reserve-official-office,#reservePublishSheet .reserve-official-meta,#reservePublishSheet .reserve-publication-intro,#reservePublishSheet .reserve-publication-approval,#reservePublishSheet .reserve-publication-signatures{font-size:10px}#reservePublishOverlay #reservePublishSheet .reserve-publication-duty th,#reservePublishOverlay #reservePublishSheet .reserve-publication-duty td{font-size:10px}}
+@media print{#reservePublishSheet .reserve-publication-page{padding:0}#reservePublishSheet .reserve-publication-duty th,#reservePublishSheet .reserve-publication-duty td{font-size:12px!important}}
+`;
 }
 function ensureReservePublicationStyles(){
   if(byId("reservePublishPrintStyle"))return;
@@ -3042,6 +3065,7 @@ function ensureReservePublicationStyles(){
       #reservePublishSheet .reserve-publication-summary{margin-top:8px!important;padding:7px!important}
       #reservePublishSheet .reserve-publication-footer{margin-top:6px!important;padding-top:3px!important}
     }`;
+  style.textContent+=reserveOfficialPublicationCSS();
   document.head.appendChild(style);
 }
 
@@ -3061,7 +3085,7 @@ function reservePrintStandalone(date){
  const tab=window.open('','_blank');
  if(!tab){alert('تعذر فتح صفحة الطباعة، يُرجى السماح بالنوافذ المنبثقة من إعدادات المتصفح.');return}
  const css='html,body{margin:0;padding:0;direction:rtl;background:#fff;color:#17323a;font:12px Tahoma,Arial,sans-serif}#reservePublishSheet{margin:auto;max-width:194mm;padding:0;box-sizing:border-box}.reserve-official-header{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:78px;padding:10px 20px;background:#06434a;color:#fff;border-radius:0 0 18px 18px;box-sizing:border-box}.reserve-official-office{display:grid;gap:5px;text-align:right;font-size:12px}.reserve-official-brand{display:grid;grid-template-columns:auto auto;align-items:center;column-gap:9px;text-align:right}.reserve-official-brand img{grid-row:span 2;width:44px;height:44px;object-fit:contain}.reserve-official-school{width:58%;margin:0 auto 10px;padding:8px;text-align:center;background:#0b555a;color:#fff;border-radius:0 0 12px 12px;font-weight:800}.reserve-official-meta{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;margin:14px 0 4px;font-size:10px}h1{text-align:center;font-size:17px}.reserve-publication-form{margin-bottom:15px;break-inside:avoid}.reserve-publication-intro,.reserve-publication-approval{font-size:10px;margin:5px 0}.reserve-publication-duty{width:100%;table-layout:fixed;border-collapse:collapse;font-size:9px}.reserve-publication-duty td,.reserve-publication-duty th{border:1px solid #4d5c60;padding:4px 3px;text-align:center;overflow-wrap:anywhere}.reserve-publication-duty th{background:#e7e7e7}.reserve-publication-duty td{height:21px}.reserve-publication-summary{border:1px solid #aabdc3;padding:8px;margin-top:12px;font-size:10px}.reserve-publication-totals{display:flex;gap:10px;flex-wrap:wrap}.reserve-publication-signatures{display:flex;justify-content:space-between;gap:20px;margin-top:14px;padding-top:8px;border-top:1px solid #9cb3b7;font-size:10px}.print-tools{text-align:center;padding:14px}.print-tools button{border:1px solid #18776f;border-radius:8px;background:#eaf7f5;padding:12px 24px;font:700 15px Tahoma}@page{size:A4 portrait;margin:8mm}@media print{.print-tools{display:none!important}#reservePublishSheet{padding:0;width:100%;max-width:100%}.reserve-publication-duty{font-size:8px}.reserve-publication-duty td,.reserve-publication-duty th{padding:3px 2px}tr{break-inside:avoid}}';
- const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(reservePublicationPdfFilename(date).replace(/\.pdf$/,""))+'</title><style>'+css+'</style></head><body><div class="print-tools"><button onclick="window.print()">طباعة الجدول / حفظ PDF</button></div>'+publicationHTML(date)+'</body></html>';
+ const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(reservePublicationPdfFilename(date).replace(/\.pdf$/,""))+'</title><style>'+css+reserveOfficialPublicationCSS()+'</style></head><body><div class="print-tools"><button onclick="window.print()">طباعة الجدول / حفظ PDF</button></div>'+publicationHTML(date)+'</body></html>';
  tab.document.open();tab.document.write(html);tab.document.close();tab.focus();
 }
 
@@ -3112,10 +3136,7 @@ async function downloadReservePublicationPDF(date){
     page.id="reservePublishSheet";
     // Portrait A4 has 194mm usable width with 8mm side margins.
     page.style.cssText="width:194mm;max-width:194mm;min-width:0;box-sizing:border-box;margin:0;padding:0;overflow:visible;font-size:10px;line-height:1.3";
-    const table=page.querySelector("table");
-    if(table){table.style.cssText="width:100%;table-layout:fixed;font-size:8px";
-      table.querySelectorAll("th,td").forEach(cell=>{cell.style.padding="4px 2px";cell.style.overflowWrap="anywhere";});
-    }
+    page.querySelectorAll("table").forEach(table=>{table.style.cssText="width:100%;table-layout:fixed";});
     // Preserve publication styles on the detached PDF copy without changing the preview.
     const offscreen=document.createElement("div");
     offscreen.style.cssText="position:fixed;left:-20000px;top:0;width:194mm;max-width:194mm;pointer-events:none";
