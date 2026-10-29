@@ -1,10 +1,10 @@
 /* MANJAZ HOME 5.3 — cloud excellence team + admin card last */
 (()=>{"use strict";
 const cards=[
-  {title:"أبرز المنجزات",view:"#achievements",add:"#add",icon:"▤"},
+  {title:"المنجزات الداخلية",view:"#achievements",add:"#add",icon:"▤"},
   {title:"الورش التدريبية",view:"#certificates",add:"#certificates-add",addKind:"workshop",icon:"▧"},
   {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons-add",addKind:"lesson",icon:"▣"},
-  {title:"التكريمات وشهادات الشكر",view:"#awards",add:"#awards",addKind:"award",icon:"◇",singleLine:true},
+  {title:"المنجزات الخارجية",view:"#awards",add:"#awards",addKind:"award",icon:"◇",singleLine:true},
   {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
   {title:"الموهبة",view:"#talent",add:"#talent",addKind:"talent",icon:"✦"},
   {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
