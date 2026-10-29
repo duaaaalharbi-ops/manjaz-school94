@@ -2,9 +2,9 @@
 (()=>{"use strict";
 const cards=[
   {title:"المنجزات الداخلية",view:"#achievements",add:"#add",icon:"▤"},
+  {title:"المنجزات الخارجية",view:"#awards",add:"#awards",addKind:"award",icon:"◇",singleLine:true},
   {title:"الورش التدريبية",view:"#certificates",add:"#certificates-add",addKind:"workshop",icon:"▧"},
   {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons-add",addKind:"lesson",icon:"▣"},
-  {title:"المنجزات الخارجية",view:"#awards",add:"#awards",addKind:"award",icon:"◇",singleLine:true},
   {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
   {title:"الموهبة",view:"#talent",add:"#talent",addKind:"talent",icon:"✦"},
   {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
@@ -136,6 +136,7 @@ function buildHome(){
   cards.forEach(item=>{
     const card=document.createElement("article");
     card.className="manjaz-home-card";
+    if(item.view==="#achievements"||item.view==="#awards") card.style.gridColumn="1 / -1";
     const titleStyle=item.singleLine?' style="white-space:nowrap;font-size:clamp(13px,1.4vw,17px)"':'';
     card.innerHTML=`<div class="manjaz-home-card-title"><span class="manjaz-home-icon" aria-hidden="true">${item.icon}</span><h3${titleStyle}>${item.title}</h3></div><div class="manjaz-home-actions"></div>`;
     const actions=card.querySelector(".manjaz-home-actions");
