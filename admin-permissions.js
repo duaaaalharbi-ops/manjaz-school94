@@ -695,6 +695,7 @@ if(view){
  const linkControls="#cloudShowAdd,#cloudLinkForm,#talentShowAdd,#talentForm,#qudratOpenForm,#qudratForm,#qudratRestoreLink,#qudrat-quantOpenForm,#qudrat-quantForm,#qudrat-quantRestoreLink,#tahsiliOpenForm,#tahsiliForm";
  style.textContent+=linkControls.split(",").map(s=>"html.manjaz-link-scope:not(.manjaz-content-admin) "+s).join(",")+"{display:none!important}";
  style.textContent+=linkRoutes.map(r=>'html:not(.manjaz-content-admin) #manjazHome a.manjaz-home-action.add[href="#'+r+'"]').join(",")+"{display:none!important}";
+ style.textContent+=linkRoutes.map(r=>'html:not(.manjaz-content-admin) #manjazHome .manjaz-home-card:has(> .manjaz-home-actions > .manjaz-home-action.add[href="#'+r+'"]) .manjaz-home-actions').join(",")+"{grid-template-columns:minmax(0,1fr)!important}";
  style.textContent+='html.manjaz-link-scope:not(.manjaz-content-admin) #view .record-actions-grid{grid-template-columns:minmax(0,1fr)}';
  const setScope=()=>{const route=(location.hash||"").slice(1);document.documentElement.classList.toggle("manjaz-content-scope",contentRoutes.includes(route));document.documentElement.classList.toggle("manjaz-link-scope",linkRoutes.includes(route));};
  async function verify(){
