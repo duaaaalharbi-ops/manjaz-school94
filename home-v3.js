@@ -150,7 +150,6 @@ function buildHome(){
     const titleStyle=item.singleLine?' style="white-space:nowrap;font-size:clamp(13px,1.4vw,17px)"':'';
     card.innerHTML=`<div class="manjaz-home-card-title"><span class="manjaz-home-icon" aria-hidden="true">${item.icon}</span><h3${titleStyle}>${item.title}</h3></div><div class="manjaz-home-actions"></div>`;
     const actions=card.querySelector(".manjaz-home-actions");
-    if(item.viewOnly) actions.style.gridTemplateColumns="1fr";
     if(item.external){
       const open=document.createElement("span");
       open.className="manjaz-home-action view";
@@ -160,6 +159,7 @@ function buildHome(){
       actions.append(action("استعراض",item.view,"view"));
     }
     if(!item.viewOnly && item.add) actions.append(action("إضافة",item.add,"add",item.addKind));
+    if(actions.childElementCount===1) actions.style.gridTemplateColumns="1fr";
     grid.append(card);
   });
   main.append(grid);
