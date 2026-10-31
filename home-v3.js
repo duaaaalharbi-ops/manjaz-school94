@@ -159,7 +159,11 @@ function buildHome(){
       actions.append(action("استعراض",item.view,"view"));
     }
     if(!item.viewOnly && item.add) actions.append(action("إضافة",item.add,"add",item.addKind));
-    if(actions.childElementCount===1) actions.style.gridTemplateColumns="1fr";
+    const visibleActions=[...actions.children].filter(el=>{
+      const style=getComputedStyle(el);
+      return style.display!=="none" && style.visibility!=="hidden" && Number(style.opacity)!==0;
+    });
+    if(visibleActions.length===1) actions.style.gridTemplateColumns="1fr";
     grid.append(card);
   });
   main.append(grid);
