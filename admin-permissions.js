@@ -691,24 +691,42 @@ if(view){
  style.textContent=selectors.split(",").map(s=>"html.manjaz-content-scope:not(.manjaz-content-admin) "+s).join(",")+"{display:none!important}";
  document.head.appendChild(style);
  const linkRoutes=["cloud-operational-plan","cloud-activity","cloud-excellence","cloud-portfolios","talent","qudrat-file","qudrat-quant-file","tahsili-file"];
+ const syncHomeBrowseWidths=()=>{
+  const grid=document.querySelector("#manjazHome .manjaz-home-grid");
+  if(!grid)return;
+  [...grid.querySelectorAll(".manjaz-home-card")].forEach(card=>{
+   const actions=card.querySelector(".manjaz-home-actions");
+   if(!actions)return;
+   const visible=[...actions.children].filter(el=>{
+    const style=getComputedStyle(el);
+    return style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0;
+   });
+   if(visible.length===1)actions.style.gridTemplateColumns="minmax(0,1fr)";
+   else actions.style.removeProperty("grid-template-columns");
+  });
+ };
+
  const contentRoutes=["achievements","awards","partners","certificates","certificates-add","admin","lessons",...linkRoutes];
  const linkControls="#cloudShowAdd,#cloudLinkForm,#talentShowAdd,#talentForm,#qudratOpenForm,#qudratForm,#qudratRestoreLink,#qudrat-quantOpenForm,#qudrat-quantForm,#qudrat-quantRestoreLink,#tahsiliOpenForm,#tahsiliForm";
  style.textContent+=linkControls.split(",").map(s=>"html.manjaz-link-scope:not(.manjaz-content-admin) "+s).join(",")+"{display:none!important}";
  style.textContent+=linkRoutes.map(r=>'html:not(.manjaz-content-admin) #manjazHome a.manjaz-home-action.add[href="#'+r+'"]').join(",")+"{display:none!important}";
  style.textContent+=linkRoutes.map(r=>'html:not(.manjaz-content-admin) #manjazHome .manjaz-home-card:has(> .manjaz-home-actions > .manjaz-home-action.add[href="#'+r+'"]) .manjaz-home-actions').join(",")+"{grid-template-columns:minmax(0,1fr)!important}";
  style.textContent+='html.manjaz-link-scope:not(.manjaz-content-admin) #view .record-actions-grid{grid-template-columns:minmax(0,1fr)}';
- const setScope=()=>{const route=(location.hash||"").slice(1);document.documentElement.classList.toggle("manjaz-content-scope",contentRoutes.includes(route));document.documentElement.classList.toggle("manjaz-link-scope",linkRoutes.includes(route));};
+ const setScope=()=>{const route=(location.hash||"").slice(1);document.documentElement.classList.toggle("manjaz-content-scope",contentRoutes.includes(route));document.documentElement.classList.toggle("manjaz-link-scope",linkRoutes.includes(route));;requestAnimationFrame(syncHomeBrowseWidths)};
+ const homeView=document.getElementById("view");
+ if(homeView)new MutationObserver(()=>requestAnimationFrame(syncHomeBrowseWidths)).observe(homeView,{childList:true,subtree:true});
+
  async function verify(){
   setScope();
   const s=session(),token=s?.access_token||"";
   if(checking===token)return;
-  checking=token;verifiedToken="";document.documentElement.classList.remove("manjaz-content-admin");
+  checking=token;verifiedToken="";document.documentElement.classList.remove("manjaz-content-admin");requestAnimationFrame(syncHomeBrowseWidths);
   if(!token||Number(s.expires_at||0)<=Date.now()/1000)return;
   try{
    const r=await originalFetch(base+"/auth/v1/user",{headers:{apikey:key,Authorization:"Bearer "+token},cache:"no-store"});
    const u=r.ok?await r.json():null;
    if(token===session()?.access_token&&String(u?.email||"").toLowerCase()==="munjz.s94@hotmail.com"){
-    verifiedToken=token;document.documentElement.classList.add("manjaz-content-admin");
+    verifiedToken=token;document.documentElement.classList.add("manjaz-content-admin");requestAnimationFrame(syncHomeBrowseWidths);
    }
   }catch(_){}
  }
