@@ -154,7 +154,7 @@ function buildHome(){
       actions.style.gridTemplateColumns="1fr";
       const open=document.createElement("span");
       open.className="manjaz-home-action view";
-      open.textContent="فتح الرابط";
+      open.textContent="استعراض";
       actions.append(open);
     }else{
       actions.append(action("استعراض",item.view,"view"));
