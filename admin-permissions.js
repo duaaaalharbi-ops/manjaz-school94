@@ -715,6 +715,21 @@ if(view){
  const setScope=()=>{const route=(location.hash||"").slice(1);document.documentElement.classList.toggle("manjaz-content-scope",contentRoutes.includes(route));document.documentElement.classList.toggle("manjaz-link-scope",linkRoutes.includes(route));;requestAnimationFrame(syncHomeBrowseWidths)};
  const homeView=document.getElementById("view");
  if(homeView)new MutationObserver(()=>requestAnimationFrame(syncHomeBrowseWidths)).observe(homeView,{childList:true,subtree:true});
+ const watchHomeGrid=()=>{
+  const grid=document.querySelector("#manjazHome .manjaz-home-grid");
+  if(grid){
+   requestAnimationFrame(syncHomeBrowseWidths);
+   new MutationObserver(()=>requestAnimationFrame(syncHomeBrowseWidths)).observe(grid,{childList:true,subtree:true});
+   return true;
+  }
+  return false;
+ };
+ if(!watchHomeGrid()){
+  const homeObserver=new MutationObserver(()=>{
+   if(watchHomeGrid())homeObserver.disconnect();
+  });
+  homeObserver.observe(document.documentElement,{childList:true,subtree:true});
+ }
 
  async function verify(){
   setScope();
