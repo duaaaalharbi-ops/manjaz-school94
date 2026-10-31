@@ -3,7 +3,7 @@
 const BASE="https://idkjuqfxcweqekdkcktk.supabase.co";
 const KEY="sb_publishable_3yW3waOwoT0m5XtTCi1ly";
 const TABLE=BASE+"/rest/v1/school_closure_posts";
-const HEADERS={apikey:KEY,"Content-Type":"application/json"};
+const HEADERS={apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"};
 const WEEKDAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const GRADES=["أولى ثانوي","ثاني ثانوي","ثالث ثانوي"];
 const PERIODS=["الأولى","الثانية","الثالثة","الرابعة","الخامسة","السادسة","السابعة"];
