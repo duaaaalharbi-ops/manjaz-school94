@@ -5,6 +5,7 @@ const cards=[
   {title:"المنجزات الخارجية",view:"#awards",add:"#awards",addKind:"award",icon:"◇",singleLine:true},
   {title:"الورش التدريبية",view:"#certificates",add:"#certificates-add",addKind:"workshop",icon:"▧"},
   {title:"الدروس التطبيقية",view:"#lessons",add:"#lessons-add",addKind:"lesson",icon:"▣"},
+  {title:"مجتمعات التعلم المهنية",view:"https://padlet.com/Teacherswork/94-1448-s024drtqwwt2dlw25dlf",icon:"▧",viewOnly:true,external:true},
   {title:"الشراكة المجتمعية",view:"#partners",add:"#partners",icon:"◎"},
   {title:"الموهبة",view:"#talent",add:"#talent",addKind:"talent",icon:"✦"},
   {title:"نماذج الإنتاج المعرفي",view:"#knowledge",add:"#knowledge",icon:"◇"},
@@ -134,13 +135,30 @@ function buildHome(){
     <div class="manjaz-home-actions"><span class="manjaz-home-action view">استعراض</span></div>`;
   grid.append(nataj);
   cards.forEach(item=>{
-    const card=document.createElement("article");
+    const card=document.createElement(item.external?"a":"article");
     card.className="manjaz-home-card";
+    if(item.external){
+      card.href=item.view;
+      card.target="_blank";
+      card.rel="noopener noreferrer";
+      card.setAttribute("aria-label",item.title);
+      card.style.textDecoration="none";
+      card.style.color="inherit";
+      card.style.cursor="pointer";
+    }
     if(item.view==="#achievements"||item.view==="#awards") card.style.gridColumn="1 / -1";
     const titleStyle=item.singleLine?' style="white-space:nowrap;font-size:clamp(13px,1.4vw,17px)"':'';
     card.innerHTML=`<div class="manjaz-home-card-title"><span class="manjaz-home-icon" aria-hidden="true">${item.icon}</span><h3${titleStyle}>${item.title}</h3></div><div class="manjaz-home-actions"></div>`;
     const actions=card.querySelector(".manjaz-home-actions");
-    actions.append(action("استعراض",item.view,"view"));
+    if(item.external){
+      actions.style.gridTemplateColumns="1fr";
+      const open=document.createElement("span");
+      open.className="manjaz-home-action view";
+      open.textContent="فتح الرابط";
+      actions.append(open);
+    }else{
+      actions.append(action("استعراض",item.view,"view"));
+    }
     if(!item.viewOnly && item.add) actions.append(action("إضافة",item.add,"add",item.addKind));
     grid.append(card);
   });
