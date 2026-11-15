@@ -98,9 +98,12 @@ function makeCard(r){
   try{
    const adminToken=await token();
    if(!adminToken){
-    const form=$("nrAuthForm"),state=$("nrAuthStatus");
-    if(form){form.hidden=false;if(state)state.textContent="سجّلي الدخول في النموذج أعلى البطاقات، ثم اضغطي حفظ الرابط مرة أخرى.";}
-    throw Error("سجّلي الدخول إلى الإدارة من النموذج أعلى البطاقات أولًا.");
+    const panel=$("nrAuthPanel"),form=$("nrAuthForm"),state=$("nrAuthStatus");
+    if(panel)panel.hidden=false;
+    if(form)form.hidden=false;
+    if(state)state.textContent="أدخلي بيانات الإدارة هنا لحفظ الرابط.";
+    if(panel&&typeof panel.scrollIntoView==="function")panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+    throw Error("سجّلي الدخول في النموذج أسفل بطاقات نتاج، ثم أعيدي حفظ الرابط.");
    }
    const now=new Date().toISOString(),payload={report_key:r.kind,url,updated_at:now};
    let persisted;
@@ -134,7 +137,7 @@ async function render(){
   const original=document.createElement("a");original.href=ORIGINAL;original.className="btn btn-primary";
   original.target="_blank";original.rel="noopener noreferrer";original.textContent="فتح لوحة نتاج الأصلية";
   toolbar.append(back,original);
-  const authPanel=document.createElement("section");authPanel.id="nrAuthPanel";authPanel.className="surface form-card";
+  const authPanel=document.createElement("section");authPanel.id="nrAuthPanel";authPanel.className="surface form-card";authPanel.hidden=true;
   authPanel.innerHTML='<h3>دخول الإدارة لحفظ روابط التقارير</h3>'+
    '<p id="nrAuthStatus" role="status" aria-live="polite">روابط التقارير متاحة للاستعراض، وحفظها يتطلب صلاحية الإدارة.</p>'+
    '<form id="nrAuthForm"><div class="nr-auth-fields">'+
@@ -149,16 +152,17 @@ async function render(){
    try{
     await signIn(authPanel.querySelector("#nrAuthEmail").value.trim(),authPanel.querySelector("#nrAuthPassword").value);
     authPanel.querySelector("#nrAuthPassword").value="";
-    loginForm.hidden=true;loginState.textContent="صلاحية الإدارة مفعّلة. يمكنك الآن حفظ رابط كل بطاقة.";
+    loginForm.hidden=true;authPanel.hidden=true;loginState.textContent="صلاحية الإدارة مفعّلة. يمكنك الآن حفظ رابط كل بطاقة.";
    }catch(err){loginState.textContent="تعذر تسجيل الدخول: "+(err.message||err);}
    finally{loginButton.disabled=false;}
   };
   const grid=document.createElement("div");grid.className="nr-grid";grid.id="nrGrid";
-  root.append(intro,toolbar,authPanel,grid);view.replaceChildren(root);renderCards();
+  // The admin sign-in stays hidden below the three cards and appears only if Save requires it.
+  root.append(intro,toolbar,grid,authPanel);view.replaceChildren(root);renderCards();
   try{await load();if(location.hash===PAGE)renderCards();}
   catch(_){if(location.hash===PAGE){const m=document.createElement("p");m.textContent="تعذر تحميل الروابط الآن. أعيدي فتح القسم.";root.insertBefore(m,grid);}}
   try{
-   if(await token()){loginForm.hidden=true;loginState.textContent="صلاحية الإدارة مفعّلة. يمكنك حفظ روابط التقارير.";}
+   if(await token()){authPanel.hidden=true;loginForm.hidden=true;loginState.textContent="صلاحية الإدارة مفعّلة. يمكنك حفظ روابط التقارير.";}
   }catch(_){} 
  }finally{rendering=false;}
 }
@@ -167,7 +171,8 @@ function styles(){
  const st=document.createElement("style");st.id="nrStyle";
  st.textContent="#nrPage{direction:rtl;max-width:1080px;margin:0 auto;font-family:Tahoma,Arial,sans-serif}"+
  "#nrPage .nr-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 18px}"+
- "#nrPage #nrAuthPanel{padding:16px;margin:0 0 18px;border:1px solid #c5dbdd;border-radius:12px;background:#f7fbfb}"+
+ "#nrPage #nrAuthPanel{padding:16px;margin:18px 0 0;border:1px solid #c5dbdd;border-radius:12px;background:#f7fbfb}"+
+ "#nrPage #nrAuthPanel[hidden]{display:none!important}"+
  "#nrPage #nrAuthPanel h3{margin:0 0 8px;font-size:16px}"+
  "#nrPage #nrAuthPanel p{margin:0 0 12px;line-height:1.7;color:#365f66}"+
  "#nrPage .nr-auth-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}"+
