@@ -265,12 +265,6 @@ function toolsHTML(session){
         <p>إصدار شهادة شكر وتقدير رسمية وفق البيانات المدخلة.</p>
         <button class="btn btn-primary" type="button" id="openThanksTool">فتح الأداة</button>
       </article>
-      <article class="surface admin-tool-card">
-        <span class="badge">تنظيم الحصص</span>
-        <h3>تنسيق جدول حضور الحصص</h3>
-        <p>اختيار التاريخ والحصة والفصل والمعلمة، ثم حفظ الجدول أو نشره.</p>
-        <button class="btn btn-primary" type="button" id="openAttendanceSchedule">فتح الأداة</button>
-      </article>
     </div>
     <section id="adminCertWorkspace" class="admin-cert-workspace"></section>`;
 }
@@ -663,7 +657,6 @@ async function renderAdminPermissions(){
   };
   document.getElementById("openExecutionTool").onclick=()=>mountTool("execution",s);
   document.getElementById("openThanksTool").onclick=()=>mountTool("thanks",s);
-  document.getElementById("openAttendanceSchedule").onclick=()=>window.openManjazAttendanceSchedule?.(s);
 }
 
 captureRecoveryRedirect();
