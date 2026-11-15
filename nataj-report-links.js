@@ -105,7 +105,7 @@ function makeCard(r){
    const now=new Date().toISOString(),payload={report_key:r.kind,url,updated_at:now};
    let persisted;
    if(row){
-    const q="?"+new URLSearchParams({report_key:"eq."+r.kind});
+    const q="?report_key=eq."+encodeURIComponent(r.kind);
     persisted=await api(q,{adminToken,method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({url,updated_at:now})});
    }else{
     persisted=await api("",{adminToken,method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(payload)});
