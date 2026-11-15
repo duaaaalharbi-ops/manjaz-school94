@@ -367,7 +367,7 @@ function mount(){
   const view=document.getElementById("view");if(!view)return;
   if(view.querySelector("#mj13ExportCards"))return;
   let reference=null;
-  if(route()==="admin")reference=view.querySelector("#adminList")?.closest("section");
+  if(route()==="admin")reference=view.querySelector("#mj15Dashboard");
   else if(view.querySelector("#adminPermissionsRoot #openExecutionTool"))reference=view.querySelector("#adminCertWorkspace");
   if(!reference)return;
   style();const container=document.createElement("div");container.innerHTML=cardMarkup();
