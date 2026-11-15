@@ -255,10 +255,7 @@ function cardMarkup(){
    </div>
    <div class="mj13-status" id="mj13CertStatus" role="status" aria-live="polite"></div>
   </article>
-  <article class="mj13-card"><h3>تنسيق جدول حضور الحصص</h3><p>اختيار التاريخ والحصة والفصل واسم المعلمة، ثم حفظ الجدول أو نشره.</p>
-   <button type="button" class="btn btn-primary" id="openAttendanceSchedule">فتح الأداة</button>
-   <div id="attAdminWorkspace"></div>
-  </article></section>`;
+ </section>`;
 }
 async function mj14Submit(form){
  const message=form.querySelector('#mj14FormStatus'),button=form.querySelector('[type=submit]');
