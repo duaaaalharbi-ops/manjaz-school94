@@ -365,7 +365,15 @@ function bind(root){
 function mount(){
   if(!ROUTES.has(route()))return;
   const view=document.getElementById("view");if(!view)return;
-  if(view.querySelector("#mj13ExportCards"))return;
+  const existing=view.querySelector("#mj13ExportCards");
+  if(existing){
+    if(route()==="admin"&&existing.closest("#mj15Dashboard")){
+      const dashboard=view.querySelector("#mj15Dashboard");
+      dashboard?.parentElement?.insertBefore(existing,dashboard.nextSibling);
+      existing.style.display="grid";
+    }
+    return;
+  }
   let reference=null;
   if(route()==="admin")reference=view.querySelector("#mj15Dashboard");
   else if(view.querySelector("#adminPermissionsRoot #openExecutionTool"))reference=view.querySelector("#adminCertWorkspace");
