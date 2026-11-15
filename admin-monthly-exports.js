@@ -254,6 +254,10 @@ function cardMarkup(){
     <button type="button" class="btn btn-primary" id="mj13CertificateDownload">استخراج Excel للفئة</button>
    </div>
    <div class="mj13-status" id="mj13CertStatus" role="status" aria-live="polite"></div>
+  </article>
+  <article class="mj13-card"><h3>تنسيق جدول حضور الحصص</h3><p>اختيار التاريخ والحصة والفصل واسم المعلمة، ثم حفظ الجدول أو نشره.</p>
+   <button type="button" class="btn btn-primary" id="openAttendanceSchedule">فتح الأداة</button>
+   <div id="attAdminWorkspace"></div>
   </article></section>`;
 }
 async function mj14Submit(form){
@@ -353,6 +357,7 @@ async function exportCertificates(){
 function bind(root){
   root.querySelector("#mj13ReserveDownload")?.addEventListener("click",exportReserve);
   root.querySelector("#mj13CertificateDownload")?.addEventListener("click",exportCertificates);
+  root.querySelector("#openAttendanceSchedule")?.addEventListener("click",()=>window.openManjazAttendanceSchedule?.());
   mj14Bind(root);
   // Populate historical Hijri months while preserving the existing selection.
   (async()=>{try{const token=await adminToken();const records=await cloudRows(["reserve_assignment"],token);if(root.isConnected)populateReserveMonths(new Set(records.map(r=>monthKey(hijriParts(r.data?.date))).filter(Boolean)));}catch(_){/* no admin session: current Hijri year remains selectable */}})();
