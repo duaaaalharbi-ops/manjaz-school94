@@ -16,6 +16,7 @@ const cards=[
   {title:"الحوسبة السحابية | ملفات الإنجاز",view:"#cloud-portfolios",icon:"☁",viewOnly:true},
   {title:"الاحتياط اليومي",view:"#daily-reserve",icon:"▦",viewOnly:true},
   {title:"تفعيل الاحتياط اليومي",view:"#daily-activation",icon:"▣",viewOnly:true},
+  {title:"دليل التواصل الإلكتروني",view:"contact-guide.html",icon:"▤",viewOnly:true,external:true},
   {title:"صلاحيات إدارية",view:"#admin-permissions",icon:"▥",viewOnly:true,singleLine:true}
 ];
 
