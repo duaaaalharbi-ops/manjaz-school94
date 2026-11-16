@@ -30,11 +30,7 @@
     card.innerHTML=`<div class="manjaz-home-card-title">
       <span class="manjaz-home-icon" aria-hidden="true">▤</span><h3>ملف القدرات اللفظي</h3>
       </div><div class="manjaz-home-actions">
-      <a class="manjaz-home-action view" href="#qudrat-file">استعراض</a>
-      <a class="manjaz-home-action add" href="#qudrat-file">إضافة</a></div>`;
-    card.querySelector(".manjaz-home-action.add").addEventListener("click",()=>{
-      try{sessionStorage.setItem("manjaz_home_open_add","qudrat-file");}catch(_){}
-    });
+      <a class="manjaz-home-action view" href="#qudrat-file">استعراض</a></div>`;
     tahsili.insertAdjacentElement("afterend",card);
   }
   async function api(url,init={}){
@@ -214,11 +210,7 @@
       quant.innerHTML=`<div class="manjaz-home-card-title">
         <span class="manjaz-home-icon" aria-hidden="true">▤</span><h3>ملف القدرات الكمي</h3>
         </div><div class="manjaz-home-actions">
-        <a class="manjaz-home-action view" href="#qudrat-quant-file">استعراض</a>
-        <a class="manjaz-home-action add" href="#qudrat-quant-file">إضافة</a></div>`;
-      quant.querySelector(".manjaz-home-action.add").addEventListener("click",()=>{
-        try{sessionStorage.setItem("manjaz_home_open_add","qudrat-quant-file");}catch(_){}
-      });
+        <a class="manjaz-home-action view" href="#qudrat-quant-file">استعراض</a></div>`;
       verbal.insertAdjacentElement("afterend",quant);
     }
     if(!grid.querySelector('[data-manjaz-step-bank-card="1"]')){
