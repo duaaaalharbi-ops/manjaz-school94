@@ -584,7 +584,7 @@ function mount(){const view=document.getElementById('view');if((location.hash||'
  <details class="mj15-panel" id="mjAdminReserveCard"><summary><span class="mj15-number">٦</span>الاحتياط اليومي</summary><div class="mj15-body"><div class="mj15-actions"><a class="btn btn-primary" href="#daily-reserve">فتح الاحتياط اليومي وإدارته</a></div></div></details>
  <details class="mj15-panel" id="mjAdminProgramsCard"><summary><span class="mj15-number">٧</span>برامج الهيكل الإداري</summary><div class="mj15-body"><div class="mj15-actions"><a class="btn btn-primary" href="#admin-programs">فتح برامج الهيكل الإداري وإدارتها</a></div></div></details>
  <details class="mj15-panel" id="mjAdminDutyCard"><summary><span class="mj15-number">٨</span>المناوبة اليومية</summary><div class="mj15-body"><div class="mj15-actions"><a class="btn btn-primary" href="#daily-duty">فتح المناوبة اليومية وإدارتها</a></div></div></details>
- <details class="mj15-panel" id="mjAdminClassAttendance"><summary><span class="mj15-number">٩</span>حضور الحصص</summary><div class="mj15-body"><p class="mj15-note">تنسيق جدول الحضور وحفظه أو نشره.</p><div class="mj15-actions"><button type="button" id="openAttendanceSchedule">فتح أداة حضور الحصص</button></div><div id="attAdminWorkspace"></div></div></details>`;const intro=view.querySelector('.page-intro');if(intro)intro.after(dash);else view.prepend(dash);}
+`;const intro=view.querySelector('.page-intro');if(intro)intro.after(dash);else view.prepend(dash);}
  // Review panel uses the same direct .mj15-body structure as every other card.
  // Do not nest the legacy .surface.panel (it duplicated padding, border and colors).
  const achieve=document.getElementById('mj15Achievements');
