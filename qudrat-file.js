@@ -84,7 +84,7 @@
       <div class="mj-bayan-topic">أ. إيمان الجدعاني</div>
       <span class="mj-bayan-cta">استعراض</span>
     </a>
-    <a id="manjazVerbalExcellence" href="https://lovable.dev/preview/NGZbNn9cAK0vsseYFlyGueAJCIr9r5Op" target="_blank" rel="noopener noreferrer" aria-label="استعراض بوابة التميز في القدرات اللفظية منصة التدريب الرقمي أ. عوالي السبيعي">
+    <a id="manjazVerbalExcellence" href="https://alfad-verbals-arabic-gate.lovable.app" target="_blank" rel="noopener noreferrer" aria-label="استعراض بوابة التميز في القدرات اللفظية منصة التدريب الرقمي أ. عوالي السبيعي">
       <div class="mj-bayan-brand">
         <div><h3 class="mj-bayan-name">بوابة التميز في القدرات اللفظية</h3><p class="mj-bayan-subtitle">منصة التدريب الرقمي</p></div>
       </div>
