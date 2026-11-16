@@ -1187,7 +1187,7 @@ function wireAdmin(){
       <div class="admin-actions">
         <button class="small-btn view-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">مشاهدة التفاصيل</button>
         <button class="small-btn edit-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">تعديل</button>
-        <button class="small-btn approve" data-id="${esc(x.id)}" data-kind="${esc(x._kind)}">اعتماد</button>
+        <button class="small-btn approve" data-id="${esc(x.id)}" data-kind="${esc(x._mediaKind)}">اعتماد</button>
         <button class="small-btn admin-delete-record" data-id="${esc(x.id)}" data-media-kind="${esc(x._mediaKind)}">حذف</button>
       </div>
     `;
