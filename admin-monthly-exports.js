@@ -354,7 +354,6 @@ async function exportCertificates(){
 function bind(root){
   root.querySelector("#mj13ReserveDownload")?.addEventListener("click",exportReserve);
   root.querySelector("#mj13CertificateDownload")?.addEventListener("click",exportCertificates);
-  root.querySelector("#openAttendanceSchedule")?.addEventListener("click",()=>window.openManjazAttendanceSchedule?.());
   mj14Bind(root);
   // Populate historical Hijri months while preserving the existing selection.
   (async()=>{try{const token=await adminToken();const records=await cloudRows(["reserve_assignment"],token);if(root.isConnected)populateReserveMonths(new Set(records.map(r=>monthKey(hijriParts(r.data?.date))).filter(Boolean)));}catch(_){/* no admin session: current Hijri year remains selectable */}})();
