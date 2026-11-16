@@ -220,7 +220,7 @@
       step.innerHTML=`<div class="manjaz-home-card-title">
         <span class="manjaz-home-icon" aria-hidden="true">↗</span><h3>البنك الرقمي STEP</h3>
         </div><div class="manjaz-home-actions">
-        <a class="manjaz-home-action view" href="https://ertiqaastepup-ux.github.io/ertiqaa-stepup/" target="_blank" rel="noopener noreferrer">فتح البنك</a></div>`;
+        <a class="manjaz-home-action view" href="https://ertiqaastepup-ux.github.io/ertiqaa-stepup/" target="_blank" rel="noopener noreferrer">استعراض</a></div>`;
       quant.insertAdjacentElement("afterend",step);
     }
   }
