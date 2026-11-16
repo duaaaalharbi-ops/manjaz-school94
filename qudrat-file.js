@@ -203,21 +203,34 @@
   function homeCard(){
     if(!isHome())return;
     const grid=document.querySelector("#manjazHome .manjaz-home-grid");
-    if(!grid||grid.querySelector('[data-manjaz-qudrat-quant-card="1"]'))return;
-    const tahsili=grid.querySelector('[data-manjaz-qudrat-card="1"]');
-    if(!tahsili)return;
-    const card=document.createElement("article");
-    card.className="manjaz-home-card";
-    card.setAttribute("data-manjaz-qudrat-quant-card","1");
-    card.innerHTML=`<div class="manjaz-home-card-title">
-      <span class="manjaz-home-icon" aria-hidden="true">▤</span><h3>ملف القدرات الكمي</h3>
-      </div><div class="manjaz-home-actions">
-      <a class="manjaz-home-action view" href="#qudrat-quant-file">استعراض</a>
-      <a class="manjaz-home-action add" href="#qudrat-quant-file">إضافة</a></div>`;
-    card.querySelector(".manjaz-home-action.add").addEventListener("click",()=>{
-      try{sessionStorage.setItem("manjaz_home_open_add","qudrat-quant-file");}catch(_){}
-    });
-    tahsili.insertAdjacentElement("afterend",card);
+    if(!grid)return;
+    let quant=grid.querySelector('[data-manjaz-qudrat-quant-card="1"]');
+    if(!quant){
+      const verbal=grid.querySelector('[data-manjaz-qudrat-card="1"]');
+      if(!verbal)return;
+      quant=document.createElement("article");
+      quant.className="manjaz-home-card";
+      quant.setAttribute("data-manjaz-qudrat-quant-card","1");
+      quant.innerHTML=`<div class="manjaz-home-card-title">
+        <span class="manjaz-home-icon" aria-hidden="true">▤</span><h3>ملف القدرات الكمي</h3>
+        </div><div class="manjaz-home-actions">
+        <a class="manjaz-home-action view" href="#qudrat-quant-file">استعراض</a>
+        <a class="manjaz-home-action add" href="#qudrat-quant-file">إضافة</a></div>`;
+      quant.querySelector(".manjaz-home-action.add").addEventListener("click",()=>{
+        try{sessionStorage.setItem("manjaz_home_open_add","qudrat-quant-file");}catch(_){}
+      });
+      verbal.insertAdjacentElement("afterend",quant);
+    }
+    if(!grid.querySelector('[data-manjaz-step-bank-card="1"]')){
+      const step=document.createElement("article");
+      step.className="manjaz-home-card";
+      step.setAttribute("data-manjaz-step-bank-card","1");
+      step.innerHTML=`<div class="manjaz-home-card-title">
+        <span class="manjaz-home-icon" aria-hidden="true">↗</span><h3>البنك الرقمي STEP</h3>
+        </div><div class="manjaz-home-actions">
+        <a class="manjaz-home-action view" href="https://ertiqaastepup-ux.github.io/ertiqaa-stepup/" target="_blank" rel="noopener noreferrer">فتح البنك</a></div>`;
+      quant.insertAdjacentElement("afterend",step);
+    }
   }
   async function api(url,init={}){
     const response=await fetch(url,{headers:HEADERS,cache:"no-store",...init});
