@@ -100,7 +100,7 @@ async function review(btn,decision){
    body:JSON.stringify({p_kind:kind,p_id:id,p_decision:decision,p_reason:reason||""})
   });
   const result=await r.json().catch(()=>({}));
-  if(!r.ok||String(result.id)!==String(id))throw Error(result.message||"لم تؤكد قاعدة البيانات حفظ القرار");
+  if(!r.ok||String(result.id)!==String(id)||String(result.kind)!==kind)throw Error(result.message||"لم تؤكد قاعدة البيانات حفظ القرار في القسم الصحيح");
   status(decision==="approve"?"تم اعتماد الطلب ونشره في قسمه الأصلي":"تم حفظ الرفض");
   if(typeof window.refreshAllCloudCollections==="function")await window.refreshAllCloudCollections();
   if(typeof window.render==="function")window.render();
