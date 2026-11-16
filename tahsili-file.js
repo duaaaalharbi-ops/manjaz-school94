@@ -30,11 +30,7 @@
     card.innerHTML=`<div class="manjaz-home-card-title">
       <span class="manjaz-home-icon" aria-hidden="true">▤</span><h3>ملف التحصيلي</h3>
       </div><div class="manjaz-home-actions">
-      <a class="manjaz-home-action view" href="#tahsili-file">استعراض</a>
-      <a class="manjaz-home-action add" href="#tahsili-file">إضافة</a></div>`;
-    card.querySelector(".manjaz-home-action.add").addEventListener("click",()=>{
-      try{sessionStorage.setItem("manjaz_home_open_add","tahsili-file");}catch(_){}
-    });
+      <a class="manjaz-home-action view" href="#tahsili-file">استعراض</a></div>`;
     talent.insertAdjacentElement("afterend",card);
   }
   async function api(url,init={}){
